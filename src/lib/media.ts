@@ -1,0 +1,2 @@
+/** Local, dependency-free fallback used when a remote image cannot be loaded. */
+export const OFFLINE_IMAGE_PLACEHOLDER = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500"%3E%3Crect width="800" height="500" fill="%23fff1ec"/%3E%3Cpath d="M0 410 190 220l120 110 120-145 370 225H0Z" fill="%2388101c" opacity=".16"/%3E%3Ccircle cx="400" cy="175" r="62" fill="%237d5700" opacity=".28"/%3E%3Ctext x="400" y="410" text-anchor="middle" font-family="Georgia,serif" font-size="28" fill="%2388101c"%3EThích Cúng Kiếng%3C/text%3E%3C/svg%3E';

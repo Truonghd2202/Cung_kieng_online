@@ -1,0 +1,6 @@
+{
+  "name": "Thích Cúng Kiếng",
+  "description": "Nền tảng số hóa phả hệ, phục chế ảnh cũ và lưu truyền ký ức di sản hương hỏa gia tộc thuần Việt.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
