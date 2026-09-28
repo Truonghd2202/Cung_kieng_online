@@ -168,7 +168,7 @@ export const MoodCheckInScreen: React.FC<MoodCheckInScreenProps> = ({
                   placeholder="Nếu có một điều muốn trút bỏ hoặc nhắn nhủ với chính mình, hãy viết nhẹ vài dòng ở đây... Chúng tôi tuyệt đối bảo mật tâm tư của bạn."
                   className="pr-16"
                 />
-                <div className="absolute bottom-3 right-3 flex items-center gap-1 text-[11px] text-[#93827a] pointer-events-none">
+                <div className="absolute bottom-3 right-3 flex items-center gap-1 text-xs text-[#93827a] pointer-events-none">
                   <Lock className="w-3 h-3" />
                   <span>Bảo mật</span>
                 </div>
@@ -190,7 +190,7 @@ export const MoodCheckInScreen: React.FC<MoodCheckInScreenProps> = ({
                     />
                   </div>
                   <div>
-                    <div className="text-[11px] text-[#907f78] uppercase tracking-wider font-medium">
+                    <div className="text-xs text-[#907f78] uppercase tracking-wider font-medium">
                       Tín hiệu tương ứng
                     </div>
                     <div className="text-xs sm:text-sm font-semibold text-[#2f2523]">
@@ -213,7 +213,7 @@ export const MoodCheckInScreen: React.FC<MoodCheckInScreenProps> = ({
                 />
               </div>
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-[#9e3b2e] mb-0.5">
+                <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-0.5">
                   Chiêm nghiệm ngày mới
                 </div>
                 <p className="text-xs text-[#6e5d56] leading-relaxed">

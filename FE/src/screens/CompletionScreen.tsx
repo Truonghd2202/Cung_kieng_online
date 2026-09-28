@@ -55,12 +55,12 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({
           <div className="absolute inset-2 rounded-full border border-[#eddcd0]" />
           <div className="relative w-24 h-24 rounded-full bg-[#9e3b2e] text-white flex flex-col items-center justify-center shadow-md">
             <Check className="w-7 h-7 stroke-[2.5]" />
-            <span className="text-[10px] font-bold tracking-widest uppercase mt-0.5">
+            <span className="text-xs font-bold tracking-widest uppercase mt-0.5">
               Viên mãn
             </span>
           </div>
           {/* Mood tag attached to bottom of medallion */}
-          <div className="absolute -bottom-2 px-3 py-0.5 rounded-full bg-[#faece1] border border-[#edd5c4] text-[#9e3b2e] text-[11px] font-semibold flex items-center gap-1 shadow-2xs">
+          <div className="absolute -bottom-2 px-3 py-0.5 rounded-full bg-[#faece1] border border-[#edd5c4] text-[#9e3b2e] text-xs font-semibold flex items-center gap-1 shadow-2xs">
             <Flower2 className="w-3 h-3" />
             <span>{signal.mood}</span>
           </div>
@@ -83,10 +83,10 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({
           <Card className="p-6 rounded-3xl shadow-xs flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between text-xs text-[#8c7b74] mb-4">
-                <span className="font-semibold uppercase tracking-wider text-[11px]">
+                <span className="font-semibold uppercase tracking-wider text-xs">
                   Tín hiệu vừa ghi nhận
                 </span>
-                <span className="flex items-center gap-1 text-[#9e3b2e] font-medium text-[11px]">
+                <span className="flex items-center gap-1 text-[#9e3b2e] font-medium text-xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#9e3b2e]"></span>
                   Vừa xong
                 </span>
@@ -138,7 +138,7 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({
                   </div>
                   <Badge
                     variant="secondary"
-                    className="text-[10px] bg-[#e6f4e8] text-[#225725] border-[#c2e4c6]"
+                    className="text-xs bg-[#e6f4e8] text-[#225725] border-[#c2e4c6]"
                   >
                     {userName || "Thành viên"} (Demo)
                   </Badge>
@@ -149,7 +149,7 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({
                 </p>
 
                 {/* Demo notice pill */}
-                <div className="p-3.5 rounded-2xl bg-white/90 border border-[#d2ead4] text-[11px] text-[#3e6042] mb-6 leading-relaxed shadow-2xs">
+                <div className="p-3.5 rounded-2xl bg-white/90 border border-[#d2ead4] text-xs text-[#3e6042] mb-6 leading-relaxed shadow-2xs">
                   ✦ <strong>Dữ liệu Demo (chưa kết nối Backend):</strong> Tín hiệu đang được lưu giữ trực tiếp trong bộ nhớ trình duyệt (LocalStorage).
                 </div>
 
@@ -195,7 +195,7 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({
                     <Bookmark className="w-4 h-4 text-[#9e3b2e]" />
                     <span>Lưu giữ hành trình của bạn</span>
                   </div>
-                  <Badge variant="terracotta" className="text-[10px]">
+                  <Badge variant="terracotta" className="text-xs">
                     Khách vãng lai
                   </Badge>
                 </div>
@@ -261,7 +261,7 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Trở về màn Hôm nay</span>
           </Button>
-          <div className="text-[11px] text-[#9a8982]">
+          <div className="text-xs text-[#9a8982]">
             Giữ nhịp thở tự nhiên • Thân an tâm lạc
           </div>
         </div>

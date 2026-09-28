@@ -83,7 +83,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
               <Flower2 className="w-5 h-5 text-[#9e3b2e]" />
             </div>
             <div>
-              <div className="text-[11px] uppercase tracking-wider text-[#938279] font-medium">
+              <div className="text-xs uppercase tracking-wider text-[#938279] font-medium">
                 Tiết khí nhật ký
               </div>
               <div className="font-['Noto_Serif',serif] font-bold text-base text-[#2e2624]">
@@ -106,7 +106,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
 
               {/* Floating badges on image */}
-              <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/85 backdrop-blur-md text-[11px] font-semibold text-[#3a302c] uppercase tracking-wider shadow-xs">
+              <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/85 backdrop-blur-md text-xs font-semibold text-[#3a302c] uppercase tracking-wider shadow-xs">
                 Khởi thức vô ưu
               </div>
               <div className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/85 backdrop-blur-md flex items-center justify-center text-[#9e3b2e] shadow-xs">
@@ -116,7 +116,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
 
             {/* Quote directly beneath photo */}
             <div className="mt-5 p-5 rounded-2xl bg-[#fbf6f0] border border-[#f0e2d5]">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e] mb-1.5 flex items-center gap-1.5">
+              <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-1.5 flex items-center gap-1.5">
                 <span>Cổ thi dẫn giải</span>
               </div>
               <p className="font-['Noto_Serif',serif] italic font-semibold text-lg sm:text-[19px] text-[#2c2220] leading-snug">
@@ -198,7 +198,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                   <Compass className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e] mb-0.5">
+                  <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-0.5">
                     {currentSignal.guestPreview.title}
                   </div>
                   <p className="text-xs sm:text-sm text-[#665751] leading-relaxed">
@@ -264,7 +264,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                 <div className="w-10 h-10 rounded-xl bg-[#faede2] flex items-center justify-center text-[#9e3b2e] mb-4">
                   <BookOpen className="w-5 h-5" />
                 </div>
-                <div className="text-[11px] font-semibold uppercase text-[#9e3b2e] tracking-wider mb-1">
+                <div className="text-xs font-semibold uppercase text-[#9e3b2e] tracking-wider mb-1">
                   Trụ cột 01 • Khảo cứu văn bản
                 </div>
                 <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#29201e] mb-2.5">
@@ -291,7 +291,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                 <div className="w-10 h-10 rounded-xl bg-[#faede2] flex items-center justify-center text-[#9e3b2e] mb-4">
                   <HelpCircle className="w-5 h-5" />
                 </div>
-                <div className="text-[11px] font-semibold uppercase text-[#9e3b2e] tracking-wider mb-1">
+                <div className="text-xs font-semibold uppercase text-[#9e3b2e] tracking-wider mb-1">
                   Trụ cột 02 • Nhân văn hiện đại
                 </div>
                 <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#29201e] mb-2.5">
@@ -318,7 +318,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                 <div className="w-10 h-10 rounded-xl bg-[#faede2] flex items-center justify-center text-[#9e3b2e] mb-4">
                   <Flower2 className="w-5 h-5" />
                 </div>
-                <div className="text-[11px] font-semibold uppercase text-[#9e3b2e] tracking-wider mb-1">
+                <div className="text-xs font-semibold uppercase text-[#9e3b2e] tracking-wider mb-1">
                   Trụ cột 03 • Thực hành vi mô
                 </div>
                 <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#29201e] mb-2.5">
@@ -377,7 +377,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
               <BookOpen className="w-4 h-4 text-[#9e3b2e]" />
               <span>Xem thư viện ca dao & điềm lành</span>
             </Button>
-            <div className="mt-2 text-[11px] text-[#9a867e]">
+            <div className="mt-2 text-xs text-[#9a867e]">
               Trải nghiệm hoàn toàn mở cho khách
             </div>
           </div>

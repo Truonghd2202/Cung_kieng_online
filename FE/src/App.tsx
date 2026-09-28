@@ -453,7 +453,7 @@ export default function App() {
               {/* Frontend Demo Banner */}
               <div className="mb-6 p-4 rounded-2xl bg-[#fbf3ec] border border-[#ecd9cb] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[#78645c] shadow-2xs">
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-[10px] font-bold text-[#9e3b2e] bg-white border-[#e6cbba]">
+                  <Badge variant="secondary" className="text-xs font-bold text-[#9e3b2e] bg-white border-[#e6cbba]">
                     FRONTEND DEMO
                   </Badge>
                   <span>
@@ -528,7 +528,7 @@ export default function App() {
                             {item.poemLine2}”
                           </p>
                           {item.actionTitle && (
-                            <p className="text-[11px] text-[#85736c] mt-2 font-sans font-medium">
+                            <p className="text-xs text-[#85736c] mt-2 font-sans font-medium">
                               Hành động: {item.actionTitle}
                             </p>
                           )}

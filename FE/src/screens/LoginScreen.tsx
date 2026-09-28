@@ -52,7 +52,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             <div className="flex items-center justify-between mb-6">
               <Badge
                 variant="terracotta"
-                className="gap-1.5 px-3 py-1 text-[11px] font-semibold tracking-wider uppercase"
+                className="gap-1.5 px-3 py-1 text-xs font-semibold tracking-wider uppercase"
               >
                 <Flower2 className="w-3.5 h-3.5" />
                 <span>Hồn Việt đương đại</span>
@@ -71,7 +71,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-              <div className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-white/85 backdrop-blur-xs text-[10px] font-semibold text-[#3b302c] uppercase tracking-wider">
+              <div className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-white/85 backdrop-blur-xs text-xs font-semibold text-[#3b302c] uppercase tracking-wider">
                 Điểm tựa tĩnh lặng
               </div>
 
@@ -83,7 +83,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             </div>
 
             <div className="flex justify-center">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#faece1] text-[#9e3b2e] text-[11px] font-medium">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#faece1] text-[#9e3b2e] text-xs font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#9e3b2e]"></span>
                 Không gian an định hôm nay
               </span>
@@ -94,7 +94,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           <div className="pt-6 border-t border-[#ecd9cb] flex items-start gap-2.5">
             <div className="w-1 h-8 bg-[#9e3b2e] rounded-full"></div>
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-wider text-[#9e3b2e]">
+              <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e]">
                 Tâm pháp
               </div>
               <div className="text-xs text-[#75655e]">
@@ -129,14 +129,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             )}
 
             {/* Demo Notice Banner */}
-            <div className="mb-5 p-2.5 rounded-xl bg-[#fbf5ee] border border-[#eddcd0] flex items-center gap-2 text-[11px] text-[#786962]">
-              <Badge variant="secondary" className="text-[10px] py-0 px-2 uppercase font-bold text-[#9e3b2e]">
+            <div className="mb-5 p-2.5 rounded-xl bg-[#fbf5ee] border border-[#eddcd0] flex items-center gap-2 text-xs text-[#786962]">
+              <Badge variant="secondary" className="text-xs py-0 px-2 uppercase font-bold text-[#9e3b2e]">
                 Demo
               </Badge>
               <span>Chưa có Backend • Đăng nhập mô phỏng để trải nghiệm lưu trữ.</span>
             </div>
 
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[#be8e5a] mb-1 flex items-center gap-1.5">
+            <div className="text-xs font-bold uppercase tracking-wider text-[#be8e5a] mb-1 flex items-center gap-1.5">
               <span>✦ Cánh cửa soi chiếu</span>
             </div>
 
@@ -181,7 +181,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-[#f1e5d8]"></div>
               </div>
-              <span className="relative bg-[#fffdfa] px-3 text-[11px] uppercase tracking-wider text-[#9f8f87] font-medium">
+              <span className="relative bg-[#fffdfa] px-3 text-xs uppercase tracking-wider text-[#9f8f87] font-medium">
                 ● Hoặc đăng nhập bằng lối xưa ●
               </span>
             </div>
@@ -213,7 +213,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   </label>
                   <button
                     type="button"
-                    className="text-[11px] text-[#9e3b2e] hover:underline"
+                    className="text-xs text-[#9e3b2e] hover:underline"
                   >
                     Quên mật khẩu?
                   </button>

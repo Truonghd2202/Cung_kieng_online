@@ -48,7 +48,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
           <div className="absolute inset-0 bg-[radial-gradient(#ebd6c3_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none" />
 
           {/* Top tag */}
-          <div className="relative text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e] flex items-center gap-2">
+          <div className="relative text-xs font-bold uppercase tracking-wider text-[#9e3b2e] flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-[#9e3b2e]"></span>
             <span>Sổ tay tâm thức • Khởi tâm</span>
           </div>
@@ -73,7 +73,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
           </div>
 
           {/* Bottom footnote */}
-          <div className="relative text-[11px] text-[#938279] text-center font-medium">
+          <div className="relative text-xs text-[#938279] text-center font-medium">
             Kỳ An Nhiên &nbsp;•&nbsp; Tháng Giêng Giáp Thìn
           </div>
         </div>
@@ -103,8 +103,8 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
             )}
 
             {/* Demo Notice Banner */}
-            <div className="mb-5 p-2.5 rounded-xl bg-[#fbf5ee] border border-[#eddcd0] flex items-center gap-2 text-[11px] text-[#786962]">
-              <Badge variant="secondary" className="text-[10px] py-0 px-2 uppercase font-bold text-[#9e3b2e]">
+            <div className="mb-5 p-2.5 rounded-xl bg-[#fbf5ee] border border-[#eddcd0] flex items-center gap-2 text-xs text-[#786962]">
+              <Badge variant="secondary" className="text-xs py-0 px-2 uppercase font-bold text-[#9e3b2e]">
                 Demo
               </Badge>
               <span>Chưa có Backend • Đăng ký mô phỏng để trải nghiệm lưu trữ.</span>
@@ -112,7 +112,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
 
             <Badge
               variant="secondary"
-              className="gap-1.5 px-3 py-1 mb-2 text-[11px] font-medium"
+              className="gap-1.5 px-3 py-1 mb-2 text-xs font-medium"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>Tạo không gian tĩnh tại</span>
@@ -169,7 +169,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                   <label className="text-xs font-semibold text-[#4e403a]">
                     Mật khẩu
                   </label>
-                  <span className="text-[11px] text-[#9a8982]">
+                  <span className="text-xs text-[#9a8982]">
                     Tối thiểu 8 ký tự an toàn
                   </span>
                 </div>
@@ -232,7 +232,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-[#f1e5d8]"></div>
               </div>
-              <span className="relative bg-[#fffdfa] px-3 text-[11px] uppercase tracking-wider text-[#9f8f87] font-medium">
+              <span className="relative bg-[#fffdfa] px-3 text-xs uppercase tracking-wider text-[#9f8f87] font-medium">
                 Hoặc đăng nhập bằng
               </span>
             </div>

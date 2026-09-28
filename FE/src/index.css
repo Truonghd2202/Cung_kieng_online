@@ -19,6 +19,7 @@ html {
   font-family: "Be Vietnam Pro", sans-serif;
   background-color: #fcf8f2;
   color: #2e2624;
+  font-size: 15px; /* Base font size 15px for comfortable readability */
 }
 
 body {
@@ -30,4 +31,147 @@ body {
 ::selection {
   background-color: #f3ded0;
   color: #9e3b2e;
+}
+
+/* ==========================================================================
+   Comprehensive Dark Mode Palette (Phong vị Trầm Đêm Cổ Phục & Gỗ Mộc)
+   ========================================================================== */
+html.dark,
+body.dark,
+.dark {
+  color-scheme: dark;
+}
+
+html.dark {
+  background-color: #171312;
+  color: #ede2db;
+}
+
+/* Header & Footer in Dark Mode */
+.dark header {
+  background-color: rgba(26, 21, 20, 0.95) !important;
+  border-color: #3b2d29 !important;
+}
+
+.dark footer {
+  background-color: #130f0e !important;
+  border-color: #382b27 !important;
+}
+
+/* Base Background Overrides in Dark Mode */
+.dark .bg-\[\#fcf8f2\],
+.dark .bg-\[\#f7f2ea\],
+.dark .bg-\[\#fffdfa\],
+.dark .bg-\[\#fffdfb\],
+.dark .bg-\[\#faf4ee\],
+.dark .bg-\[\#fdfbf7\] {
+  background-color: #171312 !important;
+}
+
+.dark .bg-white {
+  background-color: #231c1a !important;
+  color: #ede2db !important;
+}
+
+/* Card & Elevated Panels in Dark Mode */
+.dark .bg-\[\#fbf3ec\],
+.dark .bg-\[\#fbf5ee\],
+.dark .bg-\[\#faede2\],
+.dark .bg-\[\#faece1\],
+.dark .bg-\[\#fbf2e9\],
+.dark .bg-\[\#faf3ec\],
+.dark .bg-\[\#faf4ed\] {
+  background-color: #28201d !important;
+}
+
+.dark .bg-\[\#fdf3eb\] {
+  background-color: #2b211d !important;
+}
+
+.dark .bg-\[\#f7fbf6\] {
+  background-color: #1c261e !important;
+  border-color: #2e4431 !important;
+}
+
+/* Text Overrides in Dark Mode */
+.dark .text-\[\#2e2624\],
+.dark .text-\[\#2a2220\],
+.dark .text-\[\#2b211f\],
+.dark .text-\[\#2c2220\],
+.dark .text-\[\#1e1817\],
+.dark .text-\[\#342a27\] {
+  color: #f0e6e0 !important;
+}
+
+.dark .text-\[\#77665f\],
+.dark .text-\[\#78645c\],
+.dark .text-\[\#7a6b64\],
+.dark .text-\[\#6e5d56\],
+.dark .text-\[\#6e5e57\],
+.dark .text-\[\#8c7b74\],
+.dark .text-\[\#887870\],
+.dark .text-\[\#86766e\],
+.dark .text-\[\#85736c\],
+.dark .text-\[\#9a8982\],
+.dark .text-\[\#705e57\],
+.dark .text-\[\#73635d\],
+.dark .text-\[\#6f5e57\],
+.dark .text-\[\#6f615b\] {
+  color: #b5a49d !important;
+}
+
+.dark .text-\[\#436446\],
+.dark .text-\[\#3f5f42\] {
+  color: #9ecc9f !important;
+}
+
+.dark .text-\[\#1b431e\],
+.dark .text-\[\#225725\] {
+  color: #b7e3ba !important;
+}
+
+/* Borders in Dark Mode */
+.dark .border-\[\#f1e5d8\],
+.dark .border-\[\#f4e8dc\],
+.dark .border-\[\#f2e5d9\],
+.dark .border-\[\#eddcd0\],
+.dark .border-\[\#ecdcd0\],
+.dark .border-\[\#e8d5c4\],
+.dark .border-\[\#f0dfd1\],
+.dark .border-\[\#ecd9cb\],
+.dark .border-\[\#ede0d5\],
+.dark .border-\[\#eedcd0\],
+.dark .border-\[\#dfc3af\],
+.dark .border-\[\#dfc5af\],
+.dark .border-\[\#dfc6b3\],
+.dark .border-\[\#edd1be\],
+.dark .border-\[\#cfbcaf\] {
+  border-color: #3d2f2a !important;
+}
+
+/* Form Inputs in Dark Mode */
+.dark input,
+.dark textarea {
+  background-color: #211a18 !important;
+  color: #f0e6e0 !important;
+  border-color: #3d2f2a !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #8a7870 !important;
+}
+
+/* Modals & Dialog overlays in Dark Mode */
+.dark .bg-black\/50,
+.dark .bg-black\/60 {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}
+
+/* Shadow elevation in Dark Mode */
+.dark .shadow-xs,
+.dark .shadow-sm,
+.dark .shadow-md,
+.dark .shadow-lg {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5) !important;
 }

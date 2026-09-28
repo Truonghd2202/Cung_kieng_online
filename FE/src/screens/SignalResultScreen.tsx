@@ -103,7 +103,7 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
 
               {/* Subcard: Vùng 2 Khảo cứu */}
               <div className="p-4 sm:p-5 rounded-2xl bg-[#fbf5ee] border border-[#ebd8c8]">
-                <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e] mb-1.5">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-1.5">
                   <BookOpen className="w-3.5 h-3.5" />
                   <span>{signal.research.title}</span>
                 </div>
@@ -182,11 +182,11 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
               {/* Subcard inside: Vùng 4 */}
               <div className="p-5 sm:p-6 bg-[#fffcf8]">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e]">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#9e3b2e]">
                     <Coffee className="w-3.5 h-3.5" />
                     <span>{signal.action.tag}</span>
                   </div>
-                  <Badge variant="secondary" className="text-[10px] font-bold">
+                  <Badge variant="secondary" className="text-xs font-bold">
                     {signal.action.duration}
                   </Badge>
                 </div>

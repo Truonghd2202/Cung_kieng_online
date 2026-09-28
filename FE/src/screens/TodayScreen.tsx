@@ -109,7 +109,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
           <Card className="rounded-3xl p-6 sm:p-8 shadow-xs mb-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
             {/* Left Column */}
             <div className="md:col-span-8 space-y-4">
-              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e]">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#9e3b2e]">
                 <span>Trích dẫn tỉnh thức</span>
                 <span className="text-[#be8e5a]">•</span>
                 <span className="text-[#887870] font-medium">Chiêm nghiệm ngày</span>
@@ -129,7 +129,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
                 </span>
               </div>
 
-              <div className="text-[11px] text-[#9c8b84]">
+              <div className="text-xs text-[#9c8b84]">
                 Tín hiệu đã được đồng bộ cùng nhịp tâm trong ngày
               </div>
 
@@ -162,10 +162,10 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
                 <div className="font-['Noto_Serif',serif] font-bold text-5xl text-[#9e3b2e] mb-2 leading-none">
                   Tĩnh
                 </div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8b7972] mb-1">
+                <div className="text-xs font-bold uppercase tracking-wider text-[#8b7972] mb-1">
                   Tín hiệu cốt lõi
                 </div>
-                <p className="text-[11px] text-[#6d5b54] leading-relaxed">
+                <p className="text-xs text-[#6d5b54] leading-relaxed">
                   Hóa giải bồn chồn bằng hơi thở chậm nhẹ
                 </p>
               </div>
@@ -175,7 +175,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
           <Card className="rounded-3xl p-6 sm:p-8 shadow-xs mb-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-center border-[#ebdcd0] bg-gradient-to-br from-[#fffdfa] to-[#fcf7f0]">
             {/* Left Column */}
             <div className="md:col-span-8 space-y-4">
-              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e]">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#9e3b2e]">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Khởi đầu ngày mới</span>
                 <span className="text-[#be8e5a]">•</span>
@@ -193,22 +193,22 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
               {/* 3 mini step cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
                 <div className="p-3.5 rounded-xl bg-[#faede2]/70 border border-[#f3dfce] text-left">
-                  <span className="inline-block text-[11px] font-bold text-[#9e3b2e] mb-1">1. Nhận diện</span>
-                  <p className="text-[11px] text-[#6e5d56] leading-snug">
+                  <span className="inline-block text-xs font-bold text-[#9e3b2e] mb-1">1. Nhận diện</span>
+                  <p className="text-xs text-[#6e5d56] leading-snug">
                     Thành thật chọn 1 trong 6 nhịp tâm trạng
                   </p>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-[#faede2]/70 border border-[#f3dfce] text-left">
-                  <span className="inline-block text-[11px] font-bold text-[#9e3b2e] mb-1">2. Lắng đọng</span>
-                  <p className="text-[11px] text-[#6e5d56] leading-snug">
+                  <span className="inline-block text-xs font-bold text-[#9e3b2e] mb-1">2. Lắng đọng</span>
+                  <p className="text-xs text-[#6e5d56] leading-snug">
                     Quán chiếu hơi thở cùng la bàn tĩnh tâm
                   </p>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-[#faede2]/70 border border-[#f3dfce] text-left">
-                  <span className="inline-block text-[11px] font-bold text-[#9e3b2e] mb-1">3. Khai mở</span>
-                  <p className="text-[11px] text-[#6e5d56] leading-snug">
+                  <span className="inline-block text-xs font-bold text-[#9e3b2e] mb-1">3. Khai mở</span>
+                  <p className="text-xs text-[#6e5d56] leading-snug">
                     Đón nhận tín hiệu cổ thi & hành động nuôi tâm
                   </p>
                 </div>
@@ -241,10 +241,10 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
                 <div className="font-['Noto_Serif',serif] font-bold text-4xl text-[#9e3b2e] mb-1.5 leading-none">
                   An
                 </div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8b7972] mb-1">
+                <div className="text-xs font-bold uppercase tracking-wider text-[#8b7972] mb-1">
                   Tâm an vạn sự an
                 </div>
-                <p className="text-[11px] text-[#6d5b54] leading-relaxed">
+                <p className="text-xs text-[#6d5b54] leading-relaxed">
                   Đang chờ bạn chọn một nhịp cảm xúc hôm nay
                 </p>
               </div>
@@ -275,7 +275,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
             <Card className="p-6 rounded-2xl flex flex-col justify-between hover:border-[#dfc3af] transition-all">
               <div>
                 <div className="flex items-center justify-between text-xs text-[#8c7b74] mb-3">
-                  <Badge variant="terracotta" className="text-[10px]">
+                  <Badge variant="terracotta" className="text-xs">
                     Đất Kinh Kỳ
                   </Badge>
                   <Home className="w-4 h-4 text-[#9e3b2e]" />
@@ -316,7 +316,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
             <Card className="p-6 rounded-2xl flex flex-col justify-between hover:border-[#dfc3af] transition-all">
               <div>
                 <div className="flex items-center justify-between text-xs text-[#8c7b74] mb-3">
-                  <Badge variant="terracotta" className="text-[10px]">
+                  <Badge variant="terracotta" className="text-xs">
                     Xứ Cố Đô
                   </Badge>
                   <Feather className="w-4 h-4 text-[#9e3b2e]" />
@@ -357,7 +357,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
             <Card className="p-6 rounded-2xl flex flex-col justify-between hover:border-[#dfc3af] transition-all">
               <div>
                 <div className="flex items-center justify-between text-xs text-[#8c7b74] mb-3">
-                  <Badge variant="terracotta" className="text-[10px]">
+                  <Badge variant="terracotta" className="text-xs">
                     Miền Phù Sa
                   </Badge>
                   <Waves className="w-4 h-4 text-[#9e3b2e]" />
@@ -500,14 +500,14 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
               alt="Làng nghề gốm mộc"
               className="w-full h-64 sm:h-72 object-cover"
             />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-white text-[11px] font-semibold">
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-white text-xs font-semibold">
               LÀNG NGHỀ GỐM MỘC • ĐẤT SÉT & BÀN TAY
             </div>
           </div>
 
           {/* Quote content */}
           <div className="md:col-span-8 space-y-4">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e] flex items-center gap-1.5">
+            <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] flex items-center gap-1.5">
               <span>✦ Triết lý nếp đất</span>
             </div>
 
@@ -567,14 +567,14 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
               {/* Content columns */}
               <div className="space-y-4 text-xs sm:text-sm text-[#66544d] leading-relaxed">
                 <div className="p-4 rounded-2xl bg-[#faf3ec] border border-[#ebd8c9]">
-                  <h4 className="font-bold text-[#9e3b2e] uppercase text-[11px] tracking-wider mb-1">
+                  <h4 className="font-bold text-[#9e3b2e] uppercase text-xs tracking-wider mb-1">
                     Tập tục & Nếp sống dân gian
                   </h4>
                   <p>{selectedRegionInfo.tradition}</p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-[#faf3ec] border border-[#ebd8c9]">
-                  <h4 className="font-bold text-[#9e3b2e] uppercase text-[11px] tracking-wider mb-1">
+                  <h4 className="font-bold text-[#9e3b2e] uppercase text-xs tracking-wider mb-1">
                     Triết lý soi tỏ tâm thức
                   </h4>
                   <p>{selectedRegionInfo.philosophy}</p>
