@@ -138,7 +138,10 @@ export default function App() {
 
         {screen === "today" && (
           <TodayScreen
+            isCheckedIn={true}
+            mood={selectedMood}
             onSelectMoodClick={() => navigateTo("mood")}
+            onViewSignalDetails={() => navigateTo("result")}
             onExploreRegion={(region) => {
               if (region === "Bắc Bộ") setSelectedMood("An yên");
               else if (region === "Trung Bộ") setSelectedMood("Chênh vênh");
@@ -202,6 +205,7 @@ export default function App() {
             mood={selectedMood}
             onGoToHome={() => navigateTo("today")}
             onGoToAccount={() => navigateTo("account")}
+            onGoToAuth={() => navigateTo("login")}
           />
         )}
 

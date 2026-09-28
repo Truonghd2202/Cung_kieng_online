@@ -1,306 +1,388 @@
 import React from "react";
 import {
   ArrowRight,
-  BookOpen,
-  Coffee,
-  Volume2,
-  Clock,
+  RotateCw,
   Sparkles,
-  ArrowUpRight,
-  FileText,
+  CheckCircle2,
+  Scroll,
+  Heart,
+  Bell,
+  Home,
+  Waves,
+  Feather,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
+import { MoodKey, SIGNALS_DATA } from "../data/demoSignals";
 
 interface TodayScreenProps {
+  isCheckedIn?: boolean;
+  mood?: MoodKey;
   onSelectMoodClick: () => void;
+  onViewSignalDetails?: () => void;
   onExploreRegion?: (region: string) => void;
 }
 
 export const TodayScreen: React.FC<TodayScreenProps> = ({
+  isCheckedIn = true,
+  mood = "Chênh vênh",
   onSelectMoodClick,
+  onViewSignalDetails,
   onExploreRegion,
 }) => {
+  const signal = SIGNALS_DATA[mood] || SIGNALS_DATA["Chênh vênh"];
+
   return (
     <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif]">
       <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-16">
         {/* Top Status Badge */}
         <div className="flex justify-center mb-6">
-          <Badge variant="secondary" className="gap-2 px-4 py-1.5 text-xs font-semibold tracking-wide">
-            <span className="w-2 h-2 rounded-full bg-[#9e3b2e]"></span>
-            <span>Chưa ghi nhận nhịp tâm hôm nay</span>
-            <span className="text-[#be8e5a]">•</span>
-            <span className="italic font-normal">Lắng lòng một chút</span>
-          </Badge>
+          {isCheckedIn ? (
+            <Badge
+              variant="terracotta"
+              className="gap-2 px-4 py-1.5 text-xs font-semibold tracking-wide"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#9e3b2e]" />
+              <span>Hôm nay bạn đã check-in</span>
+              <span className="text-[#be8e5a]">•</span>
+              <span>
+                Cảm xúc: <strong className="text-[#9e3b2e]">{mood}</strong>
+              </span>
+            </Badge>
+          ) : (
+            <Badge
+              variant="secondary"
+              className="gap-2 px-4 py-1.5 text-xs font-semibold tracking-wide"
+            >
+              <span className="w-2 h-2 rounded-full bg-[#9e3b2e]"></span>
+              <span>Chưa ghi nhận nhịp tâm hôm nay</span>
+              <span className="text-[#be8e5a]">•</span>
+              <span className="italic font-normal">Lắng lòng một chút</span>
+            </Badge>
+          )}
         </div>
 
-        {/* Center Header */}
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <div className="text-xs uppercase tracking-[0.14em] font-bold text-[#9e3b2e] mb-2">
-            Chiêm nghiệm thường nhật • Khởi tạo an yên
+        {/* Hero Header with decorative mandala */}
+        <div className="relative max-w-4xl mx-auto mb-10 text-center">
+          <div className="hidden lg:block absolute -right-8 -top-6 w-32 h-32 rounded-full border border-[#f0ded0] p-2 pointer-events-none opacity-60">
+            <div className="w-full h-full rounded-full border border-dashed border-[#e6cbba] flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-[#faece1]"></div>
+            </div>
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-['Noto_Serif',serif] font-bold text-[#2a211e] leading-tight">
-            Hôm nay bạn thấy thế nào?
+
+          <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-['Noto_Serif',serif] font-bold text-[#2a211e] leading-tight mb-3">
+            Tín hiệu hôm nay đã nở rộ trong lòng bạn
           </h1>
-          <p className="mt-3 text-sm sm:text-base text-[#6f6059] leading-relaxed">
-            Một ngày trôi qua với nhiều xáo động hay an ả. Hãy dành một khoảng
-            lặng ngắn ngủi để soi tỏ cảm xúc của chính mình trước khi đón nhận
-            tín hiệu dân gian lành.
+          <p className="mt-2 text-sm sm:text-base text-[#6f6059] leading-relaxed max-w-2xl mx-auto">
+            Sự {mood.toLowerCase()} vốn chỉ là khoảng lặng giữa hai nhịp bước. Khi
+            nhận biết rõ xao động trong tâm trí, bạn đã bắt đầu tiến dần về sự an
+            ổn.
           </p>
         </div>
 
-        {/* Central Callout Card */}
-        <Card className="max-w-2xl mx-auto rounded-3xl p-8 text-center shadow-xs mb-16 relative overflow-hidden">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-[#faece1] border border-[#eddcd0] flex items-center justify-center text-[#9e3b2e] mb-5 shadow-xs">
-            <FileText className="w-7 h-7 text-[#9e3b2e]" />
+        {/* Main Checked-in Signal Split Card */}
+        <Card className="rounded-3xl p-6 sm:p-8 shadow-xs mb-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+          {/* Left Column */}
+          <div className="md:col-span-8 space-y-4">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e]">
+              <span>Trích dẫn tỉnh thức</span>
+              <span className="text-[#be8e5a]">•</span>
+              <span className="text-[#887870] font-medium">Chiêm nghiệm ngày</span>
+            </div>
+
+            <p className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#9e3b2e] leading-snug">
+              “{signal.poem.line1} / {signal.poem.line2}”
+            </p>
+
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fbf3ec] border border-[#f1e0d3] text-xs text-[#6e5d56]">
+              <span className="text-[#2e6930]">✔</span>
+              <span>
+                Đã thực hiện:{" "}
+                <strong>{signal.action.title}</strong> ({signal.action.duration})
+              </span>
+            </div>
+
+            <div className="text-[11px] text-[#9c8b84]">
+              Nội dung minh họa — đang biên tập
+            </div>
+
+            <div className="pt-2 flex flex-wrap items-center gap-3">
+              <Button
+                variant="default"
+                size="pill"
+                onClick={onViewSignalDetails}
+                className="gap-2 shadow-xs"
+              >
+                <span>Xem lại tín hiệu trọn vẹn</span>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="pill"
+                onClick={onSelectMoodClick}
+                className="gap-1.5"
+              >
+                <RotateCw className="w-3.5 h-3.5 text-[#85736b]" />
+                <span>Check-in lại nếu cảm xúc thay đổi</span>
+              </Button>
+            </div>
           </div>
 
-          <p className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220] leading-snug max-w-xl mx-auto mb-6">
-            “Mỗi ngày một lời nhắn lành, soi thấu suy tư qua nét văn hóa dân
-            gian trầm ấm.”
-          </p>
-
-          <Button
-            variant="default"
-            size="pill"
-            onClick={onSelectMoodClick}
-            className="px-8 py-3.5 text-sm font-semibold shadow-xs hover:shadow group"
-          >
-            <span>Chọn tâm trạng</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Button>
-
-          <div className="mt-4 text-xs text-[#8c7b74] flex items-center justify-center gap-2">
-            <Clock className="w-3.5 h-3.5 text-[#9e3b2e]" />
-            <span>Chỉ mất 1 phút</span>
-            <span>•</span>
-            <span>Không cần đăng nhập trước để bắt đầu</span>
+          {/* Right Column: Square Calligraphy Box */}
+          <div className="md:col-span-4 flex justify-center md:justify-end">
+            <div className="w-full max-w-[200px] aspect-square rounded-2xl bg-[#fdf8f2] border border-[#ecd9cb] p-6 text-center flex flex-col items-center justify-center shadow-2xs">
+              <div className="font-['Noto_Serif',serif] font-bold text-5xl text-[#9e3b2e] mb-2 leading-none">
+                Tĩnh
+              </div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#8b7972] mb-1">
+                Tín hiệu cốt lõi
+              </div>
+              <p className="text-[11px] text-[#6d5b54] leading-relaxed">
+                Hóa giải bồn chồn bằng hơi thở chậm nhẹ
+              </p>
+            </div>
           </div>
         </Card>
 
-        {/* Section: Cội nguồn phong thổ */}
+        {/* Section 1: Góc nhìn địa linh */}
         <section className="mb-16">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 mb-6">
             <div>
               <div className="text-xs font-bold text-[#9e3b2e] uppercase tracking-wider mb-1 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-[#9e3b2e]"></span>
-                Cội nguồn phong thổ
+                Góc nhìn địa linh
               </div>
               <h2 className="text-2xl sm:text-3xl font-['Noto_Serif',serif] font-bold text-[#2a2220]">
-                Khám phá văn hóa ba miền
+                Văn hóa & Tập tục Ba Miền
               </h2>
             </div>
-            <div className="text-xs text-[#82726b] italic">
-              Nếp sống, tín ngưỡng lành và tập tục ngàn đời
+            <div className="text-xs text-[#7e6e66] max-w-md leading-relaxed md:text-right">
+              Mỗi vùng đất là một nếp sống an định riêng biệt, nâng niu tâm thức
+              người Việt qua từng biến chuyển thời gian.
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Card 1: Bắc Bộ */}
-            <Card className="rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between group">
+            <Card className="p-6 rounded-2xl flex flex-col justify-between hover:border-[#dfc3af] transition-all">
               <div>
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src="/images/temple_bac_bo.jpg"
-                    alt="Bắc Bộ"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-xs text-white text-[11px] font-semibold">
-                    Bắc Bộ
-                  </div>
+                <div className="flex items-center justify-between text-xs text-[#8c7b74] mb-3">
+                  <Badge variant="terracotta" className="text-[10px]">
+                    Đất Kinh Kỳ
+                  </Badge>
+                  <Home className="w-4 h-4 text-[#9e3b2e]" />
                 </div>
-                <div className="p-5">
-                  <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-2">
-                    Căn cốt Kinh Bắc & Tràng An
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#72625b] leading-relaxed line-clamp-2">
-                    Nếp trật tự trang nghiêm, tục thờ gia tiên, nét thâm trầm
-                    của văn hóa đình làng và...
-                  </p>
-                </div>
+                <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-2">
+                  Bắc Bộ: Trầm mặc mái ngói phong rêu
+                </h3>
+                <p className="text-xs sm:text-sm text-[#72625b] leading-relaxed">
+                  Tập tục giữ ấm chén trà mộc, khép vạt áo trước hiên chùa làng để
+                  lắng lại những lao xao giữa sương khói hồ thu.
+                </p>
               </div>
-              <div className="px-5 pb-5">
-                <div className="text-[11px] text-[#9a8982] mb-2">
-                  Nội dung minh họa — đang biên tập
-                </div>
-                <Button
-                  variant="link"
+              <div className="pt-4 mt-6 border-t border-[#f4e8dc]">
+                <button
                   onClick={() => onExploreRegion?.("Bắc Bộ")}
-                  className="p-0 h-auto text-xs font-semibold text-[#9e3b2e] hover:text-[#7f2c22] flex items-center gap-1"
+                  className="text-xs font-semibold text-[#9e3b2e] hover:text-[#7f2c22] flex items-center gap-1 cursor-pointer"
                 >
                   <span>Chiêm nghiệm lối Bắc</span>
                   <ArrowRight className="w-3.5 h-3.5" />
-                </Button>
+                </button>
               </div>
             </Card>
 
             {/* Card 2: Trung Bộ */}
-            <Card className="rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between group">
+            <Card className="p-6 rounded-2xl flex flex-col justify-between hover:border-[#dfc3af] transition-all">
               <div>
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src="/images/hue_trung_bo.jpg"
-                    alt="Trung Bộ"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-xs text-white text-[11px] font-semibold">
-                    Trung Bộ
-                  </div>
+                <div className="flex items-center justify-between text-xs text-[#8c7b74] mb-3">
+                  <Badge variant="terracotta" className="text-[10px]">
+                    Xứ Cố Đô
+                  </Badge>
+                  <Feather className="w-4 h-4 text-[#9e3b2e]" />
                 </div>
-                <div className="p-5">
-                  <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-2">
-                    Trầm lắng miền Cố Đô
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#72625b] leading-relaxed line-clamp-2">
-                    Sự hòa quyện giữa tinh hoa cung đình và nếp sống mộc mạc xứ
-                    cát, tâm thức hướn...
-                  </p>
-                </div>
+                <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-2">
+                  Trung Bộ: Sâu lắng hồn sông núi
+                </h3>
+                <p className="text-xs sm:text-sm text-[#72625b] leading-relaxed">
+                  Khí chất dung hòa qua ngọn nến hương trầm, sự nhẫn nại và trang
+                  nhã hiển hiện nơi gian bếp nhỏ đón gió bão mặn mòi.
+                </p>
               </div>
-              <div className="px-5 pb-5">
-                <div className="text-[11px] text-[#9a8982] mb-2">
-                  Nội dung minh họa — đang biên tập
-                </div>
-                <Button
-                  variant="link"
+              <div className="pt-4 mt-6 border-t border-[#f4e8dc]">
+                <button
                   onClick={() => onExploreRegion?.("Trung Bộ")}
-                  className="p-0 h-auto text-xs font-semibold text-[#9e3b2e] hover:text-[#7f2c22] flex items-center gap-1"
+                  className="text-xs font-semibold text-[#9e3b2e] hover:text-[#7f2c22] flex items-center gap-1 cursor-pointer"
                 >
                   <span>Chiêm nghiệm lối Trung</span>
                   <ArrowRight className="w-3.5 h-3.5" />
-                </Button>
+                </button>
               </div>
             </Card>
 
             {/* Card 3: Nam Bộ */}
-            <Card className="rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between group">
+            <Card className="p-6 rounded-2xl flex flex-col justify-between hover:border-[#dfc3af] transition-all">
               <div>
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src="/images/mekong_nam_bo.jpg"
-                    alt="Nam Bộ"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-xs text-white text-[11px] font-semibold">
-                    Nam Bộ
-                  </div>
+                <div className="flex items-center justify-between text-xs text-[#8c7b74] mb-3">
+                  <Badge variant="terracotta" className="text-[10px]">
+                    Miền Phù Sa
+                  </Badge>
+                  <Waves className="w-4 h-4 text-[#9e3b2e]" />
                 </div>
-                <div className="p-5">
-                  <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-2">
-                    Khoáng đạt đất Phương Nam
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#72625b] leading-relaxed line-clamp-2">
-                    Lòng bao dung sông nước, tín ngưỡng Bà Chúa Xứ, tinh thần
-                    hào sảng dung hòa đa...
-                  </p>
-                </div>
+                <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-2">
+                  Nam Bộ: Khoáng đạt dòng nước lớn
+                </h3>
+                <p className="text-xs sm:text-sm text-[#72625b] leading-relaxed">
+                  Tấm lòng rộng mở thuận theo con nước ròng nước lớn, tin vào sự
+                  vô tư đất trời ban tặng cho người biết thảo thơm.
+                </p>
               </div>
-              <div className="px-5 pb-5">
-                <div className="text-[11px] text-[#9a8982] mb-2">
-                  Nội dung minh họa — đang biên tập
-                </div>
-                <Button
-                  variant="link"
+              <div className="pt-4 mt-6 border-t border-[#f4e8dc]">
+                <button
                   onClick={() => onExploreRegion?.("Nam Bộ")}
-                  className="p-0 h-auto text-xs font-semibold text-[#9e3b2e] hover:text-[#7f2c22] flex items-center gap-1"
+                  className="text-xs font-semibold text-[#9e3b2e] hover:text-[#7f2c22] flex items-center gap-1 cursor-pointer"
                 >
                   <span>Chiêm nghiệm lối Nam</span>
                   <ArrowRight className="w-3.5 h-3.5" />
-                </Button>
+                </button>
               </div>
             </Card>
           </div>
         </section>
 
-        {/* Section: Chất liệu soi tỏ */}
-        <section className="mb-14">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-6">
-            <div>
-              <div className="text-xs font-bold text-[#9e3b2e] uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#9e3b2e]"></span>
-                Chất liệu soi tỏ
+        {/* Section 2: Tự thân tu tập */}
+        <section className="mb-16">
+          <Card className="p-6 sm:p-8 bg-[#fdf5ed]/60 border-[#eedcd0] rounded-3xl">
+            <div className="mb-6">
+              <div className="text-xs font-bold text-[#9e3b2e] uppercase tracking-wider mb-1">
+                Tự thân tu tập
               </div>
               <h2 className="text-2xl sm:text-3xl font-['Noto_Serif',serif] font-bold text-[#2a2220]">
-                Chọn trải nghiệm
+                Không Gian Thực Hành Tĩnh Niệm
               </h2>
+              <p className="mt-1 text-xs sm:text-sm text-[#73635d]">
+                Dành chút thời gian trong ngày để soi tỏ bản thân qua những nghi
+                thức dân gian được giản lược trang trọng.
+              </p>
             </div>
-            <div className="text-xs text-[#82726b] italic">
-              Lối mở dành cho bạn tự do tìm hiểu lúc rảnh rỗi
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Practice 1 */}
+              <div className="p-6 rounded-2xl bg-[#fffdfa] border border-[#eddcd0] flex flex-col justify-between shadow-2xs">
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-[#faede2] text-[#9e3b2e] flex items-center justify-center mb-4">
+                    <Scroll className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-2">
+                    Gieo quẻ chữ Nôm
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#72625b] leading-relaxed">
+                    Khám phá một chữ Hán-Nôm đại diện cho tâm niệm ngày, gửi gắm
+                    bài học đúc kết từ cổ nhân qua từng nét mực thảo.
+                  </p>
+                </div>
+                <div className="mt-6">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full bg-[#fbf5ee] border-[#ebdcd0] text-xs font-semibold gap-1.5"
+                  >
+                    <span>✎ Rút chữ chiêm nghiệm</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Practice 2 */}
+              <div className="p-6 rounded-2xl bg-[#fffdfa] border border-[#eddcd0] flex flex-col justify-between shadow-2xs">
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-[#faede2] text-[#9e3b2e] flex items-center justify-center mb-4">
+                    <Heart className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-2">
+                    Thỉnh lời chúc bình an
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#72625b] leading-relaxed">
+                    Tâm gửi một niệm lành đến người thân thương hoặc chính mình,
+                    neo giữ điều thiện lành bền bỉ qua từng biến động.
+                  </p>
+                </div>
+                <div className="mt-6">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full bg-[#fbf5ee] border-[#ebdcd0] text-xs font-semibold gap-1.5"
+                  >
+                    <span>✦ Gửi lời nguyện an</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Practice 3 */}
+              <div className="p-6 rounded-2xl bg-[#fffdfa] border border-[#eddcd0] flex flex-col justify-between shadow-2xs">
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-[#faede2] text-[#9e3b2e] flex items-center justify-center mb-4">
+                    <Bell className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-2">
+                    Chuông tỉnh thức 5 phút
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#72625b] leading-relaxed">
+                    Âm ba thanh tịnh chuông đồng lắng quẻ kéo tâm trí bạn trở về
+                    ngay trong hiện tại, giải phóng áp lực tích tụ.
+                  </p>
+                </div>
+                <div className="mt-6">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full bg-[#fbf5ee] border-[#ebdcd0] text-xs font-semibold gap-1.5"
+                  >
+                    <span>🔔 Thỉnh chuông lắng đọng</span>
+                  </Button>
+                </div>
+              </div>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Experience 1 */}
-            <Card className="p-6 rounded-2xl flex flex-col justify-between">
-              <div>
-                <div className="w-10 h-10 rounded-xl bg-[#faede2] flex items-center justify-center text-[#9e3b2e] mb-4">
-                  <BookOpen className="w-5 h-5" />
-                </div>
-                <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#29201e] mb-2">
-                  Thư viện tích cổ dân gian
-                </h3>
-                <p className="text-xs sm:text-sm text-[#71615b] leading-relaxed">
-                  Những mẩu chuyện biểu tượng, lời răn dạy từ ngàn xưa truyền
-                  lại qua ca dao tục ngữ được dịch nghĩa giản dị.
-                </p>
-              </div>
-              <div className="mt-6 pt-4 border-t border-[#f4e8dc] flex items-center justify-between text-xs text-[#9a8982]">
-                <span>Nội dung minh họa — đang biên tập</span>
-                <ArrowUpRight className="w-4 h-4 text-[#9e3b2e]" />
-              </div>
-            </Card>
-
-            {/* Experience 2 */}
-            <Card className="p-6 rounded-2xl flex flex-col justify-between">
-              <div>
-                <div className="w-10 h-10 rounded-xl bg-[#faede2] flex items-center justify-center text-[#9e3b2e] mb-4">
-                  <Coffee className="w-5 h-5" />
-                </div>
-                <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#29201e] mb-2">
-                  Gieo hạt an lành
-                </h3>
-                <p className="text-xs sm:text-sm text-[#71615b] leading-relaxed">
-                  Thực hành một cử chỉ dịu dàng trong ngày: thắp nén trầm, châm
-                  búp trà, hay gửi lời tri ân bình dị đến người thân.
-                </p>
-              </div>
-              <div className="mt-6 pt-4 border-t border-[#f4e8dc] flex items-center justify-between text-xs text-[#9a8982]">
-                <span>Nội dung minh họa — đang biên tập</span>
-                <ArrowUpRight className="w-4 h-4 text-[#9e3b2e]" />
-              </div>
-            </Card>
-
-            {/* Experience 3 */}
-            <Card className="p-6 rounded-2xl flex flex-col justify-between">
-              <div>
-                <div className="w-10 h-10 rounded-xl bg-[#faede2] flex items-center justify-center text-[#9e3b2e] mb-4">
-                  <Volume2 className="w-5 h-5" />
-                </div>
-                <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#29201e] mb-2">
-                  Thanh âm thuần khiết
-                </h3>
-                <p className="text-xs sm:text-sm text-[#71615b] leading-relaxed">
-                  Tiếng chuông đồng ngân vang nơi chốn tịnh, tiếng mưa trên mái
-                  ngói rêu phong và làn gió thoảng qua lũy tre làng.
-                </p>
-              </div>
-              <div className="mt-6 pt-4 border-t border-[#f4e8dc] flex items-center justify-between text-xs text-[#9a8982]">
-                <span>Nội dung minh họa — đang biên tập</span>
-                <ArrowUpRight className="w-4 h-4 text-[#9e3b2e]" />
-              </div>
-            </Card>
-          </div>
+          </Card>
         </section>
 
-        {/* Bottom Thought Ribbon */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-[#faede2]/80 border border-[#ecd9cb] text-center text-xs sm:text-sm text-[#78665f] flex items-center justify-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#9e3b2e]" />
-          <span>
-            Mỗi suy tư đều xứng đáng được lắng nghe. Hãy thong thả khởi đầu ngày
-            mới khi bạn đã sẵn sàng.
-          </span>
-        </div>
+        {/* Section 3: Pottery artisan storytelling card */}
+        <Card className="rounded-3xl p-6 sm:p-8 shadow-xs overflow-hidden grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-[#fffcf8]">
+          {/* Photo */}
+          <div className="md:col-span-4 relative rounded-2xl overflow-hidden shadow-xs">
+            <img
+              src="/images/pottery_artisan.jpg"
+              alt="Làng nghề gốm mộc"
+              className="w-full h-64 sm:h-72 object-cover"
+            />
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-white text-[11px] font-semibold">
+              LÀNG NGHỀ GỐM MỘC • ĐẤT SÉT & BÀN TAY
+            </div>
+          </div>
+
+          {/* Quote content */}
+          <div className="md:col-span-8 space-y-4">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e] flex items-center gap-1.5">
+              <span>✦ Triết lý nếp đất</span>
+            </div>
+
+            <blockquote className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a211e] leading-snug">
+              “Chiếc bình gốm trước khi vững vàng trước bão gió đều phải trải
+              qua nhiệt độ hầm hập của lò nung. Tâm trí người cũng vậy, những lúc
+              thấy mình chênh vênh nhất lại là lúc đất mềm đang tự định hình dáng
+              hình thanh sạch.”
+            </blockquote>
+
+            <div className="pt-2">
+              <div className="font-bold text-sm text-[#9e3b2e]">
+                Lời người thợ gốm
+              </div>
+              <div className="text-xs text-[#7e6d66]">
+                Lắng nghe từ thềm gốm ven sông Đáy
+              </div>
+            </div>
+          </div>
+        </Card>
       </main>
     </div>
   );

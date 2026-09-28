@@ -44,7 +44,7 @@ export const AppFooter: React.FC = () => {
           </div>
 
           <div className="text-center sm:text-right">
-            © 2024 Tín Lãm Tâm Linh. Tiếp nối tinh hoa mỹ học Dó & Gốm Việt đương đại.
+            © 2024 Tín Lắm Tâm Linh. Tiếp nối tinh hoa mỹ học Dó & Gốm Việt đương đại.
           </div>
         </div>
       </div>

@@ -51,7 +51,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </div>
           <div>
             <div className="font-['Noto_Serif',serif] font-bold text-lg leading-tight text-[#9e3b2e] tracking-tight">
-              Tín Lãm Tâm Linh
+              Tín Lắm Tâm Linh
             </div>
             <div className="text-[10px] tracking-[0.14em] text-[#86766e] uppercase font-semibold font-['Be_Vietnam_Pro',sans-serif]">
               Chiêm nghiệm dân gian đương đại
