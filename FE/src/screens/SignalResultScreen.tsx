@@ -13,12 +13,13 @@ import {
   Coffee,
   Lightbulb,
 } from "lucide-react";
-import { SignalData } from "../data/demoSignals";
+import { MoodKey, SignalData } from "../data/demoSignals";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 
 interface SignalResultScreenProps {
+  mood?: MoodKey;
   signal: SignalData;
   isActionDone: boolean;
   onToggleAction: (completed: boolean) => void;

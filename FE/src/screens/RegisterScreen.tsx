@@ -242,7 +242,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
               <Button
                 variant="outline"
                 type="button"
-                onClick={onSuccess}
+                onClick={() => onSuccess("Lữ khách Google", "an.nhien@gmail.com")}
                 className="bg-[#faf3ec]/60 border-[#eedcd0] text-xs font-semibold gap-2 py-2.5"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -269,7 +269,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
               <Button
                 variant="outline"
                 type="button"
-                onClick={onSuccess}
+                onClick={() => onSuccess("Lữ khách Apple", "an.nhien@icloud.com")}
                 className="bg-[#faf3ec]/60 border-[#eedcd0] text-xs font-semibold gap-2 py-2.5"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
