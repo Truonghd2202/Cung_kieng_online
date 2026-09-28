@@ -2,7 +2,18 @@ import React from "react";
 import { Sun, Moon, User } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 
-export type NavScreen = "guest" | "today" | "mood" | "loading" | "result" | "account" | "culture" | "experience";
+export type NavScreen =
+  | "guest"
+  | "today"
+  | "mood"
+  | "loading"
+  | "result"
+  | "account"
+  | "culture"
+  | "experience"
+  | "saved"
+  | "login"
+  | "register";
 
 interface AppHeaderProps {
   currentScreen: NavScreen;
