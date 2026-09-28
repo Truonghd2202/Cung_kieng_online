@@ -26,29 +26,49 @@ interface SavedEntry {
 
 export default function App() {
   const [screen, setScreen] = useState<NavScreen>("guest");
-  const [selectedMood, setSelectedMood] = useState<MoodKey>("Chênh vênh");
   const [journalText, setJournalText] = useState("");
   const [dark, setDark] = useState(() => localStorage.getItem("tltl-theme") === "dark");
+
+  const todayDateString = new Date().toDateString();
+
+  const [isCheckedIn, setIsCheckedIn] = useState<boolean>(() => {
+    try {
+      const lastCheckIn = localStorage.getItem("tltl-last-checkin-date");
+      return lastCheckIn === todayDateString;
+    } catch {
+      return false;
+    }
+  });
+
+  const [selectedMood, setSelectedMood] = useState<MoodKey>(() => {
+    try {
+      const savedMood = localStorage.getItem("tltl-today-mood");
+      if (
+        savedMood &&
+        ["An yên", "Chênh vênh", "Băn khoăn", "Nôn nóng", "Biết ơn", "Cần điểm tựa"].includes(savedMood)
+      ) {
+        return savedMood as MoodKey;
+      }
+    } catch {
+      // fallback
+    }
+    return "Chênh vênh";
+  });
 
   const [savedEntries, setSavedEntries] = useState<SavedEntry[]>(() => {
     try {
       const stored = localStorage.getItem("tltl-saved-entries");
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          // Bỏ bản ghi mẫu demo-1 nếu trước đó đã lưu vào localStorage
+          return parsed.filter((item: any) => item.id !== "demo-1");
+        }
       }
     } catch {
       // fallback
     }
-    return [
-      {
-        id: "demo-1",
-        mood: "Chênh vênh",
-        date: "29/09/2026",
-        journal: "Hôm nay thấy lòng hơi chộn rộn với nhiều dự định mới.",
-        poemLine1: "Nước trong hoa nở ngát dòng",
-        poemLine2: "Tâm an vạn nẻo bụi trần hóa sen.",
-      },
-    ];
+    return [];
   });
 
   useEffect(() => {
@@ -94,10 +114,20 @@ export default function App() {
   };
 
   const handleFinishLoading = () => {
+    setIsCheckedIn(true);
+    try {
+      localStorage.setItem("tltl-last-checkin-date", todayDateString);
+      localStorage.setItem("tltl-today-mood", selectedMood);
+    } catch {}
     navigateTo("result");
   };
 
   const handleSaveResult = () => {
+    setIsCheckedIn(true);
+    try {
+      localStorage.setItem("tltl-last-checkin-date", todayDateString);
+      localStorage.setItem("tltl-today-mood", selectedMood);
+    } catch {}
     const signal = SIGNALS_DATA[selectedMood];
     const newEntry: SavedEntry = {
       id: Date.now().toString(),
@@ -138,7 +168,7 @@ export default function App() {
 
         {screen === "today" && (
           <TodayScreen
-            isCheckedIn={true}
+            isCheckedIn={isCheckedIn}
             mood={selectedMood}
             onSelectMoodClick={() => navigateTo("mood")}
             onViewSignalDetails={() => navigateTo("result")}

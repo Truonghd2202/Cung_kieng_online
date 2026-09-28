@@ -10,6 +10,7 @@ import {
   Home,
   Waves,
   Feather,
+  Flower2,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -25,7 +26,7 @@ interface TodayScreenProps {
 }
 
 export const TodayScreen: React.FC<TodayScreenProps> = ({
-  isCheckedIn = true,
+  isCheckedIn = false,
   mood = "Chênh vênh",
   onSelectMoodClick,
   onViewSignalDetails,
@@ -53,12 +54,12 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
           ) : (
             <Badge
               variant="secondary"
-              className="gap-2 px-4 py-1.5 text-xs font-semibold tracking-wide"
+              className="gap-2 px-4 py-1.5 text-xs font-semibold tracking-wide border-[#ebd9cd] bg-[#fbf5ee]"
             >
-              <span className="w-2 h-2 rounded-full bg-[#9e3b2e]"></span>
+              <span className="w-2 h-2 rounded-full bg-[#9e3b2e] animate-pulse"></span>
               <span>Chưa ghi nhận nhịp tâm hôm nay</span>
               <span className="text-[#be8e5a]">•</span>
-              <span className="italic font-normal">Lắng lòng một chút</span>
+              <span className="italic font-normal">Dành 2 phút lắng lòng</span>
             </Badge>
           )}
         </div>
@@ -71,80 +72,173 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
             </div>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-['Noto_Serif',serif] font-bold text-[#2a211e] leading-tight mb-3">
-            Tín hiệu hôm nay đã nở rộ trong lòng bạn
-          </h1>
-          <p className="mt-2 text-sm sm:text-base text-[#6f6059] leading-relaxed max-w-2xl mx-auto">
-            Sự {mood.toLowerCase()} vốn chỉ là khoảng lặng giữa hai nhịp bước. Khi
-            nhận biết rõ xao động trong tâm trí, bạn đã bắt đầu tiến dần về sự an
-            ổn.
-          </p>
+          {isCheckedIn ? (
+            <>
+              <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-['Noto_Serif',serif] font-bold text-[#2a211e] leading-tight mb-3">
+                Tín hiệu hôm nay đã nở rộ trong lòng bạn
+              </h1>
+              <p className="mt-2 text-sm sm:text-base text-[#6f6059] leading-relaxed max-w-2xl mx-auto">
+                Sự {mood.toLowerCase()} vốn chỉ là khoảng lặng giữa hai nhịp bước. Khi
+                nhận biết rõ xao động trong tâm trí, bạn đã bắt đầu tiến dần về sự an ổn.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-['Noto_Serif',serif] font-bold text-[#2a211e] leading-tight mb-3">
+                Hôm nay tâm bạn đang nương tựa nơi đâu?
+              </h1>
+              <p className="mt-2 text-sm sm:text-base text-[#6f6059] leading-relaxed max-w-2xl mx-auto">
+                Cuộc sống hối hả dễ làm ta quên mất việc tự hỏi lòng mình đang cảm thấy thế nào. Hãy dành ít phút lắng lòng nhận diện cảm xúc để đón nhận quẻ tín hiệu và lời nhắn an lành cho hôm nay.
+              </p>
+            </>
+          )}
         </div>
 
-        {/* Main Checked-in Signal Split Card */}
-        <Card className="rounded-3xl p-6 sm:p-8 shadow-xs mb-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-          {/* Left Column */}
-          <div className="md:col-span-8 space-y-4">
-            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e]">
-              <span>Trích dẫn tỉnh thức</span>
-              <span className="text-[#be8e5a]">•</span>
-              <span className="text-[#887870] font-medium">Chiêm nghiệm ngày</span>
-            </div>
-
-            <p className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#9e3b2e] leading-snug">
-              “{signal.poem.line1} / {signal.poem.line2}”
-            </p>
-
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fbf3ec] border border-[#f1e0d3] text-xs text-[#6e5d56]">
-              <span className="text-[#2e6930]">✔</span>
-              <span>
-                Đã thực hiện:{" "}
-                <strong>{signal.action.title}</strong> ({signal.action.duration})
-              </span>
-            </div>
-
-            <div className="text-[11px] text-[#9c8b84]">
-              Nội dung minh họa — đang biên tập
-            </div>
-
-            <div className="pt-2 flex flex-wrap items-center gap-3">
-              <Button
-                variant="default"
-                size="pill"
-                onClick={onViewSignalDetails}
-                className="gap-2 shadow-xs"
-              >
-                <span>Xem lại tín hiệu trọn vẹn</span>
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-
-              <Button
-                variant="outline"
-                size="pill"
-                onClick={onSelectMoodClick}
-                className="gap-1.5"
-              >
-                <RotateCw className="w-3.5 h-3.5 text-[#85736b]" />
-                <span>Check-in lại nếu cảm xúc thay đổi</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Right Column: Square Calligraphy Box */}
-          <div className="md:col-span-4 flex justify-center md:justify-end">
-            <div className="w-full max-w-[200px] aspect-square rounded-2xl bg-[#fdf8f2] border border-[#ecd9cb] p-6 text-center flex flex-col items-center justify-center shadow-2xs">
-              <div className="font-['Noto_Serif',serif] font-bold text-5xl text-[#9e3b2e] mb-2 leading-none">
-                Tĩnh
+        {/* Main Action Card: 2 distinct states */}
+        {isCheckedIn ? (
+          <Card className="rounded-3xl p-6 sm:p-8 shadow-xs mb-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            {/* Left Column */}
+            <div className="md:col-span-8 space-y-4">
+              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e]">
+                <span>Trích dẫn tỉnh thức</span>
+                <span className="text-[#be8e5a]">•</span>
+                <span className="text-[#887870] font-medium">Chiêm nghiệm ngày</span>
               </div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-[#8b7972] mb-1">
-                Tín hiệu cốt lõi
-              </div>
-              <p className="text-[11px] text-[#6d5b54] leading-relaxed">
-                Hóa giải bồn chồn bằng hơi thở chậm nhẹ
+
+              <p className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#9e3b2e] leading-snug">
+                “{signal.poem.line1} / {signal.poem.line2}”
               </p>
+
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fbf3ec] border border-[#f1e0d3] text-xs text-[#6e5d56]">
+                <span className="text-[#2e6930]">✔</span>
+                <span>
+                  Đã thực hiện:{" "}
+                  <strong>{signal.action.title}</strong> ({signal.action.duration})
+                </span>
+              </div>
+
+              <div className="text-[11px] text-[#9c8b84]">
+                Tín hiệu đã được đồng bộ cùng nhịp tâm trong ngày
+              </div>
+
+              <div className="pt-2 flex flex-wrap items-center gap-3">
+                <Button
+                  variant="default"
+                  size="pill"
+                  onClick={onViewSignalDetails}
+                  className="gap-2 shadow-xs"
+                >
+                  <span>Xem lại tín hiệu trọn vẹn</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="pill"
+                  onClick={onSelectMoodClick}
+                  className="gap-1.5"
+                >
+                  <RotateCw className="w-3.5 h-3.5 text-[#85736b]" />
+                  <span>Check-in lại nếu cảm xúc thay đổi</span>
+                </Button>
+              </div>
             </div>
-          </div>
-        </Card>
+
+            {/* Right Column: Square Calligraphy Box */}
+            <div className="md:col-span-4 flex justify-center md:justify-end">
+              <div className="w-full max-w-[200px] aspect-square rounded-2xl bg-[#fdf8f2] border border-[#ecd9cb] p-6 text-center flex flex-col items-center justify-center shadow-2xs">
+                <div className="font-['Noto_Serif',serif] font-bold text-5xl text-[#9e3b2e] mb-2 leading-none">
+                  Tĩnh
+                </div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8b7972] mb-1">
+                  Tín hiệu cốt lõi
+                </div>
+                <p className="text-[11px] text-[#6d5b54] leading-relaxed">
+                  Hóa giải bồn chồn bằng hơi thở chậm nhẹ
+                </p>
+              </div>
+            </div>
+          </Card>
+        ) : (
+          <Card className="rounded-3xl p-6 sm:p-8 shadow-xs mb-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-center border-[#ebdcd0] bg-gradient-to-br from-[#fffdfa] to-[#fcf7f0]">
+            {/* Left Column */}
+            <div className="md:col-span-8 space-y-4">
+              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e]">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Khởi đầu ngày mới</span>
+                <span className="text-[#be8e5a]">•</span>
+                <span className="text-[#887870] font-medium">3 bước tĩnh tâm</span>
+              </div>
+
+              <h2 className="font-['Noto_Serif',serif] font-bold text-2xl sm:text-3xl text-[#2a211e] leading-snug">
+                Lắng nghe nhịp lòng, gieo một niệm lành
+              </h2>
+
+              <p className="text-xs sm:text-sm text-[#6f5e57] leading-relaxed max-w-xl">
+                Mỗi sớm mai thức dậy là một cơ hội để kết nối lại với chính mình. Một nén hương lòng, một chén trà mộc, hay chỉ đơn giản là thành thật nhận diện nhịp cảm xúc đang hiện diện.
+              </p>
+
+              {/* 3 mini step cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                <div className="p-3.5 rounded-xl bg-[#faede2]/70 border border-[#f3dfce] text-left">
+                  <span className="inline-block text-[11px] font-bold text-[#9e3b2e] mb-1">1. Nhận diện</span>
+                  <p className="text-[11px] text-[#6e5d56] leading-snug">
+                    Thành thật chọn 1 trong 6 nhịp tâm trạng
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-[#faede2]/70 border border-[#f3dfce] text-left">
+                  <span className="inline-block text-[11px] font-bold text-[#9e3b2e] mb-1">2. Lắng đọng</span>
+                  <p className="text-[11px] text-[#6e5d56] leading-snug">
+                    Quán chiếu hơi thở cùng la bàn tĩnh tâm
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-[#faede2]/70 border border-[#f3dfce] text-left">
+                  <span className="inline-block text-[11px] font-bold text-[#9e3b2e] mb-1">3. Khai mở</span>
+                  <p className="text-[11px] text-[#6e5d56] leading-snug">
+                    Đón nhận tín hiệu cổ thi & hành động nuôi tâm
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-3 flex flex-wrap items-center gap-3">
+                <Button
+                  variant="default"
+                  size="pill"
+                  onClick={onSelectMoodClick}
+                  className="gap-2 shadow-xs px-6 py-2.5 font-semibold text-xs sm:text-sm"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Bắt đầu check-in ngày mới</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+
+                <span className="text-xs text-[#8d7c75] italic">
+                  Chỉ mất khoảng 1-2 phút
+                </span>
+              </div>
+            </div>
+
+            {/* Right Column: Calligraphy Invitation Box */}
+            <div className="md:col-span-4 flex justify-center md:justify-end">
+              <div className="w-full max-w-[220px] aspect-square rounded-2xl bg-[#fdf8f2] border-2 border-dashed border-[#e6cbba] p-6 text-center flex flex-col items-center justify-center shadow-2xs relative group hover:border-[#9e3b2e]/50 transition-colors">
+                <div className="w-9 h-9 rounded-full bg-[#faede2] text-[#9e3b2e] flex items-center justify-center mb-2">
+                  <Flower2 className="w-5 h-5" />
+                </div>
+                <div className="font-['Noto_Serif',serif] font-bold text-4xl text-[#9e3b2e] mb-1.5 leading-none">
+                  An
+                </div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8b7972] mb-1">
+                  Tâm an vạn sự an
+                </div>
+                <p className="text-[11px] text-[#6d5b54] leading-relaxed">
+                  Đang chờ bạn chọn một nhịp cảm xúc hôm nay
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Section 1: Góc nhìn địa linh */}
         <section className="mb-16">
