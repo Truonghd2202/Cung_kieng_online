@@ -99,22 +99,23 @@ export const MOODS_LIST: {
   },
 ];
 
-export const SIGNALS_DATA: Record<MoodKey, SignalData> = {
-  "Chênh vênh": {
-    id: "chenh-venh",
+export const ALL_SIGNALS: SignalData[] = [
+  // 1. CHÊNH VÊNH - Signal 1
+  {
+    id: "chenh-venh-1",
     mood: "Chênh vênh",
     moodDesc: "Cảm giác mất thăng bằng, cần một neo đậu an lành",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
     poem: {
       line1: "Nước trong hoa nở ngát dòng",
       line2: "Tâm an vạn nẻo bụi trần hóa sen.",
-      subtext: "Nội dung minh họa kinh điển đang trong quá trình chuẩn hóa thư tịch",
+      subtext: "Ca dao & Lời ru lưu truyền dân gian vùng đồng bằng Bắc Bộ",
     },
     research: {
       title: "VÙNG 2 • KHẢO CỨU NGUỒN GỐC & ĐỊA PHƯƠNG",
       source: "Ca dao & Lời ru châu thổ sông Hồng",
       region: "Lưu truyền dân gian vùng đồng bằng Bắc Bộ",
-      note: "(Đang biên tập dữ liệu xác thực cùng Viện Nghiên cứu Di sản).",
+      note: "(Tư liệu khảo cứu phối hợp Viện Nghiên cứu Di sản Dân gian).",
     },
     reflection: {
       title: "VÙNG 3 • Góc Nhìn Soi Tỏ Tâm Thức",
@@ -129,7 +130,7 @@ export const SIGNALS_DATA: Record<MoodKey, SignalData> = {
       duration: "3 PHÚT",
       description:
         "Rót một ly nước ấm, đặt hai bàn tay quanh thân cốc cảm nhận hơi ấm lan tỏa, uống chậm từng ngụm nhỏ và tạm thời gác lại mọi suy tính.",
-      buttonLabel: "Tôi đã thực hiện hành động này ✓",
+      buttonLabel: "Đánh dấu đã thực hiện hành động này ✓",
       tag: "VÙNG 4 • HÀNH ĐỘNG NUÔI TÂM",
     },
     artwork: {
@@ -151,8 +152,62 @@ export const SIGNALS_DATA: Record<MoodKey, SignalData> = {
         "Thong thả đón gió, tâm thanh tịnh thì vạn sự hanh thông. Hệ thống sẵn sàng mở ra lá quẻ dân gian chúc lành cho bước chân của bạn.",
     },
   },
-  "An yên": {
-    id: "an-yen",
+  // 1. CHÊNH VÊNH - Signal 2
+  {
+    id: "chenh-venh-2",
+    mood: "Chênh vênh",
+    moodDesc: "Cảm giác mất thăng bằng, cần một neo đậu an lành",
+    badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
+    poem: {
+      line1: "Gió lay cành trúc bên đồi",
+      line2: "Cội sâu rễ chắc mặc đời chuyển rung.",
+      subtext: "Thi phẩm vịnh tre ngà cổ phong lưu truyền miền sơn cước",
+    },
+    research: {
+      title: "VÙNG 2 • KHẢO CỨU NGUỒN GỐC & ĐỊA PHƯƠNG",
+      source: "Cổ văn lưu trữ chùa Thầy - Sài Sơn",
+      region: "Vùng văn hóa Xứ Đoài ngàn năm linh tích",
+      note: "(Trích từ bản khắc bia đình làng Đỗ Động giáp ranh Hà Tây).",
+    },
+    reflection: {
+      title: "VÙNG 3 • Góc Nhìn Soi Tỏ Tâm Thức",
+      highlightWord: "chênh vênh",
+      content:
+        "Cành trúc ngả nghiêng theo gió nhưng chẳng bao giờ gãy đổ bởi rễ đã bám sâu vào lòng đất mẹ. Chênh vênh chỉ là lớp sóng mặt ngoài, phẩm giá và bản lĩnh nội tại bên trong bạn vẫn vẹn nguyên vững chãi. Hãy hít một hơi thật sâu và tự nhắc nhở bản thân về cội nguồn bền bỉ này.",
+      advice: "Gợi ý tiếp nhận: Đặt bàn chân trần chạm sàn nhà thật vững",
+      signalNumber: "Chiêm nghiệm số #2410",
+    },
+    action: {
+      title: "Đứng vững chãi như rễ tre 2 phút",
+      duration: "2 PHÚT",
+      description:
+        "Tháo giày dép, đứng thẳng lưng hai chân mở rộng bằng vai, cảm nhận lòng bàn chân tiếp xúc mặt đất vững chắc, hít thở sâu thả lỏng vai.",
+      buttonLabel: "Đánh dấu đã thực hiện hành động này ✓",
+      tag: "VÙNG 4 • HÀNH ĐỘNG NUÔI TÂM",
+    },
+    artwork: {
+      tag: "Mộc & Trúc",
+      image: "/images/temple_bac_bo.jpg",
+      caption: "Họa phẩm cảm hứng: Cội trúc hiên chùa đón gió ngàn",
+    },
+    loadingFacts: {
+      breathingText: "Hít sâu kiên định, thở nhẹ an lành...",
+      thoughtTitle: "TÂM NIỆM",
+      thoughtContent: "Tâm bất biến giữa dòng đời vạn biến.",
+      originTitle: "CỘI NGUỒN",
+      originContent: "Triết lý kiên tâm từ bài học dân gian Cây Tre Trăm Đốt.",
+      stepText: "Soi tỏ sức mạnh tiềm ẩn trong im lặng...",
+    },
+    guestPreview: {
+      title: "MẠCH NGUỒN VỮNG CHÃI",
+      message:
+        "Dẫu gió ngả nghiêng, tâm bạn vẫn là một cội nguồn bất biến. Đón nhận tín hiệu neo giữ an bình cho hôm nay.",
+    },
+  },
+
+  // 2. AN YÊN - Signal 1
+  {
+    id: "an-yen-1",
     mood: "An yên",
     moodDesc: "Trái tim bình lặng, sẵn sàng đón nhận điều lành",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
@@ -180,7 +235,7 @@ export const SIGNALS_DATA: Record<MoodKey, SignalData> = {
       duration: "2 PHÚT",
       description:
         "Khép nhẹ mi mắt, hít sâu ba hơi thở dịu nhẹ và thầm gửi lời chúc lành đến người thân yêu hoặc vạn vật xung quanh bạn.",
-      buttonLabel: "Tôi đã thực hiện hành động này ✓",
+      buttonLabel: "Đánh dấu đã thực hiện hành động này ✓",
       tag: "VÙNG 4 • HÀNH ĐỘNG NUÔI TÂM",
     },
     artwork: {
@@ -202,8 +257,62 @@ export const SIGNALS_DATA: Record<MoodKey, SignalData> = {
         "Thong thả đón gió, tâm thanh tịnh thì vạn sự hanh thông. Hệ thống sẵn sàng mở ra lá quẻ dân gian chúc lành cho bước chân của bạn.",
     },
   },
-  "Băn khoăn": {
-    id: "ban-khoan",
+  // 2. AN YÊN - Signal 2
+  {
+    id: "an-yen-2",
+    mood: "An yên",
+    moodDesc: "Trái tim bình lặng, sẵn sàng đón nhận điều lành",
+    badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
+    poem: {
+      line1: "Sớm mai mây lượn đầu non biếc",
+      line2: "Tách trà nghi ngút nhẹ lòng son.",
+      subtext: "Lời thơ thiền ẩn cư vùng non ngàn Hương Tích",
+    },
+    research: {
+      title: "VÙNG 2 • KHẢO CỨU NGUỒN GỐC & ĐỊA PHƯƠNG",
+      source: "Thiền Phái Liên Tôn Thi Tập",
+      region: "Thắng cảnh danh lam Chùa Hương - Suối Yến",
+      note: "(Bản chép tay thế kỷ XVIII lưu tại thư viện Phật học Huế).",
+    },
+    reflection: {
+      title: "VÙNG 3 • Góc Nhìn Soi Tỏ Tâm Thức",
+      highlightWord: "an yên",
+      content:
+        "Niềm an yên đích thực không nằm ở chốn không có tiếng ồn, mà nằm ở chỗ giữa bao tiếng ồn ta vẫn giữ được nhịp thở khoan thai. Tách trà ấm trên tay chính là bài học hiện diện trọn vẹn trong khoảnh khắc này.",
+      advice: "Gợi ý tiếp nhận: Nhìn ra bầu trời hoặc một bóng cây xanh",
+      signalNumber: "Chiêm nghiệm số #1081",
+    },
+    action: {
+      title: "Mở rộng tầm mắt nhìn mây trời",
+      duration: "1 PHÚT",
+      description:
+        "Bước lại gần cửa sổ, ngước nhìn vòm trời hoặc một tán cây xanh, hít thở không khí tự nhiên và cảm nhận sự bao la của đất trời.",
+      buttonLabel: "Đánh dấu đã thực hiện hành động này ✓",
+      tag: "VÙNG 4 • HÀNH ĐỘNG NUÔI TÂM",
+    },
+    artwork: {
+      tag: "Sơn & Thủy",
+      image: "/images/temple_bac_bo.jpg",
+      caption: "Họa phẩm cảm hứng: Non xanh nước biếc một màu thảnh thơi",
+    },
+    loadingFacts: {
+      breathingText: "Hơi thở nhẹ tênh như áng mây trôi...",
+      thoughtTitle: "TÂM NIỆM",
+      thoughtContent: "Tâm rộng lượng thì đời thênh thang.",
+      originTitle: "CỘI NGUỒN",
+      originContent: "Triết lý sống hòa hợp thiên nhiên của cổ nhân đất Việt.",
+      stepText: "Mở rộng không gian tĩnh lặng trong lồng ngực...",
+    },
+    guestPreview: {
+      title: "MẠCH NGUỒN KHOÁNG ĐẠT",
+      message:
+        "Tâm hồn bạn lúc này như bầu trời mùa thu trong vắt. Tiếp tục nuôi dưỡng đóa an nhiên này mỗi ngày.",
+    },
+  },
+
+  // 3. BĂN KHOĂN - Signal 1
+  {
+    id: "ban-khoan-1",
     mood: "Băn khoăn",
     moodDesc: "Đứng trước ngã rẽ, cần góc nhìn sáng suốt và thấu đạt",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
@@ -231,12 +340,12 @@ export const SIGNALS_DATA: Record<MoodKey, SignalData> = {
       duration: "3 PHÚT",
       description:
         "Lấy giấy bút viết ra 2 lựa chọn đang khiến bạn băn khoăn nhất, bên cạnh mỗi việc hãy ghi lại giá trị chân thành bạn mong muốn giữ gìn.",
-      buttonLabel: "Tôi đã thực hiện hành động này ✓",
+      buttonLabel: "Đánh dấu đã thực hiện hành động này ✓",
       tag: "VÙNG 4 • HÀNH ĐỘNG NUÔI TÂM",
     },
     artwork: {
       tag: "Mộc & Giấy Dó",
-      image: "/images/temple_bac_bo.jpg",
+      image: "/images/do_paper_still_life.jpg",
       caption: "Họa phẩm cảm hứng: Cội rễ bền bỉ soi đường chỉ lối",
     },
     loadingFacts: {
@@ -253,8 +362,62 @@ export const SIGNALS_DATA: Record<MoodKey, SignalData> = {
         "Mỗi khúc mắc là hạt mầm cho sự thấu đạt. Lắng đọng tâm can để tiếp nhận lời nhắc nhở chân phương từ tích xưa.",
     },
   },
-  "Nôn nóng": {
-    id: "non-nong",
+  // 3. BĂN KHOĂN - Signal 2
+  {
+    id: "ban-khoan-2",
+    mood: "Băn khoăn",
+    moodDesc: "Đứng trước ngã rẽ, cần góc nhìn sáng suốt và thấu đạt",
+    badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
+    poem: {
+      line1: "Gương trong không bụi soi tường tận",
+      line2: "Dạ sáng như sao tỏ bước đường.",
+      subtext: "Tuyển trích cách ngôn xử thế của danh nhân Đào Duy Từ",
+    },
+    research: {
+      title: "VÙNG 2 • KHẢO CỨU NGUỒN GỐC & ĐỊA PHƯƠNG",
+      source: "Hổ Trướng Khu Cơ ký lục",
+      region: "Xứ Thanh - Bình Định giao thoa văn hóa trí dũng",
+      note: "(Văn bản lưu truyền trong gia phả cổ dòng họ Đào).",
+    },
+    reflection: {
+      title: "VÙNG 3 • Góc Nhìn Soi Tỏ Tâm Thức",
+      highlightWord: "băn khoăn",
+      content:
+        "Muốn lau sạch tấm gương soi, trước hết phải đợi cơn gió bụi ngừng thổi. Băn khoăn không thể giải quyết bằng sự bối rối dồn dập. Hãy dừng lại vài phút, để tâm trí nguội bớt; đáp án chân xác nhất thường xuất hiện khi bạn thôi căng thẳng tìm kiếm.",
+      advice: "Gợi ý tiếp nhận: Nhắm mắt đếm chậm từ 10 lùi về 1",
+      signalNumber: "Chiêm nghiệm số #3313",
+    },
+    action: {
+      title: "Đếm nhịp thở 10 đến 1",
+      duration: "2 PHÚT",
+      description:
+        "Ngồi thẳng lưng, nhắm mắt, hít vào thở ra đếm 10, tiếp tục đếm ngược dần về 1 để đưa tâm trí về trạng thái trung tính sáng suốt.",
+      buttonLabel: "Đánh dấu đã thực hiện hành động này ✓",
+      tag: "VÙNG 4 • HÀNH ĐỘNG NUÔI TÂM",
+    },
+    artwork: {
+      tag: "Đồng & Gương",
+      image: "/images/tea_bowl.jpg",
+      caption: "Họa phẩm cảm hứng: Gương đồng soi tỏ lòng chân thật",
+    },
+    loadingFacts: {
+      breathingText: "Gạt bỏ bụi mờ, tâm trí sáng tỏ...",
+      thoughtTitle: "TÂM NIỆM",
+      thoughtContent: "Tâm tịnh như nước hồ mùa thu.",
+      originTitle: "CỘI NGUỒN",
+      originContent: "Triết lý chiếc gương đồng cổ thời Đông Sơn.",
+      stepText: "Soi tỏ lòng mình trước khi định đoạt...",
+    },
+    guestPreview: {
+      title: "MẠCH NGUỒN SÁNG SUỐT",
+      message:
+        "Bụi mờ tan biến thì đường đi tự tỏ tường. Đón nhận tín hiệu khai tâm từ lời người xưa.",
+    },
+  },
+
+  // 4. NÔN NÓNG - Signal 1
+  {
+    id: "non-nong-1",
     mood: "Nôn nóng",
     moodDesc: "Tâm trí hối hả, cần hạ nhịp thở và chậm lại từng giây",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
@@ -282,7 +445,7 @@ export const SIGNALS_DATA: Record<MoodKey, SignalData> = {
       duration: "1 PHÚT",
       description:
         "Mở vòi nước mát, để dòng nước chảy qua từng kẽ ngón tay, cảm nhận sự mát lành và buông bỏ sự căng thẳng đang tích tụ trên đôi vai.",
-      buttonLabel: "Tôi đã thực hiện hành động này ✓",
+      buttonLabel: "Đánh dấu đã thực hiện hành động này ✓",
       tag: "VÙNG 4 • HÀNH ĐỘNG NUÔI TÂM",
     },
     artwork: {
@@ -304,8 +467,62 @@ export const SIGNALS_DATA: Record<MoodKey, SignalData> = {
         "Nắng gắt mau tàn, dòng suối mát bền bỉ tuôn trào. Hạ nhiệt âu lo để đón nhận một chỉ dẫn an lành.",
     },
   },
-  "Biết ơn": {
-    id: "biet-on",
+  // 4. NÔN NÓNG - Signal 2
+  {
+    id: "non-nong-2",
+    mood: "Nôn nóng",
+    moodDesc: "Tâm trí hối hả, cần hạ nhịp thở và chậm lại từng giây",
+    badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
+    poem: {
+      line1: "Ủ men rượu nếp chờ trăng sáng",
+      line2: "Nước đủ hương nồng dạ mới say.",
+      subtext: "Triết lý làng nghề chưng cất dân gian xứ Kinh Bắc",
+    },
+    research: {
+      title: "VÙNG 2 • KHẢO CỨU NGUỒN GỐC & ĐỊA PHƯƠNG",
+      source: "Địa chí làng nghề Vân Hà - Bắc Giang",
+      region: "Vùng đất Kinh Bắc văn vật sông Cầu",
+      note: "(Kinh nghiệm truyền khẩu của các nghệ nhân làng men rượu cổ).",
+    },
+    reflection: {
+      title: "VÙNG 3 • Góc Nhìn Soi Tỏ Tâm Thức",
+      highlightWord: "nôn nóng",
+      content:
+        "Men rượu cần thời gian ủ kín trong chum sành mới dậy mùi thơm nức. Đốt cháy giai đoạn chỉ làm hỏng cả mẻ ủ quý. Sự việc bạn đang chờ đợi cũng vậy, hãy tin tưởng vào quy luật thời gian của đất trời.",
+      advice: "Gợi ý tiếp nhận: Hít sâu 4 nhịp, thở ra 6 nhịp thật chậm",
+      signalNumber: "Chiêm nghiệm số #4522",
+    },
+    action: {
+      title: "Thả lỏng khớp vai và hàm",
+      duration: "2 PHÚT",
+      description:
+        "Nhận diện xem quai hàm có đang nghiến chặt không, vai có đang co rút không. Thả lỏng cơ hàm, xoay nhẹ khớp vai 5 vòng theo chiều kim đồng hồ.",
+      buttonLabel: "Đánh dấu đã thực hiện hành động này ✓",
+      tag: "VÙNG 4 • HÀNH ĐỘNG NUÔI TÂM",
+    },
+    artwork: {
+      tag: "Gốm & Men",
+      image: "/images/pottery_artisan.jpg",
+      caption: "Họa phẩm cảm hứng: Chum sành ủ men thời gian mộc mạc",
+    },
+    loadingFacts: {
+      breathingText: "Hạ nhịp, buông lỏng toàn thân...",
+      thoughtTitle: "TÂM NIỆM",
+      thoughtContent: "Ủ kỹ men nồng, thơm ngát ngàn thu.",
+      originTitle: "CỘI NGUỒN",
+      originContent: "Bí quyết kiên nhẫn từ nghề gốm sành Thổ Hà.",
+      stepText: "Chờ đợi cũng là một dạng tu dưỡng bản lĩnh...",
+    },
+    guestPreview: {
+      title: "MẠCH NGUỒN KIÊN ĐỊNH",
+      message:
+        "Chậm lại một nhịp để đi xa vạn dặm. Nhận lấy lời nhắn lành giúp lòng bạn dịu lại.",
+    },
+  },
+
+  // 5. BIẾT ƠN - Signal 1
+  {
+    id: "biet-on-1",
     mood: "Biết ơn",
     moodDesc: "Tràn đầy cảm kích với những duyên lành nhỏ bé quanh mình",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
@@ -333,7 +550,7 @@ export const SIGNALS_DATA: Record<MoodKey, SignalData> = {
       duration: "2 PHÚT",
       description:
         "Chọn một người đã từng giúp đỡ hoặc sẻ chia cùng bạn, gửi cho họ một câu hỏi thăm chân thành kèm lời cảm ơn giản dị.",
-      buttonLabel: "Tôi đã thực hiện hành động này ✓",
+      buttonLabel: "Đánh dấu đã thực hiện hành động này ✓",
       tag: "VÙNG 4 • HÀNH ĐỘNG NUÔI TÂM",
     },
     artwork: {
@@ -355,8 +572,62 @@ export const SIGNALS_DATA: Record<MoodKey, SignalData> = {
         "Khi lòng biết ơn tràn ngập, mọi bước chân đều trở thành điềm lành. Đón nhận hoa trái tâm hồn dịu êm.",
     },
   },
-  "Cần điểm tựa": {
-    id: "can-diem-tua",
+  // 5. BIẾT ƠN - Signal 2
+  {
+    id: "biet-on-2",
+    mood: "Biết ơn",
+    moodDesc: "Tràn đầy cảm kích với những duyên lành nhỏ bé quanh mình",
+    badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
+    poem: {
+      line1: "Gieo hạt mầm thơm vào đất ẩm",
+      line2: "Cảm tạ trời mây giọt sương lành.",
+      subtext: "Khúc ca đồng dao miệt vườn phương Nam hào sảng",
+    },
+    research: {
+      title: "VÙNG 2 • KHẢO CỨU NGUỒN GỐC & ĐỊA PHƯƠNG",
+      source: "Ca dao dân ca Tây Nam Bộ cổ bản",
+      region: "Vùng đất Chín Rồng phù sa bồi đắp ngàn năm",
+      note: "(Ghi chép từ lời ru của các bà mẹ miệt vườn Cần Thơ - Mỹ Tho).",
+    },
+    reflection: {
+      title: "VÙNG 3 • Góc Nhìn Soi Tỏ Tâm Thức",
+      highlightWord: "biết ơn",
+      content:
+        "Người phương Nam xưa tin rằng: đất cho ta mùa màng, trời cho ta mưa thuận gió hòa, lòng biết ơn biến một bữa cơm đạm bạc thành đại tiệc của sự sum vầy. Giữ được sự biết ơn là giữ được gia tài bình an lớn nhất đời người.",
+      advice: "Gợi ý tiếp nhận: Đặt tay lên trái tim thầm cảm ơn bản thân",
+      signalNumber: "Chiêm nghiệm số #7790",
+    },
+    action: {
+      title: "Tự cảm ơn chính cơ thể mình",
+      duration: "1 PHÚT",
+      description:
+        "Đặt hai tay lên ngực áo, cảm nhận nhịp đập bền bỉ không ngừng nghỉ của trái tim và thầm cảm ơn cơ thể đã kiên cường đồng hành cùng bạn suốt bao năm tháng.",
+      buttonLabel: "Đánh dấu đã thực hiện hành động này ✓",
+      tag: "VÙNG 4 • HÀNH ĐỘNG NUÔI TÂM",
+    },
+    artwork: {
+      tag: "Sen & Nước",
+      image: "/images/tea_bowl.jpg",
+      caption: "Họa phẩm cảm hứng: Chén trà thơm đượm tấm lòng thảo thơm",
+    },
+    loadingFacts: {
+      breathingText: "Nhịp đập chân thành, tri ân vạn vật...",
+      thoughtTitle: "TÂM NIỆM",
+      thoughtContent: "Thảo thơm ắt gặp người hiền, hạt lành nảy nở muôn duyên.",
+      originTitle: "CỘI NGUỒN",
+      originContent: "Triết lý sống thảo thơm hào hiệp người phương Nam.",
+      stepText: "Gieo mầm bình an vào từng hơi thở...",
+    },
+    guestPreview: {
+      title: "MẠCH NGUỒN THẢO THƠM",
+      message:
+        "Biết ơn mở rộng dung lượng trái tim. Chúc cho tâm thức bạn luôn đong đầy niềm hân hoan an lành.",
+    },
+  },
+
+  // 6. CẦN ĐIỂM TỰA - Signal 1
+  {
+    id: "can-diem-tua-1",
     mood: "Cần điểm tựa",
     moodDesc: "Mệt mỏi sau ngày dài, muốn được vỗ về trong khoảng lặng",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
@@ -384,7 +655,7 @@ export const SIGNALS_DATA: Record<MoodKey, SignalData> = {
       duration: "2 PHÚT",
       description:
         "Khoanh tay nhẹ nhàng ôm lấy đôi vai bạn, nhắm mắt lại và tự nhủ: 'Hôm nay mình đã làm rất tốt rồi, giờ là lúc nghỉ ngơi'.",
-      buttonLabel: "Tôi đã thực hiện hành động này ✓",
+      buttonLabel: "Đánh dấu đã thực hiện hành động này ✓",
       tag: "VÙNG 4 • HÀNH ĐỘNG NUÔI TÂM",
     },
     artwork: {
@@ -406,4 +677,91 @@ export const SIGNALS_DATA: Record<MoodKey, SignalData> = {
         "Tựa vào cội nguồn, buông bỏ muộn phiền. Hệ thống xin gửi đến bạn lời vỗ về ấm áp nhất hôm nay.",
     },
   },
+  // 6. CẦN ĐIỂM TỰA - Signal 2
+  {
+    id: "can-diem-tua-2",
+    mood: "Cần điểm tựa",
+    moodDesc: "Mệt mỏi sau ngày dài, muốn được vỗ về trong khoảng lặng",
+    badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
+    poem: {
+      line1: "Mái hiên che chở giọt mưa sa",
+      line2: "Bếp lửa nhà ai ấm mái nhà.",
+      subtext: "Ca dao cổ phong miền trung du đồi cọ ngút ngàn",
+    },
+    research: {
+      title: "VÙNG 2 • KHẢO CỨU NGUỒN GỐC & ĐỊA PHƯƠNG",
+      source: "Văn hóa dân gian đất Tổ Phú Thọ",
+      region: "Vùng đất cội nguồn Phong Châu - Sông Thao",
+      note: "(Ghi chép từ phong tục thắp lửa ấm gian bếp ngày đông).",
+    },
+    reflection: {
+      title: "VÙNG 3 • Góc Nhìn Soi Tỏ Tâm Thức",
+      highlightWord: "cần điểm tựa",
+      content:
+        "Con thuyền nào rồi cũng phải neo vào bến cảng, cánh chim nào bay mỏi cũng phải tìm về tàng cây. Sự mỏi mệt hôm nay là lời nhắc cơ thể bạn cần được bảo bọc. Đừng ngại tìm về một người thân yêu hoặc đơn giản là cho phép mình nằm nghỉ một giấc thật sâu.",
+      advice: "Gợi ý tiếp nhận: Đắp một tấm chăn mỏng hoặc mặc thêm áo ấm",
+      signalNumber: "Chiêm nghiệm số #5921",
+    },
+    action: {
+      title: "Thả lỏng toàn thân trên ghế êm",
+      duration: "3 PHÚT",
+      description:
+        "Tựa hoàn toàn lưng và đầu vào thành ghế hoặc gối mềm, buông thõng hai tay và để trọng lực nâng đỡ bạn hoàn toàn mà không cần gồng cứng.",
+      buttonLabel: "Đánh dấu đã thực hiện hành động này ✓",
+      tag: "VÙNG 4 • HÀNH ĐỘNG NUÔI TÂM",
+    },
+    artwork: {
+      tag: "Bếp Lửa & Hiên Nhà",
+      image: "/images/do_paper_still_life.jpg",
+      caption: "Họa phẩm cảm hứng: Bếp lửa ấm cúng giữa ngày mưa gió",
+    },
+    loadingFacts: {
+      breathingText: "Tựa vào chiếc gối êm, buông lỏng...",
+      thoughtTitle: "TÂM NIỆM",
+      thoughtContent: "Mái ấm cội nguồn che chở vạn gió sương.",
+      originTitle: "CỘI NGUỒN",
+      originContent: "Triết lý bếp lửa hồng sưởi ấm gia đình Việt.",
+      stepText: "Nhen nhóm ngọn lửa bình an trong tim...",
+    },
+    guestPreview: {
+      title: "MẠCH NGUỒN VỖ VỀ",
+      message:
+        "Bạn luôn được che chở bởi cội nguồn và tình yêu thương. Nhận lấy lời nhắn lành xoa dịu tâm can.",
+    },
+  },
+];
+
+// Helper methods
+export function getSignalById(id: string): SignalData | undefined {
+  return ALL_SIGNALS.find((s) => s.id === id);
+}
+
+export function getSignalsByMood(mood: MoodKey): SignalData[] {
+  return ALL_SIGNALS.filter((s) => s.mood === mood);
+}
+
+export function getDefaultSignalForMood(mood: MoodKey): SignalData {
+  const list = getSignalsByMood(mood);
+  return list[0] || ALL_SIGNALS[0];
+}
+
+export function getNextSignalForMood(
+  currentSignalId: string,
+  mood: MoodKey
+): SignalData {
+  const list = getSignalsByMood(mood);
+  if (list.length <= 1) return list[0] || ALL_SIGNALS[0];
+  const currentIndex = list.findIndex((s) => s.id === currentSignalId);
+  const nextIndex = (currentIndex + 1) % list.length;
+  return list[nextIndex];
+}
+
+// Backward compatibility map
+export const SIGNALS_DATA: Record<MoodKey, SignalData> = {
+  "Chênh vênh": getDefaultSignalForMood("Chênh vênh"),
+  "An yên": getDefaultSignalForMood("An yên"),
+  "Băn khoăn": getDefaultSignalForMood("Băn khoăn"),
+  "Nôn nóng": getDefaultSignalForMood("Nôn nóng"),
+  "Biết ơn": getDefaultSignalForMood("Biết ơn"),
+  "Cần điểm tựa": getDefaultSignalForMood("Cần điểm tựa"),
 };

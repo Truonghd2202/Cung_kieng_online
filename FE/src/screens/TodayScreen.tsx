@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   ArrowRight,
   RotateCw,
@@ -11,6 +11,7 @@ import {
   Waves,
   Feather,
   Flower2,
+  X,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -19,20 +20,29 @@ import { MoodKey, SIGNALS_DATA } from "../data/demoSignals";
 
 interface TodayScreenProps {
   isCheckedIn?: boolean;
+  isActionDone?: boolean;
   mood?: MoodKey;
   onSelectMoodClick: () => void;
   onViewSignalDetails?: () => void;
-  onExploreRegion?: (region: string) => void;
 }
 
 export const TodayScreen: React.FC<TodayScreenProps> = ({
   isCheckedIn = false,
+  isActionDone = false,
   mood = "Chênh vênh",
   onSelectMoodClick,
   onViewSignalDetails,
-  onExploreRegion,
 }) => {
   const signal = SIGNALS_DATA[mood] || SIGNALS_DATA["Chênh vênh"];
+  const [selectedRegionInfo, setSelectedRegionInfo] = useState<{
+    region: string;
+    sub: string;
+    title: string;
+    image: string;
+    quote: string;
+    tradition: string;
+    philosophy: string;
+  } | null>(null);
 
   return (
     <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif]">
@@ -110,9 +120,11 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
               </p>
 
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fbf3ec] border border-[#f1e0d3] text-xs text-[#6e5d56]">
-                <span className="text-[#2e6930]">✔</span>
+                <span className={isActionDone ? "text-[#2e6930]" : "text-[#be8e5a]"}>
+                  {isActionDone ? "✔" : "✦"}
+                </span>
                 <span>
-                  Đã thực hiện:{" "}
+                  {isActionDone ? "Đã thực hiện: " : "Hành động nuôi tâm: "}
                   <strong>{signal.action.title}</strong> ({signal.action.duration})
                 </span>
               </div>
@@ -278,7 +290,20 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
               </div>
               <div className="pt-4 mt-6 border-t border-[#f4e8dc]">
                 <button
-                  onClick={() => onExploreRegion?.("Bắc Bộ")}
+                  onClick={() =>
+                    setSelectedRegionInfo({
+                      region: "Bắc Bộ",
+                      sub: "Đất Kinh Kỳ ngàn năm văn vật",
+                      title: "Trầm mặc mái ngói phong rêu & nếp trà sương sớm",
+                      image: "/images/temple_bac_bo.jpg",
+                      quote:
+                        "“Chè ngon nước ngát hương đưa, giọt sương đầu sớm hiên chùa lắng tâm.”",
+                      tradition:
+                        "Người Bắc Bộ xưa giữ nếp sống thong thả bên chén trà mộc, khép vạt áo trước hiên đình làng. Từng ngụm trà nóng không chỉ làm ấm thân tâm giữa tiết trời se lạnh mà còn là dịp để gác lại những lao xao chợ đời.",
+                      philosophy:
+                        "Sự thâm trầm, trang nhã và chừng mực trong nếp sống giúp người Tràng An giữ được tâm thế an định, nhu hòa trước bao biến thiên của lịch sử.",
+                    })
+                  }
                   className="text-xs font-semibold text-[#9e3b2e] hover:text-[#7f2c22] flex items-center gap-1 cursor-pointer"
                 >
                   <span>Chiêm nghiệm lối Bắc</span>
@@ -306,7 +331,20 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
               </div>
               <div className="pt-4 mt-6 border-t border-[#f4e8dc]">
                 <button
-                  onClick={() => onExploreRegion?.("Trung Bộ")}
+                  onClick={() =>
+                    setSelectedRegionInfo({
+                      region: "Trung Bộ",
+                      sub: "Xứ Cố Đô trầm mặc sông Hương",
+                      title: "Khí chất kiên định & nén trầm ấm áp",
+                      image: "/images/hue_trung_bo.jpg",
+                      quote:
+                        "“Gió dập sóng dồi lòng chẳng chuyển, nén hương trầm ấm tỏa muôn phương.”",
+                      tradition:
+                        "Đất miền Trung nắng rát mưa dầm tôi luyện nên nếp người nhẫn nại và sâu sắc. Mùi hương bài, khói trầm lan tỏa nơi gian nhà rường cổ kính là chiếc cầu nối thiêng liêng với tổ tiên.",
+                      philosophy:
+                        "Biến khắc nghiệt thành chiều sâu nội tâm; tĩnh tại và kiên cường vượt qua mọi bão giông cuộc đời.",
+                    })
+                  }
                   className="text-xs font-semibold text-[#9e3b2e] hover:text-[#7f2c22] flex items-center gap-1 cursor-pointer"
                 >
                   <span>Chiêm nghiệm lối Trung</span>
@@ -334,7 +372,20 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
               </div>
               <div className="pt-4 mt-6 border-t border-[#f4e8dc]">
                 <button
-                  onClick={() => onExploreRegion?.("Nam Bộ")}
+                  onClick={() =>
+                    setSelectedRegionInfo({
+                      region: "Nam Bộ",
+                      sub: "Miền Đất Chín Rồng cây trái trù phú",
+                      title: "Khoáng đạt dòng nước lớn & nếp sống thảo thơm",
+                      image: "/images/mekong_nam_bo.jpg",
+                      quote:
+                        "“Nước lớn phù sa bồi bãi bồi, thảo thơm đi trước đón duyên lành.”",
+                      tradition:
+                        "Người phương Nam sống thuận tự nhiên theo con nước lớn nước ròng. Tinh thần cởi mở, hiếu khách và sẵn sàng san sẻ ngọt bùi tạo nên một không gian văn hóa chan hòa, nhẹ nhõm.",
+                      philosophy:
+                        "Khoáng đạt buông bỏ chấp niệm; tin tưởng vào sự hào phóng của đất trời và lòng người.",
+                    })
+                  }
                   className="text-xs font-semibold text-[#9e3b2e] hover:text-[#7f2c22] flex items-center gap-1 cursor-pointer"
                 >
                   <span>Chiêm nghiệm lối Nam</span>
@@ -477,6 +528,72 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
             </div>
           </div>
         </Card>
+
+        {/* Regional Culture Modal */}
+        {selectedRegionInfo && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <Card className="max-w-2xl w-full bg-[#fdfaf5] border border-[#ebd6c5] rounded-3xl p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+              <button
+                onClick={() => setSelectedRegionInfo(null)}
+                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#faece1] text-[#9e3b2e] hover:bg-[#9e3b2e] hover:text-white transition-colors flex items-center justify-center cursor-pointer shadow-2xs"
+                title="Đóng cửa sổ"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-2 mb-3">
+                <Badge variant="terracotta" className="text-xs uppercase font-bold tracking-wider">
+                  {selectedRegionInfo.sub}
+                </Badge>
+              </div>
+
+              <h2 className="font-['Noto_Serif',serif] font-bold text-2xl sm:text-[26px] text-[#2a211e] leading-snug mb-4">
+                {selectedRegionInfo.title}
+              </h2>
+
+              {/* Photo */}
+              <div className="relative rounded-2xl overflow-hidden mb-6 h-56 sm:h-64 shadow-xs border border-[#ecd9cb]">
+                <img
+                  src={selectedRegionInfo.image}
+                  alt={selectedRegionInfo.region}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                <div className="absolute bottom-3 left-4 right-4 text-white font-['Noto_Serif',serif] italic text-sm">
+                  {selectedRegionInfo.quote}
+                </div>
+              </div>
+
+              {/* Content columns */}
+              <div className="space-y-4 text-xs sm:text-sm text-[#66544d] leading-relaxed">
+                <div className="p-4 rounded-2xl bg-[#faf3ec] border border-[#ebd8c9]">
+                  <h4 className="font-bold text-[#9e3b2e] uppercase text-[11px] tracking-wider mb-1">
+                    Tập tục & Nếp sống dân gian
+                  </h4>
+                  <p>{selectedRegionInfo.tradition}</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#faf3ec] border border-[#ebd8c9]">
+                  <h4 className="font-bold text-[#9e3b2e] uppercase text-[11px] tracking-wider mb-1">
+                    Triết lý soi tỏ tâm thức
+                  </h4>
+                  <p>{selectedRegionInfo.philosophy}</p>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-[#f0ded2] flex justify-end">
+                <Button
+                  variant="default"
+                  size="pill"
+                  onClick={() => setSelectedRegionInfo(null)}
+                  className="gap-1.5"
+                >
+                  <span>Khép lại chiêm nghiệm</span>
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
       </main>
     </div>
   );

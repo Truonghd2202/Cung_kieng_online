@@ -9,13 +9,14 @@ import {
   CheckCircle2,
   Flower2,
 } from "lucide-react";
-import { MoodKey, SIGNALS_DATA } from "../data/demoSignals";
+import { MoodKey, SIGNALS_DATA, SignalData } from "../data/demoSignals";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 
 interface CompletionScreenProps {
   mood: MoodKey;
+  signal?: SignalData;
   isLoggedIn?: boolean;
   userName?: string;
   onGoToHome: () => void;
@@ -25,13 +26,14 @@ interface CompletionScreenProps {
 
 export const CompletionScreen: React.FC<CompletionScreenProps> = ({
   mood,
+  signal: propSignal,
   isLoggedIn = false,
   userName,
   onGoToHome,
   onGoToAccount,
   onGoToAuth,
 }) => {
-  const signal = SIGNALS_DATA[mood] || SIGNALS_DATA["Chênh vênh"];
+  const signal = propSignal || SIGNALS_DATA[mood] || SIGNALS_DATA["Chênh vênh"];
 
   return (
     <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif]">

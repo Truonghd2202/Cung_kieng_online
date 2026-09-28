@@ -1,6 +1,11 @@
 import React from "react";
+import { NavScreen } from "./AppHeader";
 
-export const AppFooter: React.FC = () => {
+interface AppFooterProps {
+  onNavigate?: (screen: NavScreen) => void;
+}
+
+export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => {
   return (
     <footer className="mt-20 border-t border-[#f1e5d8] bg-[#fbf5ee]/70 text-[#786b64] font-['Be_Vietnam_Pro',sans-serif]">
       {/* Upper poetic quote block */}
@@ -29,17 +34,27 @@ export const AppFooter: React.FC = () => {
       {/* Lower links and copyright bar */}
       <div className="border-t border-[#ebdcd0] py-6 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#8a7b73]">
-          <div className="flex items-center gap-6">
-            <button className="hover:text-[#9e3b2e] transition-colors">
-              Văn hóa & Bản sắc
+          {/* Chỉ hiển thị điều hướng đến các màn hình đã có */}
+          <div className="flex items-center gap-5">
+            <button
+              onClick={() => onNavigate?.("guest")}
+              className="hover:text-[#9e3b2e] transition-colors cursor-pointer"
+            >
+              Khám phá
             </button>
             <span>•</span>
-            <button className="hover:text-[#9e3b2e] transition-colors">
-              Về dự án
+            <button
+              onClick={() => onNavigate?.("today")}
+              className="hover:text-[#9e3b2e] transition-colors cursor-pointer"
+            >
+              Hôm nay
             </button>
             <span>•</span>
-            <button className="hover:text-[#9e3b2e] transition-colors">
-              Quyền riêng tư
+            <button
+              onClick={() => onNavigate?.("account")}
+              className="hover:text-[#9e3b2e] transition-colors cursor-pointer"
+            >
+              Góc của tôi
             </button>
           </div>
 

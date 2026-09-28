@@ -13,31 +13,36 @@ import {
   Coffee,
   Lightbulb,
 } from "lucide-react";
-import { MoodKey, SIGNALS_DATA } from "../data/demoSignals";
+import { SignalData } from "../data/demoSignals";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 
 interface SignalResultScreenProps {
-  mood: MoodKey;
+  signal: SignalData;
+  isActionDone: boolean;
+  onToggleAction: (completed: boolean) => void;
+  onGoToCompletion?: () => void;
+  isSaved?: boolean;
   onSaveToAccount: () => void;
   onRefreshSignal: () => void;
   onGoToDiary: () => void;
 }
 
 export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
-  mood,
+  signal,
+  isActionDone,
+  onToggleAction,
+  onGoToCompletion,
+  isSaved = false,
   onSaveToAccount,
   onRefreshSignal,
   onGoToDiary,
 }) => {
-  const signal = SIGNALS_DATA[mood] || SIGNALS_DATA["Chênh vênh"];
-  const [actionCompleted, setActionCompleted] = useState(false);
   const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleSave = () => {
-    setSaved(true);
     onSaveToAccount();
   };
 
@@ -193,21 +198,34 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
                 </p>
 
                 <Button
-                  variant={actionCompleted ? "secondary" : "default"}
-                  onClick={() => setActionCompleted(!actionCompleted)}
+                  variant={isActionDone ? "secondary" : "default"}
+                  onClick={() => onToggleAction(!isActionDone)}
                   className={`w-full py-3 px-4 text-xs sm:text-sm font-semibold gap-2 ${
-                    actionCompleted
+                    isActionDone
                       ? "bg-[#2e6930] text-white hover:bg-[#255727]"
                       : ""
                   }`}
                 >
                   <Check className="w-4 h-4" />
                   <span>
-                    {actionCompleted
+                    {isActionDone
                       ? "Đã hoàn thành hành động này ✓"
                       : signal.action.buttonLabel}
                   </span>
                 </Button>
+
+                {/* Nút tiến vào trạng thái viên mãn khi đã làm xong hành động */}
+                {isActionDone && onGoToCompletion && (
+                  <Button
+                    variant="default"
+                    size="lg"
+                    onClick={onGoToCompletion}
+                    className="w-full mt-3 py-3 px-4 text-xs sm:text-sm font-semibold gap-2 shadow-xs bg-[#9e3b2e] hover:bg-[#882f23] text-white"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>Tiến vào trạng thái Viên mãn (Bước 5/5)</span>
+                  </Button>
+                )}
               </div>
             </Card>
 
@@ -239,6 +257,7 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
                   variant="outline"
                   onClick={onRefreshSignal}
                   className="py-2.5 text-xs font-medium gap-1.5"
+                  title="Nhận một tín hiệu khác cho cùng tâm trạng này"
                 >
                   <RotateCw className="w-3.5 h-3.5 text-[#88756d]" />
                   <span>Cần thông điệp khác</span>
@@ -247,14 +266,14 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
 
               {/* Big Save Button */}
               <Button
-                variant="bronze"
+                variant={isSaved ? "secondary" : "bronze"}
                 size="lg"
                 onClick={handleSave}
                 className="w-full text-xs sm:text-sm font-semibold gap-2 mb-4"
               >
                 <Bookmark className="w-4 h-4" />
                 <span>
-                  {saved ? "Đã lưu vào Góc của tôi ✓" : "Lưu tín hiệu vào Góc của tôi"}
+                  {isSaved ? "Đã lưu vào Góc của tôi ✓" : "Lưu tín hiệu vào Góc của tôi"}
                 </span>
               </Button>
 
@@ -262,13 +281,16 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
               <div className="pt-2 flex items-center justify-center gap-4 text-xs text-[#7b6b64]">
                 <button
                   onClick={() => {
-                    navigator.clipboard?.writeText(window.location.href);
-                    alert("Đã sao chép liên kết chiêm nghiệm!");
+                    const shareUrl = `${window.location.origin}/result?signalId=${signal.id}`;
+                    navigator.clipboard?.writeText(shareUrl);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 3000);
                   }}
                   className="hover:text-[#9e3b2e] flex items-center gap-1 transition-colors cursor-pointer"
+                  title="Sao chép liên kết mở lại đúng tín hiệu này"
                 >
                   <Share2 className="w-3.5 h-3.5" />
-                  <span>Chia sẻ chiêm nghiệm</span>
+                  <span>{copied ? "Đã sao chép liên kết ✓" : "Chia sẻ chiêm nghiệm"}</span>
                 </button>
                 <span>•</span>
                 <button

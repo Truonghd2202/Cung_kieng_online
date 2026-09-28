@@ -9,19 +9,26 @@ import { SignalResultScreen } from "./screens/SignalResultScreen";
 import { LoginScreen } from "./screens/LoginScreen";
 import { RegisterScreen } from "./screens/RegisterScreen";
 import { CompletionScreen } from "./screens/CompletionScreen";
-import { MoodKey, SIGNALS_DATA } from "./data/demoSignals";
+import {
+  MoodKey,
+  getSignalById,
+  getDefaultSignalForMood,
+  getNextSignalForMood,
+} from "./data/demoSignals";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
-import { Trash2, Calendar, BookOpen, ArrowRight, Flower2 } from "lucide-react";
+import { Trash2, Calendar, BookOpen, ArrowRight, Flower2, Sparkles } from "lucide-react";
 
 interface SavedEntry {
   id: string;
+  signalId: string;
   mood: MoodKey;
   date: string;
   journal?: string;
   poemLine1: string;
   poemLine2: string;
+  actionTitle?: string;
 }
 
 interface UserProfile {
@@ -30,11 +37,24 @@ interface UserProfile {
 }
 
 export default function App() {
-  const [screen, setScreen] = useState<NavScreen>("guest");
+  const todayDateString = new Date().toDateString();
+
+  // Helper to resolve initial screen from URL
+  const getInitialScreen = (): NavScreen => {
+    const path = window.location.pathname.replace(/^\//, "");
+    if (["guest", "today", "mood", "loading", "result", "account", "login", "register", "saved"].includes(path)) {
+      return path as NavScreen;
+    }
+    return "guest";
+  };
+
+  // Check URL signalId first
+  const initialUrlSignalId = new URLSearchParams(window.location.search).get("signalId");
+  const initialUrlSignal = initialUrlSignalId ? getSignalById(initialUrlSignalId) : null;
+
+  const [screen, setScreen] = useState<NavScreen>(getInitialScreen);
   const [journalText, setJournalText] = useState("");
   const [dark, setDark] = useState(() => localStorage.getItem("tltl-theme") === "dark");
-
-  const todayDateString = new Date().toDateString();
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     try {
@@ -57,6 +77,9 @@ export default function App() {
   });
 
   const [selectedMood, setSelectedMood] = useState<MoodKey>(() => {
+    if (initialUrlSignal) {
+      return initialUrlSignal.mood;
+    }
     try {
       const savedMood = localStorage.getItem("tltl-today-mood");
       if (
@@ -71,13 +94,35 @@ export default function App() {
     return "Chênh vênh";
   });
 
+  const [currentSignalId, setCurrentSignalId] = useState<string>(() => {
+    if (initialUrlSignal) {
+      return initialUrlSignal.id;
+    }
+    try {
+      const storedSigId = localStorage.getItem("tltl-current-signal-id");
+      if (storedSigId && getSignalById(storedSigId)) {
+        return storedSigId;
+      }
+    } catch {}
+    return getDefaultSignalForMood("Chênh vênh").id;
+  });
+
+  // Trạng thái hành động hoàn thành được nâng lên App.tsx và lưu theo ngày
+  const [isActionDone, setIsActionDone] = useState<boolean>(() => {
+    try {
+      const doneDate = localStorage.getItem("tltl-action-done-date");
+      return doneDate === todayDateString;
+    } catch {
+      return false;
+    }
+  });
+
   const [savedEntries, setSavedEntries] = useState<SavedEntry[]>(() => {
     try {
       const stored = localStorage.getItem("tltl-saved-entries");
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
-          // Bỏ bản ghi mẫu demo-1 nếu trước đó đã lưu vào localStorage
           return parsed.filter((item: any) => item.id !== "demo-1");
         }
       }
@@ -86,6 +131,9 @@ export default function App() {
     }
     return [];
   });
+
+  // Active signal computed from currentSignalId
+  const activeSignal = getSignalById(currentSignalId) || getDefaultSignalForMood(selectedMood);
 
   useEffect(() => {
     localStorage.setItem("tltl-theme", dark ? "dark" : "light");
@@ -108,10 +156,23 @@ export default function App() {
     }
   }, [currentUser]);
 
-  // Handle URL history sync
+  useEffect(() => {
+    localStorage.setItem("tltl-current-signal-id", currentSignalId);
+  }, [currentSignalId]);
+
+  // Handle URL history sync & direct link / popstate reload
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname.replace(/^\//, "");
+      const params = new URLSearchParams(window.location.search);
+      const urlSignalId = params.get("signalId");
+      if (urlSignalId) {
+        const sig = getSignalById(urlSignalId);
+        if (sig) {
+          setCurrentSignalId(sig.id);
+          setSelectedMood(sig.mood);
+        }
+      }
       if (["guest", "today", "mood", "loading", "result", "account", "login", "register", "saved"].includes(path)) {
         setScreen(path as NavScreen);
       } else {
@@ -122,14 +183,32 @@ export default function App() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  const navigateTo = (newScreen: NavScreen) => {
+  const navigateTo = (newScreen: NavScreen, signalIdParam?: string) => {
     setScreen(newScreen);
-    window.history.pushState(null, "", newScreen === "guest" ? "/" : `/${newScreen}`);
+    let url = newScreen === "guest" ? "/" : `/${newScreen}`;
+    if (newScreen === "result") {
+      const idToUse = signalIdParam || currentSignalId || activeSignal.id;
+      url = `/result?signalId=${idToUse}`;
+    }
+    window.history.pushState(null, "", url);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleToggleAction = (completed: boolean) => {
+    setIsActionDone(completed);
+    try {
+      if (completed) {
+        localStorage.setItem("tltl-action-done-date", todayDateString);
+      } else {
+        localStorage.removeItem("tltl-action-done-date");
+      }
+    } catch {}
   };
 
   const handleStartSignalFromGuest = (mood: MoodKey) => {
     setSelectedMood(mood);
+    const defaultSig = getDefaultSignalForMood(mood);
+    setCurrentSignalId(defaultSig.id);
     navigateTo("mood");
   };
 
@@ -142,8 +221,20 @@ export default function App() {
     try {
       localStorage.setItem("tltl-last-checkin-date", todayDateString);
       localStorage.setItem("tltl-today-mood", selectedMood);
+      localStorage.setItem("tltl-current-signal-id", activeSignal.id);
     } catch {}
-    navigateTo("result");
+    navigateTo("result", activeSignal.id);
+  };
+
+  // Đổi tín hiệu: GIỮ NGUYÊN TÂM TRẠNG, chỉ đổi quẻ tín hiệu khác cùng tâm trạng
+  const handleRefreshSignal = () => {
+    const nextSignal = getNextSignalForMood(activeSignal.id, selectedMood);
+    setCurrentSignalId(nextSignal.id);
+    try {
+      localStorage.setItem("tltl-current-signal-id", nextSignal.id);
+    } catch {}
+    // Đồng bộ URL ngay lập tức
+    window.history.replaceState(null, "", `/result?signalId=${nextSignal.id}`);
   };
 
   const handleSaveResult = () => {
@@ -151,16 +242,18 @@ export default function App() {
     try {
       localStorage.setItem("tltl-last-checkin-date", todayDateString);
       localStorage.setItem("tltl-today-mood", selectedMood);
+      localStorage.setItem("tltl-current-signal-id", activeSignal.id);
     } catch {}
 
-    const signal = SIGNALS_DATA[selectedMood];
     const newEntry: SavedEntry = {
       id: Date.now().toString(),
-      mood: selectedMood,
+      signalId: activeSignal.id,
+      mood: activeSignal.mood,
       date: new Date().toLocaleDateString("vi-VN"),
       journal: journalText.trim() || undefined,
-      poemLine1: signal.poem.line1,
-      poemLine2: signal.poem.line2,
+      poemLine1: activeSignal.poem.line1,
+      poemLine2: activeSignal.poem.line2,
+      actionTitle: activeSignal.action.title,
     };
 
     if (!currentUser) {
@@ -168,9 +261,11 @@ export default function App() {
       setPendingEntry(newEntry);
       navigateTo("login");
     } else {
-      // Đã đăng nhập: Lưu trực tiếp và sang màn hoàn tất
-      setSavedEntries([newEntry, ...savedEntries]);
-      navigateTo("saved");
+      // Đã đăng nhập: Lưu trực tiếp
+      const exists = savedEntries.some((e) => e.signalId === activeSignal.id);
+      if (!exists) {
+        setSavedEntries([newEntry, ...savedEntries]);
+      }
     }
   };
 
@@ -182,9 +277,14 @@ export default function App() {
     setCurrentUser(user);
 
     if (pendingEntry) {
-      setSavedEntries([pendingEntry, ...savedEntries]);
+      setSavedEntries((prev) => {
+        const exists = prev.some((e) => e.signalId === pendingEntry.signalId);
+        return exists ? prev : [pendingEntry, ...prev];
+      });
+      const savedSigId = pendingEntry.signalId;
       setPendingEntry(null);
-      navigateTo("saved");
+      setCurrentSignalId(savedSigId);
+      navigateTo("result", savedSigId);
     } else {
       navigateTo("account");
     }
@@ -198,6 +298,15 @@ export default function App() {
   const handleDeleteEntry = (id: string) => {
     setSavedEntries(savedEntries.filter((item) => item.id !== id));
   };
+
+  // Mở lại đúng bản ghi tín hiệu đã lưu
+  const handleOpenSavedSignal = (entry: SavedEntry) => {
+    setSelectedMood(entry.mood);
+    setCurrentSignalId(entry.signalId);
+    navigateTo("result", entry.signalId);
+  };
+
+  const isCurrentSignalSaved = savedEntries.some((e) => e.signalId === activeSignal.id);
 
   return (
     <div className={`min-h-screen flex flex-col bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif] ${dark ? "dark" : ""}`}>
@@ -226,21 +335,20 @@ export default function App() {
           <TodayScreen
             isCheckedIn={isCheckedIn}
             mood={selectedMood}
+            isActionDone={isActionDone}
             onSelectMoodClick={() => navigateTo("mood")}
-            onViewSignalDetails={() => navigateTo("result")}
-            onExploreRegion={(region) => {
-              if (region === "Bắc Bộ") setSelectedMood("An yên");
-              else if (region === "Trung Bộ") setSelectedMood("Chênh vênh");
-              else setSelectedMood("Biết ơn");
-              navigateTo("mood");
-            }}
+            onViewSignalDetails={() => navigateTo("result", activeSignal.id)}
           />
         )}
 
         {screen === "mood" && (
           <MoodCheckInScreen
             selectedMood={selectedMood}
-            onSelectMood={setSelectedMood}
+            onSelectMood={(mood) => {
+              setSelectedMood(mood);
+              const defaultSig = getDefaultSignalForMood(mood);
+              setCurrentSignalId(defaultSig.id);
+            }}
             journalText={journalText}
             onChangeJournal={setJournalText}
             onBackToToday={() => navigateTo("today")}
@@ -259,20 +367,20 @@ export default function App() {
         {screen === "result" && (
           <SignalResultScreen
             mood={selectedMood}
+            signal={activeSignal}
+            isActionDone={isActionDone}
+            onToggleAction={handleToggleAction}
+            onGoToCompletion={() => navigateTo("saved")}
             onSaveToAccount={handleSaveResult}
-            onRefreshSignal={() => {
-              const moods: MoodKey[] = ["An yên", "Chênh vênh", "Băn khoăn", "Nôn nóng", "Biết ơn", "Cần điểm tựa"];
-              const otherMoods = moods.filter((m) => m !== selectedMood);
-              const nextMood = otherMoods[Math.floor(Math.random() * otherMoods.length)];
-              setSelectedMood(nextMood);
-            }}
+            onRefreshSignal={handleRefreshSignal}
             onGoToDiary={() => navigateTo("account")}
+            isSaved={isCurrentSignalSaved}
           />
         )}
 
         {screen === "login" && (
           <LoginScreen
-            onBack={() => navigateTo(pendingEntry ? "result" : "guest")}
+            onBack={() => navigateTo(pendingEntry ? "result" : "guest", pendingEntry?.signalId)}
             onSuccess={handleSimulatedLogin}
             onGoToRegister={() => navigateTo("register")}
             pendingSignalMood={pendingEntry?.mood}
@@ -291,19 +399,21 @@ export default function App() {
         {screen === "saved" && (
           <CompletionScreen
             mood={selectedMood}
+            signal={activeSignal}
             isLoggedIn={!!currentUser}
             userName={currentUser?.name}
             onGoToHome={() => navigateTo("today")}
             onGoToAccount={() => navigateTo("account")}
             onGoToAuth={() => {
-              const signal = SIGNALS_DATA[selectedMood];
               const newEntry: SavedEntry = {
                 id: Date.now().toString(),
-                mood: selectedMood,
+                signalId: activeSignal.id,
+                mood: activeSignal.mood,
                 date: new Date().toLocaleDateString("vi-VN"),
                 journal: journalText.trim() || undefined,
-                poemLine1: signal.poem.line1,
-                poemLine2: signal.poem.line2,
+                poemLine1: activeSignal.poem.line1,
+                poemLine2: activeSignal.poem.line2,
+                actionTitle: activeSignal.action.title,
               };
               setPendingEntry(newEntry);
               navigateTo("login");
@@ -334,6 +444,7 @@ export default function App() {
                   onClick={() => navigateTo("mood")}
                   className="gap-2 self-start sm:self-auto"
                 >
+                  <Sparkles className="w-4 h-4" />
                   <span>Gieo tín hiệu mới</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
@@ -416,6 +527,11 @@ export default function App() {
                             <br />
                             {item.poemLine2}”
                           </p>
+                          {item.actionTitle && (
+                            <p className="text-[11px] text-[#85736c] mt-2 font-sans font-medium">
+                              Hành động: {item.actionTitle}
+                            </p>
+                          )}
                         </div>
 
                         {item.journal && (
@@ -428,11 +544,8 @@ export default function App() {
                       <div className="pt-3 border-t border-[#f4e8dc] flex items-center justify-between text-xs">
                         <Button
                           variant="link"
-                          onClick={() => {
-                            setSelectedMood(item.mood);
-                            navigateTo("result");
-                          }}
-                          className="text-[#9e3b2e] font-semibold flex items-center gap-1"
+                          onClick={() => handleOpenSavedSignal(item)}
+                          className="text-[#9e3b2e] font-semibold flex items-center gap-1 p-0 h-auto"
                         >
                           <span>Xem lại chiêm nghiệm</span>
                           <ArrowRight className="w-3.5 h-3.5" />
@@ -456,7 +569,7 @@ export default function App() {
       </div>
 
       {/* Universal Footer */}
-      <AppFooter />
+      <AppFooter onNavigate={navigateTo} />
     </div>
   );
 }

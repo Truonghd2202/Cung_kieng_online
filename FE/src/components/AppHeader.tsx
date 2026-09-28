@@ -63,11 +63,19 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </div>
         </button>
 
-        {/* Navigation items */}
+        {/* Navigation items - Chỉ điều hướng tới màn đã có */}
         <nav className="hidden md:flex items-center gap-1 sm:gap-2">
           <Button
+            variant={currentScreen === "guest" ? "default" : "ghost"}
+            size="pill"
+            onClick={() => onNavigate("guest")}
+          >
+            Khám phá
+          </Button>
+
+          <Button
             variant={
-              currentScreen === "today" || currentScreen === "mood" || currentScreen === "loading" || currentScreen === "result"
+              ["today", "mood", "loading", "result", "saved"].includes(currentScreen)
                 ? "default"
                 : "ghost"
             }
@@ -75,23 +83,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             onClick={() => onNavigate("today")}
           >
             Hôm nay
-          </Button>
-
-          <Button
-            variant={currentScreen === "experience" ? "default" : "ghost"}
-            size="pill"
-            onClick={() => onNavigate("today")}
-          >
-            Trải nghiệm
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="pill"
-            className={currentScreen === "guest" ? "text-[#9e3b2e] font-semibold" : ""}
-            onClick={() => onNavigate("guest")}
-          >
-            Khám phá
           </Button>
 
           <Button
