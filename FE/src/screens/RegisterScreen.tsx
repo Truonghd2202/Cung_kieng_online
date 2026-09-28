@@ -8,6 +8,7 @@ import {
   ArrowRight,
   Sparkles,
   Flower2,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -15,13 +16,16 @@ import { Card } from "@/src/components/ui/card";
 
 interface RegisterScreenProps {
   onBack?: () => void;
-  onSuccess: () => void;
+  onSuccess: (name?: string, email?: string) => void;
   onGoToLogin: () => void;
+  pendingSignalMood?: string;
 }
 
 export const RegisterScreen: React.FC<RegisterScreenProps> = ({
+  onBack,
   onSuccess,
   onGoToLogin,
+  pendingSignalMood,
 }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -32,7 +36,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreed) return;
-    onSuccess();
+    onSuccess(name || "Lữ khách An Nhiên", email || "annhien@tinlam.vn");
   };
 
   return (
@@ -77,6 +81,35 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
         {/* Right Column: Register Form */}
         <div className="md:col-span-7 p-8 sm:p-10 bg-[#fffdfa] flex flex-col justify-between">
           <div>
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="text-xs text-[#887870] hover:text-[#9e3b2e] flex items-center gap-1 mb-4 cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Quay lại</span>
+              </button>
+            )}
+
+            {/* Pending Signal Notice */}
+            {pendingSignalMood && (
+              <div className="mb-5 p-3.5 rounded-2xl bg-[#faede2] border border-[#ecd2bf] text-xs text-[#823326] flex items-start gap-2.5 shadow-2xs">
+                <Sparkles className="w-4 h-4 text-[#9e3b2e] flex-shrink-0 mt-0.5" />
+                <div>
+                  <strong className="font-semibold">Tín hiệu đang chờ lưu:</strong> Quẻ "{pendingSignalMood}" sẽ tự động được lưu vào Góc của bạn ngay khi tạo tài khoản.
+                </div>
+              </div>
+            )}
+
+            {/* Demo Notice Banner */}
+            <div className="mb-5 p-2.5 rounded-xl bg-[#fbf5ee] border border-[#eddcd0] flex items-center gap-2 text-[11px] text-[#786962]">
+              <Badge variant="secondary" className="text-[10px] py-0 px-2 uppercase font-bold text-[#9e3b2e]">
+                Demo
+              </Badge>
+              <span>Chưa có Backend • Đăng ký mô phỏng để trải nghiệm lưu trữ.</span>
+            </div>
+
             <Badge
               variant="secondary"
               className="gap-1.5 px-3 py-1 mb-2 text-[11px] font-medium"

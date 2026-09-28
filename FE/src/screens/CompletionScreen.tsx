@@ -16,6 +16,8 @@ import { Card } from "@/src/components/ui/card";
 
 interface CompletionScreenProps {
   mood: MoodKey;
+  isLoggedIn?: boolean;
+  userName?: string;
   onGoToHome: () => void;
   onGoToAccount: () => void;
   onGoToAuth?: () => void;
@@ -23,6 +25,8 @@ interface CompletionScreenProps {
 
 export const CompletionScreen: React.FC<CompletionScreenProps> = ({
   mood,
+  isLoggedIn = false,
+  userName,
   onGoToHome,
   onGoToAccount,
   onGoToAuth,
@@ -122,65 +126,126 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({
           </Card>
 
           {/* Right Card: Lưu giữ hành trình của bạn */}
-          <Card className="p-6 rounded-3xl bg-[#fdf3eb] border-[#edd1be] shadow-xs flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2 font-['Noto_Serif',serif] font-bold text-base text-[#2b211f]">
-                  <Bookmark className="w-4 h-4 text-[#9e3b2e]" />
-                  <span>Lưu giữ hành trình của bạn</span>
+          {isLoggedIn ? (
+            <Card className="p-6 rounded-3xl bg-[#f7fbf6] border-[#cfecd1] shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 font-['Noto_Serif',serif] font-bold text-base text-[#1b431e]">
+                    <CheckCircle2 className="w-5 h-5 text-[#2e6930]" />
+                    <span>Đã lưu vào Góc của bạn</span>
+                  </div>
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] bg-[#e6f4e8] text-[#225725] border-[#c2e4c6]"
+                  >
+                    {userName || "Thành viên"} (Demo)
+                  </Badge>
                 </div>
-                <Badge variant="terracotta" className="text-[10px]">
-                  Khách vãng lai
-                </Badge>
+
+                <p className="text-xs text-[#436446] leading-relaxed mb-4">
+                  Quẻ tín hiệu <strong className="text-[#1b431e]">“{signal.mood}”</strong> cùng lời chiêm nghiệm hôm nay đã được lưu an toàn vào tài khoản của bạn.
+                </p>
+
+                {/* Demo notice pill */}
+                <div className="p-3.5 rounded-2xl bg-white/90 border border-[#d2ead4] text-[11px] text-[#3e6042] mb-6 leading-relaxed shadow-2xs">
+                  ✦ <strong>Dữ liệu Demo (chưa kết nối Backend):</strong> Tín hiệu đang được lưu giữ trực tiếp trong bộ nhớ trình duyệt (LocalStorage).
+                </div>
+
+                {/* 2 Feature checks */}
+                <div className="grid grid-cols-2 gap-2.5 text-xs text-[#3f5f42] mb-6">
+                  <div className="flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5 text-[#2e6930] flex-shrink-0" />
+                    <span>Ghi chép sẵn sàng</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5 text-[#2e6930] flex-shrink-0" />
+                    <span>Mở lại bất kỳ lúc nào</span>
+                  </div>
+                </div>
               </div>
 
-              <p className="text-xs text-[#6e5d56] leading-relaxed mb-4">
-                Bạn đang trải nghiệm với tư cách Khách. Để lưu lại tín hiệu này
-                vào <strong className="text-[#9e3b2e]">“Góc của tôi”</strong> và
-                theo dõi chuỗi ngày chiêm nghiệm an lành, hãy đăng nhập hoặc tạo
-                tài khoản mới.
-              </p>
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <Button
+                  variant="default"
+                  size="default"
+                  onClick={onGoToAccount}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold gap-2 shadow-xs bg-[#2e6930] hover:bg-[#255727] text-white"
+                >
+                  <Bookmark className="w-4 h-4" />
+                  <span>Xem trong Góc của tôi</span>
+                </Button>
 
-              {/* 4 Feature checks */}
-              <div className="grid grid-cols-2 gap-2.5 text-xs text-[#62514b] mb-6">
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#9e3b2e] flex-shrink-0" />
-                  <span>Lưu lại quẻ chữ & nhật ký</span>
+                <Button
+                  variant="outline"
+                  size="default"
+                  onClick={onGoToHome}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold gap-2 border-[#d2ead4] text-xs text-[#2e6930]"
+                >
+                  <span>Trở về màn Hôm nay</span>
+                </Button>
+              </div>
+            </Card>
+          ) : (
+            <Card className="p-6 rounded-3xl bg-[#fdf3eb] border-[#edd1be] shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 font-['Noto_Serif',serif] font-bold text-base text-[#2b211f]">
+                    <Bookmark className="w-4 h-4 text-[#9e3b2e]" />
+                    <span>Lưu giữ hành trình của bạn</span>
+                  </div>
+                  <Badge variant="terracotta" className="text-[10px]">
+                    Khách vãng lai
+                  </Badge>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#9e3b2e] flex-shrink-0" />
-                  <span>Đo nhịp bình an theo tháng</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#9e3b2e] flex-shrink-0" />
-                  <span>Nhận gợi ý hành động mỗi sáng</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#9e3b2e] flex-shrink-0" />
-                  <span>Đồng bộ trên mọi thiết bị</span>
+
+                <p className="text-xs text-[#6e5d56] leading-relaxed mb-4">
+                  Bạn đang trải nghiệm với tư cách Khách. Để lưu lại tín hiệu này
+                  vào <strong className="text-[#9e3b2e]">“Góc của tôi”</strong> và
+                  theo dõi chuỗi ngày chiêm nghiệm an lành, hãy đăng nhập hoặc tạo
+                  tài khoản mới.
+                </p>
+
+                {/* 4 Feature checks */}
+                <div className="grid grid-cols-2 gap-2.5 text-xs text-[#62514b] mb-6">
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#9e3b2e] flex-shrink-0" />
+                    <span>Lưu lại quẻ chữ & nhật ký</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#9e3b2e] flex-shrink-0" />
+                    <span>Đo nhịp bình an theo tháng</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#9e3b2e] flex-shrink-0" />
+                    <span>Nhận gợi ý hành động mỗi sáng</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#9e3b2e] flex-shrink-0" />
+                    <span>Đồng bộ trên mọi thiết bị</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              <Button
-                variant="default"
-                size="default"
-                onClick={onGoToAuth || onGoToAccount}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold gap-2 shadow-xs"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>Đăng nhập / Đăng ký để lưu</span>
-              </Button>
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <Button
+                  variant="default"
+                  size="default"
+                  onClick={onGoToAuth || onGoToAccount}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold gap-2 shadow-xs"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>Đăng nhập / Đăng ký để lưu</span>
+                </Button>
 
-              <button
-                onClick={onGoToHome}
-                className="text-xs text-[#705e57] hover:text-[#9e3b2e] transition-colors cursor-pointer text-center"
-              >
-                Tiếp tục khám phá mà không cần lưu
-              </button>
-            </div>
-          </Card>
+                <button
+                  onClick={onGoToHome}
+                  className="text-xs text-[#705e57] hover:text-[#9e3b2e] transition-colors cursor-pointer text-center"
+                >
+                  Tiếp tục khám phá mà không cần lưu
+                </button>
+              </div>
+            </Card>
+          )}
         </div>
 
         {/* Bottom Back Button */}

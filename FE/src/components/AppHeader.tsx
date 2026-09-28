@@ -1,5 +1,5 @@
 import React from "react";
-import { Sun, Moon, User } from "lucide-react";
+import { Sun, Moon, User, LogOut } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 
 export type NavScreen =
@@ -21,6 +21,8 @@ interface AppHeaderProps {
   dark?: boolean;
   onToggleDark?: () => void;
   onLoginClick?: () => void;
+  user?: { name: string; email: string } | null;
+  onLogout?: () => void;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
@@ -29,6 +31,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   dark = false,
   onToggleDark,
   onLoginClick,
+  user,
+  onLogout,
 }) => {
   return (
     <header className="sticky top-0 z-50 bg-[#fffdfa]/95 backdrop-blur-md border-b border-[#f1e5d8] transition-colors">
@@ -110,22 +114,40 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             {dark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
           </Button>
 
-          <Button
-            variant="default"
-            size="pill"
-            onClick={onLoginClick || (() => onNavigate("account"))}
-          >
-            Đăng nhập
-          </Button>
+          {user ? (
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="pill"
+                onClick={() => onNavigate("account")}
+                className="text-xs font-semibold gap-1.5 border-[#e8d5c4] bg-[#fbf5ee] text-[#2a2220] max-w-[130px] sm:max-w-[160px]"
+                title={`Tài khoản: ${user.name}`}
+              >
+                <User className="w-3.5 h-3.5 text-[#9e3b2e] flex-shrink-0" />
+                <span className="truncate">{user.name}</span>
+              </Button>
 
-          <Button
-            variant="default"
-            size="icon"
-            onClick={() => onNavigate("account")}
-            title="Tài khoản"
-          >
-            <User className="w-4 h-4" />
-          </Button>
+              {onLogout && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onLogout}
+                  title="Đăng xuất mô phỏng"
+                  className="text-[#887870] hover:text-[#9e3b2e]"
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          ) : (
+            <Button
+              variant="default"
+              size="pill"
+              onClick={onLoginClick || (() => onNavigate("login"))}
+            >
+              Đăng nhập
+            </Button>
+          )}
         </div>
       </div>
     </header>

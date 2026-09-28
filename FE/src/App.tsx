@@ -24,12 +24,28 @@ interface SavedEntry {
   poemLine2: string;
 }
 
+interface UserProfile {
+  name: string;
+  email: string;
+}
+
 export default function App() {
   const [screen, setScreen] = useState<NavScreen>("guest");
   const [journalText, setJournalText] = useState("");
   const [dark, setDark] = useState(() => localStorage.getItem("tltl-theme") === "dark");
 
   const todayDateString = new Date().toDateString();
+
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
+    try {
+      const stored = localStorage.getItem("tltl-current-user");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [pendingEntry, setPendingEntry] = useState<SavedEntry | null>(null);
 
   const [isCheckedIn, setIsCheckedIn] = useState<boolean>(() => {
     try {
@@ -84,6 +100,14 @@ export default function App() {
     localStorage.setItem("tltl-saved-entries", JSON.stringify(savedEntries));
   }, [savedEntries]);
 
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem("tltl-current-user", JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem("tltl-current-user");
+    }
+  }, [currentUser]);
+
   // Handle URL history sync
   useEffect(() => {
     const handlePopState = () => {
@@ -128,6 +152,7 @@ export default function App() {
       localStorage.setItem("tltl-last-checkin-date", todayDateString);
       localStorage.setItem("tltl-today-mood", selectedMood);
     } catch {}
+
     const signal = SIGNALS_DATA[selectedMood];
     const newEntry: SavedEntry = {
       id: Date.now().toString(),
@@ -137,8 +162,37 @@ export default function App() {
       poemLine1: signal.poem.line1,
       poemLine2: signal.poem.line2,
     };
-    setSavedEntries([newEntry, ...savedEntries]);
-    navigateTo("saved");
+
+    if (!currentUser) {
+      // Khách chưa đăng nhập: Ghi nhận kết quả chờ lưu & chuyển đến màn đăng nhập mô phỏng
+      setPendingEntry(newEntry);
+      navigateTo("login");
+    } else {
+      // Đã đăng nhập: Lưu trực tiếp và sang màn hoàn tất
+      setSavedEntries([newEntry, ...savedEntries]);
+      navigateTo("saved");
+    }
+  };
+
+  const handleSimulatedLogin = (name?: string, email?: string) => {
+    const user: UserProfile = {
+      name: name || "Lữ khách An Yên",
+      email: email || "annhien@tinlam.vn",
+    };
+    setCurrentUser(user);
+
+    if (pendingEntry) {
+      setSavedEntries([pendingEntry, ...savedEntries]);
+      setPendingEntry(null);
+      navigateTo("saved");
+    } else {
+      navigateTo("account");
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    navigateTo("guest");
   };
 
   const handleDeleteEntry = (id: string) => {
@@ -154,6 +208,8 @@ export default function App() {
         dark={dark}
         onToggleDark={() => setDark(!dark)}
         onLoginClick={() => navigateTo("login")}
+        user={currentUser}
+        onLogout={handleLogout}
       />
 
       {/* Screen Router */}
@@ -216,33 +272,49 @@ export default function App() {
 
         {screen === "login" && (
           <LoginScreen
-            onBack={() => navigateTo("guest")}
-            onSuccess={() => navigateTo("account")}
+            onBack={() => navigateTo(pendingEntry ? "result" : "guest")}
+            onSuccess={handleSimulatedLogin}
             onGoToRegister={() => navigateTo("register")}
+            pendingSignalMood={pendingEntry?.mood}
           />
         )}
 
         {screen === "register" && (
           <RegisterScreen
             onBack={() => navigateTo("login")}
-            onSuccess={() => navigateTo("account")}
+            onSuccess={handleSimulatedLogin}
             onGoToLogin={() => navigateTo("login")}
+            pendingSignalMood={pendingEntry?.mood}
           />
         )}
 
         {screen === "saved" && (
           <CompletionScreen
             mood={selectedMood}
+            isLoggedIn={!!currentUser}
+            userName={currentUser?.name}
             onGoToHome={() => navigateTo("today")}
             onGoToAccount={() => navigateTo("account")}
-            onGoToAuth={() => navigateTo("login")}
+            onGoToAuth={() => {
+              const signal = SIGNALS_DATA[selectedMood];
+              const newEntry: SavedEntry = {
+                id: Date.now().toString(),
+                mood: selectedMood,
+                date: new Date().toLocaleDateString("vi-VN"),
+                journal: journalText.trim() || undefined,
+                poemLine1: signal.poem.line1,
+                poemLine2: signal.poem.line2,
+              };
+              setPendingEntry(newEntry);
+              navigateTo("login");
+            }}
           />
         )}
 
         {screen === "account" && (
           <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif]">
             <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-10 pb-16">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-[#eddcd0]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-[#eddcd0]">
                 <div>
                   <Badge variant="terracotta" className="gap-2 px-3 py-1 mb-2 uppercase tracking-wider text-xs">
                     <Flower2 className="w-3.5 h-3.5" />
@@ -265,6 +337,42 @@ export default function App() {
                   <span>Gieo tín hiệu mới</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
+              </div>
+
+              {/* Frontend Demo Banner */}
+              <div className="mb-6 p-4 rounded-2xl bg-[#fbf3ec] border border-[#ecd9cb] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[#78645c] shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-[10px] font-bold text-[#9e3b2e] bg-white border-[#e6cbba]">
+                    FRONTEND DEMO
+                  </Badge>
+                  <span>
+                    Chưa kết nối Backend • Dữ liệu đang được lưu tạm trên Local Storage của trình duyệt.
+                  </span>
+                </div>
+                {currentUser ? (
+                  <div className="flex items-center gap-2 sm:gap-3 self-end sm:self-auto">
+                    <span className="text-[#9e3b2e] font-semibold">
+                      {currentUser.name} ({currentUser.email})
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleLogout}
+                      className="text-xs text-[#8a7a72] hover:text-[#9e3b2e] h-7 px-2"
+                    >
+                      Đăng xuất (Demo)
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigateTo("login")}
+                    className="text-xs font-semibold self-start sm:self-auto h-7 px-3 border-[#dfc6b3]"
+                  >
+                    Đăng nhập mô phỏng
+                  </Button>
+                )}
               </div>
 
               {savedEntries.length === 0 ? (
