@@ -13,6 +13,7 @@ import { ForgotPasswordScreen } from "./screens/ForgotPasswordScreen";
 import { ExperienceScreen } from "./screens/ExperienceScreen";
 import { CultureScreen } from "./screens/CultureScreen";
 import { CultureDetailScreen } from "./screens/CultureDetailScreen";
+import { XinXamScreen } from "./screens/XinXamScreen";
 import {
   MoodKey,
   getSignalById,
@@ -91,6 +92,7 @@ export default function App() {
         "account",
         "culture",
         "culture-detail",
+        "xinxam",
         "login",
         "register",
         "saved",
@@ -256,6 +258,7 @@ export default function App() {
           "account",
           "culture",
           "culture-detail",
+          "xinxam",
           "login",
           "register",
           "saved",
@@ -527,8 +530,47 @@ export default function App() {
               setSelectedArticleId(id);
               navigateTo("culture-detail", id);
             }}
-            onGoToExperience={() => navigateTo("experience")}
+            onGoToExperience={() => navigateTo("xinxam")}
             onGoToMood={() => navigateTo("mood")}
+          />
+        )}
+
+        {screen === "xinxam" && (
+          <XinXamScreen
+            onBackToExperienceHome={() => navigateTo("experience")}
+            onGoToArticle={(articleId) => {
+              setSelectedArticleId(articleId);
+              navigateTo("culture-detail", articleId);
+            }}
+            onSaveToAccount={(result) => {
+              const newEntry: SavedEntry = {
+                id: Date.now().toString(),
+                signalId: `xinxam-${result.stickNumber}`,
+                mood: selectedMood,
+                date: new Date().toLocaleDateString("vi-VN"),
+                journal: `${result.title}: ${result.quote}`,
+                poemLine1: result.poem.line1,
+                poemLine2: result.poem.line2,
+                actionTitle: result.microAction.title,
+              };
+              if (!currentUser) {
+                setPendingEntry(newEntry);
+                navigateTo("login");
+              } else {
+                const exists = savedEntries.some((e) => e.signalId === newEntry.signalId);
+                if (!exists) {
+                  const updated = [newEntry, ...savedEntries];
+                  setSavedEntries(updated);
+                  const userKey = getUserStorageKey(currentUser);
+                  if (userKey) {
+                    localStorage.setItem(userKey, JSON.stringify(updated));
+                  }
+                }
+              }
+            }}
+            onGoToLogin={() => navigateTo("login")}
+            onGoToExplore={() => navigateTo("culture")}
+            isLoggedIn={!!currentUser}
           />
         )}
 

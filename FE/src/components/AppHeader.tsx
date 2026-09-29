@@ -12,6 +12,7 @@ export type NavScreen =
   | "culture"
   | "culture-detail"
   | "experience"
+  | "xinxam"
   | "saved"
   | "login"
   | "register"
@@ -80,9 +81,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </Button>
 
           <Button
-            variant={currentScreen === "experience" ? "default" : "ghost"}
+            variant={
+              ["experience", "xinxam"].includes(currentScreen)
+                ? "default"
+                : "ghost"
+            }
             size="pill"
-            onClick={() => onNavigate("experience")}
+            onClick={() => onNavigate("xinxam")}
           >
             Trải nghiệm
           </Button>
