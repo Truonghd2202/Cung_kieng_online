@@ -22,11 +22,13 @@ import {
 interface CultureScreenProps {
   onSelectArticle: (id: string) => void;
   onGoToHome: () => void;
+  onGoToRituals?: () => void;
 }
 
 export const CultureScreen: React.FC<CultureScreenProps> = ({
   onSelectArticle,
   onGoToHome,
+  onGoToRituals,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
@@ -100,6 +102,21 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
             <span className="text-[#9e3b2e]">✦</span>
             <span>KHO TÀNG DÂN GIAN • GÓC NHÌN VĂN HÓA & ĐỜI SỐNG TÂM LINH</span>
           </div>
+        </div>
+
+        {/* Khám phá Sub-tabs */}
+        <div className="flex items-center gap-2 mb-6">
+          <button className="px-4 py-2 rounded-full bg-[#9e3b2e] text-white text-xs font-semibold shadow-2xs">
+            Di sản & Điển tích dân gian
+          </button>
+          {onGoToRituals && (
+            <button
+              onClick={onGoToRituals}
+              className="px-4 py-2 rounded-full bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#9e3b2e] hover:text-[#9e3b2e] text-xs font-medium transition-all cursor-pointer"
+            >
+              Cẩm nang nghi lễ tại gia (Mới)
+            </button>
+          )}
         </div>
 
         {/* Hero Banner Card */}

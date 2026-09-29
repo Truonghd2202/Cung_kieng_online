@@ -31,6 +31,7 @@ interface ExperienceScreenProps {
   onSkip?: () => void;
   onGoToXinXam?: () => void;
   onGoToWish?: () => void;
+  onGoToZen?: () => void;
 }
 
 export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
@@ -39,6 +40,7 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
   onSkip,
   onGoToXinXam,
   onGoToWish,
+  onGoToZen,
 }) => {
   // Quản lý các chủ đề đã chọn
   const [selectedIds, setSelectedIds] = useState<string[]>(initialTopics);
@@ -153,7 +155,7 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Card 1: Xin xăm */}
               {onGoToXinXam && (
                 <div
@@ -213,6 +215,38 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
 
                   <div className="relative z-10 pt-4 border-t border-[#f4e8dc] flex items-center justify-between text-sm font-semibold text-[#9e3b2e]">
                     <span>Gửi gắm khoảng lòng</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              )}
+
+              {/* Card 3: Không gian tĩnh tâm */}
+              {onGoToZen && (
+                <div
+                  onClick={onGoToZen}
+                  className="group p-6 rounded-3xl bg-white border border-[#eedcd0] hover:border-[#9e3b2e]/60 shadow-xs hover:shadow-md transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between"
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#faece1]/50 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-[#faece1] transition-all"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-[#faede2] border border-[#ecd9cb] flex items-center justify-center text-[#9e3b2e]">
+                        <Flower2 className="w-6 h-6" />
+                      </div>
+                      <Badge variant="outline" className="text-xs text-[#9e3b2e] border-[#eedcd0] bg-[#fffaf5]">
+                        Nếp sống chậm
+                      </Badge>
+                    </div>
+
+                    <h3 className="font-['Noto_Serif',serif] font-bold text-xl text-[#2a2220] group-hover:text-[#9e3b2e] transition-colors mb-2">
+                      Không gian tĩnh tâm
+                    </h3>
+                    <p className="text-sm text-[#6e5d56] leading-relaxed mb-4">
+                      Khoảng lặng 3 phút an trú thân tâm bên hiên nhà Việt mộc mạc; chú tâm vào hơi thở tự nhiên và buông xả âu lo thường nhật.
+                    </p>
+                  </div>
+
+                  <div className="relative z-10 pt-4 border-t border-[#f4e8dc] flex items-center justify-between text-sm font-semibold text-[#9e3b2e]">
+                    <span>Bắt đầu tĩnh tâm</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>

@@ -15,6 +15,9 @@ import { CultureScreen } from "./screens/CultureScreen";
 import { CultureDetailScreen } from "./screens/CultureDetailScreen";
 import { XinXamScreen } from "./screens/XinXamScreen";
 import { WishScreen, WishTopic } from "./screens/WishScreen";
+import { RitualGuideScreen } from "./screens/RitualGuideScreen";
+import { RitualDetailScreen } from "./screens/RitualDetailScreen";
+import { ZenScreen } from "./screens/ZenScreen";
 import {
   MoodKey,
   getSignalById,
@@ -93,8 +96,11 @@ export default function App() {
         "account",
         "culture",
         "culture-detail",
+        "rituals",
+        "ritual-detail",
         "xinxam",
         "wish",
+        "zen",
         "login",
         "register",
         "saved",
@@ -114,8 +120,12 @@ export default function App() {
   // Check URL articleId for CultureDetail
   const initialUrlArticleId = new URLSearchParams(window.location.search).get("articleId") || "dinh-lang-bac-bo";
 
+  // Check URL ritualId for RitualDetail
+  const initialUrlRitualId = new URLSearchParams(window.location.search).get("ritualId") || "chuan-bi-ngay-ram";
+
   const [screen, setScreen] = useState<NavScreen>(getInitialScreen);
   const [selectedArticleId, setSelectedArticleId] = useState<string>(initialUrlArticleId);
+  const [selectedRitualId, setSelectedRitualId] = useState<string>(initialUrlRitualId);
   const [journalText, setJournalText] = useState("");
   const [dark, setDark] = useState(() => localStorage.getItem("tltl-theme") === "dark");
 
@@ -248,6 +258,10 @@ export default function App() {
       if (urlArticleId) {
         setSelectedArticleId(urlArticleId);
       }
+      const urlRitualId = params.get("ritualId");
+      if (urlRitualId) {
+        setSelectedRitualId(urlRitualId);
+      }
       if (path === "account" && !currentUser) {
         setScreen("login");
       } else if (
@@ -260,8 +274,11 @@ export default function App() {
           "account",
           "culture",
           "culture-detail",
+          "rituals",
+          "ritual-detail",
           "xinxam",
           "wish",
+          "zen",
           "login",
           "register",
           "saved",
@@ -292,6 +309,9 @@ export default function App() {
     } else if (targetScreen === "culture-detail") {
       const idToUse = signalIdParam || selectedArticleId || "dinh-lang-bac-bo";
       url = `/culture-detail?articleId=${idToUse}`;
+    } else if (targetScreen === "ritual-detail") {
+      const idToUse = signalIdParam || selectedRitualId || "chuan-bi-ngay-ram";
+      url = `/ritual-detail?ritualId=${idToUse}`;
     }
     window.history.pushState(null, "", url);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -514,6 +534,7 @@ export default function App() {
             onSkip={() => navigateTo("guest")}
             onGoToXinXam={() => navigateTo("xinxam")}
             onGoToWish={() => navigateTo("wish")}
+            onGoToZen={() => navigateTo("zen")}
           />
         )}
 
@@ -524,6 +545,7 @@ export default function App() {
               navigateTo("culture-detail", id);
             }}
             onGoToHome={() => navigateTo("today")}
+            onGoToRituals={() => navigateTo("rituals")}
           />
         )}
 
@@ -610,6 +632,34 @@ export default function App() {
               }
             }}
             isLoggedIn={!!currentUser}
+          />
+        )}
+
+        {screen === "rituals" && (
+          <RitualGuideScreen
+            onSelectRitual={(id) => {
+              setSelectedRitualId(id);
+              navigateTo("ritual-detail", id);
+            }}
+            onGoToCulture={() => navigateTo("culture")}
+          />
+        )}
+
+        {screen === "ritual-detail" && (
+          <RitualDetailScreen
+            ritualId={selectedRitualId}
+            onBackToRitualList={() => navigateTo("rituals")}
+            onSelectRelatedRitual={(id) => {
+              setSelectedRitualId(id);
+              navigateTo("ritual-detail", id);
+            }}
+          />
+        )}
+
+        {screen === "zen" && (
+          <ZenScreen
+            onBackToExperience={() => navigateTo("xinxam")}
+            onGoToHome={() => navigateTo("today")}
           />
         )}
 
