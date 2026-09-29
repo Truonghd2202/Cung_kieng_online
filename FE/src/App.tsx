@@ -18,6 +18,7 @@ import { WishScreen, WishTopic } from "./screens/WishScreen";
 import { RitualGuideScreen } from "./screens/RitualGuideScreen";
 import { RitualDetailScreen } from "./screens/RitualDetailScreen";
 import { ZenScreen } from "./screens/ZenScreen";
+import { AccountScreen } from "./screens/AccountScreen";
 import {
   MoodKey,
   getSignalById,
@@ -715,149 +716,19 @@ export default function App() {
         )}
 
         {screen === "account" && (
-          <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif]">
-            <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-10 pb-16">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-[#eddcd0]">
-                <div>
-                  <Badge variant="terracotta" className="gap-2 px-3 py-1 mb-2 uppercase tracking-wider text-xs">
-                    <Flower2 className="w-3.5 h-3.5" />
-                    <span>Không gian lưu giữ cá nhân</span>
-                  </Badge>
-                  <h1 className="text-3xl sm:text-4xl font-['Noto_Serif',serif] font-bold text-[#2a2220]">
-                    Góc của tôi • Nhật ký an yên
-                  </h1>
-                  <p className="mt-1.5 text-xs sm:text-sm text-[#77665f]">
-                    Nơi lưu lại các quẻ chữ, lời chiêm nghiệm và tâm tư bạn đã gửi gắm mỗi ngày.
-                  </p>
-                </div>
-
-                <Button
-                  variant="default"
-                  size="pill"
-                  onClick={() => navigateTo("mood")}
-                  className="gap-2 self-start sm:self-auto"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Gieo tín hiệu mới</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </div>
-
-              {/* Frontend Demo Banner */}
-              <div className="mb-6 p-4 rounded-2xl bg-[#fbf3ec] border border-[#ecd9cb] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[#78645c] shadow-2xs">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-xs font-bold text-[#9e3b2e] bg-white border-[#e6cbba]">
-                    FRONTEND DEMO
-                  </Badge>
-                  <span>
-                    Chưa kết nối Backend • Dữ liệu đang được lưu tạm trên Local Storage của trình duyệt.
-                  </span>
-                </div>
-                {currentUser ? (
-                  <div className="flex items-center gap-2 sm:gap-3 self-end sm:self-auto">
-                    <span className="text-[#9e3b2e] font-semibold">
-                      {currentUser.name} ({currentUser.email})
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleLogout}
-                      className="text-xs text-[#8a7a72] hover:text-[#9e3b2e] h-7 px-2"
-                    >
-                      Đăng xuất (Demo)
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigateTo("login")}
-                    className="text-xs font-semibold self-start sm:self-auto h-7 px-3 border-[#dfc6b3]"
-                  >
-                    Đăng nhập mô phỏng
-                  </Button>
-                )}
-              </div>
-
-              {savedEntries.length === 0 ? (
-                <Card className="p-12 text-center max-w-lg mx-auto shadow-xs">
-                  <div className="w-12 h-12 mx-auto rounded-full bg-[#faede2] text-[#9e3b2e] flex items-center justify-center mb-4">
-                    <BookOpen className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-2">
-                    Chưa có nhật ký nào được lưu
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#7a6b64] mb-6">
-                    Hãy khởi đầu ngày mới bằng việc chọn một tâm trạng và đón nhận lời nhắn lành.
-                  </p>
-                  <Button
-                    variant="default"
-                    size="pill"
-                    onClick={() => navigateTo("mood")}
-                  >
-                    Chọn tâm trạng ngay
-                  </Button>
-                </Card>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {savedEntries.map((item) => (
-                    <Card
-                      key={item.id}
-                      className="p-6 shadow-xs flex flex-col justify-between hover:border-[#dfc3af] transition-all"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between text-xs text-[#8c7b74] mb-3">
-                          <span className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-[#9e3b2e]" />
-                            <span>{item.date}</span>
-                          </span>
-                          <Badge variant="terracotta">{item.mood}</Badge>
-                        </div>
-
-                        <div className="p-4 rounded-2xl bg-[#fbf5ee] border border-[#f0dfd1] mb-4">
-                          <p className="font-['Noto_Serif',serif] italic font-semibold text-sm sm:text-base text-[#2c2220] leading-snug">
-                            “{item.poemLine1}
-                            <br />
-                            {item.poemLine2}”
-                          </p>
-                          {item.actionTitle && (
-                            <p className="text-xs text-[#85736c] mt-2 font-sans font-medium">
-                              Hành động: {item.actionTitle}
-                            </p>
-                          )}
-                        </div>
-
-                        {item.journal && (
-                          <div className="text-xs text-[#6e5d56] leading-relaxed italic bg-[#faf4ed]/60 p-3 rounded-xl border border-[#ede0d5] mb-4">
-                            "{item.journal}"
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="pt-3 border-t border-[#f4e8dc] flex items-center justify-between text-xs">
-                        <Button
-                          variant="link"
-                          onClick={() => handleOpenSavedSignal(item)}
-                          className="text-[#9e3b2e] font-semibold flex items-center gap-1 p-0 h-auto"
-                        >
-                          <span>Xem lại chiêm nghiệm</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </Button>
-
-                        <button
-                          onClick={() => handleDeleteEntry(item.id)}
-                          title="Xóa ghi chép này"
-                          className="text-[#aa9991] hover:text-[#9e3b2e] p-1.5 rounded-lg transition-colors cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </main>
-          </div>
+          <AccountScreen
+            currentUser={currentUser}
+            savedSignals={savedEntries}
+            onDeleteSignal={handleDeleteEntry}
+            onGoToSignalResult={(signalId) => {
+              setCurrentSignalId(signalId);
+              navigateTo("result", signalId);
+            }}
+            onGoToXinXam={() => navigateTo("xinxam")}
+            onGoToWish={() => navigateTo("wish")}
+            onGoToMood={() => navigateTo("mood")}
+            onGoToHome={() => navigateTo("today")}
+          />
         )}
       </div>
 
