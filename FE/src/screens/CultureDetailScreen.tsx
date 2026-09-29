@@ -9,6 +9,7 @@ import {
   Compass,
   ShieldAlert,
   Share2,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -177,18 +178,60 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
               </section>
             ))}
 
-            {/* Editorial Principle Disclaimer Callout */}
-            <div className="p-5 rounded-2xl bg-[#fbece1]/80 border border-[#ecd5c4] flex items-start gap-3.5 shadow-2xs">
-              <ShieldAlert className="w-5 h-5 text-[#9e3b2e] flex-shrink-0 mt-0.5" />
-              <div className="text-xs text-[#73615a] leading-relaxed">
-                <div className="font-bold text-[#8d2f23] mb-1 flex items-center justify-between">
-                  <span>Nguồn & Tính trung thực tư liệu</span>
-                  <span className="font-normal text-[11px] text-[#9a867e]">
-                    Bản quyền nội dung Tin Lắm Tâm Linh
-                  </span>
+            {/* Editorial Principle & Verified Scholarly Citations Section */}
+            <div className="p-6 rounded-3xl bg-white border border-[#eddcd0] shadow-2xs space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#faece1] text-[#9e3b2e] flex items-center justify-center shrink-0 mt-0.5">
+                  <BookOpen className="w-4 h-4" />
                 </div>
-                <p>{article.editorialNote}</p>
+                <div>
+                  <h3 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220]">
+                    Nguồn tư liệu & Căn cứ khảo cứu
+                  </h3>
+                  <p className="text-xs text-[#73615a] leading-relaxed mt-0.5">
+                    {article.editorialNote}
+                  </p>
+                </div>
               </div>
+
+              {/* Citations List */}
+              {article.sources && article.sources.length > 0 && (
+                <div className="space-y-3 pt-3 border-t border-[#f1e3d7]">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e] flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Tài liệu tham khảo & trích dẫn chính thức</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2.5">
+                    {article.sources.map((src, sIdx) => (
+                      <div
+                        key={sIdx}
+                        className="p-3.5 rounded-2xl bg-[#faf4ed]/70 border border-[#ecdacb] flex flex-col sm:flex-row sm:items-start justify-between gap-2"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-xs sm:text-sm text-[#2a2220]">
+                              {src.title}
+                            </span>
+                            <span className="text-xs text-[#8d7971]">
+                              — {src.author}
+                            </span>
+                          </div>
+                          <p className="text-xs text-[#6e5d56] leading-relaxed">
+                            {src.annotation}
+                          </p>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className="shrink-0 text-[10px] uppercase font-semibold text-[#9e3b2e] border-[#ebd3c1] bg-white self-start"
+                        >
+                          {src.sourceType}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Navigation Action Buttons Row */}

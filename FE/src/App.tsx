@@ -162,18 +162,27 @@ export default function App() {
 
   const initialUser = getInitialUser();
 
-  // Helper to resolve initial screen from URL
+  // Helper to resolve initial screen from URL safely with prerequisite checks
   const getInitialScreen = (): NavScreen => {
     const path = window.location.pathname.replace(/^\//, "");
     if (path === "account" && !initialUser) {
       return "login";
+    }
+    // loading requires active check-in flow; if opened directly, redirect safely
+    if (path === "loading") {
+      const lastCheck = localStorage.getItem("tltl-last-checkin-date");
+      return lastCheck === todayDateString ? "today" : "mood";
+    }
+    // saved requires completed ritual/action context; if opened directly, redirect to today or guest
+    if (path === "saved") {
+      const lastCheck = localStorage.getItem("tltl-last-checkin-date");
+      return lastCheck === todayDateString ? "today" : "guest";
     }
     if (
       [
         "guest",
         "today",
         "mood",
-        "loading",
         "result",
         "account",
         "culture",
@@ -185,7 +194,6 @@ export default function App() {
         "zen",
         "login",
         "register",
-        "saved",
         "experience",
         "forgot",
       ].includes(path)
@@ -305,35 +313,73 @@ export default function App() {
     localStorage.setItem("tltl-current-signal-id", currentSignalId);
   }, [currentSignalId]);
 
-  // Handle URL history sync & direct link / popstate reload
+  // Handle URL history sync & direct link / popstate reload with full context restoration
   useEffect(() => {
-    const handlePopState = () => {
+    // If opened directly on /result without ?signalId=..., ensure URL query param is normalized
+    if (screen === "result" && !initialUrlSignalId) {
+      window.history.replaceState(
+        { screen: "result", signalId: activeSignal.id, mood: selectedMood },
+        "",
+        `/result?signalId=${activeSignal.id}`
+      );
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
       const path = window.location.pathname.replace(/^\//, "");
       const params = new URLSearchParams(window.location.search);
-      const urlSignalId = params.get("signalId");
+      const state = event.state as {
+        screen?: NavScreen;
+        signalId?: string;
+        articleId?: string;
+        ritualId?: string;
+        mood?: MoodKey;
+      } | null;
+
+      // Restore signal context
+      const urlSignalId = params.get("signalId") || state?.signalId;
       if (urlSignalId) {
         const sig = getSignalById(urlSignalId);
         if (sig) {
           setCurrentSignalId(sig.id);
           setSelectedMood(sig.mood);
         }
+      } else if (path === "result") {
+        const fallbackSig = getSignalById(currentSignalId) || getDefaultSignalForMood(selectedMood);
+        setCurrentSignalId(fallbackSig.id);
+        setSelectedMood(fallbackSig.mood);
+        window.history.replaceState(
+          { screen: "result", signalId: fallbackSig.id, mood: fallbackSig.mood },
+          "",
+          `/result?signalId=${fallbackSig.id}`
+        );
       }
-      const urlArticleId = params.get("articleId");
+
+      // Restore article context
+      const urlArticleId = params.get("articleId") || state?.articleId;
       if (urlArticleId) {
         setSelectedArticleId(urlArticleId);
       }
-      const urlRitualId = params.get("ritualId");
+
+      // Restore ritual context
+      const urlRitualId = params.get("ritualId") || state?.ritualId;
       if (urlRitualId) {
         setSelectedRitualId(urlRitualId);
       }
+
+      // Handle screen routing with guards for missing context
       if (path === "account" && !currentUser) {
         setScreen("login");
+      } else if (path === "loading") {
+        // Direct hit or back to loading: do not trap in loading spinner
+        setScreen(isCheckedIn ? "today" : "mood");
+      } else if (path === "saved") {
+        // Direct hit or back to saved without completed flow: route to today or guest
+        setScreen(isCheckedIn ? "today" : "guest");
       } else if (
         [
           "guest",
           "today",
           "mood",
-          "loading",
           "result",
           "account",
           "culture",
@@ -345,7 +391,6 @@ export default function App() {
           "zen",
           "login",
           "register",
-          "saved",
           "experience",
           "forgot",
         ].includes(path)
@@ -355,9 +400,10 @@ export default function App() {
         setScreen("guest");
       }
     };
+
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [currentUser]);
+  }, [currentUser, isCheckedIn, activeSignal.id, currentSignalId, selectedMood]);
 
   const navigateTo = (newScreen: NavScreen, signalIdParam?: string) => {
     let targetScreen = newScreen;
@@ -367,17 +413,30 @@ export default function App() {
     }
     setScreen(targetScreen);
     let url = targetScreen === "guest" ? "/" : `/${targetScreen}`;
+    let resolvedSignalId = undefined;
+    let resolvedArticleId = undefined;
+    let resolvedRitualId = undefined;
+
     if (targetScreen === "result") {
-      const idToUse = signalIdParam || currentSignalId || activeSignal.id;
-      url = `/result?signalId=${idToUse}`;
+      resolvedSignalId = signalIdParam || currentSignalId || activeSignal.id;
+      url = `/result?signalId=${resolvedSignalId}`;
     } else if (targetScreen === "culture-detail") {
-      const idToUse = signalIdParam || selectedArticleId || "dinh-lang-bac-bo";
-      url = `/culture-detail?articleId=${idToUse}`;
+      resolvedArticleId = signalIdParam || selectedArticleId || "dinh-lang-bac-bo";
+      url = `/culture-detail?articleId=${resolvedArticleId}`;
     } else if (targetScreen === "ritual-detail") {
-      const idToUse = signalIdParam || selectedRitualId || "chuan-bi-ngay-ram";
-      url = `/ritual-detail?ritualId=${idToUse}`;
+      resolvedRitualId = signalIdParam || selectedRitualId || "chuan-bi-ngay-ram";
+      url = `/ritual-detail?ritualId=${resolvedRitualId}`;
     }
-    window.history.pushState(null, "", url);
+
+    const historyPayload = {
+      screen: targetScreen,
+      signalId: resolvedSignalId,
+      articleId: resolvedArticleId,
+      ritualId: resolvedRitualId,
+      mood: selectedMood,
+    };
+
+    window.history.pushState(historyPayload, "", url);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -587,7 +646,7 @@ export default function App() {
   const isCurrentSignalSaved = userCornerData.signals.some((e) => e.signalId === activeSignal.id);
 
   return (
-    <div className={`min-h-screen flex flex-col bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif] ${dark ? "dark" : ""}`}>
+    <div className={`min-h-screen flex flex-col bg-[#fcf8f2] dark:bg-[#120d0b] text-[#2e2624] dark:text-[#f3eae4] font-['Be_Vietnam_Pro',sans-serif] ${dark ? "dark" : ""}`}>
       {/* Universal Header */}
       <AppHeader
         currentScreen={screen}

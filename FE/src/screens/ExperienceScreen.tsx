@@ -465,7 +465,7 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
             </span>
           </div>
           <div>
-            © 2024 Tin Lắm Tâm Linh. Tiếp nối tinh hoa mỹ học Dó & Gốm Việt đương đại.
+            © 2025 Tin Lắm Tâm Linh. Tiếp nối tinh hoa mỹ học Dó & Gốm Việt đương đại.
           </div>
         </div>
       </main>

@@ -11,9 +11,9 @@ import {
   ArrowRight,
   ShieldCheck,
   CheckCircle2,
-  Code2,
   Compass,
   Wind,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -28,7 +28,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
   onBackToExperience,
   onGoToHome,
 }) => {
-  // 3 States: 'ready' (State 1) | 'active' (State 2) | 'completed' (State 3)
+  // 3 States: 'ready' | 'active' | 'completed'
   const [zenState, setZenState] = useState<"ready" | "active" | "completed">("ready");
 
   // Display & Ambient options
@@ -43,9 +43,12 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
   const [breathPhase, setBreathPhase] = useState<"inhale" | "hold" | "exhale">("inhale");
   const [breathCycleTime, setBreathCycleTime] = useState(0);
 
-  // Web Audio Context for natural ambient tone
+  // Canvas ref for 3D Perspective Scene
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Web Audio Context for authentic harmonic singing bowl & ambient breeze
   const audioContextRef = useRef<AudioContext | null>(null);
-  const oscillatorRef = useRef<OscillatorNode | null>(null);
+  const activeNodesRef = useRef<{ [key: string]: any }>({});
 
   const startAmbientSound = () => {
     try {
@@ -54,29 +57,82 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
       const ctx = new AudioCtx();
       audioContextRef.current = ctx;
 
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(216, ctx.currentTime); // Calm 216Hz singing bowl tone
-      gain.gain.setValueAtTime(0.015, ctx.currentTime);
+      // Master gain
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(0.08, ctx.currentTime);
+      masterGain.connect(ctx.destination);
 
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      oscillatorRef.current = osc;
+      // 1. Warm Pink/Brown Noise Generator for gentle natural breeze/stream
+      const bufferSize = ctx.sampleRate * 2;
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99 * b0 + white * 0.05;
+        b1 = 0.96 * b1 + white * 0.11;
+        b2 = 0.86 * b2 + white * 0.25;
+        output[i] = (b0 + b1 + b2) * 0.15;
+      }
+
+      const whiteNoise = ctx.createBufferSource();
+      whiteNoise.buffer = noiseBuffer;
+      whiteNoise.loop = true;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(320, ctx.currentTime);
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.04, ctx.currentTime);
+
+      whiteNoise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(masterGain);
+      whiteNoise.start();
+
+      // 2. Gentle Singing Bowl Resonance (Fundamental 108Hz + 216Hz + 432Hz harmonics)
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const bowlGain1 = ctx.createGain();
+      const bowlGain2 = ctx.createGain();
+
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(108, ctx.currentTime);
+      bowlGain1.gain.setValueAtTime(0.03, ctx.currentTime);
+
+      osc2.type = "sine";
+      osc2.frequency.setValueAtTime(216.5, ctx.currentTime); // Slight detune for natural vibrato beat
+      bowlGain2.gain.setValueAtTime(0.02, ctx.currentTime);
+
+      osc1.connect(bowlGain1);
+      osc2.connect(bowlGain2);
+      bowlGain1.connect(masterGain);
+      bowlGain2.connect(masterGain);
+
+      osc1.start();
+      osc2.start();
+
+      activeNodesRef.current = {
+        whiteNoise,
+        osc1,
+        osc2,
+        masterGain,
+      };
     } catch {}
   };
 
   const stopAmbientSound = () => {
     try {
-      if (oscillatorRef.current) {
-        oscillatorRef.current.stop();
-        oscillatorRef.current.disconnect();
-      }
+      if (activeNodesRef.current.osc1) activeNodesRef.current.osc1.stop();
+      if (activeNodesRef.current.osc2) activeNodesRef.current.osc2.stop();
+      if (activeNodesRef.current.whiteNoise) activeNodesRef.current.whiteNoise.stop();
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
     } catch {}
+    activeNodesRef.current = {};
+    audioContextRef.current = null;
   };
 
   useEffect(() => {
@@ -88,7 +144,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
     return () => stopAmbientSound();
   }, [soundEnabled, zenState]);
 
-  // Timer interval
+  // Timer interval & Breathing Cycle
   useEffect(() => {
     if (zenState !== "active" || isPaused) return;
 
@@ -114,6 +170,122 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
 
     return () => clearInterval(timer);
   }, [zenState, isPaused]);
+
+  // 3D Canvas Rendering Engine (Perspective Projection with 3D Particles & Golden Bell)
+  useEffect(() => {
+    if (viewMode !== "3D") return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    const width = (canvas.width = canvas.offsetWidth || 800);
+    const height = (canvas.height = canvas.offsetHeight || 450);
+
+    // Generate 3D floating particles
+    const particleCount = reducedMotion ? 25 : 65;
+    const particles = Array.from({ length: particleCount }, () => ({
+      x: (Math.random() - 0.5) * 600,
+      y: (Math.random() - 0.5) * 400,
+      z: Math.random() * 800 + 100,
+      speedZ: Math.random() * 0.8 + 0.3,
+      radius: Math.random() * 2 + 1.2,
+      opacity: Math.random() * 0.7 + 0.3,
+    }));
+
+    let angle = 0;
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      // Radial dark background with atmospheric mist
+      const grad = ctx.createRadialGradient(
+        width / 2,
+        height / 2,
+        40,
+        width / 2,
+        height / 2,
+        width / 1.4
+      );
+      grad.addColorStop(0, isLampLit ? "#2f1e16" : "#1c1715");
+      grad.addColorStop(1, "#0f0c0b");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
+
+      const fov = 350;
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      // Draw 3D rotating lotus / meditation platform
+      angle += reducedMotion ? 0.002 : 0.008;
+      const pulse =
+        breathPhase === "inhale"
+          ? 1.08
+          : breathPhase === "hold"
+          ? 1.05
+          : 0.96;
+
+      ctx.save();
+      ctx.translate(centerX, centerY + 20);
+
+      // Concentric 3D elliptical rings
+      for (let r = 1; r <= 3; r++) {
+        ctx.beginPath();
+        ctx.ellipse(0, 40, (110 - r * 15) * pulse, (35 - r * 5) * pulse, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(216, 132, 118, ${0.15 + r * 0.1})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
+      // Golden Lantern / Singing Bowl Center Glow
+      if (isLampLit) {
+        const glow = ctx.createRadialGradient(0, -10, 2, 0, -10, 80);
+        glow.addColorStop(0, "rgba(251, 191, 36, 0.6)");
+        glow.addColorStop(0.5, "rgba(245, 158, 11, 0.2)");
+        glow.addColorStop(1, "rgba(245, 158, 11, 0)");
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(0, -10, 80, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+
+      // Render 3D Perspective Particles
+      particles.forEach((p) => {
+        p.z -= p.speedZ;
+        if (p.z <= 10) {
+          p.z = 800;
+          p.x = (Math.random() - 0.5) * 600;
+          p.y = (Math.random() - 0.5) * 400;
+        }
+
+        const scale = fov / (fov + p.z);
+        const projX = centerX + p.x * scale;
+        const projY = centerY + p.y * scale;
+        const projRadius = p.radius * scale * (isLampLit ? 1.3 : 1);
+
+        if (projX >= 0 && projX <= width && projY >= 0 && projY <= height) {
+          ctx.beginPath();
+          ctx.arc(projX, projY, Math.max(0.5, projRadius), 0, Math.PI * 2);
+          ctx.fillStyle = isLampLit
+            ? `rgba(251, 191, 36, ${p.opacity * scale})`
+            : `rgba(235, 214, 197, ${p.opacity * scale * 0.75})`;
+          ctx.fill();
+        }
+      });
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [viewMode, breathPhase, isLampLit, reducedMotion]);
 
   const handleStartZen = () => {
     setSecondsRemaining(180);
@@ -156,11 +328,9 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
             <span className="text-[#9e3b2e] font-semibold">Không gian tĩnh tâm</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 uppercase font-semibold text-[11px] text-[#938279]">
-              <span className="w-2 h-2 rounded-full bg-[#9e3b2e] inline-block"></span>
-              <span>TRẢI NGHIỆM TƯƠNG TÁC • NẾP SỐNG CHẬM • PHI TÔN GIÁO & PHI TIÊN TRI</span>
-            </div>
+          <div className="flex items-center gap-1.5 uppercase font-semibold text-[11px] text-[#938279]">
+            <span className="w-2 h-2 rounded-full bg-[#9e3b2e] inline-block"></span>
+            <span>TRẢI NGHIỆM TƯƠNG TÁC • NẾP SỐNG CHẬM • PHI TÔN GIÁO & PHI TIÊN TRI</span>
           </div>
         </div>
 
@@ -178,7 +348,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
               </p>
             </div>
 
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-white border border-[#eddcd0] shrink-0 text-xs text-[#806f67]">
+            <div className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white border border-[#eddcd0] shrink-0 text-xs text-[#806f67] shadow-2xs">
               <Flower2 className="w-4 h-4 text-[#9e3b2e]" />
               <div className="text-left">
                 <div className="font-bold text-[#2a2220]">Tin Lắm Tâm Linh</div>
@@ -195,23 +365,24 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
             <span className="font-semibold text-[#6f5e57]">HIỂN THỊ:</span>
             <button
               onClick={() => setViewMode("2D")}
-              className={`px-3 py-1 rounded-full font-medium transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                 viewMode === "2D"
                   ? "bg-[#9e3b2e] text-white shadow-2xs font-semibold"
-                  : "bg-white border border-[#eddcd0] text-[#6d5c55]"
+                  : "bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#dfc3af]"
               }`}
             >
-              Chế độ 2D mộc mạc (Khuyên dùng)
+              <span>Chế độ 2D hiên nhà</span>
             </button>
             <button
               onClick={() => setViewMode("3D")}
-              className={`px-3 py-1 rounded-full font-medium transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                 viewMode === "3D"
                   ? "bg-[#9e3b2e] text-white shadow-2xs font-semibold"
-                  : "bg-white border border-[#eddcd0] text-[#6d5c55]"
+                  : "bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#dfc3af]"
               }`}
             >
-              WebGL 3D thực nghiệm <span className="text-[10px] text-[#b35e53]">Thử nghiệm</span>
+              <Layers className="w-3.5 h-3.5" />
+              <span>Không gian 3D chiều sâu</span>
             </button>
           </div>
 
@@ -219,11 +390,15 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className="px-3 py-1 rounded-full bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#dfc3af] flex items-center gap-1.5 cursor-pointer"
+              className={`px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 cursor-pointer ${
+                soundEnabled
+                  ? "bg-[#9e3b2e] text-white border-[#9e3b2e] font-semibold shadow-2xs"
+                  : "bg-white border-[#eddcd0] text-[#6d5c55] hover:border-[#dfc3af]"
+              }`}
             >
               {soundEnabled ? (
                 <>
-                  <Volume2 className="w-3.5 h-3.5 text-[#9e3b2e]" />
+                  <Volume2 className="w-3.5 h-3.5 text-amber-200" />
                   <span>Âm thanh tự nhiên: Bật</span>
                 </>
               ) : (
@@ -236,66 +411,41 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
 
             <button
               onClick={() => setReducedMotion(!reducedMotion)}
-              className="px-3 py-1 rounded-full bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#dfc3af] flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-1.5 rounded-full bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#dfc3af] flex items-center gap-1.5 cursor-pointer"
             >
               <Wind className="w-3.5 h-3.5 text-[#9e3b2e]" />
               <span>Chuyển động: {reducedMotion ? "Tối thiểu" : "Mặc định"}</span>
             </button>
           </div>
-
-          {/* State Switcher for quick review */}
-          <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-full border border-[#eddcd0]">
-            <span className="font-semibold text-[#8c7a72] mr-1">Demo:</span>
-            <button
-              onClick={() => setZenState("ready")}
-              className={`px-2 py-0.5 rounded text-[11px] font-medium ${
-                zenState === "ready"
-                  ? "bg-[#9e3b2e] text-white font-bold"
-                  : "text-[#6b5a53] hover:text-[#9e3b2e]"
-              }`}
-            >
-              1. Sẵn sàng
-            </button>
-            <button
-              onClick={() => setZenState("active")}
-              className={`px-2 py-0.5 rounded text-[11px] font-medium ${
-                zenState === "active"
-                  ? "bg-[#9e3b2e] text-white font-bold"
-                  : "text-[#6b5a53] hover:text-[#9e3b2e]"
-              }`}
-            >
-              2. Đang tĩnh tâm
-            </button>
-            <button
-              onClick={() => setZenState("completed")}
-              className={`px-2 py-0.5 rounded text-[11px] font-medium ${
-                zenState === "completed"
-                  ? "bg-[#9e3b2e] text-white font-bold"
-                  : "text-[#6b5a53] hover:text-[#9e3b2e]"
-              }`}
-            >
-              3. Hoàn thành
-            </button>
-          </div>
         </div>
 
         {/* 16:9 Cinematic Canvas Scene */}
-        <div className="relative aspect-[16/9] w-full rounded-3xl overflow-hidden border border-[#ecd5c4] shadow-md bg-[#251f1c] mb-8 select-none">
-          {/* Background Visual (Vietnamese Courtyard Veranda) */}
-          <img
-            src="/images/temple_bac_bo.jpg"
-            alt="Hiên nhà Việt tĩnh lặng"
-            className={`w-full h-full object-cover transition-all duration-1000 ${
-              zenState === "active" ? "scale-105 filter blur-xs brightness-75" : "brightness-90"
-            }`}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/40" />
+        <div className="relative aspect-[16/9] w-full rounded-3xl overflow-hidden border border-[#ecd5c4] shadow-md bg-[#161211] mb-8 select-none">
+          {viewMode === "2D" ? (
+            <>
+              {/* Background Visual (Vietnamese Courtyard Veranda) */}
+              <img
+                src="/images/temple_bac_bo.jpg"
+                alt="Hiên nhà Việt tĩnh lặng"
+                className={`w-full h-full object-cover transition-all duration-1000 ${
+                  zenState === "active" ? "scale-105 filter blur-xs brightness-75" : "brightness-90"
+                }`}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/40" />
+            </>
+          ) : (
+            /* Real 3D Perspective Canvas */
+            <canvas
+              ref={canvasRef}
+              className="w-full h-full block absolute inset-0 z-0"
+            />
+          )}
 
           {/* Top-Right: Light Oil Lamp Button */}
           <div className="absolute top-4 right-4 z-20">
             <button
               onClick={() => setIsLampLit(!isLampLit)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-md border transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold backdrop-blur-md border transition-all flex items-center gap-1.5 cursor-pointer ${
                 isLampLit
                   ? "bg-amber-500/90 text-white border-amber-300 shadow-md shadow-amber-500/30"
                   : "bg-black/50 text-white/90 border-white/20 hover:bg-black/70"
@@ -446,144 +596,46 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
           </div>
         </div>
 
-        {/* Developer Architecture Note Banner */}
-        <Card className="p-4 sm:p-5 rounded-2xl bg-[#eef4f2] border border-[#d3e3dd] mb-12 shadow-2xs">
-          <div className="flex items-start gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-white border border-[#cbe0d8] flex items-center justify-center text-[#2d6a59] shrink-0 mt-0.5">
-              <Code2 className="w-5 h-5" />
+        {/* 3 Mindful Living Pillars */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <Card className="p-6 rounded-3xl bg-white border border-[#eddcd0] shadow-2xs">
+            <div className="w-10 h-10 rounded-2xl bg-[#faede2] text-[#9e3b2e] flex items-center justify-center mb-4">
+              <Flower2 className="w-5 h-5" />
             </div>
-            <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-[#245849] flex items-center gap-2 mb-1">
-                <span>CHÚ THÍCH CÔNG NGHỆ NHÚNG (DÀNH CHO ĐỘI NGŨ PHÁT TRIỂN)</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-white border border-[#cbe0d8] text-[#245849]">
-                  Front-end Architecture
-                </span>
-              </div>
-              <p className="text-xs text-[#3f6356] leading-relaxed">
-                Khu vực trung tâm được thiết kế sẵn container{" "}
-                <code className="px-1.5 py-0.5 bg-white rounded text-[#1b4e40] font-mono">
-                  &lt;canvas id="folk-zen-canvas"&gt;
-                </code>{" "}
-                với tỷ lệ khung hình 16:9. Khi build production, engine WebGL / Three.js sẽ tự
-                động hydrate thay thế ảnh 2D tĩnh nếu trình duyệt hỗ trợ GPU; trường hợp thiết bị
-                bật <em>"prefers-reduced-motion"</em> hoặc không có WebGL, hệ thống giữ nguyên lớp
-                nền tranh dân gian 2D tĩnh để đảm bảo hiệu năng và tính tiếp cận.
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        {/* Interactive Comparison Table: 3 States */}
-        <div className="mb-14">
-          <div className="mb-4">
-            <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-1">
-              TÀI LIỆU TƯƠNG TÁC
-            </div>
-            <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220]">
-              Đối chiếu 3 trạng thái tĩnh tâm
-            </h2>
-            <p className="text-xs text-[#8a776e]">
-              Bản xem nhanh cấu trúc luồng trải nghiệm cho người thiết kế và duyệt giao diện.
+            <h3 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] mb-2">
+              01. Thả lỏng thân thể
+            </h3>
+            <p className="text-xs sm:text-sm text-[#6e5d56] leading-relaxed">
+              Ngồi thẳng lưng tự nhiên, thả lỏng bờ vai và khớp hàm. Để trọng lực nâng đỡ thân thể
+              mà không gồng cứng hay tạo áp lực.
             </p>
-          </div>
+          </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Column 1: Sẵn sàng */}
-            <Card className="p-5 rounded-3xl bg-white border-[#eddcd0] flex flex-col justify-between shadow-2xs">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220]">
-                    01. Sẵn sàng
-                  </h3>
-                  <Badge variant="outline" className="text-xs text-[#8f7e77] border-[#eddcd0]">
-                    Ready
-                  </Badge>
-                </div>
-                <p className="text-xs sm:text-sm text-[#66544c] leading-relaxed mb-4">
-                  Giai đoạn ổn định tư thế và tâm thế: người dùng nhìn thấy hiên nhà trong sương mai,
-                  chọn kiểm tra âm thanh hoặc bấm bắt đầu thời lượng 3 phút.
-                </p>
-                <ul className="space-y-1.5 text-xs text-[#7d6b63] mb-6 list-disc pl-4">
-                  <li>Mặc định tắt âm lượng (tôn trọng riêng tư)</li>
-                  <li>Lời nhắc thả lỏng vai và hơi thở</li>
-                  <li>Tùy chọn thắp ngọn đèn dầu lọc tượng trưng</li>
-                </ul>
-              </div>
+          <Card className="p-6 rounded-3xl bg-white border border-[#eddcd0] shadow-2xs">
+            <div className="w-10 h-10 rounded-2xl bg-[#faede2] text-[#9e3b2e] flex items-center justify-center mb-4">
+              <Wind className="w-5 h-5" />
+            </div>
+            <h3 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] mb-2">
+              02. Nhận diện hơi thở
+            </h3>
+            <p className="text-xs sm:text-sm text-[#6e5d56] leading-relaxed">
+              Chỉ đơn giản nhận biết hơi thở vào và hơi thở ra. Khi tâm trí đi lang thang, nhẹ
+              nhàng mỉm cười và đưa sự chú ý trở về luồng dưỡng khí.
+            </p>
+          </Card>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setZenState("ready")}
-                className="w-full text-xs font-semibold"
-              >
-                Xem mô phỏng State 1
-              </Button>
-            </Card>
-
-            {/* Column 2: Đang diễn ra */}
-            <Card className="p-5 rounded-3xl bg-white border-[#eddcd0] flex flex-col justify-between shadow-2xs">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220]">
-                    02. Đang diễn ra
-                  </h3>
-                  <Badge variant="terracotta" className="text-xs bg-[#faede2] text-[#9e3b2e]">
-                    Active 03:00
-                  </Badge>
-                </div>
-                <p className="text-xs sm:text-sm text-[#66544c] leading-relaxed mb-4">
-                  Khoảng đếm ngược đồng hồ nhẹ nhàng cùng vòng tròn thở (Breathing ring 4-4-4).
-                  Hình ảnh nền hơi mờ nhẹ để hướng tiêu điểm vào tâm thức.
-                </p>
-                <ul className="space-y-1.5 text-xs text-[#7d6b63] mb-6 list-disc pl-4">
-                  <li>Đồng hồ hiển thị định dạng 02:45 / 03:00</li>
-                  <li>Chữ hướng dẫn nhịp thở Hít vào / Thở ra</li>
-                  <li>Nút Tạm dừng và Kết thúc sớm khi cần</li>
-                </ul>
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setZenState("active")}
-                className="w-full text-xs font-semibold"
-              >
-                Xem mô phỏng State 2
-              </Button>
-            </Card>
-
-            {/* Column 3: Hoàn thành */}
-            <Card className="p-5 rounded-3xl bg-white border-[#eddcd0] flex flex-col justify-between shadow-2xs">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220]">
-                    03. Hoàn thành
-                  </h3>
-                  <Badge variant="outline" className="text-xs text-[#2d6a59] border-[#cbe0d8] bg-[#eef6f3]">
-                    Complete
-                  </Badge>
-                </div>
-                <p className="text-xs sm:text-sm text-[#66544c] leading-relaxed mb-4">
-                  Kết thúc tĩnh lặng bằng câu chúc an lành, không tạo cảm giác thành tích giả tạo
-                  hay cạnh tranh số phút tĩnh tâm.
-                </p>
-                <ul className="space-y-1.5 text-xs text-[#7d6b63] mb-6 list-disc pl-4">
-                  <li>Thông điệp nhắc nhở tâm an tỉnh thức</li>
-                  <li>Nút trở về mục Hôm nay (màn 06B/01)</li>
-                  <li>Tùy chọn Bắt đầu lại nếu muốn tiếp tục</li>
-                </ul>
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setZenState("completed")}
-                className="w-full text-xs font-semibold"
-              >
-                Xem mô phỏng State 3
-              </Button>
-            </Card>
-          </div>
+          <Card className="p-6 rounded-3xl bg-white border border-[#eddcd0] shadow-2xs">
+            <div className="w-10 h-10 rounded-2xl bg-[#faede2] text-[#9e3b2e] flex items-center justify-center mb-4">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <h3 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] mb-2">
+              03. Nuôi dưỡng an tĩnh
+            </h3>
+            <p className="text-xs sm:text-sm text-[#6e5d56] leading-relaxed">
+              Sự an định không đến từ việc cưỡng ép tâm trí ngừng suy nghĩ, mà đến từ sự chấp
+              nhận bao dung trước mọi trạng thái đang hiện diện.
+            </p>
+          </Card>
         </div>
 
         {/* Bottom Pledge Banner */}

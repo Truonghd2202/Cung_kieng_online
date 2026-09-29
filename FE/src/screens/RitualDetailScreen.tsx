@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -36,15 +36,58 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
   const ritual = getRitualById(ritualId) || RITUAL_GUIDES[0];
   const detail = ritual.detail || RITUAL_GUIDES[0].detail!;
 
-  // Interactive checklist state
-  const [checkedIds, setCheckedIds] = useState<string[]>([]);
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  // Interactive checklist state isolated per ritual ID
+  const [checkedIds, setCheckedIds] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem(`tltl-ritual-checklist-${ritual.id}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [isBookmarked, setIsBookmarked] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem(`tltl-ritual-bookmark-${ritual.id}`);
+      return stored === "true";
+    } catch {
+      return false;
+    }
+  });
+
   const [showShareNotification, setShowShareNotification] = useState(false);
 
+  // Sync state whenever ritual.id changes (prevents carrying old state to new article)
+  useEffect(() => {
+    try {
+      const storedChecklist = localStorage.getItem(`tltl-ritual-checklist-${ritual.id}`);
+      setCheckedIds(storedChecklist ? JSON.parse(storedChecklist) : []);
+      const storedBookmark = localStorage.getItem(`tltl-ritual-bookmark-${ritual.id}`);
+      setIsBookmarked(storedBookmark === "true");
+    } catch {
+      setCheckedIds([]);
+      setIsBookmarked(false);
+    }
+  }, [ritual.id]);
+
   const toggleCheck = (id: string) => {
-    setCheckedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+    setCheckedIds((prev) => {
+      const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
+      try {
+        localStorage.setItem(`tltl-ritual-checklist-${ritual.id}`, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const handleToggleBookmark = () => {
+    setIsBookmarked((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(`tltl-ritual-bookmark-${ritual.id}`, String(next));
+      } catch {}
+      return next;
+    });
   };
 
   const handleShare = () => {
@@ -293,7 +336,7 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
               </div>
 
               {/* Bottom Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[#eddcd0]">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[#eddcd0] dark:border-[#3d2f2b]">
                 <Button
                   variant="outline"
                   size="sm"
@@ -301,20 +344,20 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
                   className="w-full sm:w-auto text-xs font-semibold gap-1.5"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  <span>Quay lại: Cẩm nang nghi lễ (Màn 18)</span>
+                  <span>Quay lại: Cẩm nang nghi lễ</span>
                 </Button>
 
                 <Button
                   variant={isBookmarked ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setIsBookmarked(!isBookmarked)}
+                  onClick={handleToggleBookmark}
                   className="w-full sm:w-auto text-xs font-semibold gap-1.5"
                 >
-                  <Bookmark className="w-4 h-4" />
+                  <Bookmark className={`w-4 h-4 ${isBookmarked ? "fill-current" : ""}`} />
                   <span>
                     {isBookmarked
-                      ? "Lưu vào mắt sách của tôi (Đã lưu) ✔"
-                      : "Lưu vào mắt sách của tôi"}
+                      ? "Đã lưu vào cẩm nang của tôi ✔"
+                      : "Lưu cẩm nang nghi thức"}
                   </span>
                 </Button>
               </div>

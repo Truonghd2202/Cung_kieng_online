@@ -299,9 +299,7 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
                           : "text-[#9e3b2e] hover:bg-[#fbf2eb] border border-transparent hover:border-[#eddcd0]"
                       }`}
                     >
-                      <span>
-                        {item.actionText} {isHighlight && "(Màn 19)"}
-                      </span>
+                      <span>{item.actionText}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>

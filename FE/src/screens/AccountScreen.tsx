@@ -108,6 +108,29 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
   } | null>(null);
 
   const [openedWish, setOpenedWish] = useState<SavedWishItem | null>(null);
+  const [openedXam, setOpenedXam] = useState<SavedXinXamItem | null>(null);
+
+  // Helper date parsing (DD/MM/YYYY)
+  const parseVnDate = (str: string): number => {
+    try {
+      const parts = str.split("/");
+      if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parseInt(parts[2], 10);
+        return new Date(year, month, day).getTime();
+      }
+    } catch {}
+    return 0;
+  };
+
+  const isWithinDays = (dateStr: string, days: number): boolean => {
+    const ts = parseVnDate(dateStr);
+    if (!ts) return true;
+    const now = Date.now();
+    const diffDays = (now - ts) / (1000 * 60 * 60 * 24);
+    return diffDays <= days && diffDays >= -1;
+  };
 
   // Perform deletion
   const handleConfirmDelete = () => {
@@ -126,23 +149,39 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
   // Filtered Xam
   const filteredXam = useMemo(() => {
-    return savedXamList.filter((item) => {
+    const list = savedXamList.filter((item) => {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchTitle = item.category.toLowerCase().includes(q);
         const matchQuote = item.quote.toLowerCase().includes(q);
         const matchRegion = item.region.toLowerCase().includes(q);
         const matchNum = item.stickNumber.includes(q);
-        if (!matchTitle && !matchQuote && !matchRegion && !matchNum) return false;
+        const matchFortune = item.fortuneType.toLowerCase().includes(q);
+        if (!matchTitle && !matchQuote && !matchRegion && !matchNum && !matchFortune) return false;
       }
       if (activeFilter === "starred" && !item.starred) return false;
+      if (activeFilter === "thisWeek" && !isWithinDays(item.date, 7)) return false;
+      if (activeFilter === "thisMonth" && !isWithinDays(item.date, 31)) return false;
+      if (
+        activeFilter === "reflect" &&
+        item.fortuneType !== "Tùy Duyên" &&
+        item.fortuneType !== "Trung Cát" &&
+        item.starred
+      )
+        return false;
       return true;
     });
-  }, [savedXamList, searchQuery, activeFilter]);
+
+    return list.sort((a, b) => {
+      const timeA = parseVnDate(a.date);
+      const timeB = parseVnDate(b.date);
+      return sortOrder === "newest" ? timeB - timeA : timeA - timeB;
+    });
+  }, [savedXamList, searchQuery, activeFilter, sortOrder]);
 
   // Filtered Wishes
   const filteredWishes = useMemo(() => {
-    return savedWishList.filter((item) => {
+    const list = savedWishList.filter((item) => {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchCategory = item.category.toLowerCase().includes(q);
@@ -150,13 +189,22 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
         if (!matchCategory && !matchContent) return false;
       }
       if (activeFilter === "starred" && !item.starred) return false;
+      if (activeFilter === "thisWeek" && !isWithinDays(item.date, 7)) return false;
+      if (activeFilter === "thisMonth" && !isWithinDays(item.date, 31)) return false;
+      if (activeFilter === "reflect" && item.starred) return false;
       return true;
     });
-  }, [savedWishList, searchQuery, activeFilter]);
+
+    return list.sort((a, b) => {
+      const timeA = parseVnDate(a.date);
+      const timeB = parseVnDate(b.date);
+      return sortOrder === "newest" ? timeB - timeA : timeA - timeB;
+    });
+  }, [savedWishList, searchQuery, activeFilter, sortOrder]);
 
   // Filtered Signals
   const filteredSignals = useMemo(() => {
-    return savedSignals.filter((item) => {
+    const list = savedSignals.filter((item) => {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchMood = item.mood.toLowerCase().includes(q);
@@ -166,9 +214,23 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
         if (!matchMood && !matchPoem && !matchJournal && !matchAction) return false;
       }
       if (activeFilter === "starred" && !item.starred) return false;
+      if (activeFilter === "thisWeek" && !isWithinDays(item.date, 7)) return false;
+      if (activeFilter === "thisMonth" && !isWithinDays(item.date, 31)) return false;
+      if (
+        activeFilter === "reflect" &&
+        !["Chênh vênh", "Băn khoăn", "Cần điểm tựa", "Nôn nóng"].includes(item.mood) &&
+        item.starred
+      )
+        return false;
       return true;
     });
-  }, [savedSignals, searchQuery, activeFilter]);
+
+    return list.sort((a, b) => {
+      const timeA = parseVnDate(a.date);
+      const timeB = parseVnDate(b.date);
+      return sortOrder === "newest" ? timeB - timeA : timeA - timeB;
+    });
+  }, [savedSignals, searchQuery, activeFilter, sortOrder]);
 
   // Total count
   const totalCount = savedSignals.length + savedXamList.length + savedWishList.length;
@@ -378,9 +440,13 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
           </div>
 
           {/* Sort selector */}
-          <div className="flex items-center gap-1 text-[#786760] shrink-0 border-l border-[#eddcd0] pl-3">
-            <span>Mới nhất trước ∨</span>
-          </div>
+          <button
+            onClick={() => setSortOrder((prev) => (prev === "newest" ? "oldest" : "newest"))}
+            className="flex items-center gap-1.5 text-xs text-[#786760] hover:text-[#9e3b2e] shrink-0 border-l border-[#eddcd0] pl-3 cursor-pointer transition-colors font-medium"
+            title="Nhấp để chuyển đổi thứ tự sắp xếp"
+          >
+            <span>{sortOrder === "newest" ? "Mới nhất trước ↓" : "Cũ nhất trước ↑"}</span>
+          </button>
         </div>
 
         {/* =========================================================================
@@ -447,7 +513,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                     {/* Card Actions */}
                     <div className="pt-3 border-t border-[#f4e8dc] flex items-center justify-between">
                       <button
-                        onClick={onGoToXinXam}
+                        onClick={() => setOpenedXam(item)}
                         className="text-xs font-semibold text-[#9e3b2e] hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         <span>Xem lại kết quả</span>
@@ -508,7 +574,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                   className="px-6 py-3 rounded-2xl text-xs sm:text-sm font-semibold gap-2 shadow-sm mb-4"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span>Bắt đầu trải nghiệm xin xăm (Màn 13)</span>
+                  <span>Bắt đầu trải nghiệm xin xăm</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
 
@@ -859,6 +925,75 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
             >
               Đóng lại
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL 3: MỞ THẺ XĂM CHI TIẾT
+         ========================================================================= */}
+      {openedXam && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="max-w-lg w-full p-6 sm:p-8 rounded-3xl bg-[#fffdfa] shadow-2xl border border-[#eedcd0] relative animate-in fade-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setOpenedXam(null)}
+              className="absolute top-5 right-5 p-2 rounded-full hover:bg-[#faede2] text-[#8c7b74] transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="terracotta" className="text-xs">
+                {openedXam.region}
+              </Badge>
+              <Badge variant="outline" className="text-xs bg-[#faede2] text-[#9e3b2e] border-[#ebd7c8]">
+                {openedXam.category}
+              </Badge>
+              <span className="text-xs text-[#8c7b74]">{openedXam.date}</span>
+            </div>
+
+            <div className="text-xs uppercase font-bold tracking-wider text-[#9e3b2e] mb-1">
+              THẺ SỐ {openedXam.stickNumber} • QUẺ {openedXam.fortuneType.toUpperCase()}
+            </div>
+
+            <h3 className="font-['Noto_Serif',serif] font-bold text-2xl text-[#2a2220] mb-4">
+              Lời quẻ chiêm nghiệm
+            </h3>
+
+            <div className="p-5 rounded-2xl bg-[#fbf5ee] border border-[#f0e2d5] mb-5">
+              <p className="font-['Noto_Serif',serif] italic text-base sm:text-lg text-[#9e3b2e] font-semibold text-center leading-relaxed">
+                “{openedXam.quote}”
+              </p>
+            </div>
+
+            <p className="text-xs sm:text-sm text-[#6c5a52] leading-relaxed mb-6">
+              Lời nhắc từ truyền thống dân gian: Mọi sự hanh thông bắt đầu từ việc giữ lòng an định,
+              chăm lo những điều thiết thực trong tầm tay và bao dung với chính mình.
+            </p>
+
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setOpenedXam(null)}
+                className="w-1/2 rounded-2xl text-xs font-semibold"
+              >
+                Đóng lại
+              </Button>
+
+              <Button
+                variant="default"
+                size="lg"
+                onClick={() => {
+                  setOpenedXam(null);
+                  onGoToXinXam();
+                }}
+                className="w-1/2 rounded-2xl text-xs font-semibold gap-1.5"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Rút quẻ mới</span>
+              </Button>
+            </div>
           </div>
         </div>
       )}

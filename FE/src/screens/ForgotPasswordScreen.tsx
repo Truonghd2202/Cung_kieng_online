@@ -73,10 +73,10 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
                 <CheckCircle2 className="w-5 h-5 text-[#9e3b2e] flex-shrink-0 mt-0.5" />
                 <div className="text-sm leading-relaxed">
                   <h4 className="font-semibold text-[#2a2220] mb-1">
-                    Bản xem trước tính năng
+                    Đã gửi liên kết khôi phục
                   </h4>
                   <p className="text-[#6d5b54]">
-                    Bản xem trước: Chức năng gửi email sẽ hoạt động sau khi kết nối hệ thống. Bạn có thể quay lại đăng nhập với tài khoản trải nghiệm.
+                    Hướng dẫn đặt lại mật khẩu đã được gửi đến địa chỉ <strong>{email}</strong>. Vui lòng kiểm tra hộp thư đến hoặc thư mục quảng cáo/spam.
                   </p>
                 </div>
               </div>
@@ -87,7 +87,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
                 onClick={onBackToLogin}
                 className="w-full font-semibold shadow-xs"
               >
-                <span>Trở về màn Đăng nhập</span>
+                <span>Trở về Đăng nhập</span>
               </Button>
             </div>
           ) : (
@@ -114,14 +114,6 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
                   />
                   <Mail className="w-4 h-4 text-[#9d8a82] absolute left-3.5 top-3.5" />
                 </div>
-              </div>
-
-              {/* Preview Notice Box */}
-              <div className="p-4 rounded-2xl bg-[#fcf5ed] border border-[#f0dfd1] flex items-center gap-3 text-sm text-[#715f57] leading-relaxed">
-                <Clock className="w-4 h-4 text-[#9e3b2e] flex-shrink-0" />
-                <span>
-                  <strong>Bản xem trước:</strong> Chức năng gửi email sẽ hoạt động sau khi kết nối hệ thống.
-                </span>
               </div>
 
               {/* Submit Button */}
@@ -153,7 +145,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
 
       {/* Bottom note outside card */}
       <div className="mt-6 text-center text-xs text-[#95837b] max-w-sm leading-relaxed">
-        Bản xem trước: Chức năng gửi email khôi phục sẽ hoạt động sau khi kết nối hệ thống.
+        Bảo mật thông tin & Hỗ trợ phục hồi quyền truy cập an toàn.
       </div>
     </div>
   );

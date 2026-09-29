@@ -54,7 +54,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   const [selectedTopic, setSelectedTopic] = useState<TopicType>("Bình an");
 
   // Step 2 Interactive States
-  const [demoState, setDemoState] = useState<"A" | "B" | "C">("A");
+  const [drawPhase, setDrawPhase] = useState<"idle" | "shaking" | "dropped">("idle");
   const [isShaking, setIsShaking] = useState(false);
   const [isGentleMotion, setIsGentleMotion] = useState(true);
   const [showGuideModal, setShowGuideModal] = useState(false);
@@ -63,19 +63,29 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   const [isActionDone, setIsActionDone] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
-  const currentResult: XinXamResult = getXinXamResult(selectedRegion, selectedTopic);
+  const [currentResult, setCurrentResult] = useState<XinXamResult>(() =>
+    getXinXamResult(selectedRegion, selectedTopic)
+  );
+
+  // Update current result when region or topic changes
+  useEffect(() => {
+    setCurrentResult(getXinXamResult(selectedRegion, selectedTopic));
+    setDrawPhase("idle");
+  }, [selectedRegion, selectedTopic]);
 
   const handleStartDraw = () => {
+    if (isShaking) return;
     setIsShaking(true);
-    setDemoState("B");
+    setDrawPhase("shaking");
+
+    // Dynamic selection from culture pool
+    const result = getXinXamResult(selectedRegion, selectedTopic);
+    setCurrentResult(result);
+
     setTimeout(() => {
-      setDemoState("C");
       setIsShaking(false);
-      setTimeout(() => {
-        setStep(3);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }, 700);
-    }, 1200);
+      setDrawPhase("dropped");
+    }, 1400);
   };
 
   const handleSaveResult = () => {
@@ -612,50 +622,6 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
               </p>
             </div>
 
-            {/* Interactive Preview State Pills */}
-            <div className="flex flex-wrap items-center justify-center gap-2 mb-8 text-xs">
-              <button
-                onClick={() => setDemoState("A")}
-                className={`px-3.5 py-1.5 rounded-full font-medium transition-all cursor-pointer ${
-                  demoState === "A"
-                    ? "bg-[#9e3b2e] text-white shadow-2xs font-semibold"
-                    : "bg-[#fbf4ed] text-[#715f57] border border-[#ecd9cb]"
-                }`}
-              >
-                ● A: Trước khi rút
-              </button>
-              <button
-                onClick={() => setDemoState("B")}
-                className={`px-3.5 py-1.5 rounded-full font-medium transition-all cursor-pointer ${
-                  demoState === "B"
-                    ? "bg-[#9e3b2e] text-white shadow-2xs font-semibold"
-                    : "bg-[#fbf4ed] text-[#715f57] border border-[#ecd9cb]"
-                }`}
-              >
-                B: Đang rút thẻ
-              </button>
-              <button
-                onClick={() => setDemoState("C")}
-                className={`px-3.5 py-1.5 rounded-full font-medium transition-all cursor-pointer ${
-                  demoState === "C"
-                    ? "bg-[#9e3b2e] text-white shadow-2xs font-semibold"
-                    : "bg-[#fbf4ed] text-[#715f57] border border-[#ecd9cb]"
-                }`}
-              >
-                C: Đã rút thẻ
-              </button>
-
-              <label className="ml-2 flex items-center gap-1.5 text-xs text-[#78665f] cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isGentleMotion}
-                  onChange={(e) => setIsGentleMotion(e.target.checked)}
-                  className="rounded border-[#cfbcaf] text-[#9e3b2e] focus:ring-[#9e3b2e]"
-                />
-                <span>Chuyển động nhẹ nhàng</span>
-              </label>
-            </div>
-
             {/* Center Altar: The Sacred Bamboo Tube Card */}
             <Card className="max-w-xl mx-auto rounded-3xl p-8 sm:p-12 bg-white border border-[#eddcd0] shadow-md text-center relative overflow-hidden mb-10">
               {/* Concentric Circle Aura Motif */}
@@ -666,21 +632,23 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
 
                 {/* Bamboo Stick Cylinder Container */}
                 <div
-                  className={`relative flex flex-col items-center justify-end z-10 transition-transform duration-300 ${
-                    isShaking ? "animate-bounce" : ""
+                  onClick={drawPhase !== "shaking" ? handleStartDraw : undefined}
+                  className={`relative flex flex-col items-center justify-end z-10 transition-transform duration-300 cursor-pointer ${
+                    isShaking ? "animate-bounce" : "hover:scale-105"
                   }`}
+                  title="Chạm vào ống xăm để rút thẻ"
                 >
-                  {/* Rising Bamboo Stick during State B & C */}
+                  {/* Rising Bamboo Stick during Shaking & Dropped */}
                   <div
                     className={`transition-all duration-700 ease-out flex flex-col items-center ${
-                      demoState === "B" || demoState === "C"
+                      drawPhase === "shaking" || drawPhase === "dropped"
                         ? "-translate-y-8 opacity-100"
                         : "translate-y-4 opacity-75"
                     }`}
                   >
                     <div className="w-5 h-24 sm:h-28 rounded-t-lg bg-gradient-to-b from-[#e38576] to-[#cca78e] border border-[#b85b4d] shadow-md flex items-start justify-center pt-2">
                       <span className="text-[10px] font-mono font-bold text-white [writing-mode:vertical-rl]">
-                        {demoState === "C" ? `SỐ ${currentResult.stickNumber}` : "THẺ TRE"}
+                        {drawPhase === "dropped" ? `SỐ ${currentResult.stickNumber}` : "THẺ TRE"}
                       </span>
                     </div>
                   </div>
@@ -716,38 +684,63 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
               {/* Status and instruction */}
               <div className="space-y-3 mb-6">
                 <div className="text-xs text-[#95837a] italic">
-                  ✦ Chỉ cần chạm nhẹ một lần • Không cần thao tác thiết bị phức tạp
+                  ✦ Chạm trực tiếp vào ống xăm hoặc bấm nút bên dưới
                 </div>
                 <h3 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220]">
-                  {demoState === "C"
+                  {drawPhase === "dropped"
                     ? `Đã hiện diện Thẻ xăm số ${currentResult.stickNumber}`
+                    : drawPhase === "shaking"
+                    ? "Đang lắng lòng lắc ống xăm..."
                     : "Sẵn sàng khởi niệm bình an"}
                 </h3>
                 <p className="text-xs sm:text-sm text-[#73625b] max-w-md mx-auto leading-relaxed">
-                  {demoState === "C"
-                    ? "Thẻ xăm đã mở ra, hãy bấm nút bên dưới để bước vào luận giải chiêm nghiệm cho ngày hôm nay."
-                    : "Hãy thở đều một nhịp êm, thả lỏng tâm trí và rút một thẻ tre lưu dấu chiêm nghiệm cho ngày hôm nay."}
+                  {drawPhase === "dropped"
+                    ? `Thẻ xăm số ${currentResult.stickNumber} đã xuất hiện. Hãy mở xem lời quẻ chiêm nghiệm và thông điệp dành cho bạn.`
+                    : "Hãy thở đều một nhịp êm, giữ tâm thế an tĩnh và rút một thẻ tre lưu dấu chiêm nghiệm hôm nay."}
                 </p>
               </div>
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <Button
-                  variant="default"
-                  size="lg"
-                  onClick={demoState === "C" ? () => setStep(3) : handleStartDraw}
-                  disabled={isShaking}
-                  className="w-full sm:w-auto px-8 py-3.5 font-semibold shadow-md gap-2 text-sm sm:text-base cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>
-                    {demoState === "C"
-                      ? "Xem chiêm nghiệm thẻ số " + currentResult.stickNumber
-                      : isShaking
-                      ? "Đang lắng đọng rút thẻ..."
-                      : "Rút một thẻ xăm"}
-                  </span>
-                </Button>
+                {drawPhase === "dropped" ? (
+                  <>
+                    <Button
+                      variant="default"
+                      size="lg"
+                      onClick={() => {
+                        setStep(3);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="w-full sm:w-auto px-8 py-3.5 font-semibold shadow-md gap-2 text-sm sm:text-base cursor-pointer"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>Xem chiêm nghiệm thẻ số {currentResult.stickNumber}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={handleStartDraw}
+                      disabled={isShaking}
+                      className="w-full sm:w-auto px-5 py-3 text-xs font-semibold gap-1.5 cursor-pointer"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Lắc lại thẻ khác</span>
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="default"
+                    size="lg"
+                    onClick={handleStartDraw}
+                    disabled={isShaking}
+                    className="w-full sm:w-auto px-8 py-3.5 font-semibold shadow-md gap-2 text-sm sm:text-base cursor-pointer"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>{isShaking ? "Đang lắng đọng rút thẻ..." : "Thành tâm lắc ống xăm"}</span>
+                  </Button>
+                )}
 
                 <Button
                   variant="ghost"
@@ -775,78 +768,45 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
               </div>
             </Card>
 
-            {/* 3 State Explanation Cards */}
+            {/* 3 Cultural Guidance Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
-              <Card
-                onClick={() => setDemoState("A")}
-                className={`p-5 rounded-2xl cursor-pointer transition-all ${
-                  demoState === "A"
-                    ? "bg-white border-[#9e3b2e] shadow-xs"
-                    : "bg-[#fffdfa] border-[#ecdcd0]"
-                }`}
-              >
+              <Card className="p-5 rounded-2xl bg-white border border-[#eddcd0] shadow-xs">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e] mb-1">
-                  TRẠNG THÁI 1
+                  CHIÊM NGHIỆM 01
                 </div>
                 <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] mb-1.5">
-                  Trước khi rút (Khởi tâm)
+                  Tâm thành ý tịnh
                 </h4>
-                <p className="text-xs text-[#73635b] leading-relaxed mb-3">
-                  Ống xăm gỗ tĩnh lặng với các thẻ tre resting tự nhiên. Hướng dẫn tâm
-                  thế an hòa.
+                <p className="text-xs text-[#73635b] leading-relaxed">
+                  Trước khi rút thẻ, buông xả những toan tính được mất. Giữ lòng thanh thản để đón nhận
+                  lời khuyên với tâm thế sáng tỏ.
                 </p>
-                <div className="text-xs text-[#9e3b2e] font-semibold flex items-center gap-1">
-                  <span>Chọn xem trạng thái này</span>
-                  <ArrowRight className="w-3 h-3" />
-                </div>
               </Card>
 
-              <Card
-                onClick={() => setDemoState("B")}
-                className={`p-5 rounded-2xl cursor-pointer transition-all ${
-                  demoState === "B"
-                    ? "bg-white border-[#9e3b2e] shadow-xs"
-                    : "bg-[#fffdfa] border-[#ecdcd0]"
-                }`}
-              >
+              <Card className="p-5 rounded-2xl bg-white border border-[#eddcd0] shadow-xs">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e] mb-1">
-                  TRẠNG THÁI 2
+                  CHIÊM NGHIỆM 02
                 </div>
                 <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] mb-1.5">
-                  Đang rút (Lắng đọng)
+                  Tự soi chiếu tâm tư
                 </h4>
-                <p className="text-xs text-[#73635b] leading-relaxed mb-3">
-                  Một thẻ tre nhô lên nhịp nhàng cùng hào quang ấm, thanh tiến trình và
-                  câu châm ngôn sâu sắc.
+                <p className="text-xs text-[#73635b] leading-relaxed">
+                  Lời quẻ dân gian tựa chiếc gương phản chiếu nỗi lòng, giúp nhận ra điều gì cần gìn
+                  giữ và điều gì nên buông bỏ.
                 </p>
-                <div className="text-xs text-[#9e3b2e] font-semibold flex items-center gap-1">
-                  <span>Chọn xem trạng thái này</span>
-                  <ArrowRight className="w-3 h-3" />
-                </div>
               </Card>
 
-              <Card
-                onClick={() => setDemoState("C")}
-                className={`p-5 rounded-2xl cursor-pointer transition-all ${
-                  demoState === "C"
-                    ? "bg-white border-[#9e3b2e] shadow-xs"
-                    : "bg-[#fffdfa] border-[#ecdcd0]"
-                }`}
-              >
+              <Card className="p-5 rounded-2xl bg-white border border-[#eddcd0] shadow-xs">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e] mb-1">
-                  TRẠNG THÁI 3
+                  CHIÊM NGHIỆM 03
                 </div>
                 <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] mb-1.5">
-                  Đã rút thẻ (Hé lộ số)
+                  Thuận lẽ tự nhiên
                 </h4>
-                <p className="text-xs text-[#73635b] leading-relaxed mb-3">
-                  Hiển thị số thẻ và ấn triện phong thái cổ truyền, giữ trọn vẹn sự kín đáo
-                  trước khi luận giải.
+                <p className="text-xs text-[#73635b] leading-relaxed">
+                  Quẻ lành hay quẻ nhẫn nại đều hướng về đạo lý làm người. Tâm an vạn sự ắt sẽ hanh
+                  thông, tự tại.
                 </p>
-                <div className="text-xs text-[#9e3b2e] font-semibold flex items-center gap-1">
-                  <span>Chọn xem trạng thái này</span>
-                  <ArrowRight className="w-3 h-3" />
-                </div>
               </Card>
             </div>
 
