@@ -9,6 +9,8 @@ import { SignalResultScreen } from "./screens/SignalResultScreen";
 import { LoginScreen } from "./screens/LoginScreen";
 import { RegisterScreen } from "./screens/RegisterScreen";
 import { CompletionScreen } from "./screens/CompletionScreen";
+import { ForgotPasswordScreen } from "./screens/ForgotPasswordScreen";
+import { ExperienceScreen } from "./screens/ExperienceScreen";
 import {
   MoodKey,
   getSignalById,
@@ -42,7 +44,21 @@ export default function App() {
   // Helper to resolve initial screen from URL
   const getInitialScreen = (): NavScreen => {
     const path = window.location.pathname.replace(/^\//, "");
-    if (["guest", "today", "mood", "loading", "result", "account", "login", "register", "saved"].includes(path)) {
+    if (
+      [
+        "guest",
+        "today",
+        "mood",
+        "loading",
+        "result",
+        "account",
+        "login",
+        "register",
+        "saved",
+        "experience",
+        "forgot",
+      ].includes(path)
+    ) {
       return path as NavScreen;
     }
     return "guest";
@@ -173,7 +189,21 @@ export default function App() {
           setSelectedMood(sig.mood);
         }
       }
-      if (["guest", "today", "mood", "loading", "result", "account", "login", "register", "saved"].includes(path)) {
+      if (
+        [
+          "guest",
+          "today",
+          "mood",
+          "loading",
+          "result",
+          "account",
+          "login",
+          "register",
+          "saved",
+          "experience",
+          "forgot",
+        ].includes(path)
+      ) {
         setScreen(path as NavScreen);
       } else {
         setScreen("guest");
@@ -378,11 +408,26 @@ export default function App() {
           />
         )}
 
+        {screen === "experience" && (
+          <ExperienceScreen
+            onComplete={() => navigateTo("today")}
+            onSkip={() => navigateTo("guest")}
+          />
+        )}
+
+        {screen === "forgot" && (
+          <ForgotPasswordScreen
+            onBackToLogin={() => navigateTo("login")}
+            onSuccessSubmit={() => {}}
+          />
+        )}
+
         {screen === "login" && (
           <LoginScreen
             onBack={() => navigateTo(pendingEntry ? "result" : "guest", pendingEntry?.signalId)}
             onSuccess={handleSimulatedLogin}
             onGoToRegister={() => navigateTo("register")}
+            onGoToForgotPassword={() => navigateTo("forgot")}
             pendingSignalMood={pendingEntry?.mood}
           />
         )}

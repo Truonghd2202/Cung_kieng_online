@@ -17,6 +17,7 @@ interface LoginScreenProps {
   onBack?: () => void;
   onSuccess: (name?: string, email?: string) => void;
   onGoToRegister: () => void;
+  onGoToForgotPassword?: () => void;
   pendingSignalMood?: string;
 }
 
@@ -24,6 +25,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onBack,
   onSuccess,
   onGoToRegister,
+  onGoToForgotPassword,
   pendingSignalMood,
 }) => {
   const [identifier, setIdentifier] = useState("");
@@ -213,7 +215,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   </label>
                   <button
                     type="button"
-                    className="text-xs text-[#9e3b2e] hover:underline"
+                    onClick={onGoToForgotPassword}
+                    className="text-xs text-[#9e3b2e] hover:underline cursor-pointer"
                   >
                     Quên mật khẩu?
                   </button>

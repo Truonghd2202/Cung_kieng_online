@@ -13,7 +13,8 @@ export type NavScreen =
   | "experience"
   | "saved"
   | "login"
-  | "register";
+  | "register"
+  | "forgot";
 
 interface AppHeaderProps {
   currentScreen: NavScreen;
@@ -63,16 +64,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </div>
         </button>
 
-        {/* Navigation items - Chỉ điều hướng tới màn đã có */}
+        {/* Navigation items matching Image 2 */}
         <nav className="hidden md:flex items-center gap-1 sm:gap-2">
-          <Button
-            variant={currentScreen === "guest" ? "default" : "ghost"}
-            size="pill"
-            onClick={() => onNavigate("guest")}
-          >
-            Khám phá
-          </Button>
-
           <Button
             variant={
               ["today", "mood", "loading", "result", "saved"].includes(currentScreen)
@@ -83,6 +76,22 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             onClick={() => onNavigate("today")}
           >
             Hôm nay
+          </Button>
+
+          <Button
+            variant={currentScreen === "experience" ? "default" : "ghost"}
+            size="pill"
+            onClick={() => onNavigate("experience")}
+          >
+            Trải nghiệm
+          </Button>
+
+          <Button
+            variant={currentScreen === "guest" ? "default" : "ghost"}
+            size="pill"
+            onClick={() => onNavigate("guest")}
+          >
+            Khám phá
           </Button>
 
           <Button
