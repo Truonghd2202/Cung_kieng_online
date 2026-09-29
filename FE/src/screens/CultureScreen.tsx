@@ -23,12 +23,14 @@ interface CultureScreenProps {
   onSelectArticle: (id: string) => void;
   onGoToHome: () => void;
   onGoToRituals?: () => void;
+  onGoToCalendar?: () => void;
 }
 
 export const CultureScreen: React.FC<CultureScreenProps> = ({
   onSelectArticle,
   onGoToHome,
   onGoToRituals,
+  onGoToCalendar,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
@@ -115,6 +117,14 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
               className="px-4 py-2 rounded-full bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#9e3b2e] hover:text-[#9e3b2e] text-xs font-medium transition-all cursor-pointer"
             >
               Cẩm nang nghi lễ tại gia (Mới)
+            </button>
+          )}
+          {onGoToCalendar && (
+            <button
+              onClick={onGoToCalendar}
+              className="px-4 py-2 rounded-full bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#9e3b2e] hover:text-[#9e3b2e] text-xs font-medium transition-all cursor-pointer"
+            >
+              Lịch văn hóa & Tiết khí (Mới)
             </button>
           )}
         </div>

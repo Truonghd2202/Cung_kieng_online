@@ -13,6 +13,9 @@ import { ForgotPasswordScreen } from "./screens/ForgotPasswordScreen";
 import { ExperienceScreen } from "./screens/ExperienceScreen";
 import { CultureScreen } from "./screens/CultureScreen";
 import { CultureDetailScreen } from "./screens/CultureDetailScreen";
+import { CulturalCalendarScreen } from "./screens/CulturalCalendarScreen";
+import { EventDetailScreen } from "./screens/EventDetailScreen";
+import { GratitudeScreen } from "./screens/GratitudeScreen";
 import { XinXamScreen } from "./screens/XinXamScreen";
 import { WishScreen, WishTopic } from "./screens/WishScreen";
 import { RitualGuideScreen } from "./screens/RitualGuideScreen";
@@ -253,12 +256,15 @@ export default function App() {
         "culture-detail",
         "rituals",
         "ritual-detail",
+        "calendar",
+        "calendar-detail",
+        "experience",
         "xinxam",
         "wish",
         "zen",
+        "gratitude",
         "login",
         "register",
-        "experience",
         "forgot",
       ].includes(path)
     ) {
@@ -277,9 +283,13 @@ export default function App() {
   // Check URL ritualId for RitualDetail
   const initialUrlRitualId = new URLSearchParams(window.location.search).get("ritualId") || "chuan-bi-ngay-ram";
 
+  // Check URL eventId for CalendarDetail
+  const initialUrlCalendarEventId = new URLSearchParams(window.location.search).get("eventId") || "le-soc-vong-ngay-ram";
+
   const [screen, setScreen] = useState<NavScreen>(getInitialScreen);
   const [selectedArticleId, setSelectedArticleId] = useState<string>(initialUrlArticleId);
   const [selectedRitualId, setSelectedRitualId] = useState<string>(initialUrlRitualId);
+  const [selectedCalendarEventId, setSelectedCalendarEventId] = useState<string>(initialUrlCalendarEventId);
   const [journalText, setJournalText] = useState("");
   const [dark, setDark] = useState(() => localStorage.getItem("tltl-theme") === "dark");
 
@@ -397,6 +407,12 @@ export default function App() {
         setSelectedRitualId(urlRitualId);
       }
 
+      // Restore calendar event context
+      const urlEventId = params.get("eventId") || (state as { eventId?: string })?.eventId;
+      if (urlEventId) {
+        setSelectedCalendarEventId(urlEventId);
+      }
+
       // Handle screen routing with guards for missing context
       if (path === "account" && !currentUser) {
         setScreen("login");
@@ -417,12 +433,15 @@ export default function App() {
           "culture-detail",
           "rituals",
           "ritual-detail",
+          "calendar",
+          "calendar-detail",
+          "experience",
           "xinxam",
           "wish",
           "zen",
+          "gratitude",
           "login",
           "register",
-          "experience",
           "forgot",
         ].includes(path)
       ) {
@@ -447,6 +466,7 @@ export default function App() {
     let resolvedSignalId = undefined;
     let resolvedArticleId = undefined;
     let resolvedRitualId = undefined;
+    let resolvedEventId = undefined;
 
     if (targetScreen === "result") {
       resolvedSignalId = signalIdParam || currentSignalId || activeSignal.id;
@@ -457,6 +477,9 @@ export default function App() {
     } else if (targetScreen === "ritual-detail") {
       resolvedRitualId = signalIdParam || selectedRitualId || "chuan-bi-ngay-ram";
       url = `/ritual-detail?ritualId=${resolvedRitualId}`;
+    } else if (targetScreen === "calendar-detail") {
+      resolvedEventId = signalIdParam || selectedCalendarEventId || "le-soc-vong-ngay-ram";
+      url = `/calendar-detail?eventId=${resolvedEventId}`;
     }
 
     const historyPayload = {
@@ -464,6 +487,7 @@ export default function App() {
       signalId: resolvedSignalId,
       articleId: resolvedArticleId,
       ritualId: resolvedRitualId,
+      eventId: resolvedEventId,
       mood: selectedMood,
     };
 
@@ -788,6 +812,7 @@ export default function App() {
             onGoToXinXam={() => navigateTo("xinxam")}
             onGoToWish={() => navigateTo("wish")}
             onGoToZen={() => navigateTo("zen")}
+            onGoToGratitude={() => navigateTo("gratitude")}
           />
         )}
 
@@ -799,6 +824,7 @@ export default function App() {
             }}
             onGoToHome={() => navigateTo("today")}
             onGoToRituals={() => navigateTo("rituals")}
+            onGoToCalendar={() => navigateTo("calendar")}
           />
         )}
 
@@ -923,6 +949,72 @@ export default function App() {
           <ZenScreen
             onBackToExperience={() => navigateTo("xinxam")}
             onGoToHome={() => navigateTo("today")}
+          />
+        )}
+
+        {screen === "calendar" && (
+          <CulturalCalendarScreen
+            onSelectEvent={(eventId) => {
+              setSelectedCalendarEventId(eventId);
+              navigateTo("calendar-detail", eventId);
+            }}
+            onGoToCulture={() => navigateTo("culture")}
+            onGoToHome={() => navigateTo("today")}
+          />
+        )}
+
+        {screen === "calendar-detail" && (
+          <EventDetailScreen
+            eventId={selectedCalendarEventId}
+            onBackToCalendar={() => navigateTo("calendar")}
+            onGoToRituals={() => navigateTo("rituals")}
+            onGoToExplore={() => navigateTo("culture")}
+          />
+        )}
+
+        {screen === "gratitude" && (
+          <GratitudeScreen
+            onBackToExperience={() => navigateTo("experience")}
+            onBackToHome={() => navigateTo("today")}
+            onGoToCulture={() => navigateTo("culture")}
+            user={currentUser}
+            onSaveGratitude={(text) => {
+              const newWish: SavedWishItem = {
+                id: Date.now().toString(),
+                category: "Lòng biết ơn",
+                content: text,
+                date: new Date().toLocaleDateString("vi-VN"),
+                sealed: true,
+                starred: true,
+              };
+              if (!currentUser) {
+                setPendingSave({ type: "wish", item: newWish });
+                navigateTo("login");
+                return false;
+              } else {
+                setUserCornerData((prev) => {
+                  const updated = {
+                    ...prev,
+                    wishes: [newWish, ...prev.wishes],
+                  };
+                  saveUserCornerData(currentUser.email, updated);
+                  return updated;
+                });
+                return true;
+              }
+            }}
+            onRequireLogin={(text) => {
+              const newWish: SavedWishItem = {
+                id: Date.now().toString(),
+                category: "Lòng biết ơn",
+                content: text,
+                date: new Date().toLocaleDateString("vi-VN"),
+                sealed: true,
+                starred: true,
+              };
+              setPendingSave({ type: "wish", item: newWish });
+              navigateTo("login");
+            }}
           />
         )}
 

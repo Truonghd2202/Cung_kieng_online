@@ -13,10 +13,13 @@ export type NavScreen =
   | "culture-detail"
   | "rituals"
   | "ritual-detail"
+  | "calendar"
+  | "calendar-detail"
   | "experience"
   | "xinxam"
   | "wish"
   | "zen"
+  | "gratitude"
   | "saved"
   | "login"
   | "register"
@@ -91,7 +94,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
           <Button
             variant={
-              ["experience", "xinxam", "wish", "zen"].includes(currentScreen)
+              ["experience", "xinxam", "wish", "zen", "gratitude"].includes(currentScreen)
                 ? "default"
                 : "ghost"
             }
@@ -103,9 +106,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
           <Button
             variant={
-              ["culture", "culture-detail", "rituals", "ritual-detail"].includes(
-                currentScreen
-              )
+              [
+                "culture",
+                "culture-detail",
+                "rituals",
+                "ritual-detail",
+                "calendar",
+                "calendar-detail",
+              ].includes(currentScreen)
                 ? "default"
                 : "ghost"
             }
@@ -205,7 +213,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
           <Button
             variant={
-              ["experience", "xinxam", "wish", "zen"].includes(currentScreen)
+              ["experience", "xinxam", "wish", "zen", "gratitude"].includes(currentScreen)
                 ? "default"
                 : "ghost"
             }
@@ -220,9 +228,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
           <Button
             variant={
-              ["culture", "culture-detail", "rituals", "ritual-detail"].includes(
-                currentScreen
-              )
+              [
+                "culture",
+                "culture-detail",
+                "rituals",
+                "ritual-detail",
+                "calendar",
+                "calendar-detail",
+              ].includes(currentScreen)
                 ? "default"
                 : "ghost"
             }
