@@ -11,6 +11,8 @@ import { RegisterScreen } from "./screens/RegisterScreen";
 import { CompletionScreen } from "./screens/CompletionScreen";
 import { ForgotPasswordScreen } from "./screens/ForgotPasswordScreen";
 import { ExperienceScreen } from "./screens/ExperienceScreen";
+import { CultureScreen } from "./screens/CultureScreen";
+import { CultureDetailScreen } from "./screens/CultureDetailScreen";
 import {
   MoodKey,
   getSignalById,
@@ -87,6 +89,8 @@ export default function App() {
         "loading",
         "result",
         "account",
+        "culture",
+        "culture-detail",
         "login",
         "register",
         "saved",
@@ -103,7 +107,11 @@ export default function App() {
   const initialUrlSignalId = new URLSearchParams(window.location.search).get("signalId");
   const initialUrlSignal = initialUrlSignalId ? getSignalById(initialUrlSignalId) : null;
 
+  // Check URL articleId for CultureDetail
+  const initialUrlArticleId = new URLSearchParams(window.location.search).get("articleId") || "dinh-lang-bac-bo";
+
   const [screen, setScreen] = useState<NavScreen>(getInitialScreen);
+  const [selectedArticleId, setSelectedArticleId] = useState<string>(initialUrlArticleId);
   const [journalText, setJournalText] = useState("");
   const [dark, setDark] = useState(() => localStorage.getItem("tltl-theme") === "dark");
 
@@ -232,6 +240,10 @@ export default function App() {
           setSelectedMood(sig.mood);
         }
       }
+      const urlArticleId = params.get("articleId");
+      if (urlArticleId) {
+        setSelectedArticleId(urlArticleId);
+      }
       if (path === "account" && !currentUser) {
         setScreen("login");
       } else if (
@@ -242,6 +254,8 @@ export default function App() {
           "loading",
           "result",
           "account",
+          "culture",
+          "culture-detail",
           "login",
           "register",
           "saved",
@@ -269,6 +283,9 @@ export default function App() {
     if (targetScreen === "result") {
       const idToUse = signalIdParam || currentSignalId || activeSignal.id;
       url = `/result?signalId=${idToUse}`;
+    } else if (targetScreen === "culture-detail") {
+      const idToUse = signalIdParam || selectedArticleId || "dinh-lang-bac-bo";
+      url = `/culture-detail?articleId=${idToUse}`;
     }
     window.history.pushState(null, "", url);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -489,6 +506,29 @@ export default function App() {
             initialTopics={selectedTopics}
             onComplete={handleSaveTopics}
             onSkip={() => navigateTo("guest")}
+          />
+        )}
+
+        {screen === "culture" && (
+          <CultureScreen
+            onSelectArticle={(id) => {
+              setSelectedArticleId(id);
+              navigateTo("culture-detail", id);
+            }}
+            onGoToHome={() => navigateTo("today")}
+          />
+        )}
+
+        {screen === "culture-detail" && (
+          <CultureDetailScreen
+            articleId={selectedArticleId}
+            onBackToCulture={() => navigateTo("culture")}
+            onSelectRelatedArticle={(id) => {
+              setSelectedArticleId(id);
+              navigateTo("culture-detail", id);
+            }}
+            onGoToExperience={() => navigateTo("experience")}
+            onGoToMood={() => navigateTo("mood")}
           />
         )}
 

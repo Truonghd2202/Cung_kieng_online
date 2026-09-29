@@ -37,7 +37,7 @@ export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => {
           {/* Chỉ hiển thị điều hướng đến các màn hình đã có */}
           <div className="flex items-center gap-5">
             <button
-              onClick={() => onNavigate?.("guest")}
+              onClick={() => onNavigate?.("culture")}
               className="hover:text-[#9e3b2e] transition-colors cursor-pointer"
             >
               Khám phá
@@ -59,7 +59,7 @@ export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => {
           </div>
 
           <div className="text-center sm:text-right">
-            © 2024 Tín Lắm Tâm Linh. Tiếp nối tinh hoa mỹ học Dó & Gốm Việt đương đại.
+            © 2024 Tin Lắm Tâm Linh. Tiếp nối tinh hoa mỹ học Dó & Gốm Việt đương đại.
           </div>
         </div>
       </div>
