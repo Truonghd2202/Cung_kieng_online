@@ -347,7 +347,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
             </span>
           </button>
 
-          {/* Tab 3: Điều ước lưu riêng */}
+          {/* Tab 3: Điều ước & Lời tri ân */}
           <button
             onClick={() => setActiveTab("wishes")}
             className={`px-4 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
@@ -357,7 +357,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
             }`}
           >
             <BookOpen className="w-3.5 h-3.5" />
-            <span>Điều ước lưu riêng</span>
+            <span>Điều ước & Lời tri ân</span>
             <span
               className={`px-1.5 py-0.5 rounded-full text-[11px] font-mono ${
                 activeTab === "wishes" ? "bg-white/20 text-white" : "bg-[#f5e9df] text-[#8c7a72]"
@@ -893,7 +893,11 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
             </div>
 
             <h3 className="font-['Noto_Serif',serif] font-bold text-xl text-[#2a2220] mb-4">
-              Ước nguyện đã niêm phong
+              {openedWish.category.includes("tri ân") ||
+              openedWish.category.includes("Tri ân") ||
+              openedWish.category === "Lòng biết ơn"
+                ? "Lời tri ân đã lưu riêng"
+                : "Ước nguyện đã niêm phong"}
             </h3>
 
             <div className="p-5 rounded-2xl bg-[#fbf5ee] border border-[#f0e2d5] text-sm sm:text-base font-['Noto_Serif',serif] leading-relaxed text-[#3a2c26] mb-6 whitespace-pre-wrap">

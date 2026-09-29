@@ -981,7 +981,7 @@ export default function App() {
             onSaveGratitude={(text) => {
               const newWish: SavedWishItem = {
                 id: Date.now().toString(),
-                category: "Lòng biết ơn",
+                category: "Tri ân & Tưởng niệm",
                 content: text,
                 date: new Date().toLocaleDateString("vi-VN"),
                 sealed: true,
@@ -1006,7 +1006,7 @@ export default function App() {
             onRequireLogin={(text) => {
               const newWish: SavedWishItem = {
                 id: Date.now().toString(),
-                category: "Lòng biết ơn",
+                category: "Tri ân & Tưởng niệm",
                 content: text,
                 date: new Date().toLocaleDateString("vi-VN"),
                 sealed: true,

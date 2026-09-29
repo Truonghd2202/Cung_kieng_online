@@ -17,6 +17,8 @@ import {
   Info,
   ShieldCheck,
   ArrowRight,
+  AlertCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -26,28 +28,93 @@ import { CalendarEventItem, getCalendarEventById } from "../data/calendarData";
 interface EventDetailScreenProps {
   eventId?: string;
   onBackToCalendar: () => void;
-  onGoToRituals: () => void;
-  onGoToHome: () => void;
+  onGoToRituals?: () => void;
+  onGoToHome?: () => void;
+  onGoToExplore?: () => void;
 }
+
+type NotificationStatus = "idle" | "requesting" | "granted" | "denied" | "unsupported";
 
 export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
   eventId = "le-soc-vong-ngay-ram",
   onBackToCalendar,
   onGoToRituals,
   onGoToHome,
+  onGoToExplore,
 }) => {
+  // Lấy sự kiện chuẩn xác từ eventId được truyền từ màn 22
   const event = getCalendarEventById(eventId) || getCalendarEventById("le-soc-vong-ngay-ram")!;
 
-  // Reminder widget state
+  // Reminder widget state với đầy đủ các trạng thái quyền thông báo
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderOption, setReminderOption] = useState<"before1" | "exact" | "custom">("before1");
-  const [isSavedReminder, setIsSavedReminder] = useState(false);
+  const [notificationStatus, setNotificationStatus] = useState<NotificationStatus>(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "granted") return "granted";
+      if (Notification.permission === "denied") return "denied";
+    }
+    return "idle";
+  });
+  const [statusMessage, setStatusMessage] = useState<string>("");
   const [isFavorite, setIsFavorite] = useState(false);
 
-  const handleSaveReminder = () => {
-    setIsSavedReminder(true);
-    setTimeout(() => setIsSavedReminder(false), 3000);
+  // Xử lý bật nhắc nhở và xin cấp quyền thông báo thực tế
+  const handleToggleReminderSwitch = async () => {
+    if (reminderEnabled) {
+      setReminderEnabled(false);
+      setStatusMessage("");
+      return;
+    }
+
+    setReminderEnabled(true);
+    await handleRequestNotificationPermission();
   };
+
+  const handleRequestNotificationPermission = async () => {
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      setNotificationStatus("unsupported");
+      setStatusMessage(
+        "Trình duyệt hiện tại chưa hỗ trợ Web Notification hoặc bị hạn chế bởi chính sách bảo mật."
+      );
+      return;
+    }
+
+    if (Notification.permission === "granted") {
+      setNotificationStatus("granted");
+      setStatusMessage("Đã bật lời nhắc trên thiết bị này.");
+      return;
+    }
+
+    if (Notification.permission === "denied") {
+      setNotificationStatus("denied");
+      setStatusMessage(
+        "Quyền thông báo đang bị chặn. Vui lòng vào Cài đặt trình duyệt > Quyền trang web để bật quyền thông báo."
+      );
+      return;
+    }
+
+    try {
+      setNotificationStatus("requesting");
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        setNotificationStatus("granted");
+        setStatusMessage("Đã cấp quyền thành công. Bạn sẽ nhận thông báo nhắc nhở trước ngày lễ.");
+      } else {
+        setNotificationStatus("denied");
+        setStatusMessage(
+          "Bạn chưa cấp quyền thông báo. Thiết bị sẽ không thể gửi lời nhắc tự động."
+        );
+      }
+    } catch {
+      setNotificationStatus("denied");
+      setStatusMessage("Không thể kích hoạt quyền thông báo trên trình duyệt này.");
+    }
+  };
+
+  // Tính toán nhãn ngày giờ hiển thị chính xác theo sự kiện
+  const isRam = event.id === "le-soc-vong-ngay-ram";
+  const beforeDayText = isRam ? "Trước 1 ngày (20:00 tối ngày 16/10)" : "Trước ngày diễn ra 1 ngày";
+  const exactDayText = isRam ? "Đúng ngày Rằm (07:00 sáng ngày 17/10)" : "Đúng sáng ngày diễn ra";
 
   return (
     <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif]">
@@ -55,19 +122,19 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         {/* Top Breadcrumb & Back Navigation */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 text-xs text-[#8a7971]">
           <div className="flex items-center gap-2">
-            <span
+            <button
               onClick={onGoToHome}
               className="hover:text-[#9e3b2e] cursor-pointer transition-colors"
             >
               Hôm nay
-            </span>
+            </button>
             <span>/</span>
-            <span
+            <button
               onClick={onBackToCalendar}
               className="hover:text-[#9e3b2e] cursor-pointer transition-colors"
             >
               Lịch văn hóa
-            </span>
+            </button>
             <span>/</span>
             <span className="text-[#9e3b2e] font-semibold truncate max-w-[200px] sm:max-w-xs">
               Chi tiết sự kiện ({event.title})
@@ -99,14 +166,23 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
             {event.region.toUpperCase()}
           </Badge>
 
+          {event.badge && (
+            <Badge
+              variant="secondary"
+              className="text-[11px] font-semibold px-2.5 py-0.5 bg-amber-50 text-amber-800 border-amber-200"
+            >
+              {event.badge}
+            </Badge>
+          )}
+
           <span className="text-xs text-[#8c7b74]">
-            • Nếp sống hiện đại • Gợi ý tìm hiểu trong ngày rằm xuất hiện
+            • Tư liệu văn hóa đã kiểm chứng
           </span>
         </div>
 
         {/* Main Title & Subtitle */}
         <div className="mb-6">
-          <h1 className="font-['Noto_Serif',serif] font-bold text-3xl sm:text-4xl lg:text-[42px] text-[#2a2220] leading-tight mb-3">
+          <h1 className="font-['Noto_Serif',serif] font-bold text-3xl sm:text-4xl lg:text-[40px] text-[#2a2220] leading-tight mb-3">
             {event.title}
           </h1>
 
@@ -147,242 +223,206 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
 
           <div className="p-4 rounded-2xl bg-white border border-[#eddcd0] flex items-center gap-3.5 shadow-2xs">
             <div className="w-10 h-10 rounded-xl bg-[#faede2] flex items-center justify-center text-[#9e3b2e] shrink-0">
-              <Heart className="w-5 h-5" />
+              <Sparkles className="w-5 h-5" />
             </div>
             <div>
               <div className="text-[10px] uppercase font-bold text-[#98877f]">
-                Ý nghĩa trọng tâm
+                Ý nghĩa cốt lõi
               </div>
               <div className="font-semibold text-xs sm:text-sm text-[#2a2220]">
-                {event.coreMeaning || "Tri ân cội nguồn & bình an gia đạo"}
+                {event.coreMeaning || "Tri ân cội nguồn & Nuôi dưỡng tâm lành"}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Hero Artwork with Caption matching Image 2 */}
-        <div className="mb-10">
-          <div className="relative rounded-3xl overflow-hidden shadow-md border border-[#ebd6c5] max-h-[460px] bg-[#221c1a]">
-            <img
-              src={event.heroImage || "/images/ritual_ram.jpg"}
-              alt={event.title}
-              className="w-full h-full object-cover max-h-[460px]"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-
-            <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/85 backdrop-blur-md text-xs font-semibold text-[#3b302b] uppercase tracking-wider shadow-xs">
-              CỘI NGUỒN NẾP XƯA • TRANH DÂN GIAN ĐƯƠNG ĐẠI
-            </div>
-          </div>
-
-          <div className="text-center text-xs text-[#8c7b74] italic mt-2.5">
-            {event.heroCaption ||
-              "Tranh minh họa: Nếp nhà Việt ấm áp trong ngày Rằm — Nơi soi sáng đạo hiếu và khoảng an yên sau những ngày bận rộn."}
-          </div>
-        </div>
-
-        {/* 2-Column Content Layout matching Image 2 */}
+        {/* 2-Column Content Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column (8 cols): Structured Content Sections */}
+          {/* Left Column (8 cols): Hero Image, Meaning, Customs */}
           <div className="lg:col-span-8 space-y-6">
-            {/* Section 1: Ý nghĩa văn hóa & Tinh thần nếp xưa */}
+            {/* Hero Artwork Image Card */}
+            <div className="rounded-3xl overflow-hidden bg-white border border-[#eddcd0] shadow-xs">
+              <div className="relative aspect-16/9 w-full bg-[#f3e7dc] overflow-hidden">
+                <img
+                  src={event.heroImage || "/images/ritual_ram.jpg"}
+                  alt={event.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+              </div>
+
+              {event.heroCaption && (
+                <div className="p-4 text-xs text-[#7d6c64] italic bg-[#faf5ee] border-t border-[#eedcd0] flex items-start gap-2">
+                  <span className="text-[#9e3b2e] text-sm shrink-0">✤</span>
+                  <span>{event.heroCaption}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Section 1: Ý nghĩa văn hóa & Nếp nhà */}
             <Card className="p-6 sm:p-8 rounded-3xl bg-white border border-[#eddcd0] shadow-xs">
               <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-1 flex items-center gap-1.5">
                 <Flower2 className="w-3.5 h-3.5" />
-                <span>Ý NGHĨA VIỆT</span>
+                <span>Ý NGHĨA VĂN HÓA</span>
               </div>
 
               <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220] mb-4">
-                Ý nghĩa văn hóa & Tinh thần nếp xưa
+                Chiều sâu nếp sống và đạo hiếu truyền đời
               </h2>
 
-              <div className="space-y-3.5 text-sm sm:text-base text-[#52443f] leading-relaxed mb-6">
-                {event.culturalMeaning?.paragraphs.map((para, idx) => (
-                  <p key={idx}>{para}</p>
-                )) || (
-                  <p>
-                    Trong văn hóa truyền thống của người Việt, ngày Rằm và mùng một là hai điểm tựa
-                    thời gian thiêng liêng để mỗi người tự soi chiếu lại chính mình, tưởng nhớ công
-                    ơn sinh thành dưỡng dục của tổ tiên.
-                  </p>
+              <div className="space-y-4 text-sm sm:text-base text-[#5a4942] leading-relaxed">
+                {event.culturalMeaning?.paragraphs ? (
+                  event.culturalMeaning.paragraphs.map((p, idx) => <p key={idx}>{p}</p>)
+                ) : (
+                  <>
+                    <p>
+                      Mỗi phong tục hay lễ hội trong văn hóa Việt đều là một nhịp cầu nối kết con người
+                      với tổ tiên, với cộng đồng và với đất trời. Đó không phải là sự cầu xin may rủi
+                      viển vông, mà là sự tự nhắc nhở bản thân về đạo lý làm người.
+                    </p>
+                    <p>
+                      Dành thời gian tìm hiểu về ngày này giúp người trẻ thấu hiểu mạch nguồn văn hóa,
+                      giữ được nếp nhà thanh tao mà không vướng bận vào những hủ tục mê tín tốn kém.
+                    </p>
+                  </>
                 )}
               </div>
 
               {event.culturalMeaning?.quote && (
-                <div className="p-4 sm:p-5 rounded-2xl bg-[#faf3ec] border-l-4 border-[#9e3b2e] text-xs sm:text-sm text-[#7a483e] italic leading-relaxed">
+                <div className="mt-6 p-4 rounded-2xl bg-[#fbf5ee] border-l-4 border-[#9e3b2e] text-sm italic font-['Noto_Serif',serif] text-[#4a3933] leading-relaxed">
                   “{event.culturalMeaning.quote}”
                 </div>
               )}
             </Card>
 
-            {/* Section 2: Phong tục thường gặp trong dân gian */}
-            <Card className="p-6 sm:p-8 rounded-3xl bg-white border border-[#eddcd0] shadow-xs">
-              <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-1 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>TẬP QUÁN LÀNH MẠNH</span>
-              </div>
+            {/* Section 2: Thực hành phong tục */}
+            {event.customs && event.customs.length > 0 && (
+              <Card className="p-6 sm:p-8 rounded-3xl bg-white border border-[#eddcd0] shadow-xs">
+                <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-1 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>PHONG TỤC TRUYỀN THỐNG</span>
+                </div>
 
-              <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220] mb-2">
-                Phong tục thường gặp trong dân gian
-              </h2>
+                <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220] mb-4">
+                  Những việc thường làm giản dị mà trang trọng
+                </h2>
 
-              <p className="text-xs sm:text-sm text-[#78665f] mb-6">
-                Dù ở nông thôn hay thành thị, bốn nét thực hành thuần khiết này thường được các thế hệ duy
-                trì như một nếp sống đẹp:
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {(event.customs || [
-                  {
-                    title: "Bao sái & Dọn nếp nhà",
-                    desc: "Lau dọn bàn thờ bằng nước ngũ vị ấm, giữ cho hiên nhà và không gian sống thanh tịnh.",
-                  },
-                  {
-                    title: "Thắp hương & Hoa quả mùa",
-                    desc: "Dâng một nén trầm thơm, đĩa hoa cúc hoặc hoa quả mùa thu với lòng thành mộc mạc.",
-                  },
-                  {
-                    title: "Bữa cơm gia đạo",
-                    desc: "Một bữa cơm chay thanh đạm hoặc mâm cơm sum họp gia đình ấm cúng.",
-                  },
-                  {
-                    title: "Hóa ái & Thiện tâm",
-                    desc: "Nói lời hòa nhã, bao dung với người khác và giúp đỡ người xung quanh.",
-                  },
-                ]).map((c, i) => (
-                  <div
-                    key={i}
-                    className="p-4 rounded-2xl bg-[#faf4ed]/80 border border-[#ecdacb] flex flex-col justify-between"
-                  >
-                    <div>
-                      <h4 className="font-['Noto_Serif',serif] font-bold text-sm sm:text-base text-[#2a2220] mb-1">
-                        {c.title}
-                      </h4>
-                      <p className="text-xs text-[#6e5d56] leading-relaxed">{c.desc}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {event.customs.map((custom, idx) => (
+                    <div
+                      key={idx}
+                      className="p-4 rounded-2xl bg-[#faf4ed] border border-[#eddcd0] flex flex-col justify-between"
+                    >
+                      <div>
+                        <h4 className="font-bold text-sm text-[#2a2220] mb-1 flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-[#9e3b2e]" />
+                          <span>{custom.title}</span>
+                        </h4>
+                        <p className="text-xs text-[#6e5d56] leading-relaxed">{custom.desc}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
+                  ))}
+                </div>
+              </Card>
+            )}
 
-            {/* Section 3: Điều người trẻ có thể tìm hiểu hoặc thực hành */}
-            <Card className="p-6 sm:p-8 rounded-3xl bg-white border border-[#eddcd0] shadow-xs">
-              <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-1 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
-                <span>HÀNH ĐỘNG HÔM NAY</span>
-              </div>
+            {/* Section 3: Gợi ý cho người trẻ */}
+            {event.youthActions && event.youthActions.length > 0 && (
+              <Card className="p-6 sm:p-8 rounded-3xl bg-white border border-[#eddcd0] shadow-xs">
+                <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-1 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>NGƯỜI TRẺ THỰC HÀNH</span>
+                </div>
 
-              <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220] mb-2">
-                Điều người trẻ có thể tìm hiểu hoặc thực hành
-              </h2>
+                <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220] mb-2">
+                  3 bước gắn kết nếp xưa cho người bận rộn
+                </h2>
 
-              <p className="text-xs sm:text-sm text-[#78665f] mb-6">
-                Không cần những nghi thức quá rườm rà hay tốn kém, những gợi ý này hướng tới việc nuôi dưỡng
-                tâm trí thảnh thơi giữa đời sống hiện đại:
-              </p>
-
-              <div className="space-y-4">
-                {(event.youthActions || [
-                  {
-                    step: 1,
-                    title: "15 phút tĩnh lặng buổi sớm",
-                    desc: "Tạm rời xa màn hình điện thoại, tự tay pha ấm trà ấm, hít thở sâu và ghi lại 3 điều bạn biết ơn.",
-                  },
-                  {
-                    step: 2,
-                    title: "Một cuộc gọi ấm áp về nhà",
-                    desc: "Gửi lời thăm hỏi chân tình tới ông bà, cha mẹ. Đôi khi chỉ một câu hỏi han đã đem lại niềm vui to lớn.",
-                  },
-                  {
-                    step: 3,
-                    title: "Lắng nghe ký ức từ bữa cơm sum họp",
-                    desc: "Hỏi người lớn tuổi về nếp cúng xưa, vừa tiếp thu mỹ học dân gian vừa bồi đắp tình thân.",
-                  },
-                ]).map((action) => (
-                  <div
-                    key={action.step}
-                    className="p-4 rounded-2xl bg-[#fbf5ee] border border-[#ecd9cb] flex items-start gap-3.5"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-[#9e3b2e] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
-                      {action.step}
+                <div className="space-y-3 mt-4">
+                  {event.youthActions.map((action) => (
+                    <div
+                      key={action.step}
+                      className="p-4 rounded-2xl bg-[#fbf5ee] border border-[#ecd9cb] flex items-start gap-3.5"
+                    >
+                      <div className="w-7 h-7 rounded-full bg-[#9e3b2e] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                        {action.step}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm text-[#2a2220] mb-0.5">
+                          {action.title}
+                        </h4>
+                        <p className="text-xs text-[#6e5d56] leading-relaxed">{action.desc}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-[#2a2220] mb-0.5">
-                        {action.title}
-                      </h4>
-                      <p className="text-xs text-[#6e5d56] leading-relaxed">{action.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
+                  ))}
+                </div>
+              </Card>
+            )}
 
             {/* Section 4: Sắc thái văn hóa vùng miền */}
-            <Card className="p-6 sm:p-8 rounded-3xl bg-white border border-[#eddcd0] shadow-xs">
-              <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-1 flex items-center gap-1.5">
-                <Compass className="w-3.5 h-3.5" />
-                <span>SẮC THÁI VĂN HÓA</span>
-              </div>
-
-              <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220] mb-2">
-                Lưu ý khác biệt giữa gia đình và vùng miền
-              </h2>
-
-              <p className="text-xs sm:text-sm text-[#78665f] mb-6">
-                Đất nước trải dài tạo nên sự đa dạng phong phú về tập quán. Mỗi miền lại gửi gắm nét riêng:
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-5">
-                <div className="p-3.5 rounded-2xl bg-[#faf3ec] border border-[#eddcd0]">
-                  <div className="font-bold text-xs uppercase text-[#9e3b2e] mb-1">
-                    Miền Bắc
-                  </div>
-                  <p className="text-xs text-[#695852] leading-relaxed">
-                    {event.regionalNuances?.bac ||
-                      "Coi trọng mâm cỗ tươm tất trong gian thờ, hương hoa cúc thanh nhã, giữ nét tôn ti khuôn phép."}
-                  </p>
+            {event.regionalNuances && (
+              <Card className="p-6 sm:p-8 rounded-3xl bg-white border border-[#eddcd0] shadow-xs">
+                <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-1 flex items-center gap-1.5">
+                  <Compass className="w-3.5 h-3.5" />
+                  <span>SẮC THÁI VĂN HÓA</span>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-[#faf3ec] border border-[#eddcd0]">
-                  <div className="font-bold text-xs uppercase text-[#9e3b2e] mb-1">
-                    Miền Trung
+                <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220] mb-4">
+                  Lưu ý khác biệt giữa gia đình và vùng miền
+                </h2>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-5">
+                  <div className="p-3.5 rounded-2xl bg-[#faf3ec] border border-[#eddcd0]">
+                    <div className="font-bold text-xs uppercase text-[#9e3b2e] mb-1">
+                      Miền Bắc
+                    </div>
+                    <p className="text-xs text-[#695852] leading-relaxed">
+                      {event.regionalNuances.bac}
+                    </p>
                   </div>
-                  <p className="text-xs text-[#695852] leading-relaxed">
-                    {event.regionalNuances?.trung ||
-                      "Đậm chất cung đình kết hợp nếp làng, chuộng lễ vật mộc mạc, tĩnh lặng và sâu lắng."}
-                  </p>
+
+                  <div className="p-3.5 rounded-2xl bg-[#faf3ec] border border-[#eddcd0]">
+                    <div className="font-bold text-xs uppercase text-[#9e3b2e] mb-1">
+                      Miền Trung
+                    </div>
+                    <p className="text-xs text-[#695852] leading-relaxed">
+                      {event.regionalNuances.trung}
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-[#faf3ec] border border-[#eddcd0]">
+                    <div className="font-bold text-xs uppercase text-[#9e3b2e] mb-1">
+                      Miền Nam
+                    </div>
+                    <p className="text-xs text-[#695852] leading-relaxed">
+                      {event.regionalNuances.nam}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-[#faf3ec] border border-[#eddcd0]">
-                  <div className="font-bold text-xs uppercase text-[#9e3b2e] mb-1">
-                    Miền Nam
-                  </div>
-                  <p className="text-xs text-[#695852] leading-relaxed">
-                    {event.regionalNuances?.nam ||
-                      "Khoáng đạt và rộng mở, gia chủ thường bày hoa trái xum xuê, chú trọng tình gắn kết láng giềng."}
-                  </p>
+                <div className="p-3.5 rounded-2xl bg-[#fbece1]/70 border border-[#ecd5c4] text-xs text-[#79675f] leading-relaxed">
+                  {event.regionalNuances.note}
                 </div>
-              </div>
+              </Card>
+            )}
 
-              <div className="p-3.5 rounded-2xl bg-[#fbece1]/70 border border-[#ecd5c4] text-xs text-[#79675f] leading-relaxed">
-                {event.regionalNuances?.note ||
-                  "Những điểm tiếp nối: Tuyệt đối không mê tín dị đoan. Tùy điều kiện mỗi người mà thực hành giản dị, lấy cái tâm bình an làm điều cốt tủy."}
-              </div>
-            </Card>
-
-            {/* Section 5: Nguồn tư liệu & Tính minh bạch */}
+            {/* Section 5: Nguồn tư liệu kiểm chứng */}
             <Card className="p-5 sm:p-6 rounded-3xl bg-[#faf4ed] border border-[#eddcd0] text-xs text-[#796860] leading-relaxed flex items-start gap-3">
-              <Info className="w-4 h-4 text-[#9e3b2e] shrink-0 mt-0.5" />
+              <ShieldCheck className="w-5 h-5 text-[#9e3b2e] shrink-0 mt-0.5" />
               <div>
-                <strong className="font-semibold text-[#2a2220]">Nguồn tư liệu & Tính minh bạch:</strong>{" "}
-                Nội dung tham khảo từ các tài liệu phong tục dân gian Việt Nam, lịch vạn niên văn hóa và ký ức truyền khẩu người xưa. Không đại diện cho các quan điểm bói toán định mệnh hay hủ tục mê tín.
+                <strong className="font-semibold text-[#2a2220]">Nguồn tư liệu đã kiểm chứng:</strong>{" "}
+                {event.verifiedSource ||
+                  "Tư liệu khảo cứu dựa trên nếp sống văn hóa dân gian Việt Nam và tài liệu nghiên cứu phong tục tập quán truyền thống."}
+                <div className="text-[11px] text-[#917d74] mt-1 italic">
+                  * Nền tảng chỉ đăng tải các tư liệu đã xác minh niên đại, đối chiếu lịch âm thiên văn học và tuyệt đối không phục vụ mục đích bói toán dị đoan.
+                </div>
               </div>
             </Card>
           </div>
 
-          {/* Right Column (4 cols): Sticky Sidebar Widgets matching Image 2 */}
+          {/* Right Column (4 cols): Sticky Sidebar Widgets */}
           <div className="lg:col-span-4 space-y-5 lg:sticky lg:top-24">
-            {/* Widget 1: Nhắc tôi dịp này */}
+            {/* Widget 1: Nhắc tôi dịp này với đầy đủ trạng thái quyền */}
             <Card className="p-6 rounded-3xl bg-white border border-[#eddcd0] shadow-xs">
               <div className="flex items-center justify-between mb-3 pb-3 border-b border-[#f3e6da]">
                 <div className="flex items-center gap-2">
@@ -395,10 +435,11 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                 {/* Toggle switch */}
                 <button
                   type="button"
-                  onClick={() => setReminderEnabled(!reminderEnabled)}
+                  onClick={handleToggleReminderSwitch}
                   className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
                     reminderEnabled ? "bg-[#9e3b2e]" : "bg-[#ded1c8]"
                   }`}
+                  title={reminderEnabled ? "Đang bật nhắc lịch" : "Đang tắt nhắc lịch"}
                 >
                   <span
                     className={`block w-4 h-4 rounded-full bg-white transition-transform ${
@@ -413,87 +454,132 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
               </p>
 
               {reminderEnabled && (
-                <div className="space-y-2.5 mb-5 text-xs text-[#52443f]">
-                  <label className="flex items-center gap-2 cursor-pointer p-2 rounded-xl bg-[#faf3ec]/60 border border-[#eddcd0]">
-                    <input
-                      type="radio"
-                      name="reminder"
-                      checked={reminderOption === "before1"}
-                      onChange={() => setReminderOption("before1")}
-                      className="text-[#9e3b2e] focus:ring-[#9e3b2e]"
-                    />
-                    <span>Trước 1 ngày (20:00 tối ngày 14)</span>
-                  </label>
+                <>
+                  <div className="space-y-2.5 mb-4 text-xs text-[#52443f]">
+                    <label className="flex items-center gap-2 cursor-pointer p-2 rounded-xl bg-[#faf3ec]/60 border border-[#eddcd0]">
+                      <input
+                        type="radio"
+                        name="reminder"
+                        checked={reminderOption === "before1"}
+                        onChange={() => setReminderOption("before1")}
+                        className="text-[#9e3b2e] focus:ring-[#9e3b2e]"
+                      />
+                      <span>{beforeDayText}</span>
+                    </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer p-2 rounded-xl bg-[#faf3ec]/60 border border-[#eddcd0]">
-                    <input
-                      type="radio"
-                      name="reminder"
-                      checked={reminderOption === "exact"}
-                      onChange={() => setReminderOption("exact")}
-                      className="text-[#9e3b2e] focus:ring-[#9e3b2e]"
-                    />
-                    <span>Đúng ngày Rằm (07:00 sáng ngày 15)</span>
-                  </label>
+                    <label className="flex items-center gap-2 cursor-pointer p-2 rounded-xl bg-[#faf3ec]/60 border border-[#eddcd0]">
+                      <input
+                        type="radio"
+                        name="reminder"
+                        checked={reminderOption === "exact"}
+                        onChange={() => setReminderOption("exact")}
+                        className="text-[#9e3b2e] focus:ring-[#9e3b2e]"
+                      />
+                      <span>{exactDayText}</span>
+                    </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer p-2 rounded-xl bg-[#faf3ec]/60 border border-[#eddcd0]">
-                    <input
-                      type="radio"
-                      name="reminder"
-                      checked={reminderOption === "custom"}
-                      onChange={() => setReminderOption("custom")}
-                      className="text-[#9e3b2e] focus:ring-[#9e3b2e]"
-                    />
-                    <span>Tùy chỉnh giờ nhắc riêng</span>
-                  </label>
-                </div>
+                    <label className="flex items-center gap-2 cursor-pointer p-2 rounded-xl bg-[#faf3ec]/60 border border-[#eddcd0]">
+                      <input
+                        type="radio"
+                        name="reminder"
+                        checked={reminderOption === "custom"}
+                        onChange={() => setReminderOption("custom")}
+                        className="text-[#9e3b2e] focus:ring-[#9e3b2e]"
+                      />
+                      <span>Tùy chỉnh giờ nhắc riêng</span>
+                    </label>
+                  </div>
+
+                  {/* Status Banner based on Notification Permission */}
+                  {notificationStatus === "denied" && (
+                    <div className="p-3 mb-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 shrink-0 text-amber-700 mt-0.5" />
+                      <div>
+                        <p className="font-bold">Chưa cấp quyền thông báo</p>
+                        <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                          Trình duyệt đang chặn thông báo. Vui lòng cho phép quyền thông báo trong
+                          Cài đặt trình duyệt để nhận lời nhắc đúng hẹn.
+                        </p>
+                        <button
+                          onClick={handleRequestNotificationPermission}
+                          className="mt-1.5 text-[11px] font-semibold text-[#9e3b2e] underline hover:text-[#7f2d22] cursor-pointer"
+                        >
+                          Thử xin quyền lại
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {notificationStatus === "unsupported" && (
+                    <div className="p-3 mb-4 rounded-xl bg-stone-100 border border-stone-200 text-stone-700 text-xs flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-stone-500 mt-0.5" />
+                      <div>
+                        <p className="font-semibold">Môi trường chưa hỗ trợ thông báo tự động</p>
+                        <p className="text-[11px] mt-0.5 leading-relaxed">
+                          Bạn có thể tự lưu ngày này vào ứng dụng Lịch trên điện thoại hoặc máy tính.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {notificationStatus === "granted" && (
+                    <div className="p-3 mb-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
+                      <div>
+                        <p className="font-bold">Đã bật thông báo thành công</p>
+                        <p className="text-[11px] text-emerald-800 mt-0.5 leading-relaxed">
+                          Hệ thống sẽ gửi thông báo nhẹ nhàng đến thiết bị của bạn trước thời điểm diễn ra.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <Button
+                    variant="default"
+                    size="default"
+                    onClick={handleRequestNotificationPermission}
+                    disabled={notificationStatus === "requesting"}
+                    className="w-full font-semibold gap-2 shadow-xs text-xs py-2.5 bg-[#9e3b2e] hover:bg-[#852f24] text-white"
+                  >
+                    <Bell className="w-4 h-4" />
+                    <span>
+                      {notificationStatus === "granted"
+                        ? "Đã kích hoạt lời nhắc trên máy"
+                        : notificationStatus === "denied"
+                        ? "Kiểm tra lại quyền thông báo"
+                        : "Kích hoạt thông báo nhắc lịch"}
+                    </span>
+                  </Button>
+                </>
               )}
-
-              <Button
-                variant="default"
-                size="default"
-                onClick={handleSaveReminder}
-                disabled={!reminderEnabled}
-                className="w-full font-semibold gap-2 shadow-xs text-xs py-2.5"
-              >
-                {isSavedReminder ? (
-                  <>
-                    <Check className="w-4 h-4 text-emerald-200" />
-                    <span>Đã lưu vào nhật ký</span>
-                  </>
-                ) : (
-                  <>
-                    <Calendar className="w-4 h-4" />
-                    <span>Lưu vào nhật ký/lịch</span>
-                  </>
-                )}
-              </Button>
             </Card>
 
-            {/* Widget 2: Cẩm nang nghi lễ Link matching Image 2 */}
-            <Card className="p-6 rounded-3xl bg-gradient-to-br from-[#faede2] to-[#fbf2ea] border border-[#ebd5c3] shadow-xs">
-              <div className="text-[10px] uppercase font-bold tracking-wider text-[#9e3b2e] mb-1">
-                CẨM NANG NGHI LỄ
-              </div>
+            {/* Widget 2: Cẩm nang nghi lễ Link */}
+            {onGoToRituals && (
+              <Card className="p-6 rounded-3xl bg-gradient-to-br from-[#faede2] to-[#fbf2ea] border border-[#ebd5c3] shadow-xs">
+                <div className="text-[10px] uppercase font-bold tracking-wider text-[#9e3b2e] mb-1">
+                  CẨM NANG NGHI LỄ
+                </div>
 
-              <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] mb-2 leading-snug">
-                Bạn muốn chuẩn bị ngày Rằm tinh gọn, không rườm rà?
-              </h4>
+                <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] mb-2 leading-snug">
+                  Bạn muốn chuẩn bị nghi thức ngày Rằm tinh gọn, không rườm rà?
+                </h4>
 
-              <p className="text-xs text-[#705e57] leading-relaxed mb-4">
-                Xem hướng dẫn cúng lễ mâm lễ chay mộc mạc, bài văn khấn truyền thống lưu truyền tinh gọn.
-              </p>
+                <p className="text-xs text-[#705e57] leading-relaxed mb-4">
+                  Xem hướng dẫn cúng lễ mâm lễ chay mộc mạc, bài văn khấn truyền thống lưu truyền tinh gọn.
+                </p>
 
-              <Button
-                variant="outline"
-                size="default"
-                onClick={onGoToRituals}
-                className="w-full text-xs font-semibold bg-white border-[#ebd4c2] text-[#9e3b2e] hover:bg-[#faede2] gap-1.5 shadow-2xs cursor-pointer"
-              >
-                <span>Xem Cẩm nang nghi lễ (Màn 18)</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Button>
-            </Card>
+                <Button
+                  variant="outline"
+                  size="default"
+                  onClick={onGoToRituals}
+                  className="w-full text-xs font-semibold bg-white border-[#ebd4c2] text-[#9e3b2e] hover:bg-[#faede2] gap-1.5 shadow-2xs cursor-pointer"
+                >
+                  <span>Xem Cẩm nang nghi lễ tại gia</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Button>
+              </Card>
+            )}
 
             {/* Widget 3: Lưu vào sự kiện yêu thích */}
             <Card
@@ -507,7 +593,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                   }`}
                 />
                 <span className="font-semibold group-hover:text-[#9e3b2e] transition-colors">
-                  {isFavorite ? "Đã lưu vào sự kiện yêu thích" : "Lưu vào sự kiện yêu thích"}
+                  {isFavorite ? "Đã lưu ngày này vào danh mục yêu thích" : "Lưu ngày này vào danh mục yêu thích"}
                 </span>
               </div>
               <span className="text-[11px] font-mono text-[#98877f]">
@@ -518,7 +604,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
             {/* Widget 4: Classical Quote */}
             <div className="text-center p-4 rounded-2xl bg-[#faf3ec] border border-[#eddcd0] text-xs text-[#7d6c64] italic leading-relaxed">
               <div className="text-sm text-[#be8e5a] mb-1">✤</div>
-              “Những thói quen tốt thấu cảm nếp xưa giúp tâm hồn vững vàng trước dòng chảy xao động.”
+              <p>“Cây có cội mới trổ cành xanh ngọn, nước có nguồn mới biển rộng sông sâu.”</p>
             </div>
           </div>
         </div>
