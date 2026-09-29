@@ -148,6 +148,11 @@ export const saveUserCornerData = (email: string, data: UserCornerData) => {
   } catch {}
 };
 
+export type PendingSave =
+  | { type: "signal"; item: SavedSignalItem }
+  | { type: "xam"; item: SavedXinXamItem }
+  | { type: "wish"; item: SavedWishItem };
+
 export default function App() {
   const todayDateString = new Date().toDateString();
 
@@ -221,7 +226,7 @@ export default function App() {
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(initialUser);
 
-  const [pendingEntry, setPendingEntry] = useState<SavedEntry | null>(null);
+  const [pendingSave, setPendingSave] = useState<PendingSave | null>(null);
 
   // Lưu và đồng bộ chủ đề yêu thích từ Trải nghiệm sang Hôm nay
   const [selectedTopics, setSelectedTopics] = useState<string[]>(() => {
@@ -513,8 +518,8 @@ export default function App() {
     };
 
     if (!currentUser) {
-      // Khách chưa đăng nhập: Ghi nhận kết quả chờ lưu & chuyển đến màn đăng nhập mô phỏng
-      setPendingEntry(newEntry);
+      // Lưu tín hiệu khi chưa đăng nhập
+      setPendingSave({ type: "signal", item: newEntry });
       navigateTo("login");
     } else {
       // Đã đăng nhập: Lưu trực tiếp theo tài khoản
@@ -536,25 +541,26 @@ export default function App() {
       name: name || "An Nhiên",
       email: email ? email.trim().toLowerCase() : "annhien@tinlamtamlinh.vn",
     };
-    setCurrentUser(user);
-    localStorage.setItem("tltl-current-user", JSON.stringify(user));
+
     const loadedData = loadUserCornerData(user);
 
-    if (pendingEntry) {
-      const exists = loadedData.signals.some((e) => e.signalId === pendingEntry.signalId);
-      if (!exists) {
-        loadedData.signals = [pendingEntry, ...loadedData.signals];
-        saveUserCornerData(user.email, loadedData);
-      }
-      const savedSigId = pendingEntry.signalId;
-      setPendingEntry(null);
-      setUserCornerData(loadedData);
-      setCurrentSignalId(savedSigId);
-      navigateTo("result", savedSigId);
-    } else {
-      setUserCornerData(loadedData);
-      navigateTo("account");
+    if (pendingSave?.type === "signal") {
+      loadedData.signals = [pendingSave.item, ...loadedData.signals];
     }
+    if (pendingSave?.type === "xam") {
+      loadedData.xam = [pendingSave.item, ...loadedData.xam];
+    }
+    if (pendingSave?.type === "wish") {
+      loadedData.wishes = [pendingSave.item, ...loadedData.wishes];
+    }
+
+    if (pendingSave) saveUserCornerData(user.email, loadedData);
+
+    setCurrentUser(user);
+    localStorage.setItem("tltl-current-user", JSON.stringify(user));
+    setUserCornerData(loadedData);
+    setPendingSave(null);
+    navigateTo("account");
   };
 
   const handleLogout = () => {
@@ -643,7 +649,9 @@ export default function App() {
     navigateTo("result", entry.signalId);
   };
 
-  const isCurrentSignalSaved = userCornerData.signals.some((e) => e.signalId === activeSignal.id);
+  const isCurrentSignalSaved = currentUser
+    ? userCornerData.signals.some((e) => e.signalId === activeSignal.id)
+    : false;
 
   return (
     <div className={`min-h-screen flex flex-col bg-[#fcf8f2] dark:bg-[#120d0b] text-[#2e2624] dark:text-[#f3eae4] font-['Be_Vietnam_Pro',sans-serif] ${dark ? "dark" : ""}`}>
@@ -770,6 +778,8 @@ export default function App() {
                 starred: false,
               };
               if (!currentUser) {
+                // Lưu xăm khi chưa đăng nhập
+                setPendingSave({ type: "xam", item: newXam });
                 navigateTo("login");
               } else {
                 setUserCornerData((prev) => {
@@ -809,6 +819,8 @@ export default function App() {
                 starred: false,
               };
               if (!currentUser) {
+                // Lưu điều ước khi chưa đăng nhập
+                setPendingSave({ type: "wish", item: newWish });
                 navigateTo("login");
               } else {
                 setUserCornerData((prev) => {
@@ -862,11 +874,29 @@ export default function App() {
 
         {screen === "login" && (
           <LoginScreen
-            onBack={() => navigateTo(pendingEntry ? "result" : "guest", pendingEntry?.signalId)}
+            onBack={() => {
+              if (pendingSave?.type === "signal") {
+                navigateTo("result", pendingSave.item.signalId);
+              } else if (pendingSave?.type === "xam") {
+                navigateTo("xinxam");
+              } else if (pendingSave?.type === "wish") {
+                navigateTo("wish");
+              } else {
+                navigateTo("guest");
+              }
+            }}
             onSuccess={handleSimulatedLogin}
             onGoToRegister={() => navigateTo("register")}
             onGoToForgotPassword={() => navigateTo("forgot")}
-            pendingSignalMood={pendingEntry?.mood}
+            pendingSignalMood={
+              pendingSave?.type === "signal"
+                ? `Tín hiệu "${pendingSave.item.mood}"`
+                : pendingSave?.type === "xam"
+                ? `Thẻ xăm số ${pendingSave.item.stickNumber} (${pendingSave.item.fortuneType})`
+                : pendingSave?.type === "wish"
+                ? `Điều ước ${pendingSave.item.category}`
+                : undefined
+            }
           />
         )}
 
@@ -875,7 +905,15 @@ export default function App() {
             onBack={() => navigateTo("login")}
             onSuccess={handleSimulatedLogin}
             onGoToLogin={() => navigateTo("login")}
-            pendingSignalMood={pendingEntry?.mood}
+            pendingSignalMood={
+              pendingSave?.type === "signal"
+                ? `Tín hiệu "${pendingSave.item.mood}"`
+                : pendingSave?.type === "xam"
+                ? `Thẻ xăm số ${pendingSave.item.stickNumber} (${pendingSave.item.fortuneType})`
+                : pendingSave?.type === "wish"
+                ? `Điều ước ${pendingSave.item.category}`
+                : undefined
+            }
           />
         )}
 
@@ -899,7 +937,7 @@ export default function App() {
                 actionTitle: activeSignal.action.title,
                 starred: false,
               };
-              setPendingEntry(newEntry);
+              setPendingSave({ type: "signal", item: newEntry });
               navigateTo("login");
             }}
           />
