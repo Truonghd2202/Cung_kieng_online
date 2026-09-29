@@ -29,12 +29,16 @@ interface ExperienceScreenProps {
   initialTopics?: string[];
   onComplete: (selectedTopics: string[]) => void;
   onSkip?: () => void;
+  onGoToXinXam?: () => void;
+  onGoToWish?: () => void;
 }
 
 export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
   initialTopics = ["cadao", "xinxam", "bamien"],
   onComplete,
   onSkip,
+  onGoToXinXam,
+  onGoToWish,
 }) => {
   // Quản lý các chủ đề đã chọn
   const [selectedIds, setSelectedIds] = useState<string[]>(initialTopics);
@@ -137,6 +141,92 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
           <span className="text-xs text-[#95837b] italic">
             ✦ Lựa chọn sẽ được lưu vào hệ thống để gợi mở tín hiệu phù hợp tại màn Hôm nay
           </span>
+        </div>
+
+        {/* Featured Interactive Experiences */}
+        {(onGoToXinXam || onGoToWish) && (
+          <div className="mb-14">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="w-1.5 h-4 rounded-full bg-[#9e3b2e]"></span>
+              <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220]">
+                Không gian trải nghiệm tương tác
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Card 1: Xin xăm */}
+              {onGoToXinXam && (
+                <div
+                  onClick={onGoToXinXam}
+                  className="group p-6 rounded-3xl bg-white border border-[#eedcd0] hover:border-[#9e3b2e]/60 shadow-xs hover:shadow-md transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between"
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#faece1]/50 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-[#faece1] transition-all"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-[#faede2] border border-[#ecd9cb] flex items-center justify-center text-[#9e3b2e]">
+                        <Sparkles className="w-6 h-6" />
+                      </div>
+                      <Badge variant="outline" className="text-xs text-[#9e3b2e] border-[#eedcd0] bg-[#fffaf5]">
+                        Nghi thức 3 miền
+                      </Badge>
+                    </div>
+
+                    <h3 className="font-['Noto_Serif',serif] font-bold text-xl text-[#2a2220] group-hover:text-[#9e3b2e] transition-colors mb-2">
+                      Xin xăm văn hóa ba miền
+                    </h3>
+                    <p className="text-sm text-[#6e5d56] leading-relaxed mb-4">
+                      Khởi tâm nguyện, lắng nghe nhịp điệu ống xăm và đón nhận quẻ thơ cổ cùng vi hành động an lành cho thân tâm.
+                    </p>
+                  </div>
+
+                  <div className="relative z-10 pt-4 border-t border-[#f4e8dc] flex items-center justify-between text-sm font-semibold text-[#9e3b2e]">
+                    <span>Bắt đầu trải nghiệm</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              )}
+
+              {/* Card 2: Gửi gắm điều ước */}
+              {onGoToWish && (
+                <div
+                  onClick={onGoToWish}
+                  className="group p-6 rounded-3xl bg-white border border-[#eedcd0] hover:border-[#9e3b2e]/60 shadow-xs hover:shadow-md transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between"
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#faece1]/50 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-[#faece1] transition-all"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-[#faede2] border border-[#ecd9cb] flex items-center justify-center text-[#9e3b2e]">
+                        <BookOpen className="w-6 h-6" />
+                      </div>
+                      <Badge variant="outline" className="text-xs text-[#9e3b2e] border-[#eedcd0] bg-[#fffaf5]">
+                        Khoảng lặng tự nhìn lại
+                      </Badge>
+                    </div>
+
+                    <h3 className="font-['Noto_Serif',serif] font-bold text-xl text-[#2a2220] group-hover:text-[#9e3b2e] transition-colors mb-2">
+                      Gửi gắm điều ước & Hoa đăng
+                    </h3>
+                    <p className="text-sm text-[#6e5d56] leading-relaxed mb-4">
+                      Viết ra những nỗi niềm chất chứa; lựa chọn lưu riêng tư vào sổ nhật ký hoặc gửi đi dưới dạng cánh hoa đăng số tan biến.
+                    </p>
+                  </div>
+
+                  <div className="relative z-10 pt-4 border-t border-[#f4e8dc] flex items-center justify-between text-sm font-semibold text-[#9e3b2e]">
+                    <span>Gửi gắm khoảng lòng</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Section title for topics */}
+        <div className="flex items-center gap-2 mb-4">
+          <span className="w-1.5 h-4 rounded-full bg-[#9e3b2e]"></span>
+          <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220]">
+            Chọn chủ đề yêu thích
+          </h2>
         </div>
 
         {/* 5 Topic Cards Grid (3 top, 2 bottom) */}

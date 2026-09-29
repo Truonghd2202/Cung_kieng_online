@@ -36,6 +36,7 @@ interface XinXamScreenProps {
   onSaveToAccount?: (result: XinXamResult) => void;
   onGoToLogin?: () => void;
   onGoToExplore?: () => void;
+  onGoToWish?: () => void;
   isLoggedIn?: boolean;
 }
 
@@ -45,6 +46,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   onSaveToAccount,
   onGoToLogin,
   onGoToExplore,
+  onGoToWish,
   isLoggedIn = false,
 }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -92,16 +94,32 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
         {step === 1 && (
           <div>
             {/* Top Breadcrumb & Step Badge */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-[#8a7971]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 text-xs text-[#8a7971]">
               <div className="flex items-center gap-2">
-                <span className="hover:text-[#9e3b2e] cursor-pointer">Trải nghiệm</span>
+                <span
+                  onClick={onBackToExperienceHome}
+                  className="hover:text-[#9e3b2e] cursor-pointer transition-colors"
+                >
+                  Trải nghiệm
+                </span>
                 <span>/</span>
                 <span className="text-[#9e3b2e] font-semibold">Xin xăm văn hóa</span>
               </div>
 
-              <div className="flex items-center gap-1.5 uppercase font-semibold text-[11px] text-[#938279]">
-                <span className="w-2 h-2 rounded-full bg-[#9e3b2e] inline-block"></span>
-                <span>BƯỚC 1 / 3 • KHỞI TÂM NGUYỆN – CHIÊM NGHIỆM BA MIỀN</span>
+              <div className="flex items-center gap-2.5">
+                {onGoToWish && (
+                  <button
+                    onClick={onGoToWish}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fbf3ec] border border-[#ecd9cb] text-xs font-medium text-[#9e3b2e] hover:bg-[#faede2] transition-colors cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Gửi gắm điều ước</span>
+                  </button>
+                )}
+                <div className="flex items-center gap-1.5 uppercase font-semibold text-[11px] text-[#938279]">
+                  <span className="w-2 h-2 rounded-full bg-[#9e3b2e] inline-block"></span>
+                  <span>BƯỚC 1 / 3 • KHỞI TÂM NGUYỆN</span>
+                </div>
               </div>
             </div>
 

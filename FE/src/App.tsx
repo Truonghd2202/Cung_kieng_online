@@ -14,6 +14,7 @@ import { ExperienceScreen } from "./screens/ExperienceScreen";
 import { CultureScreen } from "./screens/CultureScreen";
 import { CultureDetailScreen } from "./screens/CultureDetailScreen";
 import { XinXamScreen } from "./screens/XinXamScreen";
+import { WishScreen, WishTopic } from "./screens/WishScreen";
 import {
   MoodKey,
   getSignalById,
@@ -93,6 +94,7 @@ export default function App() {
         "culture",
         "culture-detail",
         "xinxam",
+        "wish",
         "login",
         "register",
         "saved",
@@ -259,6 +261,7 @@ export default function App() {
           "culture",
           "culture-detail",
           "xinxam",
+          "wish",
           "login",
           "register",
           "saved",
@@ -509,6 +512,8 @@ export default function App() {
             initialTopics={selectedTopics}
             onComplete={handleSaveTopics}
             onSkip={() => navigateTo("guest")}
+            onGoToXinXam={() => navigateTo("xinxam")}
+            onGoToWish={() => navigateTo("wish")}
           />
         )}
 
@@ -570,6 +575,40 @@ export default function App() {
             }}
             onGoToLogin={() => navigateTo("login")}
             onGoToExplore={() => navigateTo("culture")}
+            onGoToWish={() => navigateTo("wish")}
+            isLoggedIn={!!currentUser}
+          />
+        )}
+
+        {screen === "wish" && (
+          <WishScreen
+            onBackToExperience={() => navigateTo("xinxam")}
+            onGoToDiary={() => navigateTo("account")}
+            onGoToHome={() => navigateTo("today")}
+            onGoToExplore={() => navigateTo("culture")}
+            onSaveJournal={(text, topic) => {
+              const newEntry: SavedEntry = {
+                id: Date.now().toString(),
+                signalId: `wish-${Date.now()}`,
+                mood: "An yên",
+                date: new Date().toLocaleDateString("vi-VN"),
+                journal: `[${topic}] ${text}`,
+                poemLine1: "Gửi gắm ước nguyện vào khoảng lặng",
+                poemLine2: "Tâm bình thế giới bình, lòng an vạn sự tỏ",
+                actionTitle: `Lưu giữ ước nguyện (${topic})`,
+              };
+              if (!currentUser) {
+                setPendingEntry(newEntry);
+                navigateTo("login");
+              } else {
+                const updated = [newEntry, ...savedEntries];
+                setSavedEntries(updated);
+                const userKey = getUserStorageKey(currentUser);
+                if (userKey) {
+                  localStorage.setItem(userKey, JSON.stringify(updated));
+                }
+              }
+            }}
             isLoggedIn={!!currentUser}
           />
         )}
