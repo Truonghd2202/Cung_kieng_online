@@ -257,7 +257,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                         </div>
 
                         <div className="p-2.5 rounded-xl bg-[#faf3ec] border border-[#eddcd0] text-[11px] text-[#7d6c65] leading-relaxed">
-                          ⓘ {isLoggedIn ? "Đã đăng nhập: Lưu trữ an toàn vào tài khoản của bạn." : "Dành cho khách: Bạn sẽ được lưu tạm và có thể liên kết vào tài khoản."}
+                          ⓘ {isLoggedIn ? "Đã vào demo: Nội dung bản demo được lưu trên trình duyệt này." : "Dành cho khách: Bạn sẽ được lưu tạm và có thể liên kết vào tài khoản demo."}
                         </div>
                       </Card>
 
@@ -503,7 +503,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
 
             <div className="text-center mb-8">
               <span className="inline-block text-[11px] uppercase font-bold tracking-wider text-[#938279] bg-[#fbf2ea] px-3.5 py-1 rounded-full border border-[#ebd6c5] mb-6">
-                ● KHOẢNG LẶNG TỰ NHÌN LẠI • ĐÃ LƯU TRỮ AN TOÀN
+                ● KHOẢNG LẶNG TỰ NHÌN LẠI • ĐÃ LƯU TRÊN TRÌNH DUYỆT
               </span>
 
               {/* Big Red Book Seal Icon */}
@@ -531,13 +531,12 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                 </div>
                 <div>
                   <h4 className="font-bold text-base text-[#2a2220] mb-1 flex items-center gap-1.5">
-                    <span>Không gian riêng tư tuyệt đối</span>
+                    <span>Không gian lưu riêng trên trình duyệt</span>
                     <span className="text-xs text-[#9e3b2e]">🛡</span>
                   </h4>
                   <p className="text-xs sm:text-sm text-[#73615a] leading-relaxed">
-                    Nội dung chỉ xuất hiện duy nhất trong mục <strong>Góc của tôi</strong> của
-                    tài khoản bạn. Không một ai khác — kể cả đội ngũ quản trị hay hệ sinh
-                    thái cộng đồng — có thể đọc được tâm sự này.
+                    Nội dung bản demo được lưu trên trình duyệt này và chỉ xuất hiện trong mục <strong>Góc của tôi</strong>.
+                    Chưa kết nối máy chủ hay lưu trữ đám mây.
                   </p>
                 </div>
               </div>
@@ -825,12 +824,10 @@ export const WishScreen: React.FC<WishScreenProps> = ({
               <Card className="p-5 rounded-2xl bg-white border border-[#eddcd0]">
                 <div className="text-xs font-bold text-[#9e3b2e] mb-1.5 flex items-center gap-1.5">
                   <span>🛡</span>
-                  <span>Quyền riêng tư tuyệt đối</span>
+                  <span>Minh bạch lưu trữ bản demo</span>
                 </div>
                 <p className="text-xs text-[#73635b] leading-relaxed mb-3">
-                  Quy trình xử lý ephemeral đảm bảo văn tự của bạn được tiêu hủy ngay trên
-                  client. Không log server, không cookie theo dõi tâm trạng, trọn vẹn an
-                  tâm.
+                  Nội dung bản demo được lưu trên trình duyệt này. Chế độ gửi đi thả trôi sẽ tiêu hủy ngay trên client, không gửi lên bất kỳ máy chủ nào.
                 </p>
                 <span className="text-[11px] font-semibold text-[#9e3b2e]">
                   CAM KẾT MINH BẠCH ⓘ

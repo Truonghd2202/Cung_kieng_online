@@ -63,8 +63,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
           </h1>
 
           <p className="text-sm sm:text-base text-[#705e57] leading-relaxed mb-6">
-            Nhập địa chỉ email đã đăng ký. Chúng tôi sẽ gửi liên kết an toàn để
-            bạn thiết lập lại mật khẩu mới.
+            Nhập địa chỉ email của bạn. Chức năng khôi phục mật khẩu sẽ có khi kết nối tài khoản và hoàn thiện máy chủ Backend.
           </p>
 
           {submitted ? (
@@ -73,10 +72,10 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
                 <CheckCircle2 className="w-5 h-5 text-[#9e3b2e] flex-shrink-0 mt-0.5" />
                 <div className="text-sm leading-relaxed">
                   <h4 className="font-semibold text-[#2a2220] mb-1">
-                    Đã gửi liên kết khôi phục
+                    Thông báo bản demo
                   </h4>
                   <p className="text-[#6d5b54]">
-                    Hướng dẫn đặt lại mật khẩu đã được gửi đến địa chỉ <strong>{email}</strong>. Vui lòng kiểm tra hộp thư đến hoặc thư mục quảng cáo/spam.
+                    Chức năng khôi phục sẽ có khi kết nối tài khoản. Hiện tại bản demo lưu trữ trên trình duyệt và không gửi email thật. Bạn có thể quay lại đăng nhập với tài khoản demo.
                   </p>
                 </div>
               </div>
@@ -87,7 +86,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
                 onClick={onBackToLogin}
                 className="w-full font-semibold shadow-xs"
               >
-                <span>Trở về Đăng nhập</span>
+                <span>Trở về Đăng nhập demo</span>
               </Button>
             </div>
           ) : (
@@ -123,7 +122,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
                 type="submit"
                 className="w-full font-semibold shadow-xs py-3 text-sm sm:text-base flex items-center justify-center gap-2"
               >
-                <span>Gửi liên kết khôi phục</span>
+                <span>Yêu cầu khôi phục</span>
                 <span className="text-xs">▷</span>
               </Button>
 
@@ -145,7 +144,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
 
       {/* Bottom note outside card */}
       <div className="mt-6 text-center text-xs text-[#95837b] max-w-sm leading-relaxed">
-        Bảo mật thông tin & Hỗ trợ phục hồi quyền truy cập an toàn.
+        Nội dung bản demo được lưu trên trình duyệt này.
       </div>
     </div>
   );

@@ -253,7 +253,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
           <div className="flex items-center gap-1.5 uppercase font-semibold text-[11px] text-[#938279]">
             <Lock className="w-3.5 h-3.5 text-[#9e3b2e]" />
-            <span>NỘI DUNG LƯU RIÊNG • BẢO MẬT TRÊN THIẾT BỊ</span>
+            <span>NỘI DUNG BẢN DEMO ĐƯỢC LƯU TRÊN TRÌNH DUYỆT NÀY</span>
           </div>
         </div>
 
@@ -302,7 +302,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
               </div>
               <div className="flex items-center gap-1.5 text-xs text-[#9e3b2e] font-semibold">
                 <BookOpen className="w-3.5 h-3.5" />
-                <span>{totalCount || 12} dấu ấn đã lưu lại</span>
+                <span>{totalCount} dấu ấn đã lưu lại</span>
               </div>
             </div>
           </div>
@@ -597,7 +597,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
               <ShieldCheck className="w-5 h-5 text-[#9e3b2e] shrink-0 mt-0.5" />
               <div>
                 <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-1">
-                  Lời hẹn riêng tư tuyệt đối
+                  Không gian lưu riêng trên trình duyệt
                 </div>
                 <p className="text-xs sm:text-sm text-[#6c5a52] leading-relaxed">
                   Chỉ hiển thị những điều ước bạn chọn{" "}
