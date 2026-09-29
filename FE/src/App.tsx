@@ -834,9 +834,10 @@ export default function App() {
                 starred: false,
               };
               if (!currentUser) {
-                // Lưu xăm khi chưa đăng nhập
+                // Lưu xăm khi chưa đăng nhập -> chuyển sang login, trả về false vì chưa lưu thật vào tài khoản
                 setPendingSave({ type: "xam", item: newXam });
                 navigateTo("login");
+                return false;
               } else {
                 setUserCornerData((prev) => {
                   const exists = prev.xam.some(
@@ -850,12 +851,14 @@ export default function App() {
                   saveUserCornerData(currentUser.email, updated);
                   return updated;
                 });
+                return true;
               }
             }}
             onGoToLogin={() => navigateTo("login")}
             onGoToExplore={() => navigateTo("culture")}
             onGoToWish={() => navigateTo("wish")}
             isLoggedIn={!!currentUser}
+            savedXamList={userCornerData.xam}
           />
         )}
 
@@ -875,9 +878,10 @@ export default function App() {
                 starred: false,
               };
               if (!currentUser) {
-                // Lưu điều ước khi chưa đăng nhập
+                // Lưu điều ước khi chưa đăng nhập -> chuyển sang login, trả về false vì chưa lưu thật vào tài khoản
                 setPendingSave({ type: "wish", item: newWish });
                 navigateTo("login");
+                return false;
               } else {
                 setUserCornerData((prev) => {
                   const updated = {
@@ -887,6 +891,7 @@ export default function App() {
                   saveUserCornerData(currentUser.email, updated);
                   return updated;
                 });
+                return true;
               }
             }}
             isLoggedIn={!!currentUser}

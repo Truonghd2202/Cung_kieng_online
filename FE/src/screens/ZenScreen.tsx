@@ -664,7 +664,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
             “Tâm bình thế giới bình, lòng an vạn sự tỏ.”
           </p>
           <div className="text-xs uppercase tracking-widest text-[#938279] font-medium">
-            © 2025 Tin Lắm Tâm Linh. Mọi quyền được bảo lưu.
+            © {new Date().getFullYear()} Tin Lắm Tâm Linh. Mọi quyền được bảo lưu.
           </div>
         </div>
       </main>

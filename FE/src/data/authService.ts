@@ -3,6 +3,16 @@ export interface UserProfile {
   email: string;
 }
 
+/**
+ * LƯU Ý PHẠM VI SỬ DỤNG (DEMO PROTOTYPE ONLY):
+ * Tài khoản demo công khai "An Nhiên" dùng để trình diễn giao diện người dùng (UI)
+ * trên máy cá nhân hoặc kiểm thử cục bộ.
+ * 
+ * KHÔNG ĐƯỢC triển khai tài khoản dùng chung này cho người dùng thật (end-users)
+ * để nhập điều ước hay dữ liệu cá nhân riêng tư. Khi triển khai sản phẩm thực tế,
+ * cần kết nối máy chủ Backend với cơ sở dữ liệu riêng, phiên xác thực (JWT/Session)
+ * và phân quyền tài khoản độc lập.
+ */
 export const DEMO_USER: UserProfile = {
   name: "An Nhiên",
   email: "annhien@tinlamtamlinh.vn",

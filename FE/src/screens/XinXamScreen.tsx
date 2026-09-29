@@ -33,11 +33,12 @@ import {
 interface XinXamScreenProps {
   onBackToExperienceHome?: () => void;
   onGoToArticle?: (articleId: string) => void;
-  onSaveToAccount?: (result: XinXamResult) => void;
+  onSaveToAccount?: (result: XinXamResult) => boolean | void;
   onGoToLogin?: () => void;
   onGoToExplore?: () => void;
   onGoToWish?: () => void;
   isLoggedIn?: boolean;
+  savedXamList?: { stickNumber: string; category?: string; region?: string }[];
 }
 
 export const XinXamScreen: React.FC<XinXamScreenProps> = ({
@@ -48,6 +49,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   onGoToExplore,
   onGoToWish,
   isLoggedIn = false,
+  savedXamList,
 }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedRegion, setSelectedRegion] = useState<RegionType>("Bắc Bộ");
@@ -91,11 +93,22 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   };
 
   const handleSaveResult = () => {
-    setIsSaved(true);
     if (onSaveToAccount) {
-      onSaveToAccount(currentResult);
+      const success = onSaveToAccount(currentResult);
+      if (success === true) {
+        setIsSaved(true);
+      }
     }
   };
+
+  const isCardSaved =
+    isSaved ||
+    (Boolean(savedXamList) &&
+      savedXamList!.some(
+        (x) =>
+          x.stickNumber === currentResult.stickNumber &&
+          (x.category === currentResult.category || x.category === currentResult.topic)
+      ));
 
   return (
     <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif]">
@@ -1157,7 +1170,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                     >
                       <Download className="w-4 h-4" />
                       <span>
-                        {isSaved
+                        {isCardSaved
                           ? "Đã lưu vào Góc của tôi"
                           : "Lưu vào Góc của tôi"}
                       </span>

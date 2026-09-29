@@ -366,7 +366,7 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
             “Tâm bình thế giới bình, lòng an vạn sự tỏ.”
           </p>
           <div className="text-xs uppercase tracking-widest text-[#938279] font-medium">
-            © 2025 Tin Lắm Tâm Linh • Chiêm nghiệm dân gian đương đại
+            © {new Date().getFullYear()} Tin Lắm Tâm Linh • Chiêm nghiệm dân gian đương đại
           </div>
         </div>
       </main>

@@ -30,7 +30,7 @@ interface WishScreenProps {
   onGoToDiary: () => void;
   onGoToHome: () => void;
   onGoToExplore: () => void;
-  onSaveJournal?: (text: string, topic: WishTopic) => void;
+  onSaveJournal?: (text: string, topic: WishTopic) => boolean | void;
   isLoggedIn?: boolean;
 }
 
@@ -76,12 +76,15 @@ export const WishScreen: React.FC<WishScreenProps> = ({
     if (!content.trim()) return;
 
     if (mode === "journal") {
-      setHasActuallySaved(true);
+      let saved = false;
       if (onSaveJournal) {
-        onSaveJournal(content.trim(), topic);
+        saved = onSaveJournal(content.trim(), topic) === true;
       }
-      setViewState("variantA");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setHasActuallySaved(saved);
+      if (saved) {
+        setViewState("variantA");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     } else {
       // Ephemeral mode: thả trôi xong gọi setContent("");
       setContent("");
