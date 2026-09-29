@@ -58,8 +58,8 @@ export const WishScreen: React.FC<WishScreenProps> = ({
   // Screen views: 'form' | 'variantA' (Lưu riêng) | 'variantB' (Biểu tượng tan biến)
   const [viewState, setViewState] = useState<"form" | "variantA" | "variantB">("form");
 
-  // Form State
-  const [content, setContent] = useState(SAMPLE_WISHES["Bình an"]);
+  // Form State - default to empty string so user never accidentally saves sample text
+  const [content, setContent] = useState("");
   const [topic, setTopic] = useState<WishTopic>("Bình an");
   const [mode, setMode] = useState<WishMode>("journal");
   const [isGentleAnimation, setIsGentleAnimation] = useState(true);
@@ -321,7 +321,12 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                       type="submit"
                       variant="default"
                       size="lg"
-                      className="w-full sm:w-auto font-semibold gap-2 shadow-xs cursor-pointer px-8"
+                      disabled={!content.trim()}
+                      className={`w-full sm:w-auto font-semibold gap-2 shadow-xs px-8 transition-all ${
+                        !content.trim()
+                          ? "opacity-50 cursor-not-allowed"
+                          : "cursor-pointer"
+                      }`}
                     >
                       <span>
                         {mode === "journal"

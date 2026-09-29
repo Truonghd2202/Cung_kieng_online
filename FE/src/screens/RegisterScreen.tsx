@@ -14,6 +14,8 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 
+import { registerAccount } from "../data/authService";
+
 interface RegisterScreenProps {
   onBack?: () => void;
   onSuccess: (name?: string, email?: string) => void;
@@ -32,11 +34,26 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [agreed, setAgreed] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!agreed) return;
-    onSuccess(name || "Lữ khách An Nhiên", email || "annhien@tinlam.vn");
+    setErrorMessage("");
+
+    if (!agreed) {
+      setErrorMessage("Vui lòng đồng ý với Quy ước bảo mật để tiếp tục.");
+      return;
+    }
+
+    const res = registerAccount(name, email, password);
+    if (!res.success) {
+      setErrorMessage(res.error || "Đăng ký không thành công.");
+      return;
+    }
+
+    if (res.user) {
+      onSuccess(res.user.name, res.user.email);
+    }
   };
 
   return (
@@ -125,6 +142,13 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
               Lưu giữ những tín hiệu dân gian đã thấu cảm và bồi đắp thói quen
               lắng lòng mỗi ngày.
             </p>
+
+            {errorMessage && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-start gap-2">
+                <span className="font-bold mt-0.5">✕</span>
+                <span className="leading-relaxed">{errorMessage}</span>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Field 1: Name */}

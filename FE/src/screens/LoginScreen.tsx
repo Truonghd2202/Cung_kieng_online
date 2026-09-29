@@ -13,6 +13,8 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 
+import { loginAccount, loginWithSocial } from "../data/authService";
+
 interface LoginScreenProps {
   onBack?: () => void;
   onSuccess: (name?: string, email?: string) => void;
@@ -28,20 +30,32 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onGoToForgotPassword,
   pendingSignalMood,
 }) => {
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
+  const [identifier, setIdentifier] = useState("annhien@tinlamtamlinh.vn");
+  const [password, setPassword] = useState("123456");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const finalName = identifier.includes("@")
-      ? identifier.split("@")[0]
-      : identifier || "Lữ khách An Yên";
-    const finalEmail = identifier.includes("@")
-      ? identifier
-      : `${identifier || "khach"}@tinlam.vn`;
-    onSuccess(finalName, finalEmail);
+    setErrorMessage("");
+
+    const res = loginAccount(identifier, password);
+    if (!res.success) {
+      setErrorMessage(res.error || "Đăng nhập không thành công.");
+      return;
+    }
+
+    if (res.user) {
+      onSuccess(res.user.name, res.user.email);
+    }
+  };
+
+  const handleSocialLogin = (provider: "Google" | "Apple") => {
+    const res = loginWithSocial(provider);
+    if (res.success && res.user) {
+      onSuccess(res.user.name, res.user.email);
+    }
   };
 
   return (
@@ -131,12 +145,24 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             )}
 
             {/* Demo Notice Banner */}
-            <div className="mb-5 p-2.5 rounded-xl bg-[#fbf5ee] border border-[#eddcd0] flex items-center gap-2 text-xs text-[#786962]">
-              <Badge variant="secondary" className="text-xs py-0 px-2 uppercase font-bold text-[#9e3b2e]">
-                Demo
-              </Badge>
-              <span>Chưa có Backend • Đăng nhập mô phỏng để trải nghiệm lưu trữ.</span>
+            <div className="mb-5 p-3 rounded-xl bg-[#fbf5ee] border border-[#eddcd0] flex flex-col gap-1 text-xs text-[#786962]">
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs py-0 px-2 uppercase font-bold text-[#9e3b2e]">
+                  Hệ thống tài khoản
+                </Badge>
+                <span className="font-semibold text-[#2a2220]">Xác thực tài khoản thực tế</span>
+              </div>
+              <span className="text-[11px] text-[#8c7b74]">
+                Tài khoản mẫu: <code className="text-[#9e3b2e] font-mono">annhien@tinlamtamlinh.vn</code> / Mật khẩu: <code className="text-[#9e3b2e] font-mono">123456</code>
+              </span>
             </div>
+
+            {errorMessage && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-start gap-2">
+                <span className="font-bold mt-0.5">✕</span>
+                <span className="leading-relaxed">{errorMessage}</span>
+              </div>
+            )}
 
             <div className="text-xs font-bold uppercase tracking-wider text-[#be8e5a] mb-1 flex items-center gap-1.5">
               <span>✦ Cánh cửa soi chiếu</span>
@@ -154,7 +180,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             <Button
               variant="outline"
               type="button"
-              onClick={() => onSuccess("Lữ khách Google", "an.nhien@gmail.com")}
+              onClick={() => handleSocialLogin("Google")}
               className="w-full bg-[#faede2]/60 hover:bg-[#faede2] border-[#ecd9cb] text-sm font-semibold gap-2 py-3 mb-6"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">

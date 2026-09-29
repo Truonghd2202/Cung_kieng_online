@@ -58,7 +58,14 @@ export interface SavedWishItem {
 interface AccountScreenProps {
   currentUser?: { name: string; email: string } | null;
   savedSignals: SavedSignalItem[];
+  savedXamList: SavedXinXamItem[];
+  savedWishList: SavedWishItem[];
   onDeleteSignal: (id: string) => void;
+  onDeleteXam: (id: string) => void;
+  onDeleteWish: (id: string) => void;
+  onToggleStarSignal?: (id: string) => void;
+  onToggleStarXam: (id: string) => void;
+  onToggleStarWish: (id: string) => void;
   onGoToSignalResult: (signalId: string) => void;
   onGoToXinXam: () => void;
   onGoToWish: () => void;
@@ -69,7 +76,14 @@ interface AccountScreenProps {
 export const AccountScreen: React.FC<AccountScreenProps> = ({
   currentUser,
   savedSignals,
+  savedXamList,
+  savedWishList,
   onDeleteSignal,
+  onDeleteXam,
+  onDeleteWish,
+  onToggleStarSignal,
+  onToggleStarXam,
+  onToggleStarWish,
   onGoToSignalResult,
   onGoToXinXam,
   onGoToWish,
@@ -86,61 +100,6 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
   >("all");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
-  // Initial Demo Data matching Image 1 & Image 4
-  const [savedXamList, setSavedXamList] = useState<SavedXinXamItem[]>([
-    {
-      id: "xam-1",
-      stickNumber: "07",
-      fortuneType: "Thượng Cát",
-      category: "Bình an & Gia đạo",
-      region: "Nam Bộ (Chùa Ông - Cần Thơ)",
-      quote: "“Nước chảy xuôi dòng, lòng an vạn sự tỏ. Thuận theo lẽ tự nhiên ắt gặp lành.”",
-      date: "Hôm qua, 16:45",
-      starred: true,
-    },
-    {
-      id: "xam-2",
-      stickNumber: "12",
-      fortuneType: "Trung Cát",
-      category: "Công danh & Sự nghiệp",
-      region: "Bắc Bộ (Đền Hùng - Phú Thọ)",
-      quote: "“Gốc rễ vững vàng, kiên nhẫn bồi đắp. Hoa lành nở muộn nhưng bền lâu.”",
-      date: "12 Tháng 10",
-      starred: false,
-    },
-    {
-      id: "xam-3",
-      stickNumber: "23",
-      fortuneType: "Tùy Duyên",
-      category: "Tâm an & Tịnh dưỡng",
-      region: "Trung Bộ (Điện Hòn Chén - Huế)",
-      quote: "“Gió lặng mây quang bên dòng Hương giang. Buông bớt nhọc nhằn để đón thanh lương.”",
-      date: "28 Tháng 9",
-      starred: true,
-    },
-  ]);
-
-  const [savedWishList, setSavedWishList] = useState<SavedWishItem[]>([
-    {
-      id: "wish-1",
-      category: "Bình an & Sức khỏe",
-      content:
-        "Mong cho cha mẹ sức khỏe bình an sau chuyến đi xa, mong lòng con bớt bực bội mỗi khi gặp trắc trở đời thường...",
-      date: "Hôm nay, 14:30",
-      sealed: true,
-      starred: true,
-    },
-    {
-      id: "wish-2",
-      category: "Tâm an & Tịnh dưỡng",
-      content:
-        "Nguyện giữ lòng bao dung, không hơn thua chuyện nhỏ nhặt, tập trung xây dựng việc lành và nuôi dưỡng sự an lạc tự thân...",
-      date: "11 Tháng 10 (Mùng Một)",
-      sealed: true,
-      starred: false,
-    },
-  ]);
-
   // Modals state
   const [itemToDelete, setItemToDelete] = useState<{
     type: "signal" | "xinxam" | "wish";
@@ -150,19 +109,6 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
   const [openedWish, setOpenedWish] = useState<SavedWishItem | null>(null);
 
-  // Toggle star
-  const handleToggleStarXam = (id: string) => {
-    setSavedXamList((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, starred: !item.starred } : item))
-    );
-  };
-
-  const handleToggleStarWish = (id: string) => {
-    setSavedWishList((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, starred: !item.starred } : item))
-    );
-  };
-
   // Perform deletion
   const handleConfirmDelete = () => {
     if (!itemToDelete) return;
@@ -170,9 +116,9 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
     if (itemToDelete.type === "signal") {
       onDeleteSignal(itemToDelete.id);
     } else if (itemToDelete.type === "xinxam") {
-      setSavedXamList((prev) => prev.filter((item) => item.id !== itemToDelete.id));
+      onDeleteXam(itemToDelete.id);
     } else if (itemToDelete.type === "wish") {
-      setSavedWishList((prev) => prev.filter((item) => item.id !== itemToDelete.id));
+      onDeleteWish(itemToDelete.id);
     }
 
     setItemToDelete(null);
@@ -207,6 +153,22 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
       return true;
     });
   }, [savedWishList, searchQuery, activeFilter]);
+
+  // Filtered Signals
+  const filteredSignals = useMemo(() => {
+    return savedSignals.filter((item) => {
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchMood = item.mood.toLowerCase().includes(q);
+        const matchPoem = (item.poemLine1 + " " + item.poemLine2).toLowerCase().includes(q);
+        const matchJournal = (item.journal || "").toLowerCase().includes(q);
+        const matchAction = (item.actionTitle || "").toLowerCase().includes(q);
+        if (!matchMood && !matchPoem && !matchJournal && !matchAction) return false;
+      }
+      if (activeFilter === "starred" && !item.starred) return false;
+      return true;
+    });
+  }, [savedSignals, searchQuery, activeFilter]);
 
   // Total count
   const totalCount = savedSignals.length + savedXamList.length + savedWishList.length;
@@ -494,7 +456,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleToggleStarXam(item.id)}
+                          onClick={() => onToggleStarXam(item.id)}
                           className={`p-1.5 rounded-full hover:bg-[#faede2] transition-colors cursor-pointer ${
                             item.starred ? "text-amber-500 fill-current" : "text-[#a8958c]"
                           }`}
@@ -633,7 +595,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleToggleStarWish(wish.id)}
+                          onClick={() => onToggleStarWish(wish.id)}
                           className={`p-1.5 rounded-full hover:bg-[#faede2] transition-colors cursor-pointer ${
                             wish.starred ? "text-amber-500 fill-current" : "text-[#a8958c]"
                           }`}
@@ -699,13 +661,13 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                 </h2>
               </div>
               <span className="text-xs text-[#8c7a72]">
-                {savedSignals.length} bản ghi lưu trữ
+                {filteredSignals.length} bản ghi lưu trữ
               </span>
             </div>
 
-            {savedSignals.length > 0 ? (
+            {filteredSignals.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-                {savedSignals.map((item) => (
+                {filteredSignals.map((item) => (
                   <Card
                     key={item.id}
                     className="p-6 rounded-3xl bg-white border-[#eddcd0] shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
@@ -748,18 +710,29 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                         <ArrowRight className="w-3.5 h-3.5" />
                       </Button>
 
-                      <button
-                        onClick={() =>
-                          setItemToDelete({
-                            type: "signal",
-                            id: item.id,
-                            title: `Tín hiệu [${item.mood}]`,
-                          })
-                        }
-                        className="p-2 rounded-full hover:bg-rose-50 text-[#a8958c] hover:text-rose-600 transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => onToggleStarSignal?.(item.id)}
+                          className={`p-1.5 rounded-full hover:bg-[#faede2] transition-colors cursor-pointer ${
+                            item.starred ? "text-amber-500 fill-current" : "text-[#a8958c]"
+                          }`}
+                        >
+                          <Star className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            setItemToDelete({
+                              type: "signal",
+                              id: item.id,
+                              title: `Tín hiệu [${item.mood}]`,
+                            })
+                          }
+                          className="p-1.5 rounded-full hover:bg-rose-50 text-[#a8958c] hover:text-rose-600 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </Card>
                 ))}
