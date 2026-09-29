@@ -38,7 +38,7 @@ export interface SavedSignalItem {
 export interface SavedXinXamItem {
   id: string;
   stickNumber: string;
-  fortuneType: "Thượng Cát" | "Trung Cát" | "Tùy Duyên" | "Đại Cát";
+  fortuneType: string;
   category: string;
   region: string;
   quote: string;

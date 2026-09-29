@@ -703,8 +703,8 @@ export default function App() {
               const newXam: SavedXinXamItem = {
                 id: Date.now().toString(),
                 stickNumber: result.stickNumber,
-                fortuneType: result.fortuneType as any,
-                category: result.category,
+                fortuneType: result.fortuneType || result.sealText || "Thượng Cát",
+                category: result.category || result.topic,
                 region: result.region,
                 quote: result.quote,
                 date: new Date().toLocaleDateString("vi-VN"),

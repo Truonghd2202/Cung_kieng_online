@@ -16,6 +16,8 @@ export interface XinXamResult {
     line4: string;
   };
   sealText: string;
+  fortuneType?: string;
+  category?: string;
   insight: string;
   reflectionParagraphs: string[];
   tips: {
