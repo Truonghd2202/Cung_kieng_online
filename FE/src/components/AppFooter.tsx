@@ -66,7 +66,7 @@ export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => {
           </div>
 
           <div className="text-center sm:text-right">
-            © 2025 Tin Lắm Tâm Linh. Tiếp nối tinh hoa mỹ học Dó & Gốm Việt đương đại.
+            © {new Date().getFullYear()} Tin Lắm Tâm Linh. Tiếp nối tinh hoa mỹ học Dó & Gốm Việt đương đại.
           </div>
         </div>
       </div>

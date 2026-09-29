@@ -96,7 +96,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<
-    "all" | "thisWeek" | "thisMonth" | "starred" | "reflect"
+    "all" | "thisWeek" | "thisMonth" | "starred"
   >("all");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
@@ -132,6 +132,17 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
     return diffDays <= days && diffDays >= -1;
   };
 
+  const isCurrentMonth = (dateStr: string): boolean => {
+    const ts = parseVnDate(dateStr);
+    if (!ts) return true;
+    const itemDate = new Date(ts);
+    const now = new Date();
+    return (
+      itemDate.getMonth() === now.getMonth() &&
+      itemDate.getFullYear() === now.getFullYear()
+    );
+  };
+
   // Perform deletion
   const handleConfirmDelete = () => {
     if (!itemToDelete) return;
@@ -161,14 +172,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
       }
       if (activeFilter === "starred" && !item.starred) return false;
       if (activeFilter === "thisWeek" && !isWithinDays(item.date, 7)) return false;
-      if (activeFilter === "thisMonth" && !isWithinDays(item.date, 31)) return false;
-      if (
-        activeFilter === "reflect" &&
-        item.fortuneType !== "Tùy Duyên" &&
-        item.fortuneType !== "Trung Cát" &&
-        item.starred
-      )
-        return false;
+      if (activeFilter === "thisMonth" && !isCurrentMonth(item.date)) return false;
       return true;
     });
 
@@ -190,8 +194,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
       }
       if (activeFilter === "starred" && !item.starred) return false;
       if (activeFilter === "thisWeek" && !isWithinDays(item.date, 7)) return false;
-      if (activeFilter === "thisMonth" && !isWithinDays(item.date, 31)) return false;
-      if (activeFilter === "reflect" && item.starred) return false;
+      if (activeFilter === "thisMonth" && !isCurrentMonth(item.date)) return false;
       return true;
     });
 
@@ -215,13 +218,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
       }
       if (activeFilter === "starred" && !item.starred) return false;
       if (activeFilter === "thisWeek" && !isWithinDays(item.date, 7)) return false;
-      if (activeFilter === "thisMonth" && !isWithinDays(item.date, 31)) return false;
-      if (
-        activeFilter === "reflect" &&
-        !["Chênh vênh", "Băn khoăn", "Cần điểm tựa", "Nôn nóng"].includes(item.mood) &&
-        item.starred
-      )
-        return false;
+      if (activeFilter === "thisMonth" && !isCurrentMonth(item.date)) return false;
       return true;
     });
 
@@ -298,7 +295,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                 </span>
               </div>
               <div className="text-xs text-[#8c7a72] mb-1.5">
-                Bạn đồng hành • Mùa Thu 2024
+                Bạn đồng hành
               </div>
               <div className="flex items-center gap-1.5 text-xs text-[#9e3b2e] font-semibold">
                 <BookOpen className="w-3.5 h-3.5" />
@@ -426,16 +423,6 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
               }`}
             >
               ☆ Gắn sao
-            </button>
-            <button
-              onClick={() => setActiveFilter("reflect")}
-              className={`px-3 py-1 rounded-full font-medium transition-all cursor-pointer ${
-                activeFilter === "reflect"
-                  ? "bg-[#524440] text-white shadow-2xs font-semibold"
-                  : "bg-[#fcf8f2] border border-[#eddcd0] text-[#6d5c55]"
-              }`}
-            >
-              Cần chiêm nghiệm lại
             </button>
           </div>
 
@@ -836,7 +823,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
             “Tâm bình thế giới bình, lòng an vạn sự tỏ.”
           </p>
           <div className="text-xs uppercase tracking-widest text-[#938279] font-medium">
-            © 2025 Tin Lắm Tâm Linh. Bản quyền thuộc về những tâm hồn yêu nếp xưa đương đại.
+            © {new Date().getFullYear()} Tin Lắm Tâm Linh. Bản quyền thuộc về những tâm hồn yêu nếp xưa đương đại.
           </div>
         </div>
       </main>

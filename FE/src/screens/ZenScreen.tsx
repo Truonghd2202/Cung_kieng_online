@@ -382,7 +382,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
-              <span>Không gian 3D chiều sâu</span>
+              <span>Hiệu ứng chiều sâu 2D</span>
             </button>
           </div>
 

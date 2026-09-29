@@ -63,6 +63,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
   const [topic, setTopic] = useState<WishTopic>("Bình an");
   const [mode, setMode] = useState<WishMode>("journal");
   const [isGentleAnimation, setIsGentleAnimation] = useState(true);
+  const [hasActuallySaved, setHasActuallySaved] = useState(false);
 
   const TOPICS: WishTopic[] = ["Bình an", "Gia đình", "Học tập", "Công việc", "Khác"];
 
@@ -75,13 +76,16 @@ export const WishScreen: React.FC<WishScreenProps> = ({
     if (!content.trim()) return;
 
     if (mode === "journal") {
+      setHasActuallySaved(true);
       if (onSaveJournal) {
         onSaveJournal(content.trim(), topic);
       }
       setViewState("variantA");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      // Ephemeral mode: don't save text
+      // Ephemeral mode: thả trôi xong gọi setContent("");
+      setContent("");
+      setHasActuallySaved(false);
       setViewState("variantB");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -489,22 +493,18 @@ export const WishScreen: React.FC<WishScreenProps> = ({
 
               <div className="flex items-center gap-3">
                 <span className="px-3 py-1 rounded-full bg-[#9e3b2e] text-white font-semibold text-[11px]">
-                  ● Variant A (Lưu nhật ký)
+                  ● Lưu vào nhật ký cá nhân
                 </span>
-                <button
-                  onClick={() => setViewState("variantB")}
-                  className="px-3 py-1 rounded-full bg-[#f7ede4] text-[#715f57] border border-[#ecd9cb] hover:border-[#9e3b2e] text-[11px] cursor-pointer"
-                >
-                  Xem Variant B (Biểu tượng)
-                </button>
                 <span className="text-[11px] text-[#8e7e77]">Chuyển động: Êm ái</span>
               </div>
             </div>
 
             <div className="text-center mb-8">
-              <span className="inline-block text-[11px] uppercase font-bold tracking-wider text-[#938279] bg-[#fbf2ea] px-3.5 py-1 rounded-full border border-[#ebd6c5] mb-6">
-                ● KHOẢNG LẶNG TỰ NHÌN LẠI • ĐÃ LƯU TRÊN TRÌNH DUYỆT
-              </span>
+              {hasActuallySaved && (
+                <span className="inline-block text-[11px] uppercase font-bold tracking-wider text-[#938279] bg-[#fbf2ea] px-3.5 py-1 rounded-full border border-[#ebd6c5] mb-6">
+                  ● KHOẢNG LẶNG TỰ NHÌN LẠI • ĐÃ LƯU TRÊN TRÌNH DUYỆT
+                </span>
+              )}
 
               {/* Big Red Book Seal Icon */}
               <div className="w-20 h-20 mx-auto rounded-3xl bg-[#faede2] border-2 border-[#ebd4c2] flex items-center justify-center text-[#9e3b2e] shadow-md mb-4 relative">
@@ -600,7 +600,11 @@ export const WishScreen: React.FC<WishScreenProps> = ({
               <Button
                 variant="ghost"
                 size="default"
-                onClick={() => setViewState("form")}
+                onClick={() => {
+                  setContent("");
+                  setHasActuallySaved(false);
+                  setViewState("form");
+                }}
                 className="text-xs text-[#73635b] hover:text-[#9e3b2e]"
               >
                 Viết điều khác nếu cần
@@ -700,14 +704,8 @@ export const WishScreen: React.FC<WishScreenProps> = ({
               </div>
 
               <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setViewState("variantA")}
-                  className="px-3 py-1 rounded-full bg-[#f7ede4] text-[#715f57] border border-[#ecd9cb] hover:border-[#9e3b2e] text-[11px] cursor-pointer"
-                >
-                  Xem Variant A (Lưu vào nhật ký)
-                </button>
                 <span className="px-3 py-1 rounded-full bg-[#9e3b2e] text-white font-semibold text-[11px]">
-                  ● Variant B (Biểu tượng tan biến)
+                  ● Thả trôi an nhiên
                 </span>
                 <span className="text-[11px] text-[#8e7e77]">Chuyển động êm dịu: Bật</span>
               </div>
@@ -784,7 +782,10 @@ export const WishScreen: React.FC<WishScreenProps> = ({
               <Button
                 variant="outline"
                 size="default"
-                onClick={() => setViewState("form")}
+                onClick={() => {
+                  setContent("");
+                  setViewState("form");
+                }}
                 className="text-xs text-[#73635b] border-[#e4ccba]"
               >
                 Viết điều khác

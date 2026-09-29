@@ -84,10 +84,10 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
             </div>
             <div>
               <div className="text-xs uppercase tracking-wider text-[#938279] font-medium">
-                Tiết khí nhật ký
+                Khoảng lặng hôm nay
               </div>
               <div className="font-['Noto_Serif',serif] font-bold text-base text-[#2e2624]">
-                Giáp Thìn • Thuận Hòa
+                Thuận Hòa • An Nhiên
               </div>
             </div>
           </Card>

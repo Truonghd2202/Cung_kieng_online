@@ -148,6 +148,60 @@ export const saveUserCornerData = (email: string, data: UserCornerData) => {
   } catch {}
 };
 
+export const getAccountScopedKey = (base: string, email?: string | null) => {
+  const accountId = email ? email.trim().toLowerCase() : "guest";
+  return `${base}_${accountId}`;
+};
+
+export const loadUserSessionState = (user: UserProfile | null, todayStr: string) => {
+  const email = user?.email;
+  const checkInKey = getAccountScopedKey("tltl-last-checkin-date", email);
+  const moodKey = getAccountScopedKey("tltl-today-mood", email);
+  const topicsKey = getAccountScopedKey("tltl-selected-topics", email);
+  const actionKey = getAccountScopedKey("tltl-action-done-date", email);
+  const signalKey = getAccountScopedKey("tltl-current-signal-id", email);
+
+  let checkedIn = false;
+  try {
+    checkedIn = localStorage.getItem(checkInKey) === todayStr;
+  } catch {}
+
+  let mood: MoodKey = "Chênh vênh";
+  try {
+    const savedMood = localStorage.getItem(moodKey);
+    if (
+      savedMood &&
+      ["An yên", "Chênh vênh", "Băn khoăn", "Nôn nóng", "Biết ơn", "Cần điểm tựa"].includes(savedMood)
+    ) {
+      mood = savedMood as MoodKey;
+    }
+  } catch {}
+
+  let topics: string[] = ["cadao", "xinxam", "bamien"];
+  try {
+    const stored = localStorage.getItem(topicsKey);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) topics = parsed;
+    }
+  } catch {}
+
+  let actionDone = false;
+  try {
+    actionDone = localStorage.getItem(actionKey) === todayStr;
+  } catch {}
+
+  let signalId = getDefaultSignalForMood(mood).id;
+  try {
+    const storedSigId = localStorage.getItem(signalKey);
+    if (storedSigId && getSignalById(storedSigId)) {
+      signalId = storedSigId;
+    }
+  } catch {}
+
+  return { checkedIn, mood, topics, actionDone, signalId };
+};
+
 export type PendingSave =
   | { type: "signal"; item: SavedSignalItem }
   | { type: "xam"; item: SavedXinXamItem }
@@ -166,6 +220,7 @@ export default function App() {
   };
 
   const initialUser = getInitialUser();
+  const initialSession = loadUserSessionState(initialUser, todayDateString);
 
   // Helper to resolve initial screen from URL safely with prerequisite checks
   const getInitialScreen = (): NavScreen => {
@@ -175,12 +230,16 @@ export default function App() {
     }
     // loading requires active check-in flow; if opened directly, redirect safely
     if (path === "loading") {
-      const lastCheck = localStorage.getItem("tltl-last-checkin-date");
+      const lastCheck = localStorage.getItem(
+        getAccountScopedKey("tltl-last-checkin-date", initialUser?.email)
+      );
       return lastCheck === todayDateString ? "today" : "mood";
     }
     // saved requires completed ritual/action context; if opened directly, redirect to today or guest
     if (path === "saved") {
-      const lastCheck = localStorage.getItem("tltl-last-checkin-date");
+      const lastCheck = localStorage.getItem(
+        getAccountScopedKey("tltl-last-checkin-date", initialUser?.email)
+      );
       return lastCheck === todayDateString ? "today" : "guest";
     }
     if (
@@ -225,70 +284,32 @@ export default function App() {
   const [dark, setDark] = useState(() => localStorage.getItem("tltl-theme") === "dark");
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(initialUser);
-
   const [pendingSave, setPendingSave] = useState<PendingSave | null>(null);
 
-  // Lưu và đồng bộ chủ đề yêu thích từ Trải nghiệm sang Hôm nay
-  const [selectedTopics, setSelectedTopics] = useState<string[]>(() => {
-    try {
-      const stored = localStorage.getItem("tltl-selected-topics");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch {}
-    return ["cadao", "xinxam", "bamien"];
-  });
+  // Lưu và đồng bộ chủ đề yêu thích theo từng tài khoản
+  const [selectedTopics, setSelectedTopics] = useState<string[]>(initialSession.topics);
 
-  const [isCheckedIn, setIsCheckedIn] = useState<boolean>(() => {
-    try {
-      const lastCheckIn = localStorage.getItem("tltl-last-checkin-date");
-      return lastCheckIn === todayDateString;
-    } catch {
-      return false;
-    }
-  });
+  // Check-in theo tài khoản
+  const [isCheckedIn, setIsCheckedIn] = useState<boolean>(initialSession.checkedIn);
 
+  // Mood theo tài khoản
   const [selectedMood, setSelectedMood] = useState<MoodKey>(() => {
     if (initialUrlSignal) {
       return initialUrlSignal.mood;
     }
-    try {
-      const savedMood = localStorage.getItem("tltl-today-mood");
-      if (
-        savedMood &&
-        ["An yên", "Chênh vênh", "Băn khoăn", "Nôn nóng", "Biết ơn", "Cần điểm tựa"].includes(savedMood)
-      ) {
-        return savedMood as MoodKey;
-      }
-    } catch {
-      // fallback
-    }
-    return "Chênh vênh";
+    return initialSession.mood;
   });
 
+  // Current signal theo tài khoản
   const [currentSignalId, setCurrentSignalId] = useState<string>(() => {
     if (initialUrlSignal) {
       return initialUrlSignal.id;
     }
-    try {
-      const storedSigId = localStorage.getItem("tltl-current-signal-id");
-      if (storedSigId && getSignalById(storedSigId)) {
-        return storedSigId;
-      }
-    } catch {}
-    return getDefaultSignalForMood("Chênh vênh").id;
+    return initialSession.signalId;
   });
 
-  // Trạng thái hành động hoàn thành được nâng lên App.tsx và lưu theo ngày
-  const [isActionDone, setIsActionDone] = useState<boolean>(() => {
-    try {
-      const doneDate = localStorage.getItem("tltl-action-done-date");
-      return doneDate === todayDateString;
-    } catch {
-      return false;
-    }
-  });
+  // Trạng thái hành động hoàn thành theo từng tài khoản
+  const [isActionDone, setIsActionDone] = useState<boolean>(initialSession.actionDone);
 
   // Tách biệt dữ liệu Góc của tôi (tín hiệu, thẻ xăm, điều ước) theo từng tài khoản
   const [userCornerData, setUserCornerData] = useState<UserCornerData>(() => {
@@ -315,8 +336,13 @@ export default function App() {
   }, [screen, currentUser]);
 
   useEffect(() => {
-    localStorage.setItem("tltl-current-signal-id", currentSignalId);
-  }, [currentSignalId]);
+    try {
+      localStorage.setItem(
+        getAccountScopedKey("tltl-current-signal-id", currentUser?.email),
+        currentSignalId
+      );
+    } catch {}
+  }, [currentSignalId, currentUser]);
 
   // Handle URL history sync & direct link / popstate reload with full context restoration
   useEffect(() => {
@@ -448,10 +474,11 @@ export default function App() {
   const handleToggleAction = (completed: boolean) => {
     setIsActionDone(completed);
     try {
+      const key = getAccountScopedKey("tltl-action-done-date", currentUser?.email);
       if (completed) {
-        localStorage.setItem("tltl-action-done-date", todayDateString);
+        localStorage.setItem(key, todayDateString);
       } else {
-        localStorage.removeItem("tltl-action-done-date");
+        localStorage.removeItem(key);
       }
     } catch {}
   };
@@ -470,9 +497,10 @@ export default function App() {
   const handleFinishLoading = () => {
     setIsCheckedIn(true);
     try {
-      localStorage.setItem("tltl-last-checkin-date", todayDateString);
-      localStorage.setItem("tltl-today-mood", selectedMood);
-      localStorage.setItem("tltl-current-signal-id", activeSignal.id);
+      const email = currentUser?.email;
+      localStorage.setItem(getAccountScopedKey("tltl-last-checkin-date", email), todayDateString);
+      localStorage.setItem(getAccountScopedKey("tltl-today-mood", email), selectedMood);
+      localStorage.setItem(getAccountScopedKey("tltl-current-signal-id", email), activeSignal.id);
     } catch {}
     navigateTo("result", activeSignal.id);
   };
@@ -482,7 +510,10 @@ export default function App() {
     const nextSignal = getNextSignalForMood(activeSignal.id, selectedMood);
     setCurrentSignalId(nextSignal.id);
     try {
-      localStorage.setItem("tltl-current-signal-id", nextSignal.id);
+      localStorage.setItem(
+        getAccountScopedKey("tltl-current-signal-id", currentUser?.email),
+        nextSignal.id
+      );
     } catch {}
     // Đồng bộ URL ngay lập tức
     window.history.replaceState(null, "", `/result?signalId=${nextSignal.id}`);
@@ -492,7 +523,10 @@ export default function App() {
   const handleSaveTopics = (topics: string[]) => {
     setSelectedTopics(topics);
     try {
-      localStorage.setItem("tltl-selected-topics", JSON.stringify(topics));
+      localStorage.setItem(
+        getAccountScopedKey("tltl-selected-topics", currentUser?.email),
+        JSON.stringify(topics)
+      );
     } catch {}
     navigateTo("today");
   };
@@ -500,9 +534,10 @@ export default function App() {
   const handleSaveResult = () => {
     setIsCheckedIn(true);
     try {
-      localStorage.setItem("tltl-last-checkin-date", todayDateString);
-      localStorage.setItem("tltl-today-mood", selectedMood);
-      localStorage.setItem("tltl-current-signal-id", activeSignal.id);
+      const email = currentUser?.email;
+      localStorage.setItem(getAccountScopedKey("tltl-last-checkin-date", email), todayDateString);
+      localStorage.setItem(getAccountScopedKey("tltl-today-mood", email), selectedMood);
+      localStorage.setItem(getAccountScopedKey("tltl-current-signal-id", email), activeSignal.id);
     } catch {}
 
     const newEntry: SavedSignalItem = {
@@ -560,6 +595,16 @@ export default function App() {
     localStorage.setItem("tltl-current-user", JSON.stringify(user));
     setUserCornerData(loadedData);
     setPendingSave(null);
+
+    // Đồng bộ trạng thái session (check-in, mood, topics, action, signal) theo tài khoản vừa đăng nhập
+    const userSession = loadUserSessionState(user, todayDateString);
+    setIsCheckedIn(userSession.checkedIn);
+    setSelectedMood(userSession.mood);
+    setSelectedTopics(userSession.topics);
+    setIsActionDone(userSession.actionDone);
+    setCurrentSignalId(userSession.signalId);
+    setJournalText("");
+
     navigateTo("account");
   };
 
@@ -567,6 +612,17 @@ export default function App() {
     setCurrentUser(null);
     localStorage.removeItem("tltl-current-user");
     setUserCornerData({ signals: [], xam: [], wishes: [] });
+
+    // Reset các trạng thái session về tài khoản khách (guest)
+    const guestSession = loadUserSessionState(null, todayDateString);
+    setIsCheckedIn(guestSession.checkedIn);
+    setSelectedMood(guestSession.mood);
+    setSelectedTopics(guestSession.topics);
+    setIsActionDone(guestSession.actionDone);
+    setCurrentSignalId(guestSession.signalId);
+    setJournalText("");
+    setPendingSave(null);
+
     navigateTo("guest");
   };
 

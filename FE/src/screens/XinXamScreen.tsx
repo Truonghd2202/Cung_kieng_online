@@ -71,11 +71,13 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   useEffect(() => {
     setCurrentResult(getXinXamResult(selectedRegion, selectedTopic));
     setDrawPhase("idle");
+    setIsSaved(false);
   }, [selectedRegion, selectedTopic]);
 
   const handleStartDraw = () => {
     if (isShaking) return;
     setIsShaking(true);
+    setIsSaved(false);
     setDrawPhase("shaking");
 
     // Dynamic selection from culture pool
@@ -1150,7 +1152,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                     <Button
                       variant="default"
                       size="default"
-                      onClick={isLoggedIn ? handleSaveResult : onGoToLogin || handleSaveResult}
+                      onClick={handleSaveResult}
                       className="w-full sm:w-auto font-semibold gap-2 shadow-xs"
                     >
                       <Download className="w-4 h-4" />
