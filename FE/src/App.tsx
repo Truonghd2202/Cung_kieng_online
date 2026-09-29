@@ -21,6 +21,11 @@ import { WishScreen, WishTopic } from "./screens/WishScreen";
 import { RitualGuideScreen } from "./screens/RitualGuideScreen";
 import { RitualDetailScreen } from "./screens/RitualDetailScreen";
 import { ZenScreen } from "./screens/ZenScreen";
+import { XinKeoScreen } from "./screens/XinKeoScreen";
+import { GoodDayScreen } from "./screens/GoodDayScreen";
+import { HoroscopeScreen } from "./screens/HoroscopeScreen";
+import { MembershipScreen } from "./screens/MembershipScreen";
+import { SettingsScreen } from "./screens/SettingsScreen";
 import {
   AccountScreen,
   SavedSignalItem,
@@ -266,6 +271,11 @@ export default function App() {
         "login",
         "register",
         "forgot",
+        "xinkeo",
+        "good-days",
+        "horoscope",
+        "membership",
+        "settings",
       ].includes(path)
     ) {
       return path as NavScreen;
@@ -443,6 +453,11 @@ export default function App() {
           "login",
           "register",
           "forgot",
+          "xinkeo",
+          "good-days",
+          "horoscope",
+          "membership",
+          "settings",
         ].includes(path)
       ) {
         setScreen(path as NavScreen);
@@ -729,6 +744,27 @@ export default function App() {
     navigateTo("result", entry.signalId);
   };
 
+  const handleSaveDayToCalendar = (dayData: { title: string; day: number; month: number }) => {
+    try {
+      const stored = localStorage.getItem("tltl-calendar-personal-notes");
+      const list = stored ? JSON.parse(stored) : [];
+      const newNote = {
+        id: `good-day-${Date.now()}`,
+        title: dayData.title,
+        lunarDate: "Theo tiết khí cát lành",
+        solarDate: `${dayData.day}/${dayData.month}/2024`,
+        day: dayData.day,
+        month: dayData.month,
+        year: 2024,
+        type: "personal" as const,
+        description: `Ghi chú lưu từ phân hệ Tra cứu ngày lành: ${dayData.title}`,
+        isImportant: true,
+      };
+      list.push(newNote);
+      localStorage.setItem("tltl-calendar-personal-notes", JSON.stringify(list));
+    } catch {}
+  };
+
   const isCurrentSignalSaved = currentUser
     ? userCornerData.signals.some((e) => e.signalId === activeSignal.id)
     : false;
@@ -813,6 +849,8 @@ export default function App() {
             onGoToWish={() => navigateTo("wish")}
             onGoToZen={() => navigateTo("zen")}
             onGoToGratitude={() => navigateTo("gratitude")}
+            onGoToXinKeo={() => navigateTo("xinkeo")}
+            onGoToHoroscope={() => navigateTo("horoscope")}
           />
         )}
 
@@ -825,6 +863,7 @@ export default function App() {
             onGoToHome={() => navigateTo("today")}
             onGoToRituals={() => navigateTo("rituals")}
             onGoToCalendar={() => navigateTo("calendar")}
+            onGoToGoodDays={() => navigateTo("good-days")}
           />
         )}
 
@@ -960,6 +999,7 @@ export default function App() {
             }}
             onGoToCulture={() => navigateTo("culture")}
             onGoToHome={() => navigateTo("today")}
+            onGoToGoodDays={() => navigateTo("good-days")}
           />
         )}
 
@@ -1116,6 +1156,71 @@ export default function App() {
             onGoToWish={() => navigateTo("wish")}
             onGoToMood={() => navigateTo("mood")}
             onGoToHome={() => navigateTo("today")}
+            onGoToSettings={() => navigateTo("settings")}
+          />
+        )}
+
+        {screen === "xinkeo" && (
+          <XinKeoScreen
+            onBackToExperience={() => navigateTo("experience")}
+            onGoToCulture={() => navigateTo("culture")}
+            onGoToHome={() => navigateTo("today")}
+          />
+        )}
+
+        {screen === "good-days" && (
+          <GoodDayScreen
+            onBackToCulture={() => navigateTo("culture")}
+            onGoToHome={() => navigateTo("today")}
+            onGoToCalendar={() => navigateTo("calendar")}
+            onGoToRituals={() => navigateTo("rituals")}
+            onSaveDayToCalendar={handleSaveDayToCalendar}
+          />
+        )}
+
+        {screen === "horoscope" && (
+          <HoroscopeScreen
+            onBackToExperience={() => navigateTo("experience")}
+            onGoToCulture={() => navigateTo("culture")}
+            onGoToHome={() => navigateTo("today")}
+          />
+        )}
+
+        {screen === "membership" && (
+          <MembershipScreen
+            onBackToHome={() => navigateTo("today")}
+            onGoToExperience={() => navigateTo("experience")}
+          />
+        )}
+
+        {screen === "settings" && (
+          <SettingsScreen
+            onBackToAccount={() => navigateTo("account")}
+            onGoToHome={() => navigateTo("today")}
+            dark={dark}
+            onToggleDark={() => {
+              const newDark = !dark;
+              setDark(newDark);
+              try {
+                localStorage.setItem("tltl-theme", newDark ? "dark" : "light");
+                if (newDark) {
+                  document.documentElement.classList.add("dark");
+                } else {
+                  document.documentElement.classList.remove("dark");
+                }
+              } catch {}
+            }}
+            user={currentUser}
+            onLogout={handleLogout}
+            onClearAllLocalData={() => {
+              try {
+                localStorage.removeItem("tltl-calendar-personal-notes");
+                if (currentUser) {
+                  saveUserCornerData(currentUser.email, { signals: [], xam: [], wishes: [] });
+                  setUserCornerData({ signals: [], xam: [], wishes: [] });
+                }
+              } catch {}
+            }}
           />
         )}
       </div>

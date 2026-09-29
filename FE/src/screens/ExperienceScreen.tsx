@@ -10,6 +10,8 @@ import {
   Sun,
   Shield,
   Feather,
+  Compass,
+  Scroll,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -33,6 +35,8 @@ interface ExperienceScreenProps {
   onGoToWish?: () => void;
   onGoToZen?: () => void;
   onGoToGratitude?: () => void;
+  onGoToXinKeo?: () => void;
+  onGoToHoroscope?: () => void;
 }
 
 export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
@@ -43,6 +47,8 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
   onGoToWish,
   onGoToZen,
   onGoToGratitude,
+  onGoToXinKeo,
+  onGoToHoroscope,
 }) => {
   // Quản lý các chủ đề đã chọn
   const [selectedIds, setSelectedIds] = useState<string[]>(initialTopics);
@@ -157,7 +163,7 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Card 1: Xin xăm */}
               {onGoToXinXam && (
                 <div
@@ -190,7 +196,71 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
                 </div>
               )}
 
-              {/* Card 2: Gửi gắm điều ước */}
+              {/* Card 2: Xin keo âm dương (Mới) */}
+              {onGoToXinKeo && (
+                <div
+                  onClick={onGoToXinKeo}
+                  className="group p-6 rounded-3xl bg-white border border-[#eedcd0] hover:border-[#9e3b2e]/60 shadow-xs hover:shadow-md transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between"
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#faece1]/50 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-[#faece1] transition-all"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-[#faede2] border border-[#ecd9cb] flex items-center justify-center text-[#9e3b2e]">
+                        <Compass className="w-6 h-6" />
+                      </div>
+                      <Badge variant="outline" className="text-xs text-[#9e3b2e] border-[#eedcd0] bg-[#fffaf5]">
+                        Chiêm nghiệm dân gian
+                      </Badge>
+                    </div>
+
+                    <h3 className="font-['Noto_Serif',serif] font-bold text-xl text-[#2a2220] group-hover:text-[#9e3b2e] transition-colors mb-2">
+                      Xin keo âm dương
+                    </h3>
+                    <p className="text-sm text-[#6e5d56] leading-relaxed mb-4">
+                      Tục gieo keo truyền thống: phương tiện tĩnh tại để soi tỏ mối phân vân, tìm sự an định trước khi khởi sự việc lớn.
+                    </p>
+                  </div>
+
+                  <div className="relative z-10 pt-4 border-t border-[#f4e8dc] flex items-center justify-between text-sm font-semibold text-[#9e3b2e]">
+                    <span>Gieo keo định tâm</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              )}
+
+              {/* Card 3: Lá số chiêm nghiệm (Mới) */}
+              {onGoToHoroscope && (
+                <div
+                  onClick={onGoToHoroscope}
+                  className="group p-6 rounded-3xl bg-white border border-[#eedcd0] hover:border-[#9e3b2e]/60 shadow-xs hover:shadow-md transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between"
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#faece1]/50 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-[#faece1] transition-all"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-[#faede2] border border-[#ecd9cb] flex items-center justify-center text-[#9e3b2e]">
+                        <Scroll className="w-6 h-6" />
+                      </div>
+                      <Badge variant="outline" className="text-xs text-[#9e3b2e] border-[#eedcd0] bg-[#fffaf5]">
+                        Đối thoại nội tâm
+                      </Badge>
+                    </div>
+
+                    <h3 className="font-['Noto_Serif',serif] font-bold text-xl text-[#2a2220] group-hover:text-[#9e3b2e] transition-colors mb-2">
+                      Lá số chiêm nghiệm
+                    </h3>
+                    <p className="text-sm text-[#6e5d56] leading-relaxed mb-4">
+                      Khám phá cách người xưa nhìn thời gian và con người qua lăng kính biểu tượng tự nhiên, ngũ hành tương sinh.
+                    </p>
+                  </div>
+
+                  <div className="relative z-10 pt-4 border-t border-[#f4e8dc] flex items-center justify-between text-sm font-semibold text-[#9e3b2e]">
+                    <span>Khám phá lá số</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              )}
+
+              {/* Card 4: Gửi gắm điều ước */}
               {onGoToWish && (
                 <div
                   onClick={onGoToWish}
@@ -222,7 +292,7 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
                 </div>
               )}
 
-              {/* Card 3: Không gian tĩnh tâm */}
+              {/* Card 5: Không gian tĩnh tâm */}
               {onGoToZen && (
                 <div
                   onClick={onGoToZen}
@@ -254,7 +324,7 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
                 </div>
               )}
 
-              {/* Card 4: Một nén hương lòng / Góc tri ân */}
+              {/* Card 6: Một nén hương lòng / Góc tri ân */}
               {onGoToGratitude && (
                 <div
                   onClick={onGoToGratitude}

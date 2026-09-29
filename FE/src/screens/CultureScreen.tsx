@@ -24,6 +24,7 @@ interface CultureScreenProps {
   onGoToHome: () => void;
   onGoToRituals?: () => void;
   onGoToCalendar?: () => void;
+  onGoToGoodDays?: () => void;
 }
 
 export const CultureScreen: React.FC<CultureScreenProps> = ({
@@ -31,6 +32,7 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
   onGoToHome,
   onGoToRituals,
   onGoToCalendar,
+  onGoToGoodDays,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
@@ -107,7 +109,7 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
         </div>
 
         {/* Khám phá Sub-tabs */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-2 mb-6 flex-wrap">
           <button className="px-4 py-2 rounded-full bg-[#9e3b2e] text-white text-xs font-semibold shadow-2xs">
             Di sản & Điển tích dân gian
           </button>
@@ -125,6 +127,14 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
               className="px-4 py-2 rounded-full bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#9e3b2e] hover:text-[#9e3b2e] text-xs font-medium transition-all cursor-pointer"
             >
               Lịch văn hóa & Tiết khí (Mới)
+            </button>
+          )}
+          {onGoToGoodDays && (
+            <button
+              onClick={onGoToGoodDays}
+              className="px-4 py-2 rounded-full bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#9e3b2e] hover:text-[#9e3b2e] text-xs font-medium transition-all cursor-pointer"
+            >
+              Tra cứu ngày lành (Mới)
             </button>
           )}
         </div>

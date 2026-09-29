@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   RotateCcw,
   Compass,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -71,6 +72,7 @@ interface AccountScreenProps {
   onGoToWish: () => void;
   onGoToMood: () => void;
   onGoToHome: () => void;
+  onGoToSettings?: () => void;
 }
 
 export const AccountScreen: React.FC<AccountScreenProps> = ({
@@ -89,6 +91,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
   onGoToWish,
   onGoToMood,
   onGoToHome,
+  onGoToSettings,
 }) => {
   // 3 Primary Tabs
   const [activeTab, setActiveTab] = useState<"signals" | "xinxam" | "wishes">("xinxam");
@@ -276,32 +279,45 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
           </div>
 
           {/* User Profile Card */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white/90 backdrop-blur-md border border-[#eddcd0] shadow-sm flex items-center gap-4 shrink-0 min-w-[260px]">
-            <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-[#eddcd0] shrink-0 bg-[#faede2]">
-              <img
-                src="/images/pottery_artisan.jpg"
-                alt="Avatar"
-                className="w-full h-full object-cover"
-              />
+          <div className="p-4 sm:p-5 rounded-2xl bg-white/90 backdrop-blur-md border border-[#eddcd0] shadow-sm flex items-center justify-between gap-4 shrink-0 min-w-[280px]">
+            <div className="flex items-center gap-4">
+              <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-[#eddcd0] shrink-0 bg-[#faede2]">
+                <img
+                  src="/images/pottery_artisan.jpg"
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220]">
+                    {currentUser?.name || "An Nhiên"}
+                  </span>
+                  <span className="w-4 h-4 rounded-full bg-[#9e3b2e] text-white flex items-center justify-center text-[10px]">
+                    ✓
+                  </span>
+                </div>
+                <div className="text-xs text-[#8c7a72] mb-1.5">
+                  Bạn đồng hành
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-[#9e3b2e] font-semibold">
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>{totalCount} dấu ấn đã lưu lại</span>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220]">
-                  {currentUser?.name || "An Nhiên"}
-                </span>
-                <span className="w-4 h-4 rounded-full bg-[#9e3b2e] text-white flex items-center justify-center text-[10px]">
-                  ✓
-                </span>
-              </div>
-              <div className="text-xs text-[#8c7a72] mb-1.5">
-                Bạn đồng hành
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-[#9e3b2e] font-semibold">
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>{totalCount} dấu ấn đã lưu lại</span>
-              </div>
-            </div>
+            {onGoToSettings && (
+              <button
+                onClick={onGoToSettings}
+                title="Cài đặt & Tùy chọn cá nhân"
+                className="p-2.5 rounded-full border border-[#e8d6c7] bg-[#fdf9f5] hover:bg-[#faede2] text-[#8c7970] hover:text-[#9e3b2e] transition-colors cursor-pointer"
+                aria-label="Cài đặt"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
 

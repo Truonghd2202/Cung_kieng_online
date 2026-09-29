@@ -23,7 +23,12 @@ export type NavScreen =
   | "saved"
   | "login"
   | "register"
-  | "forgot";
+  | "forgot"
+  | "xinkeo"
+  | "good-days"
+  | "horoscope"
+  | "membership"
+  | "settings";
 
 interface AppHeaderProps {
   currentScreen: NavScreen;
@@ -94,7 +99,15 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
           <Button
             variant={
-              ["experience", "xinxam", "wish", "zen", "gratitude"].includes(currentScreen)
+              [
+                "experience",
+                "xinxam",
+                "wish",
+                "zen",
+                "gratitude",
+                "xinkeo",
+                "horoscope",
+              ].includes(currentScreen)
                 ? "default"
                 : "ghost"
             }
@@ -113,6 +126,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 "ritual-detail",
                 "calendar",
                 "calendar-detail",
+                "good-days",
               ].includes(currentScreen)
                 ? "default"
                 : "ghost"
@@ -124,7 +138,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </Button>
 
           <Button
-            variant={currentScreen === "account" ? "default" : "ghost"}
+            variant={["account", "settings"].includes(currentScreen) ? "default" : "ghost"}
             size="pill"
             onClick={() => onNavigate("account")}
           >
@@ -213,7 +227,15 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
           <Button
             variant={
-              ["experience", "xinxam", "wish", "zen", "gratitude"].includes(currentScreen)
+              [
+                "experience",
+                "xinxam",
+                "wish",
+                "zen",
+                "gratitude",
+                "xinkeo",
+                "horoscope",
+              ].includes(currentScreen)
                 ? "default"
                 : "ghost"
             }
@@ -235,6 +257,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 "ritual-detail",
                 "calendar",
                 "calendar-detail",
+                "good-days",
               ].includes(currentScreen)
                 ? "default"
                 : "ghost"
@@ -249,7 +272,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </Button>
 
           <Button
-            variant={currentScreen === "account" ? "default" : "ghost"}
+            variant={["account", "settings"].includes(currentScreen) ? "default" : "ghost"}
             className="w-full justify-start text-sm font-medium"
             onClick={() => {
               onNavigate("account");

@@ -33,6 +33,7 @@ interface CulturalCalendarScreenProps {
   onSelectEvent: (eventId: string) => void;
   onGoToRituals?: () => void;
   onGoToCulture?: () => void;
+  onGoToGoodDays?: () => void;
 }
 
 export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
@@ -41,6 +42,7 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   onSelectEvent,
   onGoToRituals,
   onGoToCulture,
+  onGoToGoodDays,
 }) => {
   // Calendar month state (tháng 10/2024 đã kiểm chứng âm - dương thiên văn học)
   const [selectedMonth, setSelectedMonth] = useState(10);
@@ -219,9 +221,23 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
             <span>DÒNG THỜI GIAN VĂN HÓA</span>
           </div>
 
-          <h1 className="font-['Noto_Serif',serif] font-bold text-3xl sm:text-4xl text-[#2a2220] leading-tight mb-2">
-            Lịch văn hóa
-          </h1>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <h1 className="font-['Noto_Serif',serif] font-bold text-3xl sm:text-4xl text-[#2a2220] leading-tight mb-2">
+              Lịch văn hóa
+            </h1>
+
+            {onGoToGoodDays && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onGoToGoodDays}
+                className="border-[#e5d4c5] text-[#9e3b2e] hover:bg-[#faede2] text-xs font-semibold gap-1.5 self-start sm:self-auto cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#9e3b2e]" />
+                <span>Tra cứu ngày lành</span>
+              </Button>
+            )}
+          </div>
 
           <p className="text-sm sm:text-base text-[#6f5e57] max-w-3xl leading-relaxed">
             Theo dõi nhịp điệu của đất trời, tiết khí thiên nhiên và những mỹ tục truyền thống được

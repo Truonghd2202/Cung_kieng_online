@@ -63,6 +63,13 @@ export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => {
             >
               Góc của tôi
             </button>
+            <span>•</span>
+            <button
+              onClick={() => onNavigate?.("membership")}
+              className="hover:text-[#9e3b2e] transition-colors cursor-pointer"
+            >
+              Gói Tâm An
+            </button>
           </div>
 
           <div className="text-center sm:text-right">
