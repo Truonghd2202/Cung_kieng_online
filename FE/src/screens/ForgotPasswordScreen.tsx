@@ -59,24 +59,24 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
 
           {/* Heading */}
           <h1 className="font-['Noto_Serif',serif] font-bold text-2xl sm:text-3xl text-[#2a211e] leading-snug mb-3">
-            04A Quên mật khẩu - Nhập email
+            Quên mật khẩu?
           </h1>
 
-          <p className="text-sm sm:text-[15px] text-[#705e57] leading-relaxed mb-6">
+          <p className="text-sm sm:text-base text-[#705e57] leading-relaxed mb-6">
             Nhập địa chỉ email đã đăng ký. Chúng tôi sẽ gửi liên kết an toàn để
             bạn thiết lập lại mật khẩu mới.
           </p>
 
           {submitted ? (
             <div className="space-y-6">
-              <div className="p-5 rounded-2xl bg-[#f7fbf6] border border-[#cfecd1] flex items-start gap-3.5">
-                <CheckCircle2 className="w-5 h-5 text-[#2e6930] flex-shrink-0 mt-0.5" />
+              <div className="p-5 rounded-2xl bg-[#fbf5ee] border border-[#ecd9cb] flex items-start gap-3.5">
+                <CheckCircle2 className="w-5 h-5 text-[#9e3b2e] flex-shrink-0 mt-0.5" />
                 <div className="text-sm leading-relaxed">
-                  <h4 className="font-semibold text-[#1b431e] mb-1">
-                    Đã gửi liên kết khôi phục (Mô phỏng)
+                  <h4 className="font-semibold text-[#2a2220] mb-1">
+                    Bản xem trước tính năng
                   </h4>
-                  <p className="text-[#3f5f42]">
-                    Hệ thống đã gửi hướng dẫn tới <strong className="text-[#1b431e]">{email}</strong>. Vui lòng kiểm tra hòm thư của bạn trong vòng 15 phút.
+                  <p className="text-[#6d5b54]">
+                    Bản xem trước: Chức năng gửi email sẽ hoạt động sau khi kết nối hệ thống. Bạn có thể quay lại đăng nhập với tài khoản trải nghiệm.
                   </p>
                 </div>
               </div>
@@ -116,11 +116,11 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
                 </div>
               </div>
 
-              {/* 15 Minutes Validity Notice Box */}
-              <div className="p-4 rounded-2xl bg-[#fcf5ed] border border-[#f0dfd1] flex items-center gap-3 text-xs sm:text-[13px] text-[#715f57] leading-relaxed">
+              {/* Preview Notice Box */}
+              <div className="p-4 rounded-2xl bg-[#fcf5ed] border border-[#f0dfd1] flex items-center gap-3 text-sm text-[#715f57] leading-relaxed">
                 <Clock className="w-4 h-4 text-[#9e3b2e] flex-shrink-0" />
                 <span>
-                  Liên kết có hiệu lực trong vòng <strong>15 phút</strong> để bảo vệ thông tin riêng tư của bạn.
+                  <strong>Bản xem trước:</strong> Chức năng gửi email sẽ hoạt động sau khi kết nối hệ thống.
                 </span>
               </div>
 
@@ -140,7 +140,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
                 <button
                   type="button"
                   onClick={onBackToLogin}
-                  className="text-xs sm:text-sm font-semibold text-[#8b7972] hover:text-[#9e3b2e] inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="text-sm font-semibold text-[#8b7972] hover:text-[#9e3b2e] inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Quay lại Đăng nhập</span>
@@ -153,7 +153,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
 
       {/* Bottom note outside card */}
       <div className="mt-6 text-center text-xs text-[#95837b] max-w-sm leading-relaxed">
-        Nhập email đã đăng ký. Hệ thống sẽ gửi liên kết để bạn thiết lập lại mật khẩu.
+        Bản xem trước: Chức năng gửi email khôi phục sẽ hoạt động sau khi kết nối hệ thống.
       </div>
     </div>
   );

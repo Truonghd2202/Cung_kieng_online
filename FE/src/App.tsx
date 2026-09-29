@@ -41,9 +41,44 @@ interface UserProfile {
 export default function App() {
   const todayDateString = new Date().toDateString();
 
+  // Helper to isolate storage key per simulated user
+  const getUserStorageKey = (user: UserProfile | null) => {
+    if (!user || !user.email) return null;
+    return `tltl-saved-entries-${user.email.trim().toLowerCase()}`;
+  };
+
+  const loadUserEntries = (user: UserProfile | null): SavedEntry[] => {
+    const key = getUserStorageKey(user);
+    if (!key) return [];
+    try {
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((item: any) => item.id !== "demo-1");
+        }
+      }
+    } catch {}
+    return [];
+  };
+
+  const getInitialUser = (): UserProfile | null => {
+    try {
+      const stored = localStorage.getItem("tltl-current-user");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const initialUser = getInitialUser();
+
   // Helper to resolve initial screen from URL
   const getInitialScreen = (): NavScreen => {
     const path = window.location.pathname.replace(/^\//, "");
+    if (path === "account" && !initialUser) {
+      return "login";
+    }
     if (
       [
         "guest",
@@ -72,16 +107,21 @@ export default function App() {
   const [journalText, setJournalText] = useState("");
   const [dark, setDark] = useState(() => localStorage.getItem("tltl-theme") === "dark");
 
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
-    try {
-      const stored = localStorage.getItem("tltl-current-user");
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(initialUser);
 
   const [pendingEntry, setPendingEntry] = useState<SavedEntry | null>(null);
+
+  // Lưu và đồng bộ chủ đề yêu thích từ Trải nghiệm sang Hôm nay
+  const [selectedTopics, setSelectedTopics] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem("tltl-selected-topics");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return ["cadao", "xinxam", "bamien"];
+  });
 
   const [isCheckedIn, setIsCheckedIn] = useState<boolean>(() => {
     try {
@@ -133,19 +173,9 @@ export default function App() {
     }
   });
 
+  // Tách biệt dữ liệu nhật ký theo từng user mô phỏng
   const [savedEntries, setSavedEntries] = useState<SavedEntry[]>(() => {
-    try {
-      const stored = localStorage.getItem("tltl-saved-entries");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          return parsed.filter((item: any) => item.id !== "demo-1");
-        }
-      }
-    } catch {
-      // fallback
-    }
-    return [];
+    return loadUserEntries(initialUser);
   });
 
   // Active signal computed from currentSignalId
@@ -160,17 +190,30 @@ export default function App() {
     }
   }, [dark]);
 
+  // Đồng bộ nhật ký riêng theo user hiện tại
   useEffect(() => {
-    localStorage.setItem("tltl-saved-entries", JSON.stringify(savedEntries));
-  }, [savedEntries]);
+    const key = getUserStorageKey(currentUser);
+    if (key) {
+      localStorage.setItem(key, JSON.stringify(savedEntries));
+    }
+  }, [savedEntries, currentUser]);
 
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem("tltl-current-user", JSON.stringify(currentUser));
+      setSavedEntries(loadUserEntries(currentUser));
     } else {
       localStorage.removeItem("tltl-current-user");
+      setSavedEntries([]);
     }
   }, [currentUser]);
+
+  // Bảo vệ màn Account: chỉ cho người đã đăng nhập truy cập
+  useEffect(() => {
+    if (screen === "account" && !currentUser) {
+      navigateTo("login");
+    }
+  }, [screen, currentUser]);
 
   useEffect(() => {
     localStorage.setItem("tltl-current-signal-id", currentSignalId);
@@ -189,7 +232,9 @@ export default function App() {
           setSelectedMood(sig.mood);
         }
       }
-      if (
+      if (path === "account" && !currentUser) {
+        setScreen("login");
+      } else if (
         [
           "guest",
           "today",
@@ -211,12 +256,17 @@ export default function App() {
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [currentUser]);
 
   const navigateTo = (newScreen: NavScreen, signalIdParam?: string) => {
-    setScreen(newScreen);
-    let url = newScreen === "guest" ? "/" : `/${newScreen}`;
-    if (newScreen === "result") {
+    let targetScreen = newScreen;
+    // Chuyển hướng về login nếu chưa đăng nhập mà muốn vào account
+    if (targetScreen === "account" && !currentUser) {
+      targetScreen = "login";
+    }
+    setScreen(targetScreen);
+    let url = targetScreen === "guest" ? "/" : `/${targetScreen}`;
+    if (targetScreen === "result") {
       const idToUse = signalIdParam || currentSignalId || activeSignal.id;
       url = `/result?signalId=${idToUse}`;
     }
@@ -267,6 +317,15 @@ export default function App() {
     window.history.replaceState(null, "", `/result?signalId=${nextSignal.id}`);
   };
 
+  // Lưu chủ đề được chọn từ Trải nghiệm
+  const handleSaveTopics = (topics: string[]) => {
+    setSelectedTopics(topics);
+    try {
+      localStorage.setItem("tltl-selected-topics", JSON.stringify(topics));
+    } catch {}
+    navigateTo("today");
+  };
+
   const handleSaveResult = () => {
     setIsCheckedIn(true);
     try {
@@ -291,10 +350,15 @@ export default function App() {
       setPendingEntry(newEntry);
       navigateTo("login");
     } else {
-      // Đã đăng nhập: Lưu trực tiếp
+      // Đã đăng nhập: Lưu trực tiếp theo tài khoản
       const exists = savedEntries.some((e) => e.signalId === activeSignal.id);
       if (!exists) {
-        setSavedEntries([newEntry, ...savedEntries]);
+        const updated = [newEntry, ...savedEntries];
+        setSavedEntries(updated);
+        const userKey = getUserStorageKey(currentUser);
+        if (userKey) {
+          localStorage.setItem(userKey, JSON.stringify(updated));
+        }
       }
     }
   };
@@ -305,28 +369,39 @@ export default function App() {
       email: email || "annhien@tinlam.vn",
     };
     setCurrentUser(user);
+    const userEntries = loadUserEntries(user);
 
     if (pendingEntry) {
-      setSavedEntries((prev) => {
-        const exists = prev.some((e) => e.signalId === pendingEntry.signalId);
-        return exists ? prev : [pendingEntry, ...prev];
-      });
+      const exists = userEntries.some((e) => e.signalId === pendingEntry.signalId);
+      const updated = exists ? userEntries : [pendingEntry, ...userEntries];
+      setSavedEntries(updated);
+      const key = getUserStorageKey(user);
+      if (key) {
+        localStorage.setItem(key, JSON.stringify(updated));
+      }
       const savedSigId = pendingEntry.signalId;
       setPendingEntry(null);
       setCurrentSignalId(savedSigId);
       navigateTo("result", savedSigId);
     } else {
+      setSavedEntries(userEntries);
       navigateTo("account");
     }
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setSavedEntries([]);
     navigateTo("guest");
   };
 
   const handleDeleteEntry = (id: string) => {
-    setSavedEntries(savedEntries.filter((item) => item.id !== id));
+    const updated = savedEntries.filter((item) => item.id !== id);
+    setSavedEntries(updated);
+    const userKey = getUserStorageKey(currentUser);
+    if (userKey) {
+      localStorage.setItem(userKey, JSON.stringify(updated));
+    }
   };
 
   // Mở lại đúng bản ghi tín hiệu đã lưu
@@ -368,6 +443,7 @@ export default function App() {
             isActionDone={isActionDone}
             onSelectMoodClick={() => navigateTo("mood")}
             onViewSignalDetails={() => navigateTo("result", activeSignal.id)}
+            selectedTopics={selectedTopics}
           />
         )}
 
@@ -410,7 +486,8 @@ export default function App() {
 
         {screen === "experience" && (
           <ExperienceScreen
-            onComplete={() => navigateTo("today")}
+            initialTopics={selectedTopics}
+            onComplete={handleSaveTopics}
             onSkip={() => navigateTo("guest")}
           />
         )}

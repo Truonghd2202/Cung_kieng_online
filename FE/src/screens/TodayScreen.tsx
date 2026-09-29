@@ -18,12 +18,21 @@ import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { MoodKey, SIGNALS_DATA } from "../data/demoSignals";
 
+const TOPIC_NAMES: Record<string, string> = {
+  cadao: "Ca dao & Tục ngữ",
+  xinxam: "Xin xăm & Gieo quẻ",
+  bamien: "Văn hóa Ba Miền",
+  nghile: "Cẩm nang nghi lễ",
+  trian: "Góc tri ân & Tĩnh thức",
+};
+
 interface TodayScreenProps {
   isCheckedIn?: boolean;
   isActionDone?: boolean;
   mood?: MoodKey;
   onSelectMoodClick: () => void;
   onViewSignalDetails?: () => void;
+  selectedTopics?: string[];
 }
 
 export const TodayScreen: React.FC<TodayScreenProps> = ({
@@ -32,6 +41,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
   mood = "Chênh vênh",
   onSelectMoodClick,
   onViewSignalDetails,
+  selectedTopics,
 }) => {
   const signal = SIGNALS_DATA[mood] || SIGNALS_DATA["Chênh vênh"];
   const [selectedRegionInfo, setSelectedRegionInfo] = useState<{
@@ -47,6 +57,26 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
   return (
     <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif]">
       <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-16">
+        {/* Personalization Topics Indicator if selected */}
+        {selectedTopics && selectedTopics.length > 0 && (
+          <div className="mb-6 p-4 rounded-2xl bg-[#faf3ec] border border-[#ecd9cb] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-[#78645d] shadow-2xs">
+            <div className="flex items-center gap-2">
+              <Badge variant="terracotta" className="text-xs font-semibold">
+                Cá nhân hóa
+              </Badge>
+              <span>
+                Đang mở tín hiệu theo <strong>{selectedTopics.length} chủ đề</strong> bạn yêu thích:{" "}
+                <strong className="text-[#9e3b2e]">
+                  {selectedTopics.map((id) => TOPIC_NAMES[id] || id).join(", ")}
+                </strong>
+              </span>
+            </div>
+            <span className="text-xs text-[#9c8981] italic">
+              Có thể đổi tại mục Trải nghiệm
+            </span>
+          </div>
+        )}
+
         {/* Top Status Badge */}
         <div className="flex justify-center mb-6">
           {isCheckedIn ? (

@@ -26,20 +26,18 @@ interface TopicItem {
 }
 
 interface ExperienceScreenProps {
-  onComplete: () => void;
+  initialTopics?: string[];
+  onComplete: (selectedTopics: string[]) => void;
   onSkip?: () => void;
 }
 
 export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
+  initialTopics = ["cadao", "xinxam", "bamien"],
   onComplete,
   onSkip,
 }) => {
-  // Initial default: 3 topics selected (Ca dao, Xin xam, Ba mien)
-  const [selectedIds, setSelectedIds] = useState<string[]>([
-    "cadao",
-    "xinxam",
-    "bamien",
-  ]);
+  // Quản lý các chủ đề đã chọn
+  const [selectedIds, setSelectedIds] = useState<string[]>(initialTopics);
 
   const toggleTopic = (id: string) => {
     setSelectedIds((prev) =>
@@ -125,15 +123,19 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
           </p>
         </div>
 
-        {/* Selection Status indicator */}
-        <div className="text-center mb-8">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#fbf3ec] border border-[#ecd9cb] text-xs sm:text-[13px] text-[#78645d]">
+        {/* Selection Status indicator & Preview Notice */}
+        <div className="flex flex-col items-center gap-2 mb-8">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#fbf3ec] border border-[#ecd9cb] text-sm text-[#78645d]">
             <span>Trạng thái:</span>
             <strong className="text-[#9e3b2e]">
               Đã chọn {selectedIds.length} / {TOPICS.length} chủ đề
             </strong>
             <span className="text-[#c7b4a7]">•</span>
             <span className="italic">Bạn có thể chọn bao nhiêu tùy ý</span>
+          </span>
+
+          <span className="text-xs text-[#95837b] italic">
+            ✦ Lựa chọn sẽ được lưu vào hệ thống để gợi mở tín hiệu phù hợp tại màn Hôm nay
           </span>
         </div>
 
@@ -297,7 +299,7 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
           <Button
             variant="default"
             size="lg"
-            onClick={onComplete}
+            onClick={() => onComplete(selectedIds)}
             className="w-full sm:w-auto px-8 py-3.5 text-sm sm:text-base font-semibold gap-2 shadow-sm"
           >
             <span>Hoàn tất & Bước vào Hôm nay</span>
@@ -307,7 +309,7 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
           <Button
             variant="ghost"
             size="lg"
-            onClick={onSkip || onComplete}
+            onClick={onSkip || (() => onComplete(selectedIds))}
             className="text-xs sm:text-sm text-[#7a6a63] hover:text-[#9e3b2e]"
           >
             <span>Bỏ qua, tôi muốn khám phá tự nhiên</span>

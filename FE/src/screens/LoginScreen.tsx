@@ -145,7 +145,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             <h2 className="font-['Noto_Serif',serif] font-bold text-2xl sm:text-[28px] text-[#2a211e] leading-snug mb-1.5">
               Chào mừng bạn quay về
             </h2>
-            <p className="text-xs sm:text-sm text-[#77665f] leading-relaxed mb-6">
+            <p className="text-sm text-[#77665f] leading-relaxed mb-6">
               Tiếp tục hành trình chiêm nghiệm và soi chiếu tâm hồn cùng cội
               nguồn dân tộc.
             </p>
@@ -155,7 +155,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               variant="outline"
               type="button"
               onClick={() => onSuccess("Lữ khách Google", "an.nhien@gmail.com")}
-              className="w-full bg-[#faede2]/60 hover:bg-[#faede2] border-[#ecd9cb] text-xs sm:text-sm font-semibold gap-2 py-3 mb-6"
+              className="w-full bg-[#faede2]/60 hover:bg-[#faede2] border-[#ecd9cb] text-sm font-semibold gap-2 py-3 mb-6"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path
@@ -191,7 +191,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Field 1: Email / Username */}
               <div>
-                <label className="block text-xs font-semibold text-[#4e403a] mb-1.5">
+                <label className="block text-sm font-semibold text-[#4e403a] mb-1.5">
                   Email hoặc Tên đăng nhập
                 </label>
                 <div className="relative">
@@ -210,13 +210,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               {/* Field 2: Password */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-semibold text-[#4e403a]">
+                  <label className="text-sm font-semibold text-[#4e403a]">
                     Mật khẩu
                   </label>
                   <button
                     type="button"
                     onClick={onGoToForgotPassword}
-                    className="text-xs text-[#9e3b2e] hover:underline cursor-pointer"
+                    className="text-sm text-[#9e3b2e] hover:underline cursor-pointer"
                   >
                     Quên mật khẩu?
                   </button>
@@ -246,7 +246,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               </div>
 
               {/* Remember me checkbox */}
-              <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6e5e57]">
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-[#6e5e57]">
                 <input
                   type="checkbox"
                   checked={rememberMe}
@@ -261,7 +261,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 variant="default"
                 size="lg"
                 type="submit"
-                className="w-full mt-2 font-semibold gap-2 shadow-xs"
+                className="w-full mt-2 font-semibold gap-2 shadow-xs text-sm"
               >
                 <LogIn className="w-4 h-4" />
                 <span>Đăng nhập vào Góc của tôi</span>

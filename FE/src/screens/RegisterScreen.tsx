@@ -121,7 +121,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
             <h2 className="font-['Noto_Serif',serif] font-bold text-2xl sm:text-[28px] text-[#2a211e] leading-snug mb-1.5">
               Khởi tạo góc an trú của bạn
             </h2>
-            <p className="text-xs sm:text-sm text-[#77665f] leading-relaxed mb-6">
+            <p className="text-sm text-[#77665f] leading-relaxed mb-6">
               Lưu giữ những tín hiệu dân gian đã thấu cảm và bồi đắp thói quen
               lắng lòng mỗi ngày.
             </p>
@@ -129,7 +129,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Field 1: Name */}
               <div>
-                <label className="block text-xs font-semibold text-[#4e403a] mb-1.5">
+                <label className="block text-sm font-semibold text-[#4e403a] mb-1.5">
                   Họ và tên hoặc Pháp danh / Biệt hiệu thân mật
                 </label>
                 <div className="relative">
@@ -147,7 +147,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
 
               {/* Field 2: Email */}
               <div>
-                <label className="block text-xs font-semibold text-[#4e403a] mb-1.5">
+                <label className="block text-sm font-semibold text-[#4e403a] mb-1.5">
                   Địa chỉ Email
                 </label>
                 <div className="relative">
@@ -166,7 +166,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
               {/* Field 3: Password */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-semibold text-[#4e403a]">
+                  <label className="text-sm font-semibold text-[#4e403a]">
                     Mật khẩu
                   </label>
                   <span className="text-xs text-[#9a8982]">
@@ -198,7 +198,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
               </div>
 
               {/* Terms checkbox */}
-              <label className="flex items-start gap-2.5 cursor-pointer text-xs text-[#6e5e57] pt-1">
+              <label className="flex items-start gap-2.5 cursor-pointer text-sm text-[#6e5e57] pt-1">
                 <input
                   type="checkbox"
                   checked={agreed}

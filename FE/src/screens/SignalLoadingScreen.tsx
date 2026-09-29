@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { BookOpen, X, Flower2, Feather } from "lucide-react";
 import { MoodKey, SIGNALS_DATA } from "../data/demoSignals";
 import { Badge } from "@/src/components/ui/badge";
@@ -20,22 +20,40 @@ export const SignalLoadingScreen: React.FC<SignalLoadingScreenProps> = ({
   const signal = SIGNALS_DATA[mood] || SIGNALS_DATA["Chênh vênh"];
   const [progress, setProgress] = useState(25);
 
+  // Giữ callback ổn định qua ref để tránh re-render kích hoạt lại hiệu ứng
+  const onFinishRef = useRef(onFinishLoading);
+  onFinishRef.current = onFinishLoading;
+
   useEffect(() => {
-    const timer = setInterval(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let isCancelled = false;
+
+    const intervalId = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
-          clearInterval(timer);
-          setTimeout(() => {
-            onFinishLoading();
-          }, 600);
+          clearInterval(intervalId);
+          if (!isCancelled) {
+            timeoutId = setTimeout(() => {
+              if (!isCancelled) {
+                onFinishRef.current();
+              }
+            }, 600);
+          }
           return 100;
         }
         return prev + 15;
       });
     }, 700);
 
-    return () => clearInterval(timer);
-  }, [onFinishLoading]);
+    // Dọn dẹp triệt để cả interval và timeout khi rời màn hoặc bấm Hủy
+    return () => {
+      isCancelled = true;
+      clearInterval(intervalId);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, []);
 
   return (
     <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif]">
