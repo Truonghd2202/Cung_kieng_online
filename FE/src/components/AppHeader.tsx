@@ -62,16 +62,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           }}
           className="flex items-center gap-3 text-left group focus:outline-none cursor-pointer"
         >
-          <div className="w-10 h-10 rounded-full bg-[#f6eadb] dark:bg-[#2c0e14] border border-[#e2d4c3] dark:border-[#4d1b24] flex items-center justify-center text-[#8a252c] dark:text-[#f28d96] shadow-xs group-hover:scale-105 transition-transform">
-            <svg
-              className="w-5 h-5 fill-current"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M12 2C12 2 10 7 10 10C10 11.5 10.8 12.8 12 13.5C13.2 12.8 14 11.5 14 10C14 7 12 2 12 2Z" />
-              <path d="M12 14.5C10.5 14 8 13.5 6 15C4 16.5 4 19 6 20.5C8 22 11 20.5 12 17.5C13 20.5 16 22 18 20.5C20 19 20 16.5 18 15C16 13.5 13.5 14 12 14.5Z" />
-              <circle cx="12" cy="14" r="1.5" />
-            </svg>
+          <div className="w-10 h-10 rounded-full overflow-hidden border border-[#e2d4c3] dark:border-[#4d1b24] shadow-xs group-hover:scale-105 transition-transform flex items-center justify-center bg-[#8a252c] shrink-0">
+            <img
+              src="/logo.png"
+              alt="Logo Tin Lắm Tâm Linh"
+              className="w-full h-full object-cover"
+            />
           </div>
           <div>
             <div className="font-['Noto_Serif',serif] font-bold text-lg leading-tight text-[#8a252c] dark:text-[#f7ede6] tracking-tight">
