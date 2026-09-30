@@ -24,7 +24,7 @@ interface GoodDayScreenProps {
   onGoToHome?: () => void;
   onGoToCalendar: () => void;
   onGoToRituals: () => void;
-  onSaveDayToCalendar?: (dayData: { title: string; day: number; month: number }) => void;
+  onSaveDayToCalendar?: (dayData: { title: string; day: number; month: number; year?: number }) => void;
 }
 
 export const GoodDayScreen: React.FC<GoodDayScreenProps> = ({
@@ -43,7 +43,7 @@ export const GoodDayScreen: React.FC<GoodDayScreenProps> = ({
     if (!savedDays.includes(day)) {
       setSavedDays((prev) => [...prev, day]);
       if (onSaveDayToCalendar) {
-        onSaveDayToCalendar({ title, day, month: 10 });
+        onSaveDayToCalendar({ title, day, month: 10, year: new Date().getFullYear() });
       }
     }
   };

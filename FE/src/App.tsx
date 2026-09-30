@@ -744,18 +744,19 @@ export default function App() {
     navigateTo("result", entry.signalId);
   };
 
-  const handleSaveDayToCalendar = (dayData: { title: string; day: number; month: number }) => {
+  const handleSaveDayToCalendar = (dayData: { title: string; day: number; month: number; year?: number }) => {
     try {
+      const currentYear = dayData.year || new Date().getFullYear();
       const stored = localStorage.getItem("tltl-calendar-personal-notes");
       const list = stored ? JSON.parse(stored) : [];
       const newNote = {
         id: `good-day-${Date.now()}`,
         title: dayData.title,
         lunarDate: "Theo tiết khí cát lành",
-        solarDate: `${dayData.day}/${dayData.month}/2024`,
+        solarDate: `${dayData.day}/${dayData.month}/${currentYear}`,
         day: dayData.day,
         month: dayData.month,
-        year: 2024,
+        year: currentYear,
         type: "personal" as const,
         description: `Ghi chú lưu từ phân hệ Tra cứu ngày lành: ${dayData.title}`,
         isImportant: true,

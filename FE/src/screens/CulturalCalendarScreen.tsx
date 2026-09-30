@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,6 +15,7 @@ import {
   MapPin,
   ExternalLink,
   Trash2,
+  Bookmark,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -23,8 +24,8 @@ import {
   CalendarEventType,
   CalendarEventItem,
   SAMPLE_CALENDAR_EVENTS,
-  OCTOBER_2024_LUNAR_MAP,
-  getEventsForDay,
+  getReliableLunarDate,
+  getCanChiYear,
 } from "../data/calendarData";
 
 interface CulturalCalendarScreenProps {
@@ -44,17 +45,23 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   onGoToCulture,
   onGoToGoodDays,
 }) => {
-  // Calendar month state (tháng 10/2024 đã kiểm chứng âm - dương thiên văn học)
-  const [selectedMonth, setSelectedMonth] = useState(10);
-  const [selectedYear, setSelectedYear] = useState(2024);
-  // Mặc định chọn ngày Rằm tháng 9 (ngày 17/10/2024 DL - 15/9 AL)
-  const [selectedDay, setSelectedDay] = useState<number>(17);
+  // Lấy thời gian thực tế từ hệ thống (Date)
+  const today = useMemo(() => new Date(), []);
+  const todayRealDay = today.getDate();
+  const todayRealMonth = today.getMonth() + 1;
+  const todayRealYear = today.getFullYear();
+
+  // Khởi tạo trạng thái lịch động theo Date hiện tại
+  const [selectedYear, setSelectedYear] = useState<number>(todayRealYear);
+  const [selectedMonth, setSelectedMonth] = useState<number>(todayRealMonth);
+  const [selectedDay, setSelectedDay] = useState<number>(todayRealDay);
+
   const [activeFilter, setActiveFilter] = useState<"all" | "custom" | "festival" | "personal">("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState("");
   const [newNoteDesc, setNewNoteDesc] = useState("");
 
-  // Dữ liệu "Ngày tôi lưu": lấy từ localStorage thực tế của người dùng, không giữ mục mẫu giả
+  // Dữ liệu "Ngày tôi lưu": lấy từ localStorage thực tế của người dùng
   const [personalNotes, setPersonalNotes] = useState<CalendarEventItem[]>(() => {
     try {
       const stored = localStorage.getItem("tltl-calendar-personal-notes");
@@ -71,7 +78,10 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   }, [personalNotes]);
 
   // Tổng hợp sự kiện: sự kiện lịch sử văn hóa đã kiểm chứng + ngày cá nhân người dùng thực sự lưu
-  const allEvents = [...SAMPLE_CALENDAR_EVENTS, ...personalNotes];
+  const allEvents = useMemo(() => {
+    return [...SAMPLE_CALENDAR_EVENTS, ...personalNotes];
+  }, [personalNotes]);
+
   const customCount = allEvents.filter((e) => e.type === "custom").length;
   const festivalCount = allEvents.filter((e) => e.type === "festival").length;
   const personalCount = personalNotes.length;
@@ -83,6 +93,13 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
     } else {
       setSelectedMonth((prev) => prev - 1);
     }
+    // Đảm bảo selectedDay không vượt quá số ngày của tháng mới
+    setSelectedDay((prev) => {
+      const prevM = selectedMonth === 1 ? 12 : selectedMonth - 1;
+      const prevY = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
+      const maxDays = new Date(prevY, prevM, 0).getDate();
+      return Math.min(prev, maxDays);
+    });
   };
 
   const handleNextMonth = () => {
@@ -92,21 +109,36 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
     } else {
       setSelectedMonth((prev) => prev + 1);
     }
+    setSelectedDay((prev) => {
+      const nextM = selectedMonth === 12 ? 1 : selectedMonth + 1;
+      const nextY = selectedMonth === 12 ? selectedYear + 1 : selectedYear;
+      const maxDays = new Date(nextY, nextM, 0).getDate();
+      return Math.min(prev, maxDays);
+    });
   };
 
+  // Nút trở về ngày hôm nay theo Date thực tế
   const handleResetToday = () => {
-    setSelectedMonth(10);
+    const now = new Date();
+    setSelectedYear(now.getFullYear());
+    setSelectedMonth(now.getMonth() + 1);
+    setSelectedDay(now.getDate());
+  };
+
+  // Chuyển nhanh đến tháng 10/2024 có bộ tư liệu mẫu đã kiểm chứng
+  const handleViewVerifiedOct2024 = () => {
     setSelectedYear(2024);
-    setSelectedDay(17); // Ngày Rằm tháng 9
+    setSelectedMonth(10);
+    setSelectedDay(17);
   };
 
   const handleAddPersonalNote = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newNoteTitle.trim()) return;
 
-    const lunarInfo = OCTOBER_2024_LUNAR_MAP[selectedDay];
+    const lunarInfo = getReliableLunarDate(selectedDay, selectedMonth, selectedYear);
     const lunarStr = lunarInfo
-      ? `Ngày ${lunarInfo.lunarDay}/${lunarInfo.lunarMonth} Âm lịch`
+      ? `Ngày ${lunarInfo.lunarDay}/${lunarInfo.lunarMonth} Âm lịch (${lunarInfo.canChiYear})`
       : "Dấu mốc tự lưu";
 
     const newNote: CalendarEventItem = {
@@ -133,64 +165,131 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   };
 
   // Các sự kiện hiển thị cho ngày được chọn (hoặc toàn bộ danh sách khi chọn tab "Ngày tôi lưu")
-  const selectedDayEvents = (activeFilter === "personal"
-    ? personalNotes
-    : allEvents.filter((e) => e.day === selectedDay && e.month === selectedMonth && e.year === selectedYear)
-  ).filter((e) => (activeFilter === "all" ? true : e.type === activeFilter));
+  const selectedDayEvents = useMemo(() => {
+    return (
+      activeFilter === "personal"
+        ? personalNotes
+        : allEvents.filter(
+            (e) => e.day === selectedDay && e.month === selectedMonth && e.year === selectedYear
+          )
+    ).filter((e) => (activeFilter === "all" ? true : e.type === activeFilter));
+  }, [activeFilter, personalNotes, allEvents, selectedDay, selectedMonth, selectedYear]);
 
-  // Dữ liệu lưới lịch Tháng 10/2024 (ngày 01/10/2024 là Thứ Ba -> Thứ Hai trước đó là ngày 30/9)
-  const calendarGridDays = [
-    { day: 30, isCurrentMonth: false, month: 9, lunarText: "28/8" },
-    { day: 1, isCurrentMonth: true, month: 10, lunarText: "29/8" },
-    { day: 2, isCurrentMonth: true, month: 10, lunarText: "30/8", badge: "Hội Katê", type: "festival" },
-    { day: 3, isCurrentMonth: true, month: 10, lunarText: "01/9", badge: "Mùng 1/9 AL", hasDot: true, type: "custom" },
-    { day: 4, isCurrentMonth: true, month: 10, lunarText: "02/9" },
-    { day: 5, isCurrentMonth: true, month: 10, lunarText: "03/9" },
-    { day: 6, isCurrentMonth: true, month: 10, lunarText: "04/9" },
+  // Sinh lưới ngày ĐỘNG theo tháng và năm đang chọn (Thứ Hai -> Chủ Nhật)
+  const calendarGridDays = useMemo(() => {
+    const daysInCurrentMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+    const prevMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
+    const prevYear = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
+    const daysInPrevMonth = new Date(prevYear, prevMonth, 0).getDate();
 
-    { day: 7, isCurrentMonth: true, month: 10, lunarText: "05/9" },
-    { day: 8, isCurrentMonth: true, month: 10, lunarText: "06/9", subText: "Hàn Lộ" },
-    { day: 9, isCurrentMonth: true, month: 10, lunarText: "07/9" },
-    { day: 10, isCurrentMonth: true, month: 10, lunarText: "08/9" },
-    { day: 11, isCurrentMonth: true, month: 10, lunarText: "09/9", badge: "Trùng Cửu 9/9", hasDot: true, type: "festival" },
-    { day: 12, isCurrentMonth: true, month: 10, lunarText: "10/9" },
-    { day: 13, isCurrentMonth: true, month: 10, lunarText: "11/9" },
+    // Ngày đầu tiên của tháng: JS getDay() trả về 0 (CN), 1 (T2), ..., 6 (T7)
+    // Hệ thống lịch Việt Nam bắt đầu bằng Thứ Hai:
+    const firstDayOfWeek = new Date(selectedYear, selectedMonth - 1, 1).getDay();
+    const startOffset = (firstDayOfWeek + 6) % 7;
 
-    { day: 14, isCurrentMonth: true, month: 10, lunarText: "12/9" },
-    { day: 15, isCurrentMonth: true, month: 10, lunarText: "13/9", badge: "Hội Chùa Keo", type: "festival" },
-    { day: 16, isCurrentMonth: true, month: 10, lunarText: "14/9", subText: "Cận Rằm" },
-    {
-      day: 17,
-      isCurrentMonth: true,
-      month: 10,
-      lunarText: "15/9",
-      badge: "RẰM THÁNG 9",
-      isSpecial: true,
-      hasDot: true,
-      type: "custom",
-    },
-    { day: 18, isCurrentMonth: true, month: 10, lunarText: "16/9" },
-    { day: 19, isCurrentMonth: true, month: 10, lunarText: "17/9" },
-    { day: 20, isCurrentMonth: true, month: 10, lunarText: "18/9" },
+    const grid = [];
 
-    { day: 21, isCurrentMonth: true, month: 10, lunarText: "19/9" },
-    { day: 22, isCurrentMonth: true, month: 10, lunarText: "20/9" },
-    { day: 23, isCurrentMonth: true, month: 10, lunarText: "21/9", subText: "Sương Giáng" },
-    { day: 24, isCurrentMonth: true, month: 10, lunarText: "22/9" },
-    { day: 25, isCurrentMonth: true, month: 10, lunarText: "23/9" },
-    { day: 26, isCurrentMonth: true, month: 10, lunarText: "24/9" },
-    { day: 27, isCurrentMonth: true, month: 10, lunarText: "25/9" },
+    // Các ngày thuộc tháng trước (mờ)
+    for (let i = startOffset - 1; i >= 0; i--) {
+      const day = daysInPrevMonth - i;
+      const lunar = getReliableLunarDate(day, prevMonth, prevYear);
+      grid.push({
+        day,
+        month: prevMonth,
+        year: prevYear,
+        isCurrentMonth: false,
+        lunarText: lunar ? `${lunar.lunarDay}/${lunar.lunarMonth}` : undefined,
+        hasDot: false,
+        hasPersonalNote: false,
+        badge: undefined as string | undefined,
+        isSpecial: false,
+        subText: undefined as string | undefined,
+        type: undefined as CalendarEventType | undefined,
+      });
+    }
 
-    { day: 28, isCurrentMonth: true, month: 10, lunarText: "26/9" },
-    { day: 29, isCurrentMonth: true, month: 10, lunarText: "27/9" },
-    { day: 30, isCurrentMonth: true, month: 10, lunarText: "28/9" },
-    { day: 31, isCurrentMonth: true, month: 10, lunarText: "29/9", subText: "Cuối tháng" },
-    { day: 1, isCurrentMonth: false, month: 11, lunarText: "01/10" },
-    { day: 2, isCurrentMonth: false, month: 11, lunarText: "02/10" },
-    { day: 3, isCurrentMonth: false, month: 11, lunarText: "03/10" },
-  ];
+    // Các ngày thuộc tháng hiện tại
+    for (let day = 1; day <= daysInCurrentMonth; day++) {
+      const lunar = getReliableLunarDate(day, selectedMonth, selectedYear);
+      // Tìm sự kiện kiểm chứng hoặc ghi chú khớp ĐÚNG ngày, tháng và năm
+      const dayEvents = allEvents.filter(
+        (e) => e.day === day && e.month === selectedMonth && e.year === selectedYear
+      );
+      const hasPersonal = personalNotes.some(
+        (n) => n.day === day && n.month === selectedMonth && n.year === selectedYear
+      );
+      const mainEvent = dayEvents[0];
 
-  const currentSelectedLunar = OCTOBER_2024_LUNAR_MAP[selectedDay];
+      let badge: string | undefined = mainEvent?.badge || mainEvent?.title;
+      let type: CalendarEventType | undefined = mainEvent?.type;
+      let isSpecial = false;
+      let subText: string | undefined = lunar?.solarTerm;
+
+      // Nếu ngày đó không có sự kiện văn hóa riêng nhưng là Rằm hoặc Mùng 1:
+      if (!badge && lunar) {
+        if (lunar.specialBadge) {
+          badge = lunar.specialBadge;
+          isSpecial = true;
+          type = "festival";
+        } else if (lunar.isFullMoon) {
+          badge = `Rằm tháng ${lunar.lunarMonth}`;
+          isSpecial = true;
+          type = "custom";
+        } else if (lunar.isFirstDay) {
+          badge = `Mùng 1/${lunar.lunarMonth} AL`;
+          type = "custom";
+        }
+      }
+
+      grid.push({
+        day,
+        month: selectedMonth,
+        year: selectedYear,
+        isCurrentMonth: true,
+        lunarText: lunar ? `${lunar.lunarDay}/${lunar.lunarMonth}` : undefined,
+        subText,
+        badge,
+        isSpecial,
+        hasDot: dayEvents.length > 0,
+        hasPersonalNote: hasPersonal,
+        type,
+      });
+    }
+
+    // Các ngày thuộc tháng sau để hoàn thiện bảng (35 hoặc 42 ô)
+    const nextMonth = selectedMonth === 12 ? 1 : selectedMonth + 1;
+    const nextYear = selectedMonth === 12 ? selectedYear + 1 : selectedYear;
+    const totalCells = Math.ceil(grid.length / 7) * 7;
+    const remaining = totalCells - grid.length;
+    for (let day = 1; day <= remaining; day++) {
+      const lunar = getReliableLunarDate(day, nextMonth, nextYear);
+      grid.push({
+        day,
+        month: nextMonth,
+        year: nextYear,
+        isCurrentMonth: false,
+        lunarText: lunar ? `${lunar.lunarDay}/${lunar.lunarMonth}` : undefined,
+        hasDot: false,
+        hasPersonalNote: false,
+        badge: undefined,
+        isSpecial: false,
+        subText: undefined,
+        type: undefined,
+      });
+    }
+
+    return grid;
+  }, [selectedYear, selectedMonth, allEvents, personalNotes]);
+
+  // Thông tin âm lịch của ngày đang được chọn trong chi tiết
+  const currentSelectedLunar = useMemo(() => {
+    return getReliableLunarDate(selectedDay, selectedMonth, selectedYear);
+  }, [selectedDay, selectedMonth, selectedYear]);
+
+  // Âm lịch tiêu đề tháng
+  const monthHeaderLunar = useMemo(() => {
+    return getReliableLunarDate(15, selectedMonth, selectedYear);
+  }, [selectedMonth, selectedYear]);
 
   return (
     <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif]">
@@ -223,20 +322,36 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h1 className="font-['Noto_Serif',serif] font-bold text-3xl sm:text-4xl text-[#2a2220] leading-tight mb-2">
-              Lịch văn hóa
+              Lịch văn hóa & Nếp nhà
             </h1>
 
-            {onGoToGoodDays && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onGoToGoodDays}
-                className="border-[#e5d4c5] text-[#9e3b2e] hover:bg-[#faede2] text-xs font-semibold gap-1.5 self-start sm:self-auto cursor-pointer"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-[#9e3b2e]" />
-                <span>Tra cứu ngày lành</span>
-              </Button>
-            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              {onGoToGoodDays && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onGoToGoodDays}
+                  className="border-[#e5d4c5] text-[#9e3b2e] hover:bg-[#faede2] text-xs font-semibold gap-1.5 self-start sm:self-auto cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#9e3b2e]" />
+                  <span>Tra cứu ngày lành</span>
+                </Button>
+              )}
+
+              {/* Nút xem nhanh bộ dữ liệu mẫu đã kiểm chứng tháng 10/2024 */}
+              {!(selectedYear === 2024 && selectedMonth === 10) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleViewVerifiedOct2024}
+                  className="border-[#dfc3af] bg-[#fbf5ee] text-[#844520] hover:bg-[#faede2] text-xs font-medium gap-1.5 cursor-pointer"
+                  title="Xem tư liệu lễ hội & phong tục đã khảo cứu đối chiếu chi tiết tháng 10/2024"
+                >
+                  <Bookmark className="w-3.5 h-3.5 text-[#9e3b2e]" />
+                  <span>Xem tư liệu mẫu (10/2024)</span>
+                </Button>
+              )}
+            </div>
           </div>
 
           <p className="text-sm sm:text-base text-[#6f5e57] max-w-3xl leading-relaxed">
@@ -268,11 +383,13 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                 </button>
 
                 <div>
-                  <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220] min-w-[180px] text-center">
+                  <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220] min-w-[190px] text-center">
                     Tháng {selectedMonth}, {selectedYear}
                   </h2>
                   <p className="text-[11px] text-[#8e7b73] text-center font-medium">
-                    Tháng 9 Giáp Thìn (Năm Rồng)
+                    {monthHeaderLunar
+                      ? `Tháng ${monthHeaderLunar.lunarMonth} Âm lịch • Năm ${monthHeaderLunar.canChiYear}`
+                      : "Lịch Âm Dương thuần Việt"}
                   </p>
                 </div>
 
@@ -287,9 +404,10 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                 <button
                   onClick={handleResetToday}
                   className="ml-2 px-3 py-1.5 rounded-xl border border-[#ecd9cb] text-xs font-semibold text-[#806b63] hover:text-[#9e3b2e] hover:bg-[#faf3ec] transition-colors flex items-center gap-1.5 cursor-pointer"
+                  title="Về ngày hiện tại theo thời gian thực"
                 >
                   <CalendarIcon className="w-3.5 h-3.5 text-[#9e3b2e]" />
-                  <span>Về ngày Rằm (17/10)</span>
+                  <span>Hôm nay ({todayRealDay}/{todayRealMonth})</span>
                 </button>
               </div>
 
@@ -341,7 +459,7 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
               </div>
             </div>
 
-            {/* Calendar Days of Week Header */}
+            {/* Calendar Days of Week Header (Bắt đầu từ Thứ Hai) */}
             <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-xs font-bold text-[#8c7a72] mb-3">
               <div>Thứ Hai</div>
               <div>Thứ Ba</div>
@@ -355,10 +473,17 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
             {/* Calendar Days Grid */}
             <div className="grid grid-cols-7 gap-1 sm:gap-2">
               {calendarGridDays.map((cell, index) => {
-                const isSelected = cell.isCurrentMonth && cell.day === selectedDay;
-                const hasPersonalNote = personalNotes.some(
-                  (n) => n.day === cell.day && n.month === cell.month
-                );
+                const isSelected =
+                  cell.isCurrentMonth &&
+                  cell.day === selectedDay &&
+                  cell.month === selectedMonth &&
+                  cell.year === selectedYear;
+
+                const isRealToday =
+                  cell.isCurrentMonth &&
+                  cell.day === todayRealDay &&
+                  cell.month === todayRealMonth &&
+                  cell.year === todayRealYear;
 
                 return (
                   <div
@@ -368,9 +493,9 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                         setSelectedDay(cell.day);
                       }
                     }}
-                    className={`min-h-[76px] sm:min-h-[92px] p-1.5 sm:p-2 rounded-2xl border transition-all flex flex-col justify-between cursor-pointer ${
+                    className={`min-h-[76px] sm:min-h-[92px] p-1.5 sm:p-2 rounded-2xl border transition-all flex flex-col justify-between cursor-pointer relative ${
                       !cell.isCurrentMonth
-                        ? "bg-[#faf6f1]/40 border-transparent text-[#beb0a7] opacity-50"
+                        ? "bg-[#faf6f1]/40 border-transparent text-[#beb0a7] opacity-40 cursor-default"
                         : isSelected
                         ? "bg-[#9e3b2e] border-[#9e3b2e] text-white shadow-md ring-2 ring-[#9e3b2e]/30 scale-[1.02]"
                         : cell.isSpecial
@@ -380,16 +505,28 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                   >
                     {/* Top Row: Solar Day Number + Notification Dot */}
                     <div className="flex items-center justify-between">
-                      <span
-                        className={`text-xs sm:text-sm font-bold font-mono ${
-                          isSelected ? "text-white" : ""
-                        }`}
-                      >
-                        {cell.day}
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <span
+                          className={`text-xs sm:text-sm font-bold font-mono ${
+                            isSelected ? "text-white" : ""
+                          }`}
+                        >
+                          {cell.day}
+                        </span>
+                        {isRealToday && (
+                          <span
+                            className={`text-[9px] px-1 rounded-sm uppercase font-bold tracking-tight ${
+                              isSelected ? "bg-white text-[#9e3b2e]" : "bg-[#faede2] text-[#9e3b2e]"
+                            }`}
+                            title="Hôm nay theo thời gian thực"
+                          >
+                            Nay
+                          </span>
+                        )}
+                      </div>
 
                       <div className="flex items-center gap-1">
-                        {hasPersonalNote && (
+                        {cell.hasPersonalNote && (
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
                               isSelected ? "bg-amber-200" : "bg-indigo-600"
@@ -407,23 +544,25 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                       </div>
                     </div>
 
-                    {/* Middle: Lunar Day indication */}
-                    <div className="text-[10px] leading-tight font-medium opacity-85">
-                      <span className={isSelected ? "text-amber-100" : "text-[#8e7c74]"}>
-                        AL: {cell.lunarText}
-                      </span>
-                      {cell.subText && (
-                        <span
-                          className={`block text-[9px] italic ${
-                            isSelected ? "text-amber-200" : "text-[#b07335]"
-                          }`}
-                        >
-                          {cell.subText}
+                    {/* Middle: Lunar Day indication (Chỉ hiện khi có dữ liệu đáng tin cậy) */}
+                    {cell.lunarText && (
+                      <div className="text-[10px] leading-tight font-medium opacity-90">
+                        <span className={isSelected ? "text-amber-100" : "text-[#8e7c74]"}>
+                          AL: {cell.lunarText}
                         </span>
-                      )}
-                    </div>
+                        {cell.subText && (
+                          <span
+                            className={`block text-[9px] italic ${
+                              isSelected ? "text-amber-200" : "text-[#b07335]"
+                            }`}
+                          >
+                            {cell.subText}
+                          </span>
+                        )}
+                      </div>
+                    )}
 
-                    {/* Bottom: Event Badge if available */}
+                    {/* Bottom: Event Badge if reliable */}
                     {cell.badge && (
                       <span
                         className={`text-[9px] px-1.5 py-0.5 rounded-md truncate font-semibold block text-center ${
@@ -455,11 +594,11 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                   <h3 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220] mt-0.5">
                     {activeFilter === "personal"
                       ? `Các ngày tôi đã lưu (${personalCount})`
-                      : `Ngày ${selectedDay} tháng ${selectedMonth}`}
+                      : `Ngày ${selectedDay} tháng ${selectedMonth}, ${selectedYear}`}
                   </h3>
                   {activeFilter !== "personal" && currentSelectedLunar && (
                     <p className="text-xs text-[#7e6d65] font-medium mt-0.5">
-                      Âm lịch: Ngày {currentSelectedLunar.lunarDay} tháng {currentSelectedLunar.lunarMonth} (Giáp Thìn)
+                      Âm lịch: Ngày {currentSelectedLunar.lunarDay} tháng {currentSelectedLunar.lunarMonth} ({currentSelectedLunar.canChiYear})
                       {currentSelectedLunar.solarTerm && ` • Tiết ${currentSelectedLunar.solarTerm}`}
                     </p>
                   )}
@@ -559,13 +698,31 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                       </>
                     ) : (
                       <>
-                        <p className="mb-2">Ngày này chưa có sự kiện nào trong danh mục lọc.</p>
-                        <button
-                          onClick={() => setShowAddModal(true)}
-                          className="text-[#9e3b2e] font-semibold hover:underline cursor-pointer"
-                        >
-                          + Thêm ghi chú cá nhân
-                        </button>
+                        <p className="font-semibold text-[#3e312b] mb-1">
+                          Chưa có sự kiện văn hóa kiểm chứng vào ngày này
+                        </p>
+                        <p className="text-[11px] text-[#7d6c64] mb-4 leading-relaxed">
+                          Hệ thống tuân thủ nguyên tắc chỉ hiển thị phong tục và sự kiện có nguồn tư liệu khảo cứu đáng tin cậy. Bạn có thể lưu dấu mốc cá nhân hoặc tham quan tháng có tư liệu mẫu.
+                        </p>
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                          <Button
+                            onClick={() => setShowAddModal(true)}
+                            size="sm"
+                            className="rounded-xl text-xs bg-[#9e3b2e] hover:bg-[#852f24] text-white"
+                          >
+                            + Thêm ghi chú ngày này
+                          </Button>
+                          {!(selectedYear === 2024 && selectedMonth === 10) && (
+                            <Button
+                              onClick={handleViewVerifiedOct2024}
+                              size="sm"
+                              variant="outline"
+                              className="rounded-xl text-xs border-[#dfc4b1] text-[#9e3b2e]"
+                            >
+                              Xem mẫu khảo cứu (10/2024)
+                            </Button>
+                          )}
+                        </div>
                       </>
                     )}
                   </div>
@@ -594,8 +751,8 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                 <Info className="w-4 h-4 text-[#9e3b2e] shrink-0 mt-0.5" />
                 <div>
                   <strong className="font-semibold text-[#2a2220]">Minh bạch tư liệu:</strong>{" "}
-                  Mọi sự kiện đều được đối chiếu theo Lịch Âm Dương thiên văn học Việt Nam và tài liệu
-                  văn hóa dân gian chính thống.
+                  Mọi dữ liệu lịch âm dương đều tính theo thuật toán thiên văn học Việt Nam (Hồ Ngọc Đức)
+                  và các nguồn khảo cứu văn hóa dân gian chính thống.
                 </div>
               </div>
             </Card>
@@ -608,7 +765,7 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
             <Card className="max-w-md w-full p-6 rounded-3xl bg-white border border-[#eddcd0] shadow-2xl animate-in fade-in zoom-in-95 duration-200">
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#f3e6da]">
                 <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220]">
-                  Thêm ghi chú ngày {selectedDay}/{selectedMonth}/2024
+                  Thêm ghi chú ngày {selectedDay}/{selectedMonth}/{selectedYear}
                 </h3>
                 <button
                   onClick={() => setShowAddModal(false)}
@@ -620,30 +777,34 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
 
               <form onSubmit={handleAddPersonalNote} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#66544d] mb-1.5">
-                    Tên sự kiện / Ghi chú của bạn:
+                  <label className="block text-xs font-semibold text-[#4e403a] mb-1.5">
+                    Tiêu đề dấu mốc / sự kiện nếp nhà:
                   </label>
                   <input
                     type="text"
                     required
                     value={newNoteTitle}
                     onChange={(e) => setNewNoteTitle(e.target.value)}
-                    placeholder="Ví dụ: Giỗ cụ, Thăm ông bà, Ăn cơm chay..."
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#eddcd0] text-sm outline-none focus:border-[#9e3b2e] focus:ring-1 focus:ring-[#9e3b2e]"
+                    placeholder="Ví dụ: Giỗ cụ cố, Lễ mừng thọ, Họp mặt gia đình..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#eddcd0] text-sm text-[#2a2220] placeholder-[#a6968e] focus:outline-none focus:ring-1 focus:ring-[#9e3b2e] bg-[#faf3ec]/50"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#66544d] mb-1.5">
-                    Lời dặn dò hoặc ý nghĩa:
+                  <label className="block text-xs font-semibold text-[#4e403a] mb-1.5">
+                    Ghi chú chi tiết (nếu có):
                   </label>
                   <textarea
                     rows={3}
                     value={newNoteDesc}
                     onChange={(e) => setNewNoteDesc(e.target.value)}
-                    placeholder="Viết vài dòng nhắc nhở bản thân chuẩn bị nếp nhà hoặc thảnh thơi thân tâm..."
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#eddcd0] text-sm outline-none focus:border-[#9e3b2e] focus:ring-1 focus:ring-[#9e3b2e] resize-none"
+                    placeholder="Chuẩn bị lễ vật mộc mạc, dặn dò các thành viên trong gia đình..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#eddcd0] text-sm text-[#2a2220] placeholder-[#a6968e] focus:outline-none focus:ring-1 focus:ring-[#9e3b2e] bg-[#faf3ec]/50 resize-none"
                   />
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#fbf5ee] border border-[#ecd9cb] text-[11px] text-[#786962] leading-relaxed">
+                  ✦ Dữ liệu ghi chú được lưu trữ cục bộ trên máy của bạn và gắn với ngày {selectedDay}/{selectedMonth}/{selectedYear}.
                 </div>
 
                 <div className="flex items-center justify-end gap-2 pt-2">
@@ -652,16 +813,16 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => setShowAddModal(false)}
-                    className="rounded-xl text-xs"
+                    className="border-[#ecd9cb] text-xs"
                   >
-                    Hủy
+                    Hủy bỏ
                   </Button>
                   <Button
                     type="submit"
                     size="sm"
-                    className="rounded-xl text-xs bg-[#9e3b2e] text-white hover:bg-[#852f24]"
+                    className="bg-[#9e3b2e] hover:bg-[#852f24] text-white text-xs px-4"
                   >
-                    Lưu vào lịch của tôi
+                    Lưu vào lịch
                   </Button>
                 </div>
               </form>
