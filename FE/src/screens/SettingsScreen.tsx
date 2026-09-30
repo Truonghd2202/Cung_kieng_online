@@ -466,16 +466,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   }}
                   className={`p-4 rounded-2xl border cursor-pointer transition-all ${
                     displayMode === "light"
-                      ? "bg-[#faece1] border-[#9e3b2e] text-[#9e3b2e] shadow-2xs"
-                      : "bg-[#fffdfa] border-[#ecdcd0] text-[#55453f]"
+                      ? "bg-[#faece1] dark:bg-[#38141c] border-[#8a252c] text-[#8a252c] dark:text-[#f7ede6] shadow-xs"
+                      : "bg-[#fffdfa] dark:bg-[#2c0e14] border-[#ecdcd0] dark:border-[#4d1b24] text-[#55453f] dark:text-[#d4bfb7]"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <Sun className="w-4 h-4" />
                     {displayMode === "light" && <Check className="w-3.5 h-3.5" />}
                   </div>
-                  <div className="font-bold text-xs">Chế độ Sáng</div>
-                  <div className="text-[10px] opacity-80 mt-1">Nền giấy kem ấm, tao nhã ban ngày</div>
+                  <div className="font-bold text-xs">Màu Be (Ban Ngày)</div>
+                  <div className="text-[10px] opacity-80 mt-1">Nền be ấm hoài cổ, thanh nhã di sản</div>
                 </div>
 
                 <div
@@ -485,24 +485,24 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   }}
                   className={`p-4 rounded-2xl border cursor-pointer transition-all ${
                     displayMode === "dark"
-                      ? "bg-[#faece1] border-[#9e3b2e] text-[#9e3b2e] shadow-2xs"
-                      : "bg-[#fffdfa] border-[#ecdcd0] text-[#55453f]"
+                      ? "bg-[#faece1] dark:bg-[#38141c] border-[#8a252c] text-[#8a252c] dark:text-[#f7ede6] shadow-xs"
+                      : "bg-[#fffdfa] dark:bg-[#2c0e14] border-[#ecdcd0] dark:border-[#4d1b24] text-[#55453f] dark:text-[#d4bfb7]"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <Moon className="w-4 h-4" />
                     {displayMode === "dark" && <Check className="w-3.5 h-3.5" />}
                   </div>
-                  <div className="font-bold text-xs">Chế độ Tối</div>
-                  <div className="text-[10px] opacity-80 mt-1">Nền mực đen tĩnh lặng, dịu mắt ban đêm</div>
+                  <div className="font-bold text-xs">Màu Đỏ Sơn Mài (Ban Đêm)</div>
+                  <div className="text-[10px] opacity-80 mt-1">Nền đỏ huyết dụ sơn mài, quý phái trang trọng</div>
                 </div>
 
                 <div
                   onClick={() => setDisplayMode("system")}
                   className={`p-4 rounded-2xl border cursor-pointer transition-all ${
                     displayMode === "system"
-                      ? "bg-[#faece1] border-[#9e3b2e] text-[#9e3b2e] shadow-2xs"
-                      : "bg-[#fffdfa] border-[#ecdcd0] text-[#55453f]"
+                      ? "bg-[#faece1] dark:bg-[#38141c] border-[#8a252c] text-[#8a252c] dark:text-[#f7ede6] shadow-xs"
+                      : "bg-[#fffdfa] dark:bg-[#2c0e14] border-[#ecdcd0] dark:border-[#4d1b24] text-[#55453f] dark:text-[#d4bfb7]"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -510,7 +510,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                     {displayMode === "system" && <Check className="w-3.5 h-3.5" />}
                   </div>
                   <div className="font-bold text-xs">Theo thiết bị</div>
-                  <div className="text-[10px] opacity-80 mt-1">Tự động thích ứng màu hệ thống</div>
+                  <div className="text-[10px] opacity-80 mt-1">Tự thích ứng Be sáng hoặc Đỏ sơn mài</div>
                 </div>
               </div>
 

@@ -52,7 +52,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-[#fffdfa]/95 dark:bg-[#181311]/95 backdrop-blur-md border-b border-[#f1e5d8] dark:border-[#382b26] transition-colors">
+    <header className="sticky top-0 z-50 bg-[#f5ece1]/95 dark:bg-[#180508]/95 backdrop-blur-md border-b border-[#e2d4c3] dark:border-[#3e1219] transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
         {/* Brand Logo */}
         <button
@@ -62,7 +62,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           }}
           className="flex items-center gap-3 text-left group focus:outline-none cursor-pointer"
         >
-          <div className="w-10 h-10 rounded-full bg-[#fbf3ec] dark:bg-[#2c201c] border border-[#e8d5c4] dark:border-[#4a3630] flex items-center justify-center text-[#9e3b2e] dark:text-[#de6250] shadow-xs group-hover:scale-105 transition-transform">
+          <div className="w-10 h-10 rounded-full bg-[#f6eadb] dark:bg-[#2c0e14] border border-[#e2d4c3] dark:border-[#4d1b24] flex items-center justify-center text-[#8a252c] dark:text-[#f28d96] shadow-xs group-hover:scale-105 transition-transform">
             <svg
               className="w-5 h-5 fill-current"
               viewBox="0 0 24 24"
@@ -74,10 +74,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             </svg>
           </div>
           <div>
-            <div className="font-['Noto_Serif',serif] font-bold text-lg leading-tight text-[#9e3b2e] tracking-tight">
+            <div className="font-['Noto_Serif',serif] font-bold text-lg leading-tight text-[#8a252c] dark:text-[#f7ede6] tracking-tight">
               Tin Lắm Tâm Linh
             </div>
-            <div className="text-xs tracking-[0.12em] text-[#86766e] uppercase font-semibold font-['Be_Vietnam_Pro',sans-serif]">
+            <div className="text-xs tracking-[0.12em] text-[#8b7770] dark:text-[#a0837b] uppercase font-semibold font-['Be_Vietnam_Pro',sans-serif]">
               Chiêm nghiệm dân gian đương đại
             </div>
           </div>
@@ -152,10 +152,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             variant="outline"
             size="icon"
             onClick={onToggleDark}
-            title="Đổi giao diện"
-            className="dark:border-[#4a3630] dark:text-[#eedcd0]"
+            title={dark ? "Chuyển sang Màu Be (Ban Ngày)" : "Chuyển sang Màu Đỏ (Ban Đêm)"}
+            className="dark:border-[#4d1b24] dark:text-[#f7ede6]"
           >
-            {dark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            {dark ? <Moon className="w-4 h-4 text-[#f28d96]" /> : <Sun className="w-4 h-4 text-[#8a252c]" />}
           </Button>
 
           {user ? (
@@ -164,10 +164,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 variant="outline"
                 size="pill"
                 onClick={() => onNavigate("account")}
-                className="text-xs font-semibold gap-1.5 border-[#e8d5c4] bg-[#fbf5ee] text-[#2a2220] dark:bg-[#2c201c] dark:border-[#4a3630] dark:text-[#f3eae4] max-w-[130px] sm:max-w-[160px]"
+                className="text-xs font-semibold gap-1.5 border-[#eadcce] bg-white text-[#2a1815] dark:bg-[#2c0e14] dark:border-[#4d1b24] dark:text-[#f7ede6] max-w-[130px] sm:max-w-[160px]"
                 title={`Tài khoản: ${user.name}`}
               >
-                <User className="w-3.5 h-3.5 text-[#9e3b2e] dark:text-[#de6250] flex-shrink-0" />
+                <User className="w-3.5 h-3.5 text-[#8a252c] dark:text-[#f28d96] flex-shrink-0" />
                 <span className="truncate">{user.name}</span>
               </Button>
 
@@ -177,7 +177,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                   size="icon"
                   onClick={onLogout}
                   title="Đăng xuất"
-                  className="text-[#887870] hover:text-[#9e3b2e] dark:text-[#a8958c]"
+                  className="text-[#8b7770] hover:text-[#8a252c] dark:text-[#a0837b] dark:hover:text-[#f28d96]"
                 >
                   <LogOut className="w-4 h-4" />
                 </Button>
@@ -199,7 +199,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             variant="outline"
             size="icon"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden border-[#ecdacb] text-[#2a2220] dark:border-[#4d3c37] dark:text-[#f3eae4]"
+            className="md:hidden border-[#eadcce] text-[#2a1815] dark:border-[#4d1b24] dark:text-[#f7ede6]"
             aria-label="Menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -209,7 +209,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <nav className="md:hidden border-t border-[#f1e5d8] dark:border-[#382b26] bg-[#fffdfa] dark:bg-[#1a1412] px-4 py-4 space-y-2 shadow-lg animate-in fade-in slide-in-from-top-2 duration-150">
+        <nav className="md:hidden border-t border-[#e2d4c3] dark:border-[#3e1219] bg-[#f5ece1] dark:bg-[#180508] px-4 py-4 space-y-2 shadow-lg animate-in fade-in slide-in-from-top-2 duration-150">
           <Button
             variant={
               ["today", "mood", "loading", "result", "saved"].includes(currentScreen)

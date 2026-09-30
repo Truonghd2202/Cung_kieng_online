@@ -18,25 +18,25 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "default", ...props }, ref) => {
     const baseStyles =
-      "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#9e3b2e] disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer";
+      "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#8a252c] dark:focus-visible:ring-[#a62734] disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer";
 
     const variantStyles: Record<string, string> = {
       default:
-        "bg-[#9e3b2e] text-white hover:bg-[#882f23] shadow-xs active:scale-[0.98]",
+        "bg-[#8a252c] dark:bg-[#a62734] text-white hover:bg-[#731a21] dark:hover:bg-[#b8323f] shadow-xs active:scale-[0.98]",
       lacquer:
-        "bg-[#9e3b2e] text-white hover:bg-[#882f23] shadow-xs active:scale-[0.98]",
+        "bg-[#8a252c] dark:bg-[#a62734] text-white hover:bg-[#731a21] dark:hover:bg-[#b8323f] shadow-xs active:scale-[0.98]",
       bronze:
-        "bg-[#6f4b1b] text-white hover:bg-[#5e3e15] shadow-xs active:scale-[0.98]",
+        "bg-[#6f4b1b] dark:bg-[#85531b] text-white hover:bg-[#5e3e15] shadow-xs active:scale-[0.98]",
       destructive:
         "bg-red-600 text-white hover:bg-red-700 shadow-xs",
       outline:
-        "border border-[#eddcd0] bg-[#fffdfa] text-[#4d403b] hover:bg-[#faf4ee] hover:border-[#dfc3af] shadow-2xs",
+        "border border-[#eadcce] dark:border-[#4d1b24] bg-white dark:bg-[#2c0e14] text-[#2a1815] dark:text-[#f7ede6] hover:bg-[#f6eadb] dark:hover:bg-[#38141c] hover:border-[#dfc3af] shadow-2xs",
       secondary:
-        "bg-[#faede2] text-[#9e3b2e] hover:bg-[#f6e1d2] shadow-2xs font-semibold",
+        "bg-[#f6eadb] dark:bg-[#38141c] text-[#8a252c] dark:text-[#f2aab2] hover:bg-[#eddccb] dark:hover:bg-[#481824] shadow-2xs font-semibold",
       ghost:
-        "text-[#5c4f4a] hover:text-[#9e3b2e] hover:bg-[#f8ede3]/60",
+        "text-[#584640] dark:text-[#d4bfb7] hover:text-[#8a252c] dark:hover:text-[#f7ede6] hover:bg-[#f6eadb]/60 dark:hover:bg-[#38141c]/70",
       link:
-        "text-[#9e3b2e] underline-offset-4 hover:underline p-0 h-auto font-medium",
+        "text-[#8a252c] dark:text-[#f28d96] underline-offset-4 hover:underline p-0 h-auto font-medium",
     };
 
     const sizeStyles: Record<string, string> = {

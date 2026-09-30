@@ -4,9 +4,9 @@
 @theme {
   --font-serif: "Noto Serif", serif;
   --font-sans: "Be Vietnam Pro", sans-serif;
-  --color-lacquer: #9e3b2e;
-  --color-lacquer-dark: #882f23;
-  --color-parchment: #fcf8f2;
+  --color-lacquer: #8a252c;
+  --color-lacquer-dark: #731a21;
+  --color-parchment: #f8efe4;
   --color-gold: #be8e5a;
 }
 
@@ -14,27 +14,96 @@
   box-sizing: border-box;
 }
 
+/* ==========================================================================
+   1. LIGHT MODE PALETTE (HÌNH 1: MÀU BE CỔ TRUYỀN DI SẢN)
+   ========================================================================== */
 html {
   scroll-behavior: smooth;
   font-family: "Be Vietnam Pro", sans-serif;
-  background-color: #fcf8f2;
-  color: #2e2624;
-  font-size: 15px; /* Base font size 15px for comfortable readability */
+  background-color: #f8efe4;
+  color: #2a1815;
+  font-size: 15px;
 }
 
 body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  background-color: #f8efe4;
+  color: #2a1815;
 }
 
 ::selection {
-  background-color: #f3ded0;
-  color: #9e3b2e;
+  background-color: #f2dbcc;
+  color: #8a252c;
+}
+
+/* Light mode primary overrides to ensure authentic beige theme */
+.bg-\[\#fcf8f2\],
+.bg-\[\#f7f2ea\],
+.bg-\[\#faf4ee\],
+.bg-\[\#fdfbf7\] {
+  background-color: #f8efe4 !important;
+}
+
+/* Base Light Red Accent & Button Adjustments */
+.bg-\[\#9e3b2e\] {
+  background-color: #8a252c !important;
+}
+.hover\:bg-\[\#882f23\]:hover,
+.hover\:bg-\[\#852f24\]:hover {
+  background-color: #731a21 !important;
+}
+.text-\[\#9e3b2e\] {
+  color: #8a252c !important;
+}
+.border-\[\#9e3b2e\] {
+  border-color: #8a252c !important;
+}
+
+/* Light Mode Borders */
+.border-\[\#eddcd0\],
+.border-\[\#ecdcd0\],
+.border-\[\#f1e5d8\],
+.border-\[\#ebdcd0\],
+.border-\[\#f2e5d9\],
+.border-\[\#f4e8dc\],
+.border-\[\#ecd9cb\],
+.border-\[\#eedcd0\] {
+  border-color: #eadcce !important;
+}
+
+/* Light Mode Headings and Texts */
+.text-\[\#2e2624\],
+.text-\[\#2a2220\],
+.text-\[\#2b211f\],
+.text-\[\#2c2220\],
+.text-\[\#1e1817\],
+.text-\[\#342a27\] {
+  color: #2a1815 !important;
+}
+
+.text-\[\#6a5951\],
+.text-\[\#6e5d56\],
+.text-\[\#6e5e57\],
+.text-\[\#715f57\],
+.text-\[\#5a4942\],
+.text-\[\#77665f\],
+.text-\[\#705e57\] {
+  color: #584640 !important;
+}
+
+.text-\[\#8a7971\],
+.text-\[\#8c7b74\],
+.text-\[\#887870\],
+.text-\[\#9a8982\],
+.text-\[\#93827a\],
+.text-\[\#86766e\] {
+  color: #8b7770 !important;
 }
 
 /* ==========================================================================
-   Comprehensive Dark Mode Palette (Phong vị Trầm Đêm Cổ Phục & Gỗ Mộc)
+   2. DARK MODE PALETTE (HÌNH 2: MÀU ĐỎ SƠN MÀI / HUYẾT DỤ HOÀNG GIA)
    ========================================================================== */
 html.dark,
 body.dark,
@@ -42,55 +111,65 @@ body.dark,
   color-scheme: dark;
 }
 
-html.dark {
-  background-color: #171312;
-  color: #ede2db;
+html.dark,
+body.dark {
+  background-color: #1e070b !important;
+  color: #f7ede6 !important;
 }
 
-/* Header & Footer in Dark Mode */
+/* Header & Footer in Dark Wine Red */
 .dark header {
-  background-color: rgba(26, 21, 20, 0.95) !important;
-  border-color: #3b2d29 !important;
+  background-color: rgba(24, 5, 8, 0.95) !important;
+  border-color: #3e1219 !important;
 }
 
 .dark footer {
-  background-color: #130f0e !important;
-  border-color: #382b27 !important;
+  background-color: #160407 !important;
+  border-color: #381117 !important;
 }
 
-/* Base Background Overrides in Dark Mode */
+/* Main Outer Screen Backgrounds in Dark Mode (Pure Lacquer Wine) */
 .dark .bg-\[\#fcf8f2\],
+.dark .bg-\[\#f8efe4\],
 .dark .bg-\[\#f7f2ea\],
 .dark .bg-\[\#fffdfa\],
 .dark .bg-\[\#fffdfb\],
 .dark .bg-\[\#faf4ee\],
 .dark .bg-\[\#fdfbf7\] {
-  background-color: #171312 !important;
+  background-color: #1e070b !important;
+  color: #f7ede6 !important;
 }
 
-.dark .bg-white {
-  background-color: #231c1a !important;
-  color: #ede2db !important;
+/* Cards & Main Panels in Dark Mode: Deep Lacquer Burgundy */
+.dark .bg-white,
+.dark Card,
+.dark .bg-\[\#fffdfa\]\/95,
+.dark .bg-\[\#fffdfa\] {
+  background-color: #2c0e14 !important;
+  border-color: #4d1b24 !important;
+  color: #f7ede6 !important;
 }
 
-/* Card & Elevated Panels in Dark Mode */
+/* Elevated Sub-panels, Selects, Inner Boxes in Dark Mode */
 .dark .bg-\[\#fbf3ec\],
 .dark .bg-\[\#fbf5ee\],
 .dark .bg-\[\#faede2\],
 .dark .bg-\[\#faece1\],
 .dark .bg-\[\#fbf2e9\],
 .dark .bg-\[\#faf3ec\],
-.dark .bg-\[\#faf4ed\] {
-  background-color: #28201d !important;
-}
-
+.dark .bg-\[\#faf4ed\],
+.dark .bg-\[\#fbece1\]\/50,
+.dark .bg-\[\#fbece1\]\/70,
 .dark .bg-\[\#fdf3eb\] {
-  background-color: #2b211d !important;
+  background-color: #38141c !important;
+  border-color: #541f2b !important;
+  color: #f7ede6 !important;
 }
 
-.dark .bg-\[\#f7fbf6\] {
-  background-color: #1c261e !important;
-  border-color: #2e4431 !important;
+.dark .bg-\[\#f7fbf6\],
+.dark .bg-\[\#f5fbf7\] {
+  background-color: #27161b !important;
+  border-color: #4a2128 !important;
 }
 
 /* Text Overrides in Dark Mode */
@@ -99,38 +178,72 @@ html.dark {
 .dark .text-\[\#2b211f\],
 .dark .text-\[\#2c2220\],
 .dark .text-\[\#1e1817\],
-.dark .text-\[\#342a27\] {
-  color: #f0e6e0 !important;
+.dark .text-\[\#342a27\],
+.dark .text-\[\#2a1815\],
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4 {
+  color: #f7ede6 !important;
 }
 
+.dark .text-\[\#6a5951\],
+.dark .text-\[\#6e5d56\],
+.dark .text-\[\#6e5e57\],
+.dark .text-\[\#715f57\],
+.dark .text-\[\#5a4942\],
 .dark .text-\[\#77665f\],
 .dark .text-\[\#78645c\],
 .dark .text-\[\#7a6b64\],
-.dark .text-\[\#6e5d56\],
-.dark .text-\[\#6e5e57\],
+.dark .text-\[\#705e57\],
+.dark .text-\[\#73635d\],
+.dark .text-\[\#6f5e57\],
+.dark .text-\[\#6f615b\],
+.dark .text-\[\#584640\],
+.dark .text-\[\#55453f\],
+.dark .text-\[\#52433e\] {
+  color: #d4bfb7 !important;
+}
+
+.dark .text-\[\#8a7971\],
 .dark .text-\[\#8c7b74\],
 .dark .text-\[\#887870\],
 .dark .text-\[\#86766e\],
 .dark .text-\[\#85736c\],
 .dark .text-\[\#9a8982\],
-.dark .text-\[\#705e57\],
-.dark .text-\[\#73635d\],
-.dark .text-\[\#6f5e57\],
-.dark .text-\[\#6f615b\] {
-  color: #b5a49d !important;
+.dark .text-\[\#9b8982\],
+.dark .text-\[\#93827a\],
+.dark .text-\[\#8e7e77\],
+.dark .text-\[\#8e7c75\],
+.dark .text-\[\#806f67\],
+.dark .text-\[\#8b7770\] {
+  color: #a0837b !important;
 }
 
-.dark .text-\[\#436446\],
-.dark .text-\[\#3f5f42\] {
-  color: #9ecc9f !important;
+/* Red Accent in Dark Mode (Vibrant Crimson Wine) */
+.dark .bg-\[\#9e3b2e\],
+.dark .bg-\[\#8a252c\] {
+  background-color: #a62734 !important;
+  color: #ffffff !important;
 }
 
-.dark .text-\[\#1b431e\],
-.dark .text-\[\#225725\] {
-  color: #b7e3ba !important;
+.dark .hover\:bg-\[\#882f23\]:hover,
+.dark .hover\:bg-\[\#852f24\]:hover,
+.dark .hover\:bg-\[\#731a21\]:hover {
+  background-color: #b8323f !important;
 }
 
-/* Borders in Dark Mode */
+.dark .text-\[\#9e3b2e\],
+.dark .text-\[\#8a252c\] {
+  color: #f28d96 !important;
+}
+
+.dark .border-\[\#9e3b2e\],
+.dark .border-\[\#8a252c\] {
+  border-color: #a62734 !important;
+}
+
+/* Borders in Dark Mode (Subtle Crimson Wine Lines) */
 .dark .border-\[\#f1e5d8\],
 .dark .border-\[\#f4e8dc\],
 .dark .border-\[\#f2e5d9\],
@@ -145,33 +258,119 @@ html.dark {
 .dark .border-\[\#dfc5af\],
 .dark .border-\[\#dfc6b3\],
 .dark .border-\[\#edd1be\],
-.dark .border-\[\#cfbcaf\] {
-  border-color: #3d2f2a !important;
+.dark .border-\[\#cfbcaf\],
+.dark .border-\[\#eadcce\],
+.dark .border-\[\#ebdcd0\],
+.dark .border-\[\#f0e4d7\],
+.dark .border-\[\#ecd5c4\],
+.dark .border-\[\#ebd5c3\],
+.dark .border-\[\#ebd6c5\],
+.dark .border-\[\#f3e6da\] {
+  border-color: #4d1b24 !important;
 }
 
-/* Form Inputs in Dark Mode */
+/* Form Inputs, Selects, and Textareas in Dark Mode */
 .dark input,
-.dark textarea {
-  background-color: #211a18 !important;
-  color: #f0e6e0 !important;
-  border-color: #3d2f2a !important;
+.dark textarea,
+.dark select {
+  background-color: #250b10 !important;
+  color: #f7ede6 !important;
+  border-color: #4d1b24 !important;
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #a62734 !important;
+  outline: none !important;
+}
+
+.dark select option {
+  background-color: #2c0e14 !important;
+  color: #f7ede6 !important;
 }
 
 .dark input::placeholder,
 .dark textarea::placeholder {
-  color: #8a7870 !important;
+  color: #8c6a65 !important;
+}
+
+/* Badges & Tags in Dark Mode */
+.dark .bg-\[\#fef3e2\],
+.dark .bg-\[\#fcedd7\],
+.dark .bg-\[\#faece1\],
+.dark .bg-\[\#fbf3ec\] {
+  background-color: #3d151e !important;
+  border-color: #5c202c !important;
+  color: #f2b8c0 !important;
+}
+
+/* Table styling in Dark Mode */
+.dark table thead tr {
+  background-color: #38141c !important;
+  border-color: #4d1b24 !important;
+}
+
+.dark table thead th {
+  color: #f7ede6 !important;
+}
+
+.dark table tbody tr {
+  border-color: #42161f !important;
+}
+
+.dark table tbody tr:hover {
+  background-color: #36121a !important;
 }
 
 /* Modals & Dialog overlays in Dark Mode */
 .dark .bg-black\/50,
-.dark .bg-black\/60 {
-  background-color: rgba(0, 0, 0, 0.75) !important;
+.dark .bg-black\/60,
+.dark .bg-black\/70 {
+  background-color: rgba(16, 2, 5, 0.85) !important;
 }
 
-/* Shadow elevation in Dark Mode */
+/* Shadows in Dark Mode with Subtle Crimson Glow */
 .dark .shadow-xs,
 .dark .shadow-sm,
+.dark .shadow-2xs {
+  box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.6) !important;
+}
+
 .dark .shadow-md,
-.dark .shadow-lg {
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5) !important;
+.dark .shadow-lg,
+.dark .shadow-xl {
+  box-shadow: 0 6px 24px -4px rgba(10, 1, 3, 0.75), 0 0 1px 1px rgba(166, 39, 52, 0.15) !important;
+}
+
+/* Scrollbar Tinting */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0e4d6;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #180508;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4bfb0;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4d1b24;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8a252c;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #a62734;
 }

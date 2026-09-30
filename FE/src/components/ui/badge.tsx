@@ -18,17 +18,17 @@ function Badge({
 }: BadgeProps) {
   const variantStyles: Record<string, string> = {
     default:
-      "bg-[#9e3b2e] text-white border-transparent shadow-2xs",
+      "bg-[#8a252c] dark:bg-[#a62734] text-white border-transparent shadow-2xs",
     terracotta:
-      "bg-[#faece1] text-[#9e3b2e] border-transparent font-semibold",
+      "bg-[#f6eadb] dark:bg-[#38141c] text-[#8a252c] dark:text-[#f2aab2] border-transparent font-semibold",
     secondary:
-      "bg-[#faede2] text-[#9e3b2e] border-transparent font-medium",
+      "bg-[#f6eadb] dark:bg-[#38141c] text-[#8a252c] dark:text-[#f2aab2] border-transparent font-medium",
     gold:
-      "bg-[#fcedd7] text-[#9b621e] border-transparent font-semibold",
+      "bg-[#fcedd7] dark:bg-[#3d2415] text-[#9b621e] dark:text-[#e5b86a] border-transparent font-semibold",
     destructive:
       "bg-red-500 text-white border-transparent",
     outline:
-      "border border-[#eddcd0] text-[#73635d] bg-transparent",
+      "border border-[#eadcce] dark:border-[#4d1b24] text-[#584640] dark:text-[#d4bfb7] bg-transparent",
   };
 
   return (
