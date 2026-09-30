@@ -638,7 +638,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
             </div>
 
             {/* Center Altar: The Sacred Bamboo Tube Card */}
-            <Card className="max-w-xl mx-auto rounded-3xl p-8 sm:p-12 bg-white border border-[#eddcd0] shadow-md text-center relative overflow-hidden mb-10">
+            <Card className="max-w-2xl mx-auto rounded-3xl p-6 sm:p-10 bg-white border border-[#eddcd0] shadow-md text-center relative overflow-hidden mb-10">
               {/* Concentric Circle Aura Motif */}
               <div className="relative w-64 h-64 sm:w-72 sm:h-72 mx-auto mb-6 flex items-center justify-center">
                 <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#faece1]/70 via-[#f9efe5]/80 to-[#faece1]/50 animate-pulse" />
@@ -716,52 +716,54 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                {drawPhase === "dropped" ? (
-                  <>
+              <div className="flex flex-col items-center justify-center gap-3.5 w-full">
+                <div className="flex flex-wrap items-center justify-center gap-3 w-full">
+                  {drawPhase === "dropped" ? (
+                    <>
+                      <Button
+                        variant="default"
+                        size="lg"
+                        onClick={() => {
+                          setStep(3);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        className="w-full sm:w-auto px-6 py-3 font-semibold shadow-md gap-2 text-sm sm:text-base cursor-pointer"
+                      >
+                        <Sparkles className="w-4 h-4 shrink-0" />
+                        <span>Xem chiêm nghiệm thẻ số {currentResult.stickNumber}</span>
+                        <ArrowRight className="w-4 h-4 shrink-0" />
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={handleStartDraw}
+                        disabled={isShaking}
+                        className="w-full sm:w-auto px-5 py-3 text-xs sm:text-sm font-semibold gap-1.5 cursor-pointer shrink-0"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+                        <span>Lắc lại thẻ khác</span>
+                      </Button>
+                    </>
+                  ) : (
                     <Button
                       variant="default"
                       size="lg"
-                      onClick={() => {
-                        setStep(3);
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }}
-                      className="w-full sm:w-auto px-8 py-3.5 font-semibold shadow-md gap-2 text-sm sm:text-base cursor-pointer"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      <span>Xem chiêm nghiệm thẻ số {currentResult.stickNumber}</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      size="lg"
                       onClick={handleStartDraw}
                       disabled={isShaking}
-                      className="w-full sm:w-auto px-5 py-3 text-xs font-semibold gap-1.5 cursor-pointer"
+                      className="w-full sm:w-auto px-8 py-3.5 font-semibold shadow-md gap-2 text-sm sm:text-base cursor-pointer"
                     >
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      <span>Lắc lại thẻ khác</span>
+                      <Sparkles className="w-4 h-4 shrink-0" />
+                      <span>{isShaking ? "Đang lắng đọng rút thẻ..." : "Thành tâm lắc ống xăm"}</span>
                     </Button>
-                  </>
-                ) : (
-                  <Button
-                    variant="default"
-                    size="lg"
-                    onClick={handleStartDraw}
-                    disabled={isShaking}
-                    className="w-full sm:w-auto px-8 py-3.5 font-semibold shadow-md gap-2 text-sm sm:text-base cursor-pointer"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    <span>{isShaking ? "Đang lắng đọng rút thẻ..." : "Thành tâm lắc ống xăm"}</span>
-                  </Button>
-                )}
+                  )}
+                </div>
 
                 <Button
                   variant="ghost"
                   size="default"
                   onClick={() => setShowGuideModal(true)}
-                  className="text-xs text-[#7d6d66] hover:text-[#9e3b2e]"
+                  className="text-xs text-[#7d6d66] hover:text-[#8a252c] cursor-pointer"
                 >
                   <Info className="w-3.5 h-3.5 mr-1" />
                   <span>Xem hướng dẫn chiêm nghiệm</span>
