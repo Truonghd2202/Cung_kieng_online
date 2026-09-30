@@ -50,20 +50,20 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif]">
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 pb-20">
+    <div className="screen-shell">
+      <main className="page-container max-w-5xl">
         {/* Breadcrumb Nav */}
-        <div className="flex items-center gap-2 text-xs text-[#8c7a72] mb-6">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted mb-6">
           <button
             onClick={onBackToCulture}
-            className="hover:text-[#9e3b2e] cursor-pointer transition-colors"
+            className="hover:text-accent cursor-pointer transition-colors"
           >
             Khám phá văn hóa
           </button>
           <span>›</span>
           <span>{article.region}</span>
           <span>›</span>
-          <span className="text-[#9e3b2e] font-semibold truncate max-w-[280px] sm:max-w-none">
+          <span className="text-accent font-semibold min-w-0 break-words">
             {article.title}
           </span>
         </div>
@@ -72,56 +72,52 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <Badge
             variant="terracotta"
-            className="px-3 py-0.5 text-xs font-semibold uppercase tracking-wider bg-[#faede2] text-[#9e3b2e] border-[#ebd7c8]"
+            className="px-3 py-0.5 text-xs font-semibold uppercase tracking-wider bg-surface text-accent border-line"
           >
             {article.region}
           </Badge>
 
           <Badge
             variant="secondary"
-            className="px-3 py-0.5 text-xs font-medium bg-[#fbf5ee] text-[#715f57] border-[#ecd9cb]"
+            className="px-3 py-0.5 text-xs font-medium bg-surface text-ink border-line"
           >
             {article.category}
           </Badge>
 
-          <div className="flex items-center gap-1.5 text-xs text-[#8c7a72] ml-1">
+          <div className="flex items-center gap-1.5 text-xs text-muted ml-1">
             <span>•</span>
-            <Clock className="w-3.5 h-3.5 text-[#9e3b2e]" />
+            <Clock className="w-3.5 h-3.5 text-accent" />
             <span>Thời lượng đọc: {article.readingTime}</span>
           </div>
         </div>
 
         {/* Article Title & Subtitle */}
-        <h1 className="font-['Noto_Serif',serif] font-bold text-3xl sm:text-4xl lg:text-[42px] text-[#2a211e] leading-tight mb-4">
+        <h1 className="page-title mb-4">
           {article.title}
         </h1>
 
-        <p className="text-base sm:text-lg text-[#685750] leading-relaxed max-w-3xl mb-8">
+        <p className="text-base sm:text-lg text-ink leading-relaxed max-w-3xl mb-8">
           {article.subtitle}
         </p>
 
         {/* Hero Artwork Image with Frame */}
-        <div className="rounded-3xl overflow-hidden bg-white border border-[#eddcd0] shadow-sm mb-10">
-          <div className="relative h-72 sm:h-96 md:h-[420px] overflow-hidden bg-[#faede2]">
+        <div className="rounded-card overflow-hidden bg-surface border border-line shadow-sm mb-10">
+          <div className="relative h-72 sm:h-96 md:h-[420px] overflow-hidden bg-surface">
             <img
               src={article.image}
               alt={article.title}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-
-            <div className="absolute top-4 right-4">
-              <span className="px-3 py-1 rounded-full bg-white/90 backdrop-blur-xs text-[11px] font-bold text-[#882f23] uppercase tracking-wider border border-[#e8cbba] shadow-xs">
-                Nội dung minh họa • Chờ kiểm chứng
-              </span>
-            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
           </div>
 
-          <div className="p-4 sm:p-5 bg-[#faf4ed] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[#7c6a62] border-t border-[#f0ded1]">
+          <div className="p-4 sm:p-5 bg-surface flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-muted border-t border-line">
             <span className="italic">{article.caption}</span>
-            <span className="font-medium text-[#9e3b2e] flex-shrink-0">
-              Bản quyền tư liệu Tin Lắm Tâm Linh
-            </span>
+            <div className="flex items-center gap-3 text-xs font-medium text-muted flex-shrink-0">
+              <span>Tư liệu Tin Lắm Tâm Linh</span>
+              <span>•</span>
+              <span className="text-muted/80">Khảo cứu văn hóa dân gian</span>
+            </div>
           </div>
         </div>
 
@@ -131,11 +127,11 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
           <div className="lg:col-span-8 space-y-10">
             {article.sections.map((section, idx) => (
               <section key={section.id} id={section.id} className="scroll-mt-24 space-y-4">
-                <h2 className="font-['Noto_Serif',serif] font-bold text-2xl sm:text-[26px] text-[#2c2220] leading-snug pb-2 border-b border-[#f1e3d6]">
+                <h2 className="section-title text-2xl sm:text-[26px] leading-snug pb-2 border-b border-line">
                   {section.title}
                 </h2>
 
-                <div className="space-y-4 text-base sm:text-[17px] text-[#4f423d] leading-[1.8] font-normal">
+                <div className="space-y-4 text-base sm:text-[17px] text-ink leading-[1.8] font-normal">
                   {section.paragraphs.map((para, pIdx) => (
                     <p key={pIdx}>{para}</p>
                   ))}
@@ -143,12 +139,12 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
 
                 {/* Highlight Quote Box */}
                 {section.quote && (
-                  <div className="my-6 p-6 rounded-2xl bg-[#faf1e8] border-l-4 border-[#9e3b2e] border-y border-r border-[#ecd5c4] shadow-2xs">
-                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-2">
+                  <div className="my-8 pl-6 border-l-2 border-gold">
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-2">
                       <Flower2 className="w-3.5 h-3.5" />
                       <span>Điểm nhấn văn hóa dân gian</span>
                     </div>
-                    <blockquote className="font-['Noto_Serif',serif] italic font-semibold text-base sm:text-lg text-[#2e2320] leading-relaxed">
+                    <blockquote className="font-display italic font-semibold text-base sm:text-lg text-ink leading-relaxed">
                       “{section.quote}”
                     </blockquote>
                   </div>
@@ -160,15 +156,15 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
                     {section.practicalCards.map((card, cIdx) => (
                       <div
                         key={cIdx}
-                        className="p-5 rounded-2xl bg-white border border-[#eddcd0] hover:border-[#dfc3af] transition-all shadow-2xs"
+                        className="py-5 border-t border-line"
                       >
                         <div className="flex items-center gap-2 mb-1.5">
-                          <span className="w-2 h-2 rounded-full bg-[#9e3b2e]" />
-                          <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2c211f]">
+                          <span className="w-2 h-2 rounded-full bg-action" />
+                          <h4 className="font-display font-bold text-base text-ink">
                             {card.title}
                           </h4>
                         </div>
-                        <p className="text-sm text-[#6c5b54] leading-relaxed pl-4">
+                        <p className="text-sm text-ink leading-relaxed pl-4">
                           {card.desc}
                         </p>
                       </div>
@@ -179,16 +175,16 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
             ))}
 
             {/* Editorial Principle & Verified Scholarly Citations Section */}
-            <div className="p-6 rounded-3xl bg-white border border-[#eddcd0] shadow-2xs space-y-4">
+            <div className="p-6 rounded-card bg-surface border border-line shadow-2xs space-y-4">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#faece1] text-[#9e3b2e] flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-8 h-8 rounded-full bg-surface text-accent flex items-center justify-center shrink-0 mt-0.5">
                   <BookOpen className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220]">
+                  <h3 className="font-display font-bold text-base text-ink">
                     Nguồn tư liệu & Căn cứ khảo cứu
                   </h3>
-                  <p className="text-xs text-[#73615a] leading-relaxed mt-0.5">
+                  <p className="text-sm text-muted leading-relaxed mt-0.5">
                     {article.editorialNote}
                   </p>
                 </div>
@@ -196,8 +192,8 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
 
               {/* Citations List */}
               {article.sources && article.sources.length > 0 && (
-                <div className="space-y-3 pt-3 border-t border-[#f1e3d7]">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e] flex items-center gap-1.5">
+                <div className="space-y-3 pt-3 border-t border-line">
+                  <div className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>Tài liệu tham khảo & trích dẫn chính thức</span>
                   </div>
@@ -206,24 +202,24 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
                     {article.sources.map((src, sIdx) => (
                       <div
                         key={sIdx}
-                        className="p-3.5 rounded-2xl bg-[#faf4ed]/70 border border-[#ecdacb] flex flex-col sm:flex-row sm:items-start justify-between gap-2"
+                        className="p-3.5 rounded-panel bg-surface/70 border border-line flex flex-col sm:flex-row sm:items-start justify-between gap-2"
                       >
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-xs sm:text-sm text-[#2a2220]">
+                            <span className="font-semibold text-xs sm:text-sm text-ink">
                               {src.title}
                             </span>
-                            <span className="text-xs text-[#8d7971]">
+                            <span className="text-xs text-muted">
                               — {src.author}
                             </span>
                           </div>
-                          <p className="text-xs text-[#6e5d56] leading-relaxed">
+                          <p className="text-sm text-ink leading-relaxed">
                             {src.annotation}
                           </p>
                         </div>
                         <Badge
                           variant="outline"
-                          className="shrink-0 text-[10px] uppercase font-semibold text-[#9e3b2e] border-[#ebd3c1] bg-white self-start"
+                          className="shrink-0 text-xs uppercase font-semibold text-accent border-line bg-surface self-start"
                         >
                           {src.sourceType}
                         </Badge>
@@ -235,12 +231,12 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
             </div>
 
             {/* Navigation Action Buttons Row */}
-            <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#eddcd0]">
+            <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-line">
               <Button
                 variant="outline"
                 size="pill"
                 onClick={onBackToCulture}
-                className="w-full sm:w-auto gap-2 text-sm border-[#e4ccba] text-[#786760] hover:text-[#9e3b2e]"
+                className="w-full sm:w-auto gap-2 text-sm border-line text-muted hover:text-accent"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Quay lại Khám phá</span>
@@ -262,8 +258,8 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
           <div className="lg:col-span-4 space-y-6">
             <div className="sticky top-28 space-y-6">
               {/* Table of Contents Card */}
-              <Card className="p-6 rounded-3xl bg-white border border-[#eddcd0] shadow-xs">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-4">
+              <Card className="p-6 rounded-card bg-surface border border-line shadow-xs">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-4">
                   <BookOpen className="w-4 h-4" />
                   <span>Mục lục bài viết</span>
                 </div>
@@ -273,9 +269,9 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
                     <button
                       key={section.id}
                       onClick={() => scrollToSection(section.id)}
-                      className="w-full text-left text-sm text-[#6a5953] hover:text-[#9e3b2e] py-1.5 px-2.5 rounded-xl hover:bg-[#faede2] transition-colors flex items-start gap-2 cursor-pointer font-medium"
+                      className="w-full text-left text-sm text-ink hover:text-accent py-1.5 px-2.5 rounded-xl hover:bg-surface transition-colors flex items-start gap-2 cursor-pointer font-medium"
                     >
-                      <span className="text-[#9e3b2e] font-mono text-xs mt-0.5">
+                      <span className="text-accent font-sans tabular-nums text-xs mt-0.5">
                         {idx + 1}.
                       </span>
                       <span>{section.title.replace(/^\d+\.\s*/, "")}</span>
@@ -285,13 +281,13 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
               </Card>
 
               {/* Recommendation Callout Box */}
-              <Card className="p-6 rounded-3xl bg-gradient-to-br from-[#faf0e6] to-[#faece1] border border-[#ebd5c3] shadow-xs">
-                <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-2">
+              <Card className="p-6 rounded-card bg-surface-soft border border-line shadow-xs">
+                <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-accent mb-2">
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>GỢI Ý TÍN HIỆU DÀNH CHO BẠN</span>
                 </div>
 
-                <p className="text-xs sm:text-sm text-[#6f5d56] leading-relaxed mb-4">
+                <p className="text-sm text-ink leading-relaxed mb-4">
                   Chiêm nghiệm quẻ phù trợ cho tâm trạng hôm nay của bạn, xem lại lời dặn của
                   cổ nhân để tìm thấy an định.
                 </p>
@@ -310,20 +306,20 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
         </div>
 
         {/* Bottom Related Articles Section */}
-        <div className="pt-12 border-t border-[#eddcd0]">
+        <div className="pt-12 border-t border-line">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-6">
             <div>
-              <div className="text-xs uppercase tracking-widest text-[#938279] font-semibold mb-1">
+              <div className="text-xs uppercase tracking-widest text-muted font-semibold mb-1">
                 TẬP TUYỂN THƯ TỊCH DÂN GIAN
               </div>
-              <h3 className="font-['Noto_Serif',serif] font-bold text-2xl text-[#2a2220]">
+              <h3 className="font-display font-bold text-2xl text-ink">
                 Khám phá tiếp các nét thiêng dân gian
               </h3>
             </div>
 
             <button
               onClick={onBackToCulture}
-              className="text-xs font-semibold text-[#9e3b2e] hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
+              className="text-xs font-semibold text-accent hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
             >
               <span>Xem tất cả chuyên đề</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -335,10 +331,10 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
               <Card
                 key={rel.id}
                 onClick={() => onSelectRelatedArticle(rel.id)}
-                className="rounded-3xl overflow-hidden bg-white border border-[#eddcd0] hover:border-[#dfc3af] hover:shadow-md transition-all duration-300 flex flex-col justify-between group cursor-pointer"
+                className="rounded-card overflow-hidden bg-surface border border-line hover:border-line hover:shadow-card transition-all duration-300 flex flex-col justify-between group cursor-pointer"
               >
                 <div>
-                  <div className="relative h-44 overflow-hidden bg-[#faede2]">
+                  <div className="relative h-44 overflow-hidden bg-surface">
                     <img
                       src={rel.image}
                       alt={rel.title}
@@ -346,28 +342,28 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                     <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
-                      <span className="px-2 py-0.5 rounded-full bg-black/60 text-[10px] font-semibold text-white">
+                      <span className="px-2 py-0.5 rounded-full bg-black/60 text-xs font-semibold text-white">
                         {rel.region}
                       </span>
-                      <span className="px-2 py-0.5 rounded-full bg-black/60 text-[10px] text-white/90">
+                      <span className="px-2 py-0.5 rounded-full bg-black/60 text-xs text-white/90">
                         {rel.category}
                       </span>
                     </div>
                   </div>
 
                   <div className="p-5">
-                    <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] leading-snug line-clamp-2 group-hover:text-[#9e3b2e] transition-colors mb-2">
+                    <h4 className="font-display font-bold text-base text-ink leading-snug line-clamp-2 group-hover:text-accent transition-colors mb-2">
                       {rel.title}
                     </h4>
-                    <p className="text-xs text-[#705f58] line-clamp-2 leading-relaxed">
+                    <p className="text-sm text-ink line-clamp-2 leading-relaxed">
                       {rel.excerpt}
                     </p>
                   </div>
                 </div>
 
-                <div className="px-5 py-3 border-t border-[#f4e8dc] flex items-center justify-between text-xs text-[#8c7a72]">
-                  <span className="text-[11px] italic text-[#998880]">Nội dung minh họa</span>
-                  <span className="text-[#9e3b2e] font-semibold flex items-center gap-1">
+                <div className="px-5 py-3 border-t border-line flex items-center justify-between text-xs text-muted">
+                  <span className="text-xs italic text-muted">Nội dung minh họa</span>
+                  <span className="text-accent font-semibold flex items-center gap-1">
                     <span>Tìm hiểu</span>
                     <ArrowRight className="w-3 h-3" />
                   </span>
@@ -377,15 +373,6 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
           </div>
         </div>
 
-        {/* Bottom Classical Serif Motto */}
-        <div className="text-center pt-14 border-t border-[#eddcd0] mt-16">
-          <p className="font-['Noto_Serif',serif] italic font-semibold text-lg sm:text-xl text-[#9e3b2e] mb-1.5">
-            “Tâm bình thế giới bình, lòng an vạn sự tỏ.”
-          </p>
-          <div className="text-xs uppercase tracking-widest text-[#938279] font-medium">
-            Thông điệp của Tin Lắm Tâm Linh
-          </div>
-        </div>
       </main>
     </div>
   );

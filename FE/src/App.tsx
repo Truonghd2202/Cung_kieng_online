@@ -1,37 +1,10 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { AppHeader, NavScreen } from "./components/AppHeader";
 import { AppFooter } from "./components/AppFooter";
 import { GuestScreen } from "./screens/GuestScreen";
 import { TodayScreen } from "./screens/TodayScreen";
-import { MoodCheckInScreen } from "./screens/MoodCheckInScreen";
-import { SignalLoadingScreen } from "./screens/SignalLoadingScreen";
-import { SignalResultScreen } from "./screens/SignalResultScreen";
-import { LoginScreen } from "./screens/LoginScreen";
-import { RegisterScreen } from "./screens/RegisterScreen";
-import { CompletionScreen } from "./screens/CompletionScreen";
-import { ForgotPasswordScreen } from "./screens/ForgotPasswordScreen";
-import { ExperienceScreen } from "./screens/ExperienceScreen";
-import { CultureScreen } from "./screens/CultureScreen";
-import { CultureDetailScreen } from "./screens/CultureDetailScreen";
-import { CulturalCalendarScreen } from "./screens/CulturalCalendarScreen";
-import { EventDetailScreen } from "./screens/EventDetailScreen";
-import { GratitudeScreen } from "./screens/GratitudeScreen";
-import { XinXamScreen } from "./screens/XinXamScreen";
-import { WishScreen, WishTopic } from "./screens/WishScreen";
-import { RitualGuideScreen } from "./screens/RitualGuideScreen";
-import { RitualDetailScreen } from "./screens/RitualDetailScreen";
-import { ZenScreen } from "./screens/ZenScreen";
-import { XinKeoScreen } from "./screens/XinKeoScreen";
-import { GoodDayScreen } from "./screens/GoodDayScreen";
-import { HoroscopeScreen } from "./screens/HoroscopeScreen";
-import { MembershipScreen } from "./screens/MembershipScreen";
-import { SettingsScreen } from "./screens/SettingsScreen";
-import {
-  AccountScreen,
-  SavedSignalItem,
-  SavedXinXamItem,
-  SavedWishItem,
-} from "./screens/AccountScreen";
+import type { WishTopic } from "./screens/WishScreen";
+import type { SavedSignalItem, SavedXinXamItem, SavedWishItem } from "./screens/AccountScreen";
 import {
   MoodKey,
   getSignalById,
@@ -48,6 +21,31 @@ import {
   loadCalendarPersonalNotes,
   saveCalendarPersonalNotes,
 } from "./data/calendarData";
+
+const MoodCheckInScreen = lazy(() => import("./screens/MoodCheckInScreen").then((module) => ({ default: module.MoodCheckInScreen })));
+const SignalLoadingScreen = lazy(() => import("./screens/SignalLoadingScreen").then((module) => ({ default: module.SignalLoadingScreen })));
+const SignalResultScreen = lazy(() => import("./screens/SignalResultScreen").then((module) => ({ default: module.SignalResultScreen })));
+const LoginScreen = lazy(() => import("./screens/LoginScreen").then((module) => ({ default: module.LoginScreen })));
+const RegisterScreen = lazy(() => import("./screens/RegisterScreen").then((module) => ({ default: module.RegisterScreen })));
+const CompletionScreen = lazy(() => import("./screens/CompletionScreen").then((module) => ({ default: module.CompletionScreen })));
+const ForgotPasswordScreen = lazy(() => import("./screens/ForgotPasswordScreen").then((module) => ({ default: module.ForgotPasswordScreen })));
+const ExperienceScreen = lazy(() => import("./screens/ExperienceScreen").then((module) => ({ default: module.ExperienceScreen })));
+const CultureScreen = lazy(() => import("./screens/CultureScreen").then((module) => ({ default: module.CultureScreen })));
+const CultureDetailScreen = lazy(() => import("./screens/CultureDetailScreen").then((module) => ({ default: module.CultureDetailScreen })));
+const CulturalCalendarScreen = lazy(() => import("./screens/CulturalCalendarScreen").then((module) => ({ default: module.CulturalCalendarScreen })));
+const EventDetailScreen = lazy(() => import("./screens/EventDetailScreen").then((module) => ({ default: module.EventDetailScreen })));
+const GratitudeScreen = lazy(() => import("./screens/GratitudeScreen").then((module) => ({ default: module.GratitudeScreen })));
+const XinXamScreen = lazy(() => import("./screens/XinXamScreen").then((module) => ({ default: module.XinXamScreen })));
+const WishScreen = lazy(() => import("./screens/WishScreen").then((module) => ({ default: module.WishScreen })));
+const RitualGuideScreen = lazy(() => import("./screens/RitualGuideScreen").then((module) => ({ default: module.RitualGuideScreen })));
+const RitualDetailScreen = lazy(() => import("./screens/RitualDetailScreen").then((module) => ({ default: module.RitualDetailScreen })));
+const ZenScreen = lazy(() => import("./screens/ZenScreen").then((module) => ({ default: module.ZenScreen })));
+const XinKeoScreen = lazy(() => import("./screens/XinKeoScreen").then((module) => ({ default: module.XinKeoScreen })));
+const GoodDayScreen = lazy(() => import("./screens/GoodDayScreen").then((module) => ({ default: module.GoodDayScreen })));
+const HoroscopeScreen = lazy(() => import("./screens/HoroscopeScreen").then((module) => ({ default: module.HoroscopeScreen })));
+const MembershipScreen = lazy(() => import("./screens/MembershipScreen").then((module) => ({ default: module.MembershipScreen })));
+const SettingsScreen = lazy(() => import("./screens/SettingsScreen").then((module) => ({ default: module.SettingsScreen })));
+const AccountScreen = lazy(() => import("./screens/AccountScreen").then((module) => ({ default: module.AccountScreen })));
 
 export type SavedEntry = SavedSignalItem;
 
@@ -356,7 +354,16 @@ export default function App() {
 
   // Bảo vệ màn Account: chỉ cho người đã đăng nhập truy cập
   useEffect(() => {
-    if (screen === "account" && !currentUser) {
+    const storedUser = (() => {
+      try {
+        const stored = localStorage.getItem("tltl-current-user");
+        return stored ? JSON.parse(stored) : null;
+      } catch {
+        return null;
+      }
+    })();
+
+    if (screen === "account" && !currentUser && !storedUser) {
       navigateTo("login");
     }
   }, [screen, currentUser]);
@@ -476,10 +483,27 @@ export default function App() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, [currentUser, isCheckedIn, activeSignal.id, currentSignalId, selectedMood]);
 
-  const navigateTo = (newScreen: NavScreen, signalIdParam?: string) => {
+  const navigateTo = (
+    newScreen: NavScreen,
+    signalIdParam?: string,
+    authenticatedUser?: UserProfile | null
+  ) => {
     let targetScreen = newScreen;
+    const effectiveUser =
+      authenticatedUser !== undefined
+        ? authenticatedUser
+        : currentUser ||
+          (() => {
+            try {
+              const stored = localStorage.getItem("tltl-current-user");
+              return stored ? JSON.parse(stored) : null;
+            } catch {
+              return null;
+            }
+          })();
+
     // Chuyển hướng về login nếu chưa đăng nhập mà muốn vào account
-    if (targetScreen === "account" && !currentUser) {
+    if (targetScreen === "account" && !effectiveUser) {
       targetScreen = "login";
     }
     setScreen(targetScreen);
@@ -650,7 +674,7 @@ export default function App() {
     setCurrentSignalId(userSession.signalId);
     setJournalText("");
 
-    navigateTo("account");
+    navigateTo("account", undefined, user);
   };
 
   const handleLogout = () => {
@@ -798,7 +822,7 @@ export default function App() {
     : false;
 
   return (
-    <div className={`min-h-screen flex flex-col bg-[#fcf8f2] dark:bg-[#120d0b] text-[#2e2624] dark:text-[#f3eae4] font-['Be_Vietnam_Pro',sans-serif] ${dark ? "dark" : ""}`}>
+    <div className={`app-shell ${dark ? "dark" : ""}`}>
       {/* Universal Header */}
       <AppHeader
         currentScreen={screen}
@@ -811,7 +835,8 @@ export default function App() {
       />
 
       {/* Screen Router */}
-      <div className="flex-1">
+      <div className="app-screen-outlet">
+        <Suspense fallback={<div className="page-container max-w-7xl text-sm text-muted" role="status">Đang mở nội dung…</div>}>
         {screen === "guest" && (
           <GuestScreen
             onStartSignal={handleStartSignalFromGuest}
@@ -1257,10 +1282,11 @@ export default function App() {
             }}
           />
         )}
+        </Suspense>
       </div>
 
-      {/* Universal Footer */}
-      <AppFooter onNavigate={navigateTo} />
+      {/* Universal Footer - Ẩn trên màn Đăng nhập theo yêu cầu */}
+      {screen !== "login" && <AppFooter onNavigate={navigateTo} />}
     </div>
   );
 }

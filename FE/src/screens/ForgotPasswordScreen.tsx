@@ -26,55 +26,54 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif] flex flex-col items-center justify-center p-4 sm:p-6">
+    <div className="screen-shell screen-shell--auth">
       {/* Top watermark banner */}
-      <div className="flex items-center gap-3 mb-6 text-xs uppercase tracking-[0.2em] text-[#938279] font-medium select-none">
-        <span className="w-12 h-px bg-[#dfcebe]"></span>
-        <span className="flex items-center gap-1.5 text-[#9e3b2e]">
+      <div className="flex flex-wrap justify-center items-center gap-3 mb-6 text-xs uppercase tracking-[0.2em] text-muted font-medium select-none">
+        <span className="w-12 h-px bg-surface-soft"></span>
+        <span className="flex items-center gap-1.5 text-accent">
           <span className="text-sm">✤</span>
           <span>Hồn Việt Đương Đại • Tĩnh Tâm</span>
         </span>
-        <span className="w-12 h-px bg-[#dfcebe]"></span>
+        <span className="w-12 h-px bg-surface-soft"></span>
       </div>
 
       {/* Main Recovery Card */}
-      <Card className="w-full max-w-lg bg-white border border-[#eddcd0] rounded-3xl p-6 sm:p-10 shadow-lg relative overflow-hidden">
+      <Card className="w-full max-w-lg bg-surface border border-line rounded-card p-6 sm:p-10 shadow-card relative overflow-hidden">
         {/* Subtle decorative top border accent */}
-        <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#9e3b2e] via-[#be8e5a] to-[#9e3b2e]" />
+        <div className="absolute top-0 inset-x-0 h-1.5 bg-action" />
         
         {/* Top subtle decorative bloom background */}
-        <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-[#fbece1]/60 pointer-events-none" />
 
         <div className="relative">
           {/* Badge at top of card */}
           <div className="mb-4">
             <Badge
               variant="terracotta"
-              className="gap-1.5 px-3 py-1 text-xs font-semibold tracking-wider uppercase bg-[#faece1] text-[#9e3b2e] border-[#eedcd0]"
+              className="gap-1.5 px-3 py-1 text-xs font-semibold tracking-wider uppercase bg-surface text-accent border-line"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-[#9e3b2e]"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-action"></span>
               <span>Khôi phục quyền truy cập</span>
             </Badge>
           </div>
 
           {/* Heading */}
-          <h1 className="font-['Noto_Serif',serif] font-bold text-2xl sm:text-3xl text-[#2a211e] leading-snug mb-3">
+          <h1 className="page-title mb-3">
             Quên mật khẩu?
           </h1>
 
-          <p className="text-sm sm:text-base text-[#705e57] leading-relaxed mb-6">
+          <p className="text-sm sm:text-base text-ink leading-relaxed mb-6">
             Nhập địa chỉ email của bạn. Chức năng khôi phục mật khẩu sẽ có khi kết nối tài khoản và hoàn thiện máy chủ Backend.
           </p>
 
           {submitted ? (
             <div className="space-y-6">
-              <div className="p-5 rounded-2xl bg-[#fbf5ee] border border-[#ecd9cb] flex items-start gap-3.5">
-                <CheckCircle2 className="w-5 h-5 text-[#9e3b2e] flex-shrink-0 mt-0.5" />
+              <div className="p-5 rounded-panel bg-surface border border-line flex items-start gap-3.5">
+                <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
                 <div className="text-sm leading-relaxed">
-                  <h4 className="font-semibold text-[#2a2220] mb-1">
+                  <h4 className="font-semibold text-ink mb-1">
                     Thông báo bản demo
                   </h4>
-                  <p className="text-[#6d5b54]">
+                  <p className="text-ink">
                     Chức năng khôi phục sẽ có khi kết nối tài khoản. Hiện tại bản demo lưu trữ trên trình duyệt và không gửi email thật. Bạn có thể quay lại đăng nhập với tài khoản demo.
                   </p>
                 </div>
@@ -94,24 +93,26 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
               {/* Email Input Field */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-sm font-bold text-[#352926]">
+                  <label htmlFor="recovery-email" className="text-sm font-bold text-ink">
                     Địa chỉ email của bạn
                   </label>
-                  <span className="text-xs text-[#95837b]">
+                  <span className="text-xs text-muted">
                     Định dạng email chuẩn
                   </span>
                 </div>
 
                 <div className="relative">
                   <input
+                    id="recovery-email"
+                    autoComplete="email"
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="tenban@mienanlac.vn"
-                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#faf3ec]/70 border border-[#eddcd0] text-sm sm:text-base text-[#2e2624] placeholder-[#a6968e] focus:outline-none focus:ring-1 focus:ring-[#9e3b2e]"
+                    className="w-full min-h-12 pl-10 pr-4 py-3 rounded-control bg-surface border border-line text-base text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-accent"
                   />
-                  <Mail className="w-4 h-4 text-[#9d8a82] absolute left-3.5 top-3.5" />
+                  <Mail className="w-4 h-4 text-muted absolute left-3.5 top-3.5" />
                 </div>
               </div>
 
@@ -131,7 +132,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
                 <button
                   type="button"
                   onClick={onBackToLogin}
-                  className="text-sm font-semibold text-[#8b7972] hover:text-[#9e3b2e] inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="text-sm font-semibold text-muted hover:text-accent inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Quay lại Đăng nhập</span>
@@ -143,7 +144,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
       </Card>
 
       {/* Bottom note outside card */}
-      <div className="mt-6 text-center text-xs text-[#95837b] max-w-sm leading-relaxed">
+      <div className="mt-6 text-center text-xs text-muted max-w-sm leading-relaxed">
         Nội dung bản demo được lưu trên trình duyệt này.
       </div>
     </div>

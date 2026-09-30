@@ -34,7 +34,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
   // Display & Ambient options
   const [viewMode, setViewMode] = useState<"2D" | "3D">("2D");
   const [soundEnabled, setSoundEnabled] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [isLampLit, setIsLampLit] = useState(false);
 
   // Timer & Breathing Loop (3 minutes = 180 seconds)
@@ -219,7 +219,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
       const centerY = height / 2;
 
       // Draw 3D rotating lotus / meditation platform
-      angle += reducedMotion ? 0.002 : 0.008;
+      angle += reducedMotion ? 0 : 0.008;
       const pulse =
         breathPhase === "inhale"
           ? 1.08
@@ -277,13 +277,13 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
         }
       });
 
-      animationFrameId = requestAnimationFrame(render);
+      if (!reducedMotion) animationFrameId = requestAnimationFrame(render);
     };
 
     render();
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
   }, [viewMode, breathPhase, isLampLit, reducedMotion]);
 
@@ -306,30 +306,30 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif]">
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-20">
+    <div className="screen-shell">
+      <main className="page-container max-w-6xl">
         {/* Top Breadcrumb & Tag */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-[#8a7971]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-muted">
           <div className="flex items-center gap-2">
             <span
               onClick={onBackToExperience}
-              className="hover:text-[#9e3b2e] cursor-pointer transition-colors"
+              className="hover:text-accent cursor-pointer transition-colors"
             >
               Trải nghiệm
             </span>
             <span>/</span>
             <span
               onClick={onBackToExperience}
-              className="hover:text-[#9e3b2e] cursor-pointer transition-colors"
+              className="hover:text-accent cursor-pointer transition-colors"
             >
               Khoảng lặng
             </span>
             <span>/</span>
-            <span className="text-[#9e3b2e] font-semibold">Không gian tĩnh tâm</span>
+            <span className="text-accent font-semibold">Không gian tĩnh tâm</span>
           </div>
 
-          <div className="flex items-center gap-1.5 uppercase font-semibold text-[11px] text-[#938279]">
-            <span className="w-2 h-2 rounded-full bg-[#9e3b2e] inline-block"></span>
+          <div className="flex items-center gap-1.5 uppercase font-semibold text-xs text-muted">
+            <span className="w-2 h-2 rounded-full bg-action inline-block"></span>
             <span>TRẢI NGHIỆM TƯƠNG TÁC • NẾP SỐNG CHẬM • PHI TÔN GIÁO & PHI TIÊN TRI</span>
           </div>
         </div>
@@ -338,37 +338,37 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="font-['Noto_Serif',serif] font-bold text-2xl sm:text-3xl lg:text-[40px] text-[#2a2220] leading-tight mb-2.5">
+              <h1 className="page-title mb-2.5">
                 Không gian tĩnh tâm: Lắng đọng tâm trí giữa đời sống hiện đại
               </h1>
-              <p className="text-sm sm:text-base text-[#6f5e57] leading-relaxed max-w-3xl">
+              <p className="text-sm sm:text-base text-ink leading-relaxed max-w-3xl">
                 Một khoảng lặng tương tác tượng trưng lấy cảm hứng từ mỹ thuật và kiến trúc dân
                 gian mộc mạc của hiên nhà Việt. Dành cho bạn 3 phút buông xả căng thẳng, chú tâm
                 vào hơi thở mà không vướng bận lễ nghi.
               </p>
             </div>
 
-            <div className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white border border-[#eddcd0] shrink-0 text-xs text-[#806f67] shadow-2xs">
-              <Flower2 className="w-4 h-4 text-[#9e3b2e]" />
+            <div className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-panel bg-surface border border-line shrink-0 text-xs text-muted shadow-2xs">
+              <Flower2 className="w-4 h-4 text-accent" />
               <div className="text-left">
-                <div className="font-bold text-[#2a2220]">Tin Lắm Tâm Linh</div>
-                <div className="text-[10px] text-[#9a8981]">Khoảng lặng thảnh thơi</div>
+                <div className="font-bold text-ink">Tin Lắm Tâm Linh</div>
+                <div className="text-xs text-muted">Khoảng lặng thảnh thơi</div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Interactive Controls Bar */}
-        <div className="p-3 sm:p-4 rounded-2xl bg-[#fbece1]/50 border border-[#ecd5c4] mb-6 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="p-3 sm:p-4 rounded-panel bg-surface/50 border border-line mb-6 flex flex-wrap items-center justify-between gap-3 text-xs">
           {/* Mode Switcher */}
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-[#6f5e57]">HIỂN THỊ:</span>
+            <span className="font-semibold text-ink">HIỂN THỊ:</span>
             <button
               onClick={() => setViewMode("2D")}
               className={`px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                 viewMode === "2D"
-                  ? "bg-[#9e3b2e] text-white shadow-2xs font-semibold"
-                  : "bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#dfc3af]"
+                  ? "bg-action text-white shadow-2xs font-semibold"
+                  : "bg-surface border border-line text-ink hover:border-line"
               }`}
             >
               <span>Chế độ 2D hiên nhà</span>
@@ -377,8 +377,8 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
               onClick={() => setViewMode("3D")}
               className={`px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                 viewMode === "3D"
-                  ? "bg-[#9e3b2e] text-white shadow-2xs font-semibold"
-                  : "bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#dfc3af]"
+                  ? "bg-action text-white shadow-2xs font-semibold"
+                  : "bg-surface border border-line text-ink hover:border-line"
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
@@ -392,8 +392,8 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
               onClick={() => setSoundEnabled(!soundEnabled)}
               className={`px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 cursor-pointer ${
                 soundEnabled
-                  ? "bg-[#9e3b2e] text-white border-[#9e3b2e] font-semibold shadow-2xs"
-                  : "bg-white border-[#eddcd0] text-[#6d5c55] hover:border-[#dfc3af]"
+                  ? "bg-action text-white border-accent font-semibold shadow-2xs"
+                  : "bg-surface border-line text-ink hover:border-line"
               }`}
             >
               {soundEnabled ? (
@@ -403,7 +403,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
                 </>
               ) : (
                 <>
-                  <VolumeX className="w-3.5 h-3.5 text-[#a19087]" />
+                  <VolumeX className="w-3.5 h-3.5 text-muted" />
                   <span>Âm thanh tự nhiên: Tắt</span>
                 </>
               )}
@@ -411,23 +411,23 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
 
             <button
               onClick={() => setReducedMotion(!reducedMotion)}
-              className="px-3 py-1.5 rounded-full bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#dfc3af] flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-1.5 rounded-full bg-surface border border-line text-ink hover:border-line flex items-center gap-1.5 cursor-pointer"
             >
-              <Wind className="w-3.5 h-3.5 text-[#9e3b2e]" />
+              <Wind className="w-3.5 h-3.5 text-accent" />
               <span>Chuyển động: {reducedMotion ? "Tối thiểu" : "Mặc định"}</span>
             </button>
           </div>
         </div>
 
         {/* 16:9 Cinematic Canvas Scene */}
-        <div className="relative aspect-[16/9] w-full rounded-3xl overflow-hidden border border-[#ecd5c4] shadow-md bg-[#161211] mb-8 select-none">
+        <div className="relative h-[560px] sm:h-[600px] lg:h-auto lg:aspect-[16/9] w-full rounded-card overflow-hidden border border-line shadow-md bg-surface-soft mb-8 select-none">
           {viewMode === "2D" ? (
             <>
               {/* Background Visual (Vietnamese Courtyard Veranda) */}
               <img
                 src="/images/temple_bac_bo.jpg"
                 alt="Hiên nhà Việt tĩnh lặng"
-                className={`w-full h-full object-cover transition-all duration-1000 ${
+                className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
                   zenState === "active" ? "scale-105 filter blur-xs brightness-75" : "brightness-90"
                 }`}
               />
@@ -447,7 +447,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
               onClick={() => setIsLampLit(!isLampLit)}
               className={`px-3.5 py-1.5 rounded-full text-xs font-semibold backdrop-blur-md border transition-all flex items-center gap-1.5 cursor-pointer ${
                 isLampLit
-                  ? "bg-amber-500/90 text-white border-amber-300 shadow-md shadow-amber-500/30"
+                  ? "bg-amber-500/90 text-white border-gold/40 shadow-md shadow-amber-500/30"
                   : "bg-black/50 text-white/90 border-white/20 hover:bg-black/70"
               }`}
             >
@@ -464,20 +464,20 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
           <div className="absolute inset-0 z-10 flex items-center justify-center p-4">
             {/* ================= STATE 1: READY ================= */}
             {zenState === "ready" && (
-              <div className="max-w-md w-full p-6 sm:p-8 rounded-3xl bg-[#fffdfa]/95 backdrop-blur-md border border-[#eddcd0] shadow-xl text-center">
-                <div className="w-12 h-12 rounded-full bg-[#fbf3ec] border border-[#ecd9cb] mx-auto mb-3 flex items-center justify-center text-[#9e3b2e]">
+              <div className="max-w-md w-full p-6 sm:p-8 rounded-card bg-surface/95 backdrop-blur-md border border-line shadow-xl text-center">
+                <div className="w-12 h-12 rounded-full bg-surface border border-line mx-auto mb-3 flex items-center justify-center text-accent">
                   <Flower2 className="w-6 h-6" />
                 </div>
 
-                <div className="text-xs uppercase font-bold tracking-widest text-[#9e3b2e] mb-1.5">
+                <div className="text-xs uppercase font-bold tracking-widest text-accent mb-1.5">
                   KHOẢNH KHẮC AN TRÚ
                 </div>
 
-                <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220] mb-3">
+                <h2 className="section-title text-xl sm:text-2xl mb-3">
                   Bạn đã sẵn sàng cho 3 phút an trú?
                 </h2>
 
-                <p className="text-xs sm:text-sm text-[#6c5a52] leading-relaxed mb-6">
+                <p className="text-sm text-ink leading-relaxed mb-6">
                   Thả lỏng đôi vai, nới lỏng cơ mặt và để nhịp thở diễn ra tự nhiên. Hãy cho phép
                   bản thân tạm gác lại mọi âu lo.
                 </p>
@@ -486,7 +486,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
                   variant="default"
                   size="lg"
                   onClick={handleStartZen}
-                  className="w-full py-3.5 text-sm font-semibold gap-2 shadow-sm rounded-2xl"
+                  className="w-full py-3.5 text-sm font-semibold gap-2 shadow-sm rounded-panel"
                 >
                   <span>Bắt đầu 3 phút tĩnh tâm</span>
                   <ArrowRight className="w-4 h-4" />
@@ -496,34 +496,34 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
 
             {/* ================= STATE 2: ACTIVE (BREATHING & COUNTDOWN) ================= */}
             {zenState === "active" && (
-              <div className="max-w-md w-full p-6 sm:p-8 rounded-3xl bg-[#1f1917]/90 backdrop-blur-md border border-white/10 shadow-2xl text-center text-white">
+              <div className="max-w-md w-full p-6 sm:p-8 rounded-card bg-inverse/95 backdrop-blur-md border border-white/10 shadow-2xl text-center text-white">
                 {/* Breathing Ring Visualizer */}
                 <div className="relative w-36 h-36 mx-auto mb-6 flex items-center justify-center">
                   <div
                     className={`absolute inset-0 rounded-full border-2 transition-all duration-1000 ${
                       breathPhase === "inhale"
-                        ? "border-[#d88476] scale-110 shadow-lg shadow-[#9e3b2e]/40"
+                        ? "border-accent scale-110 shadow-lg shadow-card"
                         : breathPhase === "hold"
-                        ? "border-amber-400 scale-105 shadow-md shadow-amber-400/30"
-                        : "border-[#7cae9e] scale-95 shadow-sm"
+                        ? "border-gold/40 scale-105 shadow-md shadow-amber-400/30"
+                        : "border-success scale-95 shadow-sm"
                     }`}
                   />
                   <div className="text-center z-10">
-                    <div className="font-mono text-2xl font-bold tracking-tight text-white mb-0.5">
+                    <div className="font-sans tabular-nums text-2xl font-bold tracking-tight text-white mb-0.5">
                       {formatTime(secondsRemaining)}
                     </div>
-                    <div className="text-[11px] text-white/60">03:00</div>
+                    <div className="text-xs text-white/60">03:00</div>
                   </div>
                 </div>
 
                 {/* Breathing Text Guide */}
                 <div className="mb-6">
-                  <div className="text-base sm:text-lg font-['Noto_Serif',serif] font-bold text-[#f7deda] mb-1">
+                  <div className="text-base sm:text-lg font-display font-bold text-on-inverse mb-1">
                     {breathPhase === "inhale" && "Hít vào nhẹ nhàng..."}
                     {breathPhase === "hold" && "Giữ hơi an định..."}
                     {breathPhase === "exhale" && "Thở ra thảnh thơi..."}
                   </div>
-                  <p className="text-xs text-white/70 italic">
+                  <p className="text-sm text-white/70 italic">
                     {breathPhase === "inhale" && "Cảm nhận luồng dưỡng khí mát lành tràn ngập thân tâm."}
                     {breathPhase === "hold" && "Tĩnh tại trong khoảnh khắc hiện tiền trọn vẹn."}
                     {breathPhase === "exhale" && "Buông bỏ mọi căng thẳng theo từng nhịp thở êm."}
@@ -552,20 +552,20 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
 
             {/* ================= STATE 3: COMPLETED ================= */}
             {zenState === "completed" && (
-              <div className="max-w-md w-full p-6 sm:p-8 rounded-3xl bg-[#fffdfa]/95 backdrop-blur-md border border-[#eddcd0] shadow-xl text-center">
-                <div className="w-14 h-14 rounded-full bg-[#fbf3ec] border border-[#ecd9cb] mx-auto mb-3 flex items-center justify-center text-[#9e3b2e] shadow-2xs">
+              <div className="max-w-md w-full p-6 sm:p-8 rounded-card bg-surface/95 backdrop-blur-md border border-line shadow-xl text-center">
+                <div className="w-14 h-14 rounded-full bg-surface border border-line mx-auto mb-3 flex items-center justify-center text-accent shadow-2xs">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
 
-                <div className="text-xs uppercase font-bold tracking-widest text-[#9e3b2e] mb-1.5">
+                <div className="text-xs uppercase font-bold tracking-widest text-accent mb-1.5">
                   KHOẢNH KHẮC HOÀN THÀNH
                 </div>
 
-                <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220] mb-2.5">
+                <h2 className="section-title text-xl sm:text-2xl mb-2.5">
                   Khoảnh khắc an tĩnh đã trọn vẹn
                 </h2>
 
-                <p className="text-xs sm:text-sm text-[#6c5a52] leading-relaxed mb-6">
+                <p className="text-sm text-ink leading-relaxed mb-6">
                   Tâm đã lắng, lòng đã nhẹ. Mang theo sự an định này bước vào những khoảnh khắc
                   tiếp theo của ngày mới bằng thái độ an hòa và thấu suốt.
                 </p>
@@ -598,40 +598,40 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
 
         {/* 3 Mindful Living Pillars */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card className="p-6 rounded-3xl bg-white border border-[#eddcd0] shadow-2xs">
-            <div className="w-10 h-10 rounded-2xl bg-[#faede2] text-[#9e3b2e] flex items-center justify-center mb-4">
+          <Card className="p-6 rounded-card bg-surface border border-line shadow-2xs">
+            <div className="w-10 h-10 rounded-panel bg-surface text-accent flex items-center justify-center mb-4">
               <Flower2 className="w-5 h-5" />
             </div>
-            <h3 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] mb-2">
+            <h3 className="font-display font-bold text-base text-ink mb-2">
               01. Thả lỏng thân thể
             </h3>
-            <p className="text-xs sm:text-sm text-[#6e5d56] leading-relaxed">
+            <p className="text-sm text-ink leading-relaxed">
               Ngồi thẳng lưng tự nhiên, thả lỏng bờ vai và khớp hàm. Để trọng lực nâng đỡ thân thể
               mà không gồng cứng hay tạo áp lực.
             </p>
           </Card>
 
-          <Card className="p-6 rounded-3xl bg-white border border-[#eddcd0] shadow-2xs">
-            <div className="w-10 h-10 rounded-2xl bg-[#faede2] text-[#9e3b2e] flex items-center justify-center mb-4">
+          <Card className="p-6 rounded-card bg-surface border border-line shadow-2xs">
+            <div className="w-10 h-10 rounded-panel bg-surface text-accent flex items-center justify-center mb-4">
               <Wind className="w-5 h-5" />
             </div>
-            <h3 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] mb-2">
+            <h3 className="font-display font-bold text-base text-ink mb-2">
               02. Nhận diện hơi thở
             </h3>
-            <p className="text-xs sm:text-sm text-[#6e5d56] leading-relaxed">
+            <p className="text-sm text-ink leading-relaxed">
               Chỉ đơn giản nhận biết hơi thở vào và hơi thở ra. Khi tâm trí đi lang thang, nhẹ
               nhàng mỉm cười và đưa sự chú ý trở về luồng dưỡng khí.
             </p>
           </Card>
 
-          <Card className="p-6 rounded-3xl bg-white border border-[#eddcd0] shadow-2xs">
-            <div className="w-10 h-10 rounded-2xl bg-[#faede2] text-[#9e3b2e] flex items-center justify-center mb-4">
+          <Card className="p-6 rounded-card bg-surface border border-line shadow-2xs">
+            <div className="w-10 h-10 rounded-panel bg-surface text-accent flex items-center justify-center mb-4">
               <Sparkles className="w-5 h-5" />
             </div>
-            <h3 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] mb-2">
+            <h3 className="font-display font-bold text-base text-ink mb-2">
               03. Nuôi dưỡng an tĩnh
             </h3>
-            <p className="text-xs sm:text-sm text-[#6e5d56] leading-relaxed">
+            <p className="text-sm text-ink leading-relaxed">
               Sự an định không đến từ việc cưỡng ép tâm trí ngừng suy nghĩ, mà đến từ sự chấp
               nhận bao dung trước mọi trạng thái đang hiện diện.
             </p>
@@ -639,16 +639,16 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
         </div>
 
         {/* Bottom Pledge Banner */}
-        <Card className="p-6 rounded-3xl bg-[#fbece1]/70 border border-[#ecd5c4] mb-12 shadow-2xs">
+        <Card className="p-6 rounded-card bg-surface/70 border border-line mb-12 shadow-2xs">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#faede2] border border-[#ecd9cb] flex items-center justify-center text-[#9e3b2e] shrink-0 mt-0.5">
+            <div className="w-12 h-12 rounded-panel bg-surface border border-line flex items-center justify-center text-accent shrink-0 mt-0.5">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-1.5">
+              <div className="text-xs font-bold uppercase tracking-wider text-accent mb-1.5">
                 NGUYÊN TẮC KHÔNG GIAN TĨNH TÂM & MINH BẠCH VĂN HÓA
               </div>
-              <p className="text-xs sm:text-sm text-[#6c5b54] leading-relaxed max-w-4xl">
+              <p className="text-sm text-ink leading-relaxed max-w-4xl">
                 Không gian này được tạo ra hoàn toàn phi thương mại và phi tôn giáo, nhằm phục vụ sự
                 an định tinh thần và tình yêu di sản văn hóa Việt của người trẻ hiện đại. Tuyệt đối
                 không thay thế các nghi lễ thực tế ngoài đời, không có tính năng cúng dường, quyên
@@ -659,11 +659,8 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
         </Card>
 
         {/* Footer Quote */}
-        <div className="text-center pt-6 border-t border-[#eddcd0]">
-          <p className="font-['Noto_Serif',serif] italic font-semibold text-lg text-[#9e3b2e] mb-1.5">
-            “Tâm bình thế giới bình, lòng an vạn sự tỏ.”
-          </p>
-          <div className="text-xs uppercase tracking-widest text-[#938279] font-medium">
+        <div className="text-center pt-6 border-t border-line">
+          <div className="text-xs uppercase tracking-widest text-muted font-medium">
             © {new Date().getFullYear()} Tin Lắm Tâm Linh. Mọi quyền được bảo lưu.
           </div>
         </div>

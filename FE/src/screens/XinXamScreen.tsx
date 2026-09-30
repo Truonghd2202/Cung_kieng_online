@@ -111,38 +111,38 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
       ));
 
   return (
-    <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif]">
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 pb-20">
+    <div className="screen-shell">
+      <main className="page-container max-w-5xl">
         {/* =========================================================================
             BƯỚC 1: KHỞI TÂM NGUYỆN (IMAGE 1)
            ========================================================================= */}
         {step === 1 && (
           <div>
             {/* Top Breadcrumb & Step Badge */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 text-xs text-[#8a7971]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 text-xs text-muted">
               <div className="flex items-center gap-2">
                 <span
                   onClick={onBackToExperienceHome}
-                  className="hover:text-[#9e3b2e] cursor-pointer transition-colors"
+                  className="hover:text-accent cursor-pointer transition-colors"
                 >
                   Trải nghiệm
                 </span>
                 <span>/</span>
-                <span className="text-[#9e3b2e] font-semibold">Xin xăm văn hóa</span>
+                <span className="text-accent font-semibold">Xin xăm văn hóa</span>
               </div>
 
               <div className="flex items-center gap-2.5">
                 {onGoToWish && (
                   <button
                     onClick={onGoToWish}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fbf3ec] border border-[#ecd9cb] text-xs font-medium text-[#9e3b2e] hover:bg-[#faede2] transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface border border-line text-xs font-medium text-accent hover:bg-surface transition-colors cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Gửi gắm điều ước</span>
                   </button>
                 )}
-                <div className="flex items-center gap-1.5 uppercase font-semibold text-[11px] text-[#938279]">
-                  <span className="w-2 h-2 rounded-full bg-[#9e3b2e] inline-block"></span>
+                <div className="flex items-center gap-1.5 uppercase font-semibold text-xs text-muted">
+                  <span className="w-2 h-2 rounded-full bg-action inline-block"></span>
                   <span>BƯỚC 1 / 3 • KHỞI TÂM NGUYỆN</span>
                 </div>
               </div>
@@ -150,10 +150,10 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
 
             {/* Heading & Subtitle */}
             <div className="mb-10 text-left">
-              <h1 className="font-['Noto_Serif',serif] font-bold text-3xl sm:text-4xl lg:text-[40px] text-[#2a2220] leading-tight mb-3">
+              <h1 className="page-title mb-3">
                 Chọn một điều bạn muốn chiêm nghiệm
               </h1>
-              <p className="text-sm sm:text-base text-[#6f5e57] leading-relaxed max-w-3xl">
+              <p className="text-sm sm:text-base text-ink leading-relaxed max-w-3xl">
                 Đây là trải nghiệm tìm hiểu văn hóa và suy ngẫm, gợi mở góc nhìn bình an
                 cho tâm trí – hoàn toàn mang tinh thần lắng đọng nội tâm, không mang tính
                 tiên tri hay dự đoán chắc chắn tương lai.
@@ -163,42 +163,42 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
             {/* Section 1: Chọn không gian văn hóa gợi mở */}
             <section className="mb-10">
               <div className="flex items-center gap-2.5 mb-2">
-                <span className="w-6 h-6 rounded-full bg-[#9e3b2e] text-white text-xs font-bold flex items-center justify-center">
+                <span className="w-6 h-6 rounded-full bg-action text-white text-xs font-bold flex items-center justify-center">
                   1
                 </span>
-                <h3 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220]">
+                <h3 className="font-display font-bold text-xl sm:text-2xl text-ink">
                   Chọn không gian văn hóa gợi mở
                 </h3>
               </div>
-              <p className="text-xs sm:text-sm text-[#78665f] mb-6 pl-8">
+              <p className="text-sm text-muted mb-6 pl-8">
                 Khám phá phong thổ và chiều sâu tâm thức ba miền. Mỗi vùng đất mang một
                 sắc thái riêng thuần hậu, không áp đặt một khuôn mẫu duy nhất:
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pl-0 sm:pl-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Bắc Bộ */}
                 <Card
                   onClick={() => setSelectedRegion("Bắc Bộ")}
-                  className={`p-5 rounded-3xl cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
+                  className={`p-5 rounded-card cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
                     selectedRegion === "Bắc Bộ"
-                      ? "bg-white border-[#9e3b2e] shadow-md ring-1 ring-[#9e3b2e]/30"
-                      : "bg-[#fffdfa] border-[#ecdcd0] hover:border-[#dfc3af]"
+                      ? "bg-accent-soft border-accent ring-1 ring-accent/20"
+                      : "bg-surface border-line hover:border-line"
                   }`}
                 >
                   <div>
-                    <div className="relative h-44 rounded-2xl overflow-hidden mb-4 bg-[#faede2]">
+                    <div className="relative h-44 rounded-panel overflow-hidden mb-4 bg-surface">
                       <img
                         src="/images/temple_bac_bo.jpg"
                         alt="Không gian Trầm mặc Xứ Bắc"
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/60 text-[11px] font-semibold text-white">
+                      <div className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/60 text-xs font-semibold text-white">
                         BẮC BỘ
                       </div>
                       <div
                         className={`absolute top-2.5 right-2.5 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
                           selectedRegion === "Bắc Bộ"
-                            ? "bg-[#9e3b2e] text-white"
+                            ? "bg-action text-white"
                             : "border-2 border-white/80 bg-black/30 text-transparent"
                         }`}
                       >
@@ -206,20 +206,20 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                       </div>
                     </div>
 
-                    <h4 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-1.5">
+                    <h4 className="font-display font-bold text-lg text-ink mb-1.5">
                       Không gian Trầm mặc Xứ Bắc
                     </h4>
-                    <p className="text-xs text-[#705e57] leading-relaxed">
+                    <p className="text-sm text-ink leading-relaxed">
                       Gợi nhắc nét tôn nghiêm nơi sân đình, mái ngói rêu phong và ước vọng
                       thái bình ngàn đời của làng xã châu thổ sông Hồng.
                     </p>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-[#f4e8dc] flex items-center justify-between text-xs text-[#8a7870]">
+                  <div className="mt-4 pt-3 border-t border-line flex items-center justify-between text-xs text-muted">
                     <span className="flex items-center gap-1.5 font-medium">
                       <span
                         className={`w-2 h-2 rounded-full ${
-                          selectedRegion === "Bắc Bộ" ? "bg-[#9e3b2e]" : "bg-[#c7b6ab]"
+                          selectedRegion === "Bắc Bộ" ? "bg-action" : "bg-surface-soft"
                         }`}
                       />
                       <span>
@@ -228,33 +228,33 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                           : "Chọn không gian này"}
                       </span>
                     </span>
-                    <Flower2 className="w-4 h-4 text-[#9e3b2e]" />
+                    <Flower2 className="w-4 h-4 text-accent" />
                   </div>
                 </Card>
 
                 {/* Trung Bộ */}
                 <Card
                   onClick={() => setSelectedRegion("Trung Bộ")}
-                  className={`p-5 rounded-3xl cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
+                  className={`p-5 rounded-card cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
                     selectedRegion === "Trung Bộ"
-                      ? "bg-white border-[#9e3b2e] shadow-md ring-1 ring-[#9e3b2e]/30"
-                      : "bg-[#fffdfa] border-[#ecdcd0] hover:border-[#dfc3af]"
+                      ? "bg-accent-soft border-accent ring-1 ring-accent/20"
+                      : "bg-surface border-line hover:border-line"
                   }`}
                 >
                   <div>
-                    <div className="relative h-44 rounded-2xl overflow-hidden mb-4 bg-[#faede2]">
+                    <div className="relative h-44 rounded-panel overflow-hidden mb-4 bg-surface">
                       <img
                         src="/images/hue_trung_bo.jpg"
                         alt="Nét Giao thoa Xứ Huế & Miền Trung"
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/60 text-[11px] font-semibold text-white">
+                      <div className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/60 text-xs font-semibold text-white">
                         TRUNG BỘ
                       </div>
                       <div
                         className={`absolute top-2.5 right-2.5 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
                           selectedRegion === "Trung Bộ"
-                            ? "bg-[#9e3b2e] text-white"
+                            ? "bg-action text-white"
                             : "border-2 border-white/80 bg-black/30 text-transparent"
                         }`}
                       >
@@ -262,20 +262,20 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                       </div>
                     </div>
 
-                    <h4 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-1.5">
+                    <h4 className="font-display font-bold text-lg text-ink mb-1.5">
                       Nét Giao thoa Xứ Huế & Miền Trung
                     </h4>
-                    <p className="text-xs text-[#705e57] leading-relaxed">
+                    <p className="text-sm text-ink leading-relaxed">
                       Hòa quyện giữa chất trầm tư kinh kỳ, sông nước Hương giang u tịch và
                       tín ngưỡng Mẫu thuần hậu chở che qua bao thăng trầm.
                     </p>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-[#f4e8dc] flex items-center justify-between text-xs text-[#8a7870]">
+                  <div className="mt-4 pt-3 border-t border-line flex items-center justify-between text-xs text-muted">
                     <span className="flex items-center gap-1.5 font-medium">
                       <span
                         className={`w-2 h-2 rounded-full ${
-                          selectedRegion === "Trung Bộ" ? "bg-[#9e3b2e]" : "bg-[#c7b6ab]"
+                          selectedRegion === "Trung Bộ" ? "bg-action" : "bg-surface-soft"
                         }`}
                       />
                       <span>
@@ -284,33 +284,33 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                           : "Chọn không gian này"}
                       </span>
                     </span>
-                    <Waves className="w-4 h-4 text-[#9e3b2e]" />
+                    <Waves className="w-4 h-4 text-accent" />
                   </div>
                 </Card>
 
                 {/* Nam Bộ */}
                 <Card
                   onClick={() => setSelectedRegion("Nam Bộ")}
-                  className={`p-5 rounded-3xl cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
+                  className={`p-5 rounded-card cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
                     selectedRegion === "Nam Bộ"
-                      ? "bg-white border-[#9e3b2e] shadow-md ring-1 ring-[#9e3b2e]/30"
-                      : "bg-[#fffdfa] border-[#ecdcd0] hover:border-[#dfc3af]"
+                      ? "bg-accent-soft border-accent ring-1 ring-accent/20"
+                      : "bg-surface border-line hover:border-line"
                   }`}
                 >
                   <div>
-                    <div className="relative h-44 rounded-2xl overflow-hidden mb-4 bg-[#faede2]">
+                    <div className="relative h-44 rounded-panel overflow-hidden mb-4 bg-surface">
                       <img
                         src="/images/mekong_nam_bo.jpg"
                         alt="Hồn Phù sa Khoáng đạt Phương Nam"
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/60 text-[11px] font-semibold text-white">
+                      <div className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/60 text-xs font-semibold text-white">
                         NAM BỘ
                       </div>
                       <div
                         className={`absolute top-2.5 right-2.5 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
                           selectedRegion === "Nam Bộ"
-                            ? "bg-[#9e3b2e] text-white"
+                            ? "bg-action text-white"
                             : "border-2 border-white/80 bg-black/30 text-transparent"
                         }`}
                       >
@@ -318,20 +318,20 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                       </div>
                     </div>
 
-                    <h4 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-1.5">
+                    <h4 className="font-display font-bold text-lg text-ink mb-1.5">
                       Hồn Phù sa Khoáng đạt Phương Nam
                     </h4>
-                    <p className="text-xs text-[#705e57] leading-relaxed">
+                    <p className="text-sm text-ink leading-relaxed">
                       Không gian ấm áp ven dòng Cửu Long, gửi gắm tinh thần bao dung, hào
                       sảng, mộc mạc và chân thành của cư dân châu thổ.
                     </p>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-[#f4e8dc] flex items-center justify-between text-xs text-[#8a7870]">
+                  <div className="mt-4 pt-3 border-t border-line flex items-center justify-between text-xs text-muted">
                     <span className="flex items-center gap-1.5 font-medium">
                       <span
                         className={`w-2 h-2 rounded-full ${
-                          selectedRegion === "Nam Bộ" ? "bg-[#9e3b2e]" : "bg-[#c7b6ab]"
+                          selectedRegion === "Nam Bộ" ? "bg-action" : "bg-surface-soft"
                         }`}
                       />
                       <span>
@@ -340,7 +340,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                           : "Chọn không gian này"}
                       </span>
                     </span>
-                    <Sun className="w-4 h-4 text-[#9e3b2e]" />
+                    <Sun className="w-4 h-4 text-accent" />
                   </div>
                 </Card>
               </div>
@@ -349,50 +349,50 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
             {/* Section 2: Chọn chủ đề bạn đang lắng đọng */}
             <section className="mb-10">
               <div className="flex items-center gap-2.5 mb-2">
-                <span className="w-6 h-6 rounded-full bg-[#9e3b2e] text-white text-xs font-bold flex items-center justify-center">
+                <span className="w-6 h-6 rounded-full bg-action text-white text-xs font-bold flex items-center justify-center">
                   2
                 </span>
-                <h3 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220]">
+                <h3 className="font-display font-bold text-xl sm:text-2xl text-ink">
                   Chọn chủ đề bạn đang lắng đọng
                 </h3>
               </div>
-              <p className="text-xs sm:text-sm text-[#78665f] mb-6 pl-8">
+              <p className="text-sm text-muted mb-6 pl-8">
                 Chọn đúng một khía cạnh bạn muốn đón nhận lời gửi gắm hôm nay:
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 pl-0 sm:pl-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {/* 1. Học tập */}
                 <Card
                   onClick={() => setSelectedTopic("Học tập")}
-                  className={`p-5 rounded-3xl cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
+                  className={`p-5 rounded-card cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
                     selectedTopic === "Học tập"
-                      ? "bg-white border-[#9e3b2e] shadow-md ring-1 ring-[#9e3b2e]/30"
-                      : "bg-[#fffdfa] border-[#ecdcd0] hover:border-[#dfc3af]"
+                      ? "bg-accent-soft border-accent ring-1 ring-accent/20"
+                      : "bg-surface border-line hover:border-line"
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <div className="w-9 h-9 rounded-xl bg-[#faede2] flex items-center justify-center text-[#9e3b2e]">
+                      <div className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-accent">
                         <BookOpen className="w-4 h-4" />
                       </div>
                       <div
                         className={`w-5 h-5 rounded-full flex items-center justify-center ${
                           selectedTopic === "Học tập"
-                            ? "bg-[#9e3b2e] text-white"
-                            : "border-2 border-[#eddcd0] bg-white text-transparent"
+                            ? "bg-action text-white"
+                            : "border-2 border-line bg-surface text-transparent"
                         }`}
                       >
                         <Check className="w-3 h-3 stroke-[3]" />
                       </div>
                     </div>
-                    <h4 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-1.5">
+                    <h4 className="font-display font-bold text-lg text-ink mb-1.5">
                       Học tập
                     </h4>
-                    <p className="text-xs text-[#705e57] leading-relaxed mb-4">
+                    <p className="text-sm text-ink leading-relaxed mb-4">
                       Định tâm, mở mang trí tuệ & thông tuệ trước trang sách đời.
                     </p>
                   </div>
-                  <div className="text-xs font-semibold text-[#9e3b2e] flex items-center gap-1">
+                  <div className="text-xs font-semibold text-accent flex items-center gap-1">
                     <span>Khởi sáng tri thức</span>
                     <ArrowRight className="w-3 h-3" />
                   </div>
@@ -401,35 +401,35 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                 {/* 2. Công việc */}
                 <Card
                   onClick={() => setSelectedTopic("Công việc")}
-                  className={`p-5 rounded-3xl cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
+                  className={`p-5 rounded-card cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
                     selectedTopic === "Công việc"
-                      ? "bg-white border-[#9e3b2e] shadow-md ring-1 ring-[#9e3b2e]/30"
-                      : "bg-[#fffdfa] border-[#ecdcd0] hover:border-[#dfc3af]"
+                      ? "bg-accent-soft border-accent ring-1 ring-accent/20"
+                      : "bg-surface border-line hover:border-line"
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <div className="w-9 h-9 rounded-xl bg-[#faede2] flex items-center justify-center text-[#9e3b2e]">
+                      <div className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-accent">
                         <Compass className="w-4 h-4" />
                       </div>
                       <div
                         className={`w-5 h-5 rounded-full flex items-center justify-center ${
                           selectedTopic === "Công việc"
-                            ? "bg-[#9e3b2e] text-white"
-                            : "border-2 border-[#eddcd0] bg-white text-transparent"
+                            ? "bg-action text-white"
+                            : "border-2 border-line bg-surface text-transparent"
                         }`}
                       >
                         <Check className="w-3 h-3 stroke-[3]" />
                       </div>
                     </div>
-                    <h4 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-1.5">
+                    <h4 className="font-display font-bold text-lg text-ink mb-1.5">
                       Công việc
                     </h4>
-                    <p className="text-xs text-[#705e57] leading-relaxed mb-4">
+                    <p className="text-sm text-ink leading-relaxed mb-4">
                       Kiên định, hanh thông trước mọi dự định và thử thách mới.
                     </p>
                   </div>
-                  <div className="text-xs font-semibold text-[#9e3b2e] flex items-center gap-1">
+                  <div className="text-xs font-semibold text-accent flex items-center gap-1">
                     <span>Thuận buồm xuôi gió</span>
                     <ArrowRight className="w-3 h-3" />
                   </div>
@@ -438,35 +438,35 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                 {/* 3. Gia đình */}
                 <Card
                   onClick={() => setSelectedTopic("Gia đình")}
-                  className={`p-5 rounded-3xl cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
+                  className={`p-5 rounded-card cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
                     selectedTopic === "Gia đình"
-                      ? "bg-white border-[#9e3b2e] shadow-md ring-1 ring-[#9e3b2e]/30"
-                      : "bg-[#fffdfa] border-[#ecdcd0] hover:border-[#dfc3af]"
+                      ? "bg-accent-soft border-accent ring-1 ring-accent/20"
+                      : "bg-surface border-line hover:border-line"
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <div className="w-9 h-9 rounded-xl bg-[#faede2] flex items-center justify-center text-[#9e3b2e]">
+                      <div className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-accent">
                         <Home className="w-4 h-4" />
                       </div>
                       <div
                         className={`w-5 h-5 rounded-full flex items-center justify-center ${
                           selectedTopic === "Gia đình"
-                            ? "bg-[#9e3b2e] text-white"
-                            : "border-2 border-[#eddcd0] bg-white text-transparent"
+                            ? "bg-action text-white"
+                            : "border-2 border-line bg-surface text-transparent"
                         }`}
                       >
                         <Check className="w-3 h-3 stroke-[3]" />
                       </div>
                     </div>
-                    <h4 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-1.5">
+                    <h4 className="font-display font-bold text-lg text-ink mb-1.5">
                       Gia đình
                     </h4>
-                    <p className="text-xs text-[#705e57] leading-relaxed mb-4">
+                    <p className="text-sm text-ink leading-relaxed mb-4">
                       Gắn kết, thấu hiểu & giữ cho nếp nhà luôn ấm êm thuận hòa.
                     </p>
                   </div>
-                  <div className="text-xs font-semibold text-[#9e3b2e] flex items-center gap-1">
+                  <div className="text-xs font-semibold text-accent flex items-center gap-1">
                     <span>Mái ấm an hòa</span>
                     <ArrowRight className="w-3 h-3" />
                   </div>
@@ -475,35 +475,35 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                 {/* 4. Bình an */}
                 <Card
                   onClick={() => setSelectedTopic("Bình an")}
-                  className={`p-5 rounded-3xl cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
+                  className={`p-5 rounded-card cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
                     selectedTopic === "Bình an"
-                      ? "bg-white border-[#9e3b2e] shadow-md ring-1 ring-[#9e3b2e]/30"
-                      : "bg-[#fffdfa] border-[#ecdcd0] hover:border-[#dfc3af]"
+                      ? "bg-accent-soft border-accent ring-1 ring-accent/20"
+                      : "bg-surface border-line hover:border-line"
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <div className="w-9 h-9 rounded-xl bg-[#faede2] flex items-center justify-center text-[#9e3b2e]">
+                      <div className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-accent">
                         <Flower2 className="w-4 h-4" />
                       </div>
                       <div
                         className={`w-5 h-5 rounded-full flex items-center justify-center ${
                           selectedTopic === "Bình an"
-                            ? "bg-[#9e3b2e] text-white"
-                            : "border-2 border-[#eddcd0] bg-white text-transparent"
+                            ? "bg-action text-white"
+                            : "border-2 border-line bg-surface text-transparent"
                         }`}
                       >
                         <Check className="w-3 h-3 stroke-[3]" />
                       </div>
                     </div>
-                    <h4 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] mb-1.5">
+                    <h4 className="font-display font-bold text-lg text-ink mb-1.5">
                       Bình an
                     </h4>
-                    <p className="text-xs text-[#705e57] leading-relaxed mb-4">
+                    <p className="text-sm text-ink leading-relaxed mb-4">
                       Thanh lọc âu lo, nuôi dưỡng sự tĩnh tại và an yên trong lòng.
                     </p>
                   </div>
-                  <div className="text-xs font-semibold text-[#9e3b2e] flex items-center gap-1">
+                  <div className="text-xs font-semibold text-accent flex items-center gap-1">
                     <span>Tâm sáng an nhiên</span>
                     <ArrowRight className="w-3 h-3" />
                   </div>
@@ -512,18 +512,18 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
             </section>
 
             {/* Selection Summary Callout Box */}
-            <Card className="p-6 rounded-3xl bg-[#fbece1]/80 border border-[#ecd5c4] flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10 shadow-2xs">
+            <Card className="p-6 rounded-card bg-surface/80 border border-line flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10 shadow-2xs">
               <div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e] mb-1">
+                <div className="text-xs font-bold uppercase tracking-wider text-accent mb-1">
                   ◎ TÓM TẮT LỰA CHỌN CỦA BẠN
                 </div>
-                <div className="text-lg font-bold text-[#2a211e] mb-1 font-['Noto_Serif',serif]">
+                <div className="text-lg font-bold text-ink mb-1 font-display">
                   Bạn đã chọn:{" "}
-                  <span className="text-[#9e3b2e]">
+                  <span className="text-accent">
                     {selectedRegion} • {selectedTopic}
                   </span>
                 </div>
-                <div className="text-xs text-[#73635b] italic">
+                <div className="text-xs text-muted italic">
                   ✦ Gợi ý: Hãy giữ hơi thở nhẹ nhàng và tâm thế thả lỏng trước khi rút thẻ
                   xăm.
                 </div>
@@ -535,7 +535,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                     variant="outline"
                     size="default"
                     onClick={onBackToExperienceHome}
-                    className="w-full sm:w-auto text-xs border-[#e4ccba] text-[#73625b]"
+                    className="w-full sm:w-auto text-xs border-line text-muted"
                   >
                     <ArrowLeft className="w-3.5 h-3.5 mr-1" />
                     <span>Quay lại Trải nghiệm</span>
@@ -558,10 +558,10 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
             </Card>
 
             {/* Editorial Principle Disclaimer */}
-            <div className="p-5 rounded-2xl bg-[#faf3ec] border border-[#eddcd0] flex items-start gap-3.5 text-xs text-[#73615a] leading-relaxed mb-12">
-              <Info className="w-5 h-5 text-[#9e3b2e] flex-shrink-0 mt-0.5" />
+            <div className="p-5 rounded-panel bg-surface border border-line flex items-start gap-3.5 text-xs text-muted leading-relaxed mb-12">
+              <Info className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
               <div>
-                <div className="font-bold text-[#8d2f23] uppercase tracking-wider mb-1">
+                <div className="font-bold text-accent uppercase tracking-wider mb-1">
                   GHI CHÚ VĂN HÓA & NGUYÊN TẮC TRẢI NGHIỆM
                 </div>
                 <p>
@@ -581,22 +581,22 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
         {step === 2 && (
           <div>
             {/* Top Breadcrumb & Step Badge */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-[#8a7971]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-muted">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setStep(1)}
-                  className="hover:text-[#9e3b2e] cursor-pointer"
+                  className="hover:text-accent cursor-pointer"
                 >
                   Trải nghiệm
                 </button>
                 <span>›</span>
                 <span>Xin xăm văn hóa</span>
                 <span>›</span>
-                <span className="text-[#9e3b2e] font-semibold">Bước 2: Rút thẻ</span>
+                <span className="text-accent font-semibold">Bước 2: Rút thẻ</span>
               </div>
 
-              <div className="flex items-center gap-1.5 uppercase font-semibold text-[11px] text-[#938279]">
-                <span className="w-2 h-2 rounded-full bg-[#9e3b2e] inline-block"></span>
+              <div className="flex items-center gap-1.5 uppercase font-semibold text-xs text-muted">
+                <span className="w-2 h-2 rounded-full bg-action inline-block"></span>
                 <span>
                   BƯỚC 2 / 3 • LẮNG ĐỘNG RÚT THẺ – {selectedRegion.toUpperCase()} &{" "}
                   {selectedTopic.toUpperCase()}
@@ -604,46 +604,41 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
               </div>
             </div>
 
-            {/* Active Choice Context Bar */}
-            <div className="mb-8 p-3 rounded-2xl bg-[#faf2ea] border border-[#ebd6c5] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-[#715f57]">
+            {/* Active Choice Context Bar (Compact, understated) */}
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-muted pb-3 border-b border-line/60">
               <div className="flex items-center gap-2">
-                <Flower2 className="w-4 h-4 text-[#9e3b2e]" />
+                <Flower2 className="w-3.5 h-3.5 text-accent" />
                 <span>
-                  Lựa chọn trước đó:{" "}
-                  <strong className="text-[#9e3b2e]">{selectedRegion}</strong> (
-                  {currentResult.regionSub}) • Ý niệm:{" "}
-                  <strong className="text-[#9e3b2e]">{selectedTopic}</strong> (
-                  {currentResult.topicTag})
+                  Đang xin xăm cho tâm: <strong className="text-ink">{selectedTopic}</strong> • Vùng đất: <strong className="text-ink">{selectedRegion}</strong>
                 </span>
               </div>
 
               <button
                 onClick={() => setStep(1)}
-                className="text-xs text-[#9e3b2e] hover:underline font-semibold cursor-pointer self-end sm:self-auto"
+                className="text-xs text-accent hover:underline font-semibold cursor-pointer self-start sm:self-auto"
               >
                 ← Đổi lựa chọn
               </button>
             </div>
 
             {/* Big Serif Heading */}
-            <div className="text-center max-w-2xl mx-auto mb-8">
-              <h1 className="font-['Noto_Serif',serif] font-bold text-3xl sm:text-4xl leading-tight mb-3 bg-gradient-to-r from-[#2a1815] via-[#8a252c] to-[#2a1815] dark:from-[#f7ede6] dark:via-[#ff9ca4] dark:to-[#f7ede6] bg-clip-text text-transparent">
+            <div className="text-center max-w-xl mx-auto mb-8">
+              <h1 className="page-title mb-2.5 text-2xl sm:text-3xl lg:text-4xl text-ink font-display">
                 Lắng lòng và rút một thẻ xăm
               </h1>
-              <p className="text-sm text-[#73635b] dark:text-[#cbb8af] leading-relaxed">
-                Giữ hơi thở chậm rãi, tĩnh tâm trong một khoảnh khắc ngắn. Thẻ xăm mở ra một
-                góc nhìn suy ngẫm cổ truyền, gợi ý thái độ an nhiên trước đời sống thường
-                nhật.
+              <p className="text-sm text-muted leading-relaxed">
+                Giữ hơi thở chậm rãi, tĩnh tâm trong một khoảnh khắc ngắn. Thẻ tre mở ra một góc nhìn suy ngẫm cổ truyền, gợi ý thái độ an nhiên trước đời sống.
               </p>
             </div>
 
-            {/* Center Altar: The Sacred Bamboo Tube Card */}
-            <Card className="max-w-2xl mx-auto rounded-3xl p-6 sm:p-10 bg-white/95 dark:bg-[#2c0e14]/95 border border-[#eadcce] dark:border-[#4d1b24] shadow-lg dark:shadow-2xl text-center relative overflow-hidden mb-10">
-              {/* Concentric Circle Aura Motif */}
-              <div className="relative w-64 h-64 sm:w-72 sm:h-72 mx-auto mb-6 flex items-center justify-center">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#faece1]/70 via-[#f9efe5]/80 to-[#faece1]/50 animate-pulse" />
-                <div className="absolute inset-4 rounded-full border border-[#f0decf]" />
-                <div className="absolute inset-10 rounded-full border border-[#ebdacb] border-dashed" />
+            {/* Center Altar: Open Sacred Space without Box Boundary */}
+            <div className="max-w-xl mx-auto py-4 text-center relative mb-12">
+              {/* Concentric Circle Aura Motif with Warm Ambient Glow */}
+              <div className="relative w-64 h-64 sm:w-80 sm:h-80 mx-auto mb-6 flex items-center justify-center">
+                {/* Golden/Warm Ambient Aura */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent blur-2xl pointer-events-none" />
+                <div className="absolute inset-4 rounded-full border border-line/50" />
+                <div className="absolute inset-10 rounded-full border border-dashed border-line/40" />
 
                 {/* Bamboo Stick Cylinder Container */}
                 <div
@@ -657,190 +652,154 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                   <div
                     className={`transition-all duration-700 ease-out flex flex-col items-center ${
                       drawPhase === "shaking" || drawPhase === "dropped"
-                        ? "-translate-y-8 opacity-100"
+                        ? "-translate-y-9 opacity-100"
                         : "translate-y-4 opacity-75"
                     }`}
                   >
-                    <div className="w-5 h-24 sm:h-28 rounded-t-lg bg-gradient-to-b from-[#e38576] to-[#cca78e] border border-[#b85b4d] shadow-md flex items-start justify-center pt-2">
-                      <span className="text-[10px] font-mono font-bold text-white [writing-mode:vertical-rl]">
+                    <div className="w-5 h-24 sm:h-28 rounded-t-lg bg-action border border-accent shadow-md flex items-start justify-center pt-2">
+                      <span className="text-xs font-sans tabular-nums font-bold text-white [writing-mode:vertical-rl]">
                         {drawPhase === "dropped" ? `SỐ ${currentResult.stickNumber}` : "THẺ TRE"}
                       </span>
                     </div>
                   </div>
 
                   {/* Bamboo Tube Cylinder */}
-                  <div className="w-28 sm:w-32 h-36 sm:h-40 rounded-2xl bg-gradient-to-b from-[#f5e6d8] via-[#eed5c1] to-[#e4c2a7] border-2 border-[#cfab91] shadow-inner relative flex flex-col items-center justify-between p-3">
-                    <div className="w-full flex justify-between px-1 text-[9px] text-[#8e6e59] font-bold">
+                  <div className="w-28 sm:w-32 h-36 sm:h-40 rounded-panel bg-surface border-2 border-line shadow-md relative flex flex-col items-center justify-between p-3">
+                    <div className="w-full flex justify-between px-1 text-xs text-gold font-bold">
                       <span>✤</span>
                       <span>✤</span>
                     </div>
 
                     <div className="text-center my-auto">
-                      <div className="w-7 h-7 mx-auto rounded-full bg-[#fcf8f3] border border-[#dfc4b1] flex items-center justify-center mb-1 text-[#9e3b2e]">
+                      <div className="w-7 h-7 mx-auto rounded-full bg-accent-soft border border-line flex items-center justify-center mb-1 text-accent">
                         <Flower2 className="w-4 h-4" />
                       </div>
-                      <div className="text-[11px] font-bold tracking-widest text-[#7c4d38] uppercase">
+                      <div className="text-xs font-bold tracking-widest text-gold uppercase">
                         {selectedRegion === "Bắc Bộ"
                           ? "XỨ BẮC"
                           : selectedRegion === "Trung Bộ"
                           ? "XỨ HUẾ"
                           : "PHƯƠNG NAM"}
                       </div>
-                      <div className="text-[9px] font-serif tracking-widest text-[#946e59]">
+                      <div className="text-xs font-serif tracking-widest text-accent font-semibold">
                         AN NHIÊN MÔN
                       </div>
                     </div>
 
-                    <div className="w-full h-1.5 rounded-full bg-[#caa58a]/60"></div>
+                    <div className="w-full h-1.5 rounded-full bg-surface-soft/60" />
                   </div>
                 </div>
               </div>
 
               {/* Status and instruction */}
-              <div className="space-y-3 mb-6">
-                <div className="text-xs text-[#95837a] italic">
-                  ✦ Chạm trực tiếp vào ống xăm hoặc bấm nút bên dưới
-                </div>
-                <h3 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220]">
+              <div className="space-y-2 mb-6">
+                <h3 className="font-display font-bold text-xl sm:text-2xl text-ink">
                   {drawPhase === "dropped"
                     ? `Đã hiện diện Thẻ xăm số ${currentResult.stickNumber}`
                     : drawPhase === "shaking"
                     ? "Đang lắng lòng lắc ống xăm..."
                     : "Sẵn sàng khởi niệm bình an"}
                 </h3>
-                <p className="text-xs sm:text-sm text-[#73625b] max-w-md mx-auto leading-relaxed">
+                <p className="text-sm text-muted max-w-md mx-auto leading-relaxed">
                   {drawPhase === "dropped"
-                    ? `Thẻ xăm số ${currentResult.stickNumber} đã xuất hiện. Hãy mở xem lời quẻ chiêm nghiệm và thông điệp dành cho bạn.`
-                    : "Hãy thở đều một nhịp êm, giữ tâm thế an tĩnh và rút một thẻ tre lưu dấu chiêm nghiệm hôm nay."}
+                    ? `Thẻ xăm số ${currentResult.stickNumber} đã rơi ra. Hãy mở xem lời quẻ chiêm nghiệm và thông điệp dành cho bạn.`
+                    : "Chạm vào ống xăm hoặc bấm nút bên dưới để rút thẻ tre lưu dấu hôm nay."}
                 </p>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col items-center justify-center gap-3.5 w-full">
-                <div className="flex flex-wrap items-center justify-center gap-3 w-full">
-                  {drawPhase === "dropped" ? (
-                    <>
-                      <Button
-                        variant="default"
-                        size="lg"
-                        onClick={() => {
-                          setStep(3);
-                          window.scrollTo({ top: 0, behavior: "smooth" });
-                        }}
-                        className="w-full sm:w-auto px-6 py-3 font-semibold shadow-md gap-2 text-sm sm:text-base cursor-pointer"
-                      >
-                        <Sparkles className="w-4 h-4 shrink-0" />
-                        <span>Xem chiêm nghiệm thẻ số {currentResult.stickNumber}</span>
-                        <ArrowRight className="w-4 h-4 shrink-0" />
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        onClick={handleStartDraw}
-                        disabled={isShaking}
-                        className="w-full sm:w-auto px-5 py-3 text-xs sm:text-sm font-semibold gap-1.5 cursor-pointer shrink-0"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5 shrink-0" />
-                        <span>Lắc lại thẻ khác</span>
-                      </Button>
-                    </>
-                  ) : (
+              {/* Action Buttons: Strict Visual Hierarchy */}
+              <div className="flex flex-col items-center justify-center gap-3 w-full">
+                {drawPhase === "dropped" ? (
+                  <div className="flex flex-col items-center gap-3 w-full max-w-sm">
                     <Button
                       variant="default"
                       size="lg"
-                      onClick={handleStartDraw}
-                      disabled={isShaking}
-                      className="w-full sm:w-auto px-8 py-3.5 font-semibold shadow-md gap-2 text-sm sm:text-base cursor-pointer"
+                      onClick={() => {
+                        setStep(3);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="w-full py-3.5 font-semibold shadow-md gap-2 text-base cursor-pointer"
                     >
                       <Sparkles className="w-4 h-4 shrink-0" />
-                      <span>{isShaking ? "Đang lắng đọng rút thẻ..." : "Thành tâm lắc ống xăm"}</span>
+                      <span>Xem chiêm nghiệm thẻ số {currentResult.stickNumber}</span>
+                      <ArrowRight className="w-4 h-4 shrink-0" />
                     </Button>
-                  )}
-                </div>
 
-                <Button
-                  variant="ghost"
-                  size="default"
+                    <button
+                      type="button"
+                      onClick={handleStartDraw}
+                      disabled={isShaking}
+                      className="text-xs text-muted hover:text-accent font-medium py-1 transition-colors cursor-pointer flex items-center gap-1.5"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Lắc lại thẻ khác</span>
+                    </button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="default"
+                    size="lg"
+                    onClick={handleStartDraw}
+                    disabled={isShaking}
+                    className="w-full sm:w-auto px-8 py-3.5 font-semibold shadow-md gap-2 text-base cursor-pointer mx-auto"
+                  >
+                    <Sparkles className="w-4 h-4 shrink-0" />
+                    <span>{isShaking ? "Đang lắng đọng rút thẻ..." : "Thành tâm lắc ống xăm"}</span>
+                  </Button>
+                )}
+
+                <button
+                  type="button"
                   onClick={() => setShowGuideModal(true)}
-                  className="text-xs text-[#7d6d66] hover:text-[#8a252c] cursor-pointer"
+                  className="text-xs text-muted hover:text-accent font-medium mt-1 cursor-pointer flex items-center gap-1"
                 >
-                  <Info className="w-3.5 h-3.5 mr-1" />
+                  <Info className="w-3.5 h-3.5" />
                   <span>Xem hướng dẫn chiêm nghiệm</span>
-                </Button>
+                </button>
+              </div>
+            </div>
+
+            {/* 3 Cultural Guidance Cards (Subtle Editorial Row) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-line/60 mb-10">
+              <div className="text-left space-y-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-accent">
+                  01 • Tâm thành ý tịnh
+                </span>
+                <p className="text-xs text-muted leading-relaxed">
+                  Trước khi rút thẻ, buông xả toan tính được mất. Giữ lòng thanh thản để đón nhận lời khuyên với tâm thế sáng tỏ.
+                </p>
               </div>
 
-              {/* Footer info in tube card */}
-              <div className="mt-8 pt-4 border-t border-[#f4e8dc] flex items-center justify-between text-xs text-[#918178]">
-                <span className="flex items-center gap-1.5">
-                  <span>⛩</span>
-                  <span>Không gian văn hóa tín ngưỡng dân gian</span>
+              <div className="text-left space-y-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-accent">
+                  02 • Tự soi chiếu tâm tư
                 </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#caa58a]"></span>
-                  <span className="w-2 h-2 rounded-full bg-[#9e3b2e]"></span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#caa58a]"></span>
-                </span>
-                <span>Bước 2 của 3</span>
+                <p className="text-xs text-muted leading-relaxed">
+                  Lời quẻ dân gian tựa chiếc gương phản chiếu nỗi lòng, giúp nhận ra điều gì cần gìn giữ và điều gì nên buông bỏ.
+                </p>
               </div>
-            </Card>
 
-            {/* 3 Cultural Guidance Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
-              <Card className="p-6 rounded-2xl bg-white/90 dark:bg-[#2c0e14]/90 border border-[#eadcce] dark:border-[#4d1b24] shadow-xs hover:-translate-y-1 hover:shadow-md transition-all duration-300">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8a252c] dark:text-[#ff9ca4] mb-1.5 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#8a252c] dark:bg-[#ff9ca4]"></span>
-                  <span>CHIÊM NGHIỆM 01</span>
-                </div>
-                <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] dark:text-[#f7ede6] mb-1.5">
-                  Tâm thành ý tịnh
-                </h4>
-                <p className="text-xs text-[#73635b] dark:text-[#cbb8af] leading-relaxed">
-                  Trước khi rút thẻ, buông xả những toan tính được mất. Giữ lòng thanh thản để đón nhận
-                  lời khuyên với tâm thế sáng tỏ.
+              <div className="text-left space-y-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-accent">
+                  03 • Thuận lẽ tự nhiên
+                </span>
+                <p className="text-xs text-muted leading-relaxed">
+                  Quẻ lành hay quẻ nhẫn nại đều hướng về đạo lý làm người. Tâm an vạn sự ắt sẽ hanh thông, tự tại.
                 </p>
-              </Card>
-
-              <Card className="p-6 rounded-2xl bg-white/90 dark:bg-[#2c0e14]/90 border border-[#eadcce] dark:border-[#4d1b24] shadow-xs hover:-translate-y-1 hover:shadow-md transition-all duration-300">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8a252c] dark:text-[#ff9ca4] mb-1.5 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#8a252c] dark:bg-[#ff9ca4]"></span>
-                  <span>CHIÊM NGHIỆM 02</span>
-                </div>
-                <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] dark:text-[#f7ede6] mb-1.5">
-                  Tự soi chiếu tâm tư
-                </h4>
-                <p className="text-xs text-[#73635b] dark:text-[#cbb8af] leading-relaxed">
-                  Lời quẻ dân gian tựa chiếc gương phản chiếu nỗi lòng, giúp nhận ra điều gì cần gìn
-                  giữ và điều gì nên buông bỏ.
-                </p>
-              </Card>
-
-              <Card className="p-6 rounded-2xl bg-white/90 dark:bg-[#2c0e14]/90 border border-[#eadcce] dark:border-[#4d1b24] shadow-xs hover:-translate-y-1 hover:shadow-md transition-all duration-300">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8a252c] dark:text-[#ff9ca4] mb-1.5 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#8a252c] dark:bg-[#ff9ca4]"></span>
-                  <span>CHIÊM NGHIỆM 03</span>
-                </div>
-                <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] dark:text-[#f7ede6] mb-1.5">
-                  Thuận lẽ tự nhiên
-                </h4>
-                <p className="text-xs text-[#73635b] dark:text-[#cbb8af] leading-relaxed">
-                  Quẻ lành hay quẻ nhẫn nại đều hướng về đạo lý làm người. Tâm an vạn sự ắt sẽ hanh
-                  thông, tự tại.
-                </p>
-              </Card>
+              </div>
             </div>
 
             {/* Cultural & Legal Philosophy Banner */}
-            <Card className="p-6 rounded-3xl bg-[#fbece1]/80 border border-[#ecd5c4] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-12 shadow-2xs">
+            <Card className="p-6 rounded-card bg-surface/80 border border-line flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-12 shadow-2xs">
               <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-2xl bg-[#faede2] flex items-center justify-center text-[#9e3b2e] flex-shrink-0">
-                  <Scale className="w-5 h-5 text-[#9e3b2e]" />
+                <div className="w-10 h-10 rounded-panel bg-surface flex items-center justify-center text-accent flex-shrink-0">
+                  <Scale className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] mb-1">
+                  <h4 className="font-display font-bold text-base text-ink mb-1">
                     Chiêm nghiệm văn hóa — Không mê tín dị đoan
                   </h4>
-                  <p className="text-xs text-[#73635b] leading-relaxed max-w-xl">
+                  <p className="text-sm text-muted leading-relaxed max-w-xl">
                     Trải nghiệm chiêm nghiệm văn hóa, không phải dự báo chắc chắn tương
                     lai. Tin Lắm Tâm Linh hướng tới việc tiếp nhận di sản tập tục dân
                     gian như một liệu pháp tinh thần tích cực, vun bồi sự bình an và trân
@@ -849,17 +808,17 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                 </div>
               </div>
 
-              <div className="space-y-1.5 text-xs text-[#78665e] flex-shrink-0">
+              <div className="space-y-1.5 text-xs text-muted flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#9e3b2e]" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
                   <span>100% Miễn phí & Phi lợi nhuận</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#9e3b2e]" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
                   <span>Không quảng cáo thương mại</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#9e3b2e]" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
                   <span>Tôn trọng tuyệt đối quyền riêng tư</span>
                 </div>
               </div>
@@ -873,62 +832,76 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
         {step === 3 && (
           <div>
             {/* Top Breadcrumb & Step Badge */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-[#8a7971]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-muted">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setStep(1)}
-                  className="hover:text-[#9e3b2e] cursor-pointer"
+                  className="hover:text-accent cursor-pointer"
                 >
                   Trải nghiệm
                 </button>
                 <span>›</span>
                 <span>Xin xăm văn hóa</span>
                 <span>›</span>
-                <span className="text-[#9e3b2e] font-semibold">Kết quả chiêm nghiệm</span>
+                <span className="text-accent font-semibold">Kết quả chiêm nghiệm</span>
               </div>
 
-              <div className="flex items-center gap-1.5 uppercase font-semibold text-[11px] text-[#938279]">
-                <span className="w-2 h-2 rounded-full bg-[#9e3b2e] inline-block"></span>
+              <div className="flex items-center gap-1.5 uppercase font-semibold text-xs text-muted">
+                <span className="w-2 h-2 rounded-full bg-action inline-block"></span>
                 <span>BƯỚC 3 / 3 • KẾT QUẢ CHIÊM NGHIỆM</span>
               </div>
             </div>
 
-            {/* Top Context Subheader */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-[#8a7a72] mb-6 pb-3 border-b border-[#f1e5d8]">
-              <div>
-                Lựa chọn của bạn:{" "}
-                <strong className="text-[#9e3b2e]">{selectedRegion}</strong> (
-                {currentResult.regionSub}) •{" "}
-                <strong className="text-[#9e3b2e]">{selectedTopic}</strong>
+            {/* Top Context Breadcrumb */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-muted mb-6 pb-3 border-b border-line/60">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setStep(1)}
+                  className="hover:text-accent cursor-pointer"
+                >
+                  Xin xăm
+                </button>
+                <span>›</span>
+                <span>{selectedRegion}</span>
+                <span>›</span>
+                <span className="text-ink font-semibold">{selectedTopic}</span>
               </div>
-              <div className="italic text-[#96867e]">✍ Nội dung biên soạn minh họa</div>
+              <div className="flex items-center gap-1.5 uppercase font-medium text-xs text-muted">
+                <span>Thẻ số {currentResult.stickNumber}</span>
+                <span>•</span>
+                <span className="text-accent font-semibold">{currentResult.sealText}</span>
+              </div>
             </div>
 
-            {/* Main Heading & Guiding Quote */}
-            <div className="mb-10 text-left">
-              <h1 className="font-['Noto_Serif',serif] font-bold text-3xl sm:text-4xl text-[#2a2220] leading-tight mb-2">
+            {/* Main Editorial Header */}
+            <div className="mb-10 text-left max-w-3xl">
+              <div className="text-xs font-bold uppercase tracking-wider text-accent mb-2 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Lời quẻ chiêm nghiệm</span>
+              </div>
+              <h1 className="page-title mb-3 text-2xl sm:text-3xl lg:text-4xl text-ink font-display">
                 Lời gửi gắm từ Thẻ xăm số {currentResult.stickNumber}
               </h1>
-              <p className="font-['Noto_Serif',serif] italic text-base sm:text-lg text-[#9e3b2e] font-medium leading-relaxed">
+              <p className="font-serif italic text-base sm:text-lg text-accent leading-relaxed">
                 “{currentResult.quote}”
               </p>
             </div>
 
-            {/* Two Column Layout: Stick Card & Structured Panels */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
-              {/* Left Column (5 columns): Parchment Bamboo Slip Fortune Card */}
+            {/* Two Column Layout: Sacred Bamboo Slip & Literary Essay */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mb-16 items-start">
+              {/* Left Column (5 columns): The Sacred Parchment Bamboo Slip */}
               <div className="lg:col-span-5 space-y-4">
-                <div className="rounded-3xl p-6 sm:p-8 bg-[#fffdfa] border-2 border-[#ebd6c5] shadow-md relative overflow-hidden text-center flex flex-col justify-between min-h-[500px]">
-                  {/* Watermark flower background */}
-                  <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#fbece1]/50 pointer-events-none" />
+                <div className="rounded-2xl p-6 sm:p-8 bg-surface border border-line shadow-sm relative overflow-hidden text-center flex flex-col justify-between min-h-[480px]">
+                  {/* Subtle inner paper glow */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 via-transparent to-amber-500/5 pointer-events-none" />
 
                   {/* Card Header */}
-                  <div>
-                    <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-[#938279] font-semibold mb-4 border-b border-[#f5e9de] pb-3">
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between text-xs uppercase tracking-wider text-muted font-medium mb-4 border-b border-line/60 pb-3">
                       <span>XĂM VIỆT ĐƯƠNG ĐẠI</span>
                       <span className="flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#be8e5a]" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#9e3b2e]" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent-soft" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-action" />
                       </span>
                       <span>
                         {selectedRegion === "Bắc Bộ"
@@ -939,17 +912,17 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                       </span>
                     </div>
 
-                    <div className="text-xs font-bold uppercase tracking-widest text-[#9e3b2e] mb-1">
+                    <div className="text-xs font-bold uppercase tracking-widest text-accent mb-1">
                       THẺ SỐ {currentResult.stickNumber} • {selectedRegion.toUpperCase()}
                     </div>
 
-                    <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2b211f] leading-snug mb-8">
+                    <h2 className="section-title text-xl sm:text-2xl leading-snug mb-8 text-ink">
                       {currentResult.title}
                     </h2>
 
                     {/* 4-Line Poem in Center */}
-                    <div className="p-6 rounded-2xl bg-[#faf3ec]/70 border border-[#eddcd0] mb-8">
-                      <p className="font-['Noto_Serif',serif] italic font-semibold text-base sm:text-lg text-[#2a2220] leading-loose">
+                    <div className="p-6 rounded-xl bg-surface-soft/60 border border-line/60 mb-8 shadow-inner">
+                      <p className="font-serif italic font-semibold text-base sm:text-lg text-ink leading-loose">
                         “{currentResult.poem.line1}
                         <br />
                         {currentResult.poem.line2}
@@ -961,167 +934,106 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                     </div>
                   </div>
 
-                  {/* Card Bottom: Seals & Meta */}
-                  <div>
-                    <div className="pt-4 border-t border-[#f1e5d8] flex items-center justify-between text-xs text-[#8a7a72]">
-                      <div className="text-left">
-                        <div className="text-[10px] uppercase text-[#9f8f87]">
-                          Thấu xăm
-                        </div>
-                        <div className="font-medium text-[#2e2624]">Tự soi chiếu</div>
-                      </div>
-
-                      {/* Red Traditional Stamp */}
-                      <div className="w-12 h-12 rounded-xl border-2 border-[#9e3b2e] text-[#9e3b2e] flex flex-col items-center justify-center font-bold text-[10px] leading-tight rotate-[-4deg] shadow-2xs">
-                        <span>{currentResult.sealText.split(" ")[0]}</span>
-                        <span>{currentResult.sealText.split(" ")[1] || "NIỆM"}</span>
-                      </div>
-
-                      <div className="text-right">
-                        <div className="text-[10px] uppercase text-[#9f8f87]">Ngụ ý</div>
-                        <div className="font-medium text-[#2e2624]">
-                          {currentResult.insight}
-                        </div>
-                      </div>
+                  {/* Card Bottom: Traditional Seal & Insight */}
+                  <div className="relative z-10 pt-4 border-t border-line/60 flex items-center justify-between text-xs text-muted">
+                    <div className="text-left">
+                      <div className="text-xs uppercase text-muted">Thấu xăm</div>
+                      <div className="font-semibold text-ink">Tự soi chiếu</div>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-[#f4e8dc] flex items-center justify-between text-[11px] text-[#95837a]">
-                      <span className="italic">
-                        Minh họa phỏng theo thẻ xăm chiêm nghiệm dân gian
-                      </span>
-                      <button
-                        onClick={handleSaveResult}
-                        className="text-[#9e3b2e] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
-                        title="Lưu lại thẻ xăm"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>{isSaved ? "Đã lưu" : "Lưu thẻ"}</span>
-                      </button>
+                    {/* Red Traditional Lacquer Stamp */}
+                    <div className="w-12 h-12 rounded-xl border-2 border-accent text-accent bg-accent-soft/40 flex flex-col items-center justify-center font-bold text-xs leading-tight rotate-[-4deg] shadow-xs">
+                      <span>{currentResult.sealText.split(" ")[0]}</span>
+                      <span>{currentResult.sealText.split(" ")[1] || "NIỆM"}</span>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-xs uppercase text-muted">Ngụ ý</div>
+                      <div className="font-semibold text-ink">
+                        {currentResult.insight}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Micro Tip below card */}
-                <div className="p-3.5 rounded-2xl bg-[#faf3ec] border border-[#ecd9cb] text-xs text-[#77665f] leading-relaxed flex items-start gap-2">
-                  <span className="text-sm">💡</span>
-                  <span>
-                    Bạn có thể chụp màn hình thẻ xăm này hoặc nhấn <strong>Lưu thẻ</strong>{" "}
-                    để giữ lại làm câu nhắc nhở an tâm trong ngày.
-                  </span>
+                {/* Subtle download / share action below slip */}
+                <div className="flex items-center justify-between px-2 text-xs text-muted">
+                  <span className="italic">Di sản xăm tre văn hóa dân gian</span>
+                  <button
+                    onClick={handleSaveResult}
+                    className="text-accent hover:text-action font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                    title="Lưu lại thẻ xăm"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>{isSaved ? "Đã lưu thẻ" : "Lưu thẻ về máy"}</span>
+                  </button>
                 </div>
               </div>
 
-              {/* Right Column (7 columns): 4 Structured Panels */}
-              <div className="lg:col-span-7 space-y-6">
-                {/* PHẦN 1 • SOI THẤU BẢN THÂN: Lời chiêm nghiệm cho bạn */}
-                <Card className="p-6 sm:p-7 rounded-3xl bg-white border border-[#eddcd0] shadow-xs">
-                  <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-1 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>PHẦN 1 • SOI THẤU BẢN THÂN</span>
+              {/* Right Column (7 columns): Seamless Literary Essay (No 4 box cards) */}
+              <div className="lg:col-span-7 space-y-8 text-ink">
+                {/* Essay Section 1: Lời chiêm nghiệm & Luận giải */}
+                <div className="space-y-4">
+                  <div className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-action"></span>
+                    <span>Tự soi chiếu nội tâm</span>
                   </div>
-                  <h3 className="font-['Noto_Serif',serif] font-bold text-xl text-[#2a2220] mb-3">
-                    Lời chiêm nghiệm cho bạn
+                  <h3 className="font-display font-semibold text-2xl text-ink">
+                    Lắng nghe lẽ biến chuyển
                   </h3>
 
-                  <div className="space-y-3 text-sm sm:text-base text-[#52443f] leading-relaxed mb-5">
+                  <div className="space-y-4 text-sm sm:text-base text-ink/90 leading-relaxed font-normal">
                     {currentResult.reflectionParagraphs.map((para, pIdx) => (
-                      <p key={pIdx}>{para}</p>
+                      <p key={pIdx} className="leading-relaxed">
+                        {pIdx === 0 && (
+                          <span className="float-left text-3xl sm:text-4xl font-serif font-bold text-accent mr-2.5 leading-none mt-0.5">
+                            {para.charAt(0)}
+                          </span>
+                        )}
+                        {pIdx === 0 ? para.slice(1) : para}
+                      </p>
                     ))}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {/* 2 Gentle Takeaways */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     {currentResult.tips.map((tip, tIdx) => (
                       <div
                         key={tIdx}
-                        className="p-4 rounded-2xl bg-[#faf4ed] border border-[#f0e2d5]"
+                        className="p-4 rounded-xl bg-surface/70 border border-line"
                       >
-                        <h5 className="font-semibold text-xs text-[#9e3b2e] mb-1 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#9e3b2e]"></span>
+                        <h5 className="font-semibold text-xs text-accent mb-1 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-action"></span>
                           <span>{tip.title}</span>
                         </h5>
-                        <p className="text-xs text-[#705e57] leading-relaxed">
+                        <p className="text-xs sm:text-sm text-muted leading-relaxed">
                           {tip.desc}
                         </p>
                       </div>
                     ))}
                   </div>
-                </Card>
+                </div>
 
-                {/* PHẦN 2 • TRI THỨC DÂN GIAN: Góc nhìn văn hóa */}
-                <Card className="p-6 sm:p-7 rounded-3xl bg-white border border-[#eddcd0] shadow-xs">
-                  <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-1 flex items-center gap-1.5">
-                    <BookOpen className="w-3.5 h-3.5" />
-                    <span>PHẦN 2 • TRI THỨC DÂN GIAN</span>
-                  </div>
-                  <h3 className="font-['Noto_Serif',serif] font-bold text-xl text-[#2a2220] mb-3">
-                    Góc nhìn văn hóa
-                  </h3>
+                <div className="w-full h-px bg-line/60" />
 
-                  <p className="text-sm sm:text-base text-[#52443f] leading-relaxed mb-4">
-                    {currentResult.culturalAspect}
-                  </p>
-
-                  <div className="p-3.5 rounded-2xl bg-[#faf4ed] border border-[#ecdacb] text-xs text-[#79675f] leading-relaxed mb-4">
-                    <span className="font-semibold text-[#8b3327]">Ghi chú biên tập:</span>{" "}
-                    Nguồn và nội dung đang được biên tập. Chúng tôi tiếp cận tập tục dân gian
-                    dưới góc độ văn hóa học và mỹ học, không đại diện cho tài liệu sử học
-                    tuyệt đối.
-                  </div>
-
-                  {/* Link to CultureDetail Article */}
-                  <div className="p-4 rounded-2xl bg-[#fbece1]/70 border border-[#edd3c1] flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#faede2] flex-shrink-0">
-                        <img
-                          src="/images/temple_bac_bo.jpg"
-                          alt="Đình làng Bắc Bộ"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-[#9e3b2e]">
-                          TÌM HIỂU KHÔNG GIAN
-                        </div>
-                        <div className="font-semibold text-xs sm:text-sm text-[#2a2220]">
-                          {currentResult.relatedArticleTitle}
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() =>
-                        onGoToArticle && onGoToArticle(currentResult.relatedArticleId)
-                      }
-                      className="text-xs font-semibold text-[#9e3b2e] hover:underline flex items-center gap-1 flex-shrink-0 cursor-pointer"
-                    >
-                      <span>Đọc để hiểu thêm bối cảnh</span>
-                      <ArrowRight className="w-3 h-3" />
-                    </button>
-                  </div>
-                </Card>
-
-                {/* PHẦN 3 • THỰC HÀNH AN YÊN: Hành động nhỏ hôm nay */}
-                <Card className="p-6 sm:p-7 rounded-3xl bg-white border border-[#eddcd0] shadow-xs">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] flex items-center gap-1.5">
+                {/* Essay Section 2: Thực hành an yên & Nuôi dưỡng tâm lành */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
                       <Flower2 className="w-3.5 h-3.5" />
-                      <span>PHẦN 3 • THỰC HÀNH AN YÊN</span>
+                      <span>Thực hành an yên hôm nay</span>
                     </div>
-                    <Badge variant="secondary" className="text-[11px] bg-[#fbf5ee]">
+                    <span className="text-xs text-muted font-medium">
                       {currentResult.microAction.duration}
-                    </Badge>
+                    </span>
                   </div>
 
-                  <h3 className="font-['Noto_Serif',serif] font-bold text-xl text-[#2a2220] mb-3">
-                    Hành động nhỏ hôm nay
-                  </h3>
-
-                  <div className="p-5 rounded-2xl bg-[#faf3ec] border border-[#ecd9cb] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="p-5 rounded-xl bg-surface/80 border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <h4 className="font-bold text-sm sm:text-base text-[#2c2220] mb-1">
+                      <h4 className="font-display font-semibold text-base text-ink mb-1">
                         {currentResult.microAction.title}
                       </h4>
-                      <p className="text-xs sm:text-sm text-[#6c5c55] leading-relaxed">
+                      <p className="text-xs sm:text-sm text-muted leading-relaxed">
                         {currentResult.microAction.desc}
                       </p>
                     </div>
@@ -1130,8 +1042,8 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                       onClick={() => setIsActionDone(!isActionDone)}
                       className={`px-4 py-2.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
                         isActionDone
-                          ? "bg-[#2e5e33] text-white shadow-2xs"
-                          : "bg-white border border-[#dfc3af] text-[#8e3629] hover:bg-[#faede2]"
+                          ? "bg-success-soft text-success shadow-2xs"
+                          : "bg-surface border border-line text-accent hover:bg-surface-soft"
                       }`}
                     >
                       <CheckCircle2 className="w-4 h-4" />
@@ -1140,87 +1052,81 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                       </span>
                     </button>
                   </div>
-                </Card>
+                </div>
 
-                {/* PHẦN 4 • BƯỚC KẾ TIẾP: Lưu giữ & Tiếp tục hành trình */}
-                <Card className="p-6 sm:p-7 rounded-3xl bg-white border border-[#eddcd0] shadow-xs space-y-4">
-                  <div>
-                    <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-1">
-                      PHẦN 4 • BƯỚC KẾ TIẾP
-                    </div>
-                    <h3 className="font-['Noto_Serif',serif] font-bold text-xl text-[#2a2220]">
-                      Lưu giữ & Tiếp tục hành trình
-                    </h3>
+                <div className="w-full h-px bg-line/60" />
+
+                {/* Essay Section 3: Góc nhìn văn hóa & Tri thức di sản */}
+                <div className="space-y-3">
+                  <div className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>Góc nhìn văn hóa & Không gian di sản</span>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-[#faf4ed] border border-[#ecdacb] text-xs text-[#705e57] leading-relaxed">
-                    <div className="font-bold text-[#8d2f23] mb-1">
-                      {isLoggedIn ? "Lưu trữ tài khoản cá nhân" : "Lưu trữ cho khách"}
-                    </div>
-                    <p>
-                      {isLoggedIn
-                        ? "Thẻ xăm và hành động chiêm nghiệm này sẽ được lưu an toàn trong Góc của tôi để bạn có thể xem lại bất cứ lúc nào."
-                        : "Nhấn 'Lưu vào Góc của tôi' sẽ đưa bạn đến trang Đăng nhập và tự động chuyển về đúng kết quả Thẻ số " +
-                          currentResult.stickNumber +
-                          " sau khi hoàn tất, giúp lưu giữ đầy đủ hành trình trải nghiệm của bạn."}
-                    </p>
-                  </div>
+                  <p className="text-sm sm:text-base text-muted leading-relaxed">
+                    {currentResult.culturalAspect}
+                  </p>
 
-                  <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
-                    <Button
-                      variant="default"
-                      size="default"
-                      onClick={handleSaveResult}
-                      className="w-full sm:w-auto font-semibold gap-2 shadow-xs"
+                  {/* Cultural link */}
+                  <div className="pt-2">
+                    <button
+                      onClick={() =>
+                        onGoToArticle && onGoToArticle(currentResult.relatedArticleId)
+                      }
+                      className="text-xs font-semibold text-accent hover:text-action flex items-center gap-1.5 cursor-pointer transition-colors"
                     >
-                      <Download className="w-4 h-4" />
-                      <span>
-                        {isCardSaved
-                          ? "Đã lưu vào Góc của tôi"
-                          : "Lưu vào Góc của tôi"}
-                      </span>
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      size="default"
-                      onClick={() => {
-                        setStep(1);
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }}
-                      className="w-full sm:w-auto gap-2 border-[#dfc5b2] text-[#715f57]"
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                      <span>Rút một thẻ khác</span>
-                    </Button>
-
-                    {onGoToExplore && (
-                      <button
-                        onClick={onGoToExplore}
-                        className="text-xs font-semibold text-[#9e3b2e] hover:underline flex items-center gap-1 ml-auto cursor-pointer"
-                      >
-                        <span>Khám phá văn hóa liên quan</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </button>
-                    )}
+                      <span>Tìm hiểu không gian: {currentResult.relatedArticleTitle}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                </Card>
+                </div>
+
+                {/* Final Primary Action Buttons (Clear, decisive focal point) */}
+                <div className="pt-6 border-t border-line flex flex-col sm:flex-row items-center gap-3">
+                  <Button
+                    variant="default"
+                    size="lg"
+                    onClick={handleSaveResult}
+                    className="w-full sm:w-auto px-7 py-3 font-semibold gap-2 shadow-sm cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>
+                      {isCardSaved ? "Đã lưu vào Góc của tôi" : "Lưu giữ vào Góc của tôi"}
+                    </span>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => {
+                      setStep(1);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="w-full sm:w-auto px-6 py-3 gap-2 border-line text-ink cursor-pointer"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Rút một thẻ khác</span>
+                  </Button>
+
+                  {onGoToExplore && (
+                    <button
+                      onClick={onGoToExplore}
+                      className="text-xs font-medium text-muted hover:text-accent flex items-center gap-1 sm:ml-auto cursor-pointer transition-colors py-2"
+                    >
+                      <span>Khám phá văn hóa Ba Miền</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Bottom Caution Banner */}
-            <div className="p-5 rounded-2xl bg-[#fcf5ed] border border-[#f0decfe3] flex items-start gap-3.5 text-xs text-[#77665f] leading-relaxed mb-12">
-              <ShieldCheck className="w-5 h-5 text-[#9e3b2e] flex-shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold text-[#8d2f23] uppercase tracking-wider block mb-0.5">
-                  LƯU Ý Ý NGHĨA TRẢI NGHIỆM
-                </span>
-                <span>
-                  Đây là nội dung chiêm nghiệm văn hóa và liệu pháp tinh thần tích cực, không
-                  phải dự báo chắc chắn tương lai hay lời khuyên chuyên môn (y tế, pháp lý,
-                  tài chính). Mọi quyết định và hướng đi cuộc sống đều thuộc về bạn.
-                </span>
-              </div>
+            <div className="p-4 rounded-xl bg-surface/60 border border-line flex items-center gap-3 text-xs text-muted leading-relaxed mb-12">
+              <ShieldCheck className="w-4 h-4 text-accent flex-shrink-0" />
+              <span>
+                Nội dung chiêm nghiệm văn hóa và liệu pháp tinh thần tích cực, không mang tính mê tín hay dự báo định mệnh. Mọi quyết định và an vui cuộc sống đều khởi phát từ tâm bạn.
+              </span>
             </div>
           </div>
         )}
@@ -1230,21 +1136,21 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
            ========================================================================= */}
         {showGuideModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-            <Card className="max-w-md w-full bg-white border border-[#eddcd0] rounded-3xl p-6 shadow-xl relative animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#f1e5d8]">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#9e3b2e]">
+            <Card className="max-w-md w-full bg-surface border border-line rounded-card p-6 shadow-xl relative animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-line">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent">
                   <Sparkles className="w-4 h-4" />
                   <span>Hướng dẫn chiêm nghiệm</span>
                 </div>
                 <button
                   onClick={() => setShowGuideModal(false)}
-                  className="text-xs text-[#8c7b74] hover:text-[#9e3b2e] cursor-pointer"
+                  className="text-xs text-muted hover:text-accent cursor-pointer"
                 >
                   ✕ Đóng
                 </button>
               </div>
 
-              <div className="space-y-3 text-xs sm:text-sm text-[#6d5b54] leading-relaxed mb-6">
+              <div className="space-y-3 text-xs sm:text-sm text-ink leading-relaxed mb-6">
                 <p>
                   <strong>1. Khởi tâm an hòa:</strong> Hãy giữ cho lồng ngực thả lỏng, hít
                   vào một hơi sâu và thở ra chậm rãi.
@@ -1271,15 +1177,6 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
           </div>
         )}
 
-        {/* Global Footer Motto */}
-        <div className="text-center pt-10 border-t border-[#eddcd0]">
-          <p className="font-['Noto_Serif',serif] italic font-semibold text-lg sm:text-xl text-[#9e3b2e] mb-1.5">
-            “Tâm bình thế giới bình, lòng an vạn sự tỏ.”
-          </p>
-          <div className="text-xs uppercase tracking-widest text-[#938279] font-medium">
-            Thông điệp của Tin Lắm Tâm Linh
-          </div>
-        </div>
       </main>
     </div>
   );

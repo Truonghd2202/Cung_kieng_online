@@ -8,13 +8,13 @@ const Progress = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "relative h-2 w-full overflow-hidden rounded-full bg-[#f3e3d6]",
+      "relative h-2 w-full overflow-hidden rounded-full bg-surface-soft",
       className
     )}
     {...props}
   >
     <div
-      className="h-full w-full flex-1 bg-[#9e3b2e] transition-all duration-500 ease-out"
+      className="h-full w-full flex-1 bg-action transition-all duration-500 ease-out"
       style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
     />
   </div>

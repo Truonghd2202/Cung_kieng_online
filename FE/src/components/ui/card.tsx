@@ -4,13 +4,23 @@ import { cn } from "@/src/lib/utils";
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+>(({ className, onClick, onKeyDown, role, tabIndex, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "rounded-3xl border border-[#eadcce] dark:border-[#4d1b24] bg-white/95 dark:bg-[#2c0e14]/95 backdrop-blur-xs text-[#2a1815] dark:text-[#f7ede6] shadow-[0_4px_24px_-4px_rgba(42,24,21,0.06),0_1px_3px_rgba(42,24,21,0.03)] dark:shadow-[0_8px_32px_-4px_rgba(0,0,0,0.5)] transition-all",
+      "min-w-0 rounded-card border border-line bg-surface text-ink transition-colors duration-200",
       className
     )}
+    role={role ?? (onClick ? "button" : undefined)}
+    tabIndex={tabIndex ?? (onClick ? 0 : undefined)}
+    onClick={onClick}
+    onKeyDown={(event) => {
+      onKeyDown?.(event);
+      if (!event.defaultPrevented && onClick && event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    }}
     {...props}
   />
 ));
@@ -35,7 +45,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "font-['Noto_Serif',serif] font-bold text-xl text-[#2a2220] leading-none tracking-tight",
+      "font-display font-semibold text-xl text-ink leading-tight tracking-tight",
       className
     )}
     {...props}
@@ -49,7 +59,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-xs sm:text-sm text-[#73635d] leading-relaxed", className)}
+    className={cn("text-sm text-muted leading-relaxed", className)}
     {...props}
   />
 ));

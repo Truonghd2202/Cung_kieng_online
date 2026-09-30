@@ -76,55 +76,55 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
   }, [searchQuery, selectedOccasion, selectedRegion]);
 
   return (
-    <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif]">
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-20">
+    <div className="screen-shell">
+      <main className="page-container max-w-6xl">
         {/* Top Breadcrumb & Tag */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-[#8a7971]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-muted">
           <div className="flex items-center gap-2">
             <span
               onClick={onGoToCulture}
-              className="hover:text-[#9e3b2e] cursor-pointer transition-colors"
+              className="hover:text-accent cursor-pointer transition-colors"
             >
               Khám phá
             </span>
             <span>/</span>
-            <span className="text-[#9e3b2e] font-semibold">Cẩm nang nghi lễ</span>
+            <span className="text-accent font-semibold">Cẩm nang nghi lễ</span>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 uppercase font-semibold text-[11px] text-[#938279]">
-              <span className="w-2 h-2 rounded-full bg-[#9e3b2e] inline-block"></span>
+            <div className="flex items-center gap-1.5 uppercase font-semibold text-xs text-muted">
+              <span className="w-2 h-2 rounded-full bg-action inline-block"></span>
               <span>THƯ VIỆN NGHI THỨC GIA ĐÌNH • BẢN SẮC & THÍCH ỨNG</span>
             </div>
           </div>
         </div>
 
         {/* Khám phá Sub-tabs */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex flex-wrap items-center gap-2 mb-6">
           {onGoToCulture && (
             <button
               onClick={onGoToCulture}
-              className="px-4 py-2 rounded-full bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#9e3b2e] hover:text-[#9e3b2e] text-xs font-medium transition-all cursor-pointer"
+              className="px-4 py-2 rounded-full bg-surface border border-line text-ink hover:border-accent hover:text-accent text-xs font-medium transition-all cursor-pointer"
             >
               Di sản & Điển tích dân gian
             </button>
           )}
-          <button className="px-4 py-2 rounded-full bg-[#9e3b2e] text-white text-xs font-semibold shadow-2xs">
+          <button className="px-4 py-2 rounded-full bg-action text-white text-xs font-semibold shadow-2xs">
             Cẩm nang nghi lễ tại gia (Mới)
           </button>
         </div>
 
         {/* Header Title Section */}
         <div className="mb-8">
-          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-2">
+          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-accent mb-2">
             <BookOpen className="w-4 h-4" />
             <span>HỒ SƠ KHẢO CỨU & THỰC HÀNH TẠI GIA</span>
           </div>
 
-          <h1 className="font-['Noto_Serif',serif] font-bold text-3xl sm:text-4xl lg:text-[42px] text-[#2a2220] leading-tight mb-3">
+          <h1 className="page-title mb-3">
             Cẩm nang nghi lễ tại gia
           </h1>
-          <p className="text-sm sm:text-base text-[#6f5e57] leading-relaxed max-w-3xl">
+          <p className="text-sm sm:text-base text-ink leading-relaxed max-w-3xl">
             Thư viện mở hỗ trợ người trẻ tìm hiểu cội nguồn và tự chuẩn bị các nếp phong tục
             truyền thống tại nhà. Tinh giản, trang trọng, tôn trọng hoàn cảnh sống hiện đại mà
             vẫn giữ vẹn tâm tình hiếu kính.
@@ -132,23 +132,23 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
         </div>
 
         {/* Search & Filter Toolbar */}
-        <div className="p-4 sm:p-5 rounded-3xl bg-[#fbece1]/50 border border-[#ecd5c4] mb-10 space-y-4">
+        <div className="py-6 border-y border-line mb-10 space-y-5">
           {/* Search Row */}
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#9a8880]" />
+              <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Tìm kiếm nghi thức, ngày lễ, lễ vật giản dị (ví dụ: ngày rằm, mùng một, giỗ, tết)..."
-                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white border border-[#eddcd0] text-sm text-[#2a2220] placeholder-[#9a8880] focus:outline-none focus:ring-2 focus:ring-[#9e3b2e]/30 transition-all"
+                className="w-full pl-11 pr-4 py-3 rounded-panel bg-surface border border-line text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all"
               />
             </div>
             <Button
               variant="default"
               size="lg"
-              className="px-6 py-3 rounded-2xl text-sm font-semibold shrink-0 gap-1.5"
+              className="px-6 py-3 rounded-panel text-sm font-semibold shrink-0 gap-1.5"
             >
               <span>Tìm</span>
               <ArrowRight className="w-4 h-4" />
@@ -157,7 +157,7 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
 
           {/* Filter: Theo Dịp */}
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="font-semibold text-[#7d6c65] flex items-center gap-1 mr-1">
+            <span className="font-semibold text-muted flex items-center gap-1 mr-1">
               <Calendar className="w-3.5 h-3.5" />
               <span>Theo Dịp:</span>
             </span>
@@ -169,8 +169,8 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
                   onClick={() => setSelectedOccasion(occ.key)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
                     isActive
-                      ? "bg-[#9e3b2e] text-white shadow-2xs font-semibold"
-                      : "bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#dfc4b0]"
+                      ? "bg-action text-white shadow-2xs font-semibold"
+                      : "bg-surface border border-line text-ink hover:border-line"
                   }`}
                 >
                   {occ.label}
@@ -180,8 +180,8 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
           </div>
 
           {/* Filter: Vùng Miền */}
-          <div className="flex flex-wrap items-center gap-2 text-xs pt-1 border-t border-[#eedcd0]/70">
-            <span className="font-semibold text-[#7d6c65] flex items-center gap-1 mr-1">
+          <div className="flex flex-wrap items-center gap-2 text-xs pt-1 border-t border-line/70">
+            <span className="font-semibold text-muted flex items-center gap-1 mr-1">
               <Compass className="w-3.5 h-3.5" />
               <span>Vùng miền:</span>
             </span>
@@ -193,8 +193,8 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
                   onClick={() => setSelectedRegion(reg.key)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
                     isActive
-                      ? "bg-[#453b38] text-white shadow-2xs font-semibold"
-                      : "bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#dfc4b0]"
+                      ? "bg-action text-on-action shadow-2xs font-semibold"
+                      : "bg-surface border border-line text-ink hover:border-line"
                   }`}
                 >
                   {reg.label}
@@ -212,15 +212,15 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
               return (
                 <Card
                   key={item.id}
-                  className={`rounded-3xl overflow-hidden flex flex-col justify-between transition-all duration-300 hover:shadow-md ${
+                  className={`rounded-panel overflow-hidden flex flex-col justify-between transition-colors duration-200 ${
                     isHighlight
-                      ? "bg-white border-[#e0c4b2] shadow-xs ring-1 ring-[#9e3b2e]/20"
-                      : "bg-[#fffdfa] border-[#eddcd0]"
+                      ? "bg-surface border-accent/40"
+                      : "bg-surface border-line"
                   }`}
                 >
                   <div>
                     {/* Image Banner */}
-                    <div className="relative h-52 w-full overflow-hidden bg-[#faede2]">
+                    <div className="relative h-52 w-full overflow-hidden bg-surface">
                       <img
                         src={item.image}
                         alt={item.title}
@@ -232,19 +232,19 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
                       <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
                         {item.badge && (
                           <span
-                            className={`px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase ${
+                            className={`px-2.5 py-1 rounded-full text-xs font-bold tracking-wide uppercase ${
                               item.badgeType === "featured"
-                                ? "bg-[#9e3b2e] text-white shadow-2xs"
+                                ? "bg-action text-white shadow-2xs"
                                 : item.badgeType === "family"
-                                ? "bg-[#64504a] text-white"
-                                : "bg-white/95 text-[#9e3b2e]"
+                                ? "bg-action text-on-action"
+                                : "bg-surface/95 text-accent"
                             }`}
                           >
                             {item.badge}
                           </span>
                         )}
                         {item.subBadgeOccasion && (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-black/50 text-white backdrop-blur-xs">
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-black/50 text-white backdrop-blur-xs">
                             {item.subBadgeOccasion}
                           </span>
                         )}
@@ -252,7 +252,7 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
 
                       {/* Bottom-right Tag on Image */}
                       <div className="absolute bottom-3 right-3">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-black/60 text-white/90 backdrop-blur-xs border border-white/20">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-black/60 text-white/90 backdrop-blur-xs border border-white/20">
                           {item.tagOnImage}
                         </span>
                       </div>
@@ -261,11 +261,11 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
                     {/* Card Body */}
                     <div className="p-5">
                       {/* Meta line */}
-                      <div className="flex items-center gap-2 text-xs text-[#8c7b74] mb-2 font-medium">
+                      <div className="flex items-center gap-2 text-xs text-muted mb-2 font-medium">
                         <span>{item.stepsCount}</span>
                         <span>•</span>
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-[#9e3b2e]" />
+                          <Clock className="w-3 h-3 text-accent" />
                           <span>{item.timeEstimate}</span>
                         </span>
                       </div>
@@ -273,21 +273,21 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
                       {/* Title */}
                       <h2
                         onClick={() => onSelectRitual(item.id)}
-                        className="font-['Noto_Serif',serif] font-bold text-xl text-[#2a2220] leading-snug mb-2 hover:text-[#9e3b2e] transition-colors cursor-pointer"
+                        className="font-display font-bold text-xl text-ink leading-snug mb-2 hover:text-accent transition-colors cursor-pointer"
                       >
                         {item.title}
                       </h2>
 
                       {/* Description */}
-                      <p className="text-sm text-[#6f5e57] leading-relaxed line-clamp-3">
+                      <p className="text-sm text-ink leading-relaxed line-clamp-3">
                         {item.desc}
                       </p>
                     </div>
                   </div>
 
                   {/* Card Footer */}
-                  <div className="px-5 pb-5 pt-3 border-t border-[#f4e8dc] flex items-center justify-between gap-2">
-                    <span className="text-[11px] uppercase font-bold tracking-wider text-[#938279] truncate">
+                  <div className="px-5 pb-5 pt-3 border-t border-line flex items-center justify-between gap-2">
+                    <span className="text-xs uppercase font-bold tracking-wider text-muted truncate">
                       {item.tagPill}
                     </span>
 
@@ -295,8 +295,8 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
                       onClick={() => onSelectRitual(item.id)}
                       className={`inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                         isHighlight
-                          ? "bg-[#9e3b2e] text-white hover:bg-[#853025] shadow-2xs"
-                          : "text-[#9e3b2e] hover:bg-[#fbf2eb] border border-transparent hover:border-[#eddcd0]"
+                          ? "bg-action text-white hover:bg-action shadow-2xs"
+                          : "text-accent hover:bg-surface border border-transparent hover:border-line"
                       }`}
                     >
                       <span>{item.actionText}</span>
@@ -308,8 +308,8 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
             })}
           </div>
         ) : (
-          <div className="p-12 text-center rounded-3xl bg-white border border-[#eddcd0] mb-16">
-            <p className="text-base text-[#7c6a63] mb-4">
+          <div className="p-12 text-center rounded-card bg-surface border border-line mb-16">
+            <p className="text-base text-muted mb-4">
               Không tìm thấy nghi thức phù hợp với bộ lọc đã chọn.
             </p>
             <Button
@@ -327,18 +327,18 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
         )}
 
         {/* Philosophy Pledge Banner */}
-        <Card className="p-6 sm:p-7 rounded-3xl bg-[#fbece1]/70 border border-[#ecd5c4] mb-12 shadow-2xs">
+        <Card className="p-6 sm:p-7 rounded-card bg-surface/70 border border-line mb-12 shadow-2xs">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#faede2] border border-[#ecd9cb] flex items-center justify-center text-[#9e3b2e] shrink-0 mt-0.5">
+              <div className="w-12 h-12 rounded-panel bg-surface border border-line flex items-center justify-center text-accent shrink-0 mt-0.5">
                 <Flower2 className="w-6 h-6" />
               </div>
               <div>
-                <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-1.5 flex items-center gap-1.5">
+                <div className="text-xs font-bold uppercase tracking-wider text-accent mb-1.5 flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4" />
                   <span>NGUYÊN TẮC TÙY DUYÊN & TÂM THÀNH LÀM TRỌNG</span>
                 </div>
-                <p className="text-xs sm:text-sm text-[#6c5b54] leading-relaxed max-w-3xl">
+                <p className="text-sm text-ink leading-relaxed max-w-3xl">
                   Tập tục tín ngưỡng dân gian Việt Nam thiên biến vạn hóa theo từng nếp nhà,
                   dòng họ và phong thổ ba miền. <strong>Tin Lắm Tâm Linh</strong> tuyệt đối không
                   tự tạo văn khấn, không áp đặt bất kỳ nghi thức nào là “chuẩn duy nhất” hay mang
@@ -352,7 +352,7 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
             <Button
               variant="outline"
               size="sm"
-              className="shrink-0 bg-white border-[#eddcd0] hover:bg-[#faede2] text-xs font-semibold text-[#8b3528]"
+              className="shrink-0 bg-surface border-line hover:bg-surface text-xs font-semibold text-accent"
             >
               <span>Đọc Quy ước An yên</span>
               <ArrowRight className="w-3.5 h-3.5 ml-1" />
@@ -361,11 +361,8 @@ export const RitualGuideScreen: React.FC<RitualGuideScreenProps> = ({
         </Card>
 
         {/* Classical Bottom Quote */}
-        <div className="text-center pt-6 border-t border-[#eddcd0]">
-          <p className="font-['Noto_Serif',serif] italic font-semibold text-lg text-[#9e3b2e] mb-1.5">
-            “Tâm bình thế giới bình, lòng an vạn sự tỏ.”
-          </p>
-          <div className="text-xs uppercase tracking-widest text-[#938279] font-medium">
+        <div className="text-center pt-6 border-t border-line">
+          <div className="text-xs uppercase tracking-widest text-muted font-medium">
             © {new Date().getFullYear()} Tin Lắm Tâm Linh • Chiêm nghiệm dân gian đương đại
           </div>
         </div>

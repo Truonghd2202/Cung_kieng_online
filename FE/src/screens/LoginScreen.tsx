@@ -5,17 +5,13 @@ import {
   EyeOff,
   AtSign,
   LogIn,
-  Flower2,
   Sparkles,
   ArrowLeft,
-  UserCheck,
-  Info,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Card } from "@/src/components/ui/card";
-
-import { loginAccount, DEMO_USER } from "../data/authService";
+import { loginAccount } from "../data/authService";
 
 interface LoginScreenProps {
   onBack?: () => void;
@@ -24,6 +20,8 @@ interface LoginScreenProps {
   onGoToForgotPassword?: () => void;
   pendingSignalMood?: string;
 }
+
+type AuthState = "idle" | "submitting" | "success" | "error";
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({
   onBack,
@@ -37,321 +35,792 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [authState, setAuthState] = useState<AuthState>("idle");
 
-  const handleQuickDemoLogin = () => {
-    onSuccess(DEMO_USER.name, DEMO_USER.email);
-  };
+  const isSubmitting = authState === "submitting";
+  const isSuccess = authState === "success";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting || isSuccess) return;
+
     setErrorMessage("");
+    setAuthState("submitting");
 
-    const result = loginAccount(identifier, password);
-    if (!result.success) {
-      setErrorMessage(result.error || "Không thể đăng nhập. Vui lòng thử lại.");
-      return;
-    }
+    // Xác thực tài khoản nhanh chóng & chính xác
+    setTimeout(() => {
+      const result = loginAccount(identifier, password);
+      if (!result.success) {
+        setAuthState("error");
+        setErrorMessage(result.error || "Tài khoản hoặc mật khẩu không chính xác.");
+        return;
+      }
 
-    onSuccess(result.user.name, result.user.email);
+      // Đăng nhập thành công -> Ba cây nhang tỏa khói trầm thanh thoát
+      setAuthState("success");
+
+      // Chuyển vào trang tiếp theo sau khi làn khói bốc lên tuyệt đẹp (~750ms)
+      setTimeout(() => {
+        onSuccess(result.user?.name, result.user?.email);
+      }, 750);
+    }, 180);
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#f7f2ea] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif] flex flex-col items-center justify-center p-4 sm:p-6">
-      <Card className="w-full max-w-4xl bg-white border border-[#eddcd0] rounded-3xl shadow-lg overflow-hidden grid grid-cols-1 md:grid-cols-12">
-        {/* Left Column: Peach Parchment Art Panel */}
-        <div className="md:col-span-5 bg-[#fbf2e9] p-8 sm:p-10 border-b md:border-b-0 md:border-r border-[#ecdcd0] flex flex-col justify-between">
-          <div>
-            {/* Top row */}
-            <div className="flex items-center justify-between mb-6">
-              <Badge
-                variant="terracotta"
-                className="gap-1.5 px-3 py-1 text-xs font-semibold tracking-wider uppercase"
-              >
-                <Flower2 className="w-3.5 h-3.5" />
-                <span>Hồn Việt đương đại</span>
-              </Badge>
-              <div className="w-6 h-6 rounded-full bg-[#f4e2d3] flex items-center justify-center text-[#9e3b2e] shadow-2xs">
-                <Sparkles className="w-3.5 h-3.5" />
-              </div>
-            </div>
+    <div className="relative min-h-[calc(100vh-64px)] w-full flex flex-col justify-between overflow-x-hidden bg-canvas text-ink transition-colors duration-500">
+      {/* Vầng hào quang thiền định nền */}
+      <div
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+        aria-hidden="true"
+      >
+        <div
+          className={`absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl transition-all duration-1000 ${
+            isSuccess
+              ? "w-[850px] h-[850px] bg-gradient-to-b from-amber-400/50 via-red-500/35 to-transparent scale-140 opacity-100"
+              : "w-[600px] h-[600px] bg-gradient-to-b from-amber-500/15 via-red-900/10 to-transparent scale-100 opacity-60"
+          }`}
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(#8f202b_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.025] dark:opacity-[0.05]" />
+      </div>
 
-            {/* Photo Card with text */}
-            <div className="relative rounded-2xl overflow-hidden shadow-xs border border-[#ecd9cb] mb-6 group">
-              <img
-                src="/images/do_paper_still_life.jpg"
-                alt="Điểm tựa tĩnh lặng"
-                className="w-full h-56 sm:h-64 object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+      {/* TOP: Nút trở về tinh gọn góc trên */}
+      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-8 pt-3 flex items-center justify-between">
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={isSubmitting || isSuccess}
+            className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface/80 hover:bg-surface border border-line text-xs font-medium text-muted hover:text-ink transition-all shadow-2xs cursor-pointer backdrop-blur-md"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+            <span>Trở về</span>
+          </button>
+        ) : (
+          <div />
+        )}
+      </div>
 
-              <div className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-white/85 backdrop-blur-xs text-xs font-semibold text-[#3b302c] uppercase tracking-wider">
-                Điểm tựa tĩnh lặng
-              </div>
-
-              <div className="absolute bottom-3 left-3 right-3 text-white">
-                <h4 className="font-['Noto_Serif',serif] font-bold text-base sm:text-lg leading-snug">
-                  Một nén hương lòng, muôn sự lắng đọng
-                </h4>
-              </div>
-            </div>
-
-            <div className="flex justify-center">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#faece1] text-[#9e3b2e] text-xs font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#9e3b2e]"></span>
-                Không gian an định hôm nay
-              </span>
-            </div>
-          </div>
-
-          {/* Bottom tag */}
-          <div className="pt-6 border-t border-[#ecd9cb] flex items-start gap-2.5">
-            <div className="w-1 h-8 bg-[#9e3b2e] rounded-full"></div>
-            <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e]">
-                Tâm pháp
-              </div>
-              <div className="text-xs text-[#75655e]">
-                Lắng nghe nhịp điệu từ nguồn cội
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Login Form & Demo Options */}
-        <div className="md:col-span-7 p-8 sm:p-10 bg-[#fffdfa] flex flex-col justify-between">
-          <div>
-            {onBack && (
-              <button
-                type="button"
-                onClick={onBack}
-                className="text-xs text-[#887870] hover:text-[#9e3b2e] flex items-center gap-1 mb-4 cursor-pointer"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Quay lại</span>
-              </button>
-            )}
-
-            {/* Pending Signal Notice */}
-            {pendingSignalMood && (
-              <div className="mb-5 p-3.5 rounded-2xl bg-[#faede2] border border-[#ecd2bf] text-xs text-[#823326] flex items-start gap-2.5 shadow-2xs">
-                <Sparkles className="w-4 h-4 text-[#9e3b2e] flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong className="font-semibold">Tín hiệu đang chờ lưu:</strong> Quẻ "{pendingSignalMood}" sẽ tự động được lưu vào Góc của bạn ngay khi hoàn tất đăng nhập.
-                </div>
-              </div>
-            )}
-
-            <div className="text-xs font-bold uppercase tracking-wider text-[#be8e5a] mb-1 flex items-center gap-1.5">
-              <span>✦ Cánh cửa soi chiếu</span>
-            </div>
-
-            <h2 className="font-['Noto_Serif',serif] font-bold text-2xl sm:text-[28px] text-[#2a211e] leading-snug mb-1.5">
-              Chào mừng bạn quay về
-            </h2>
-            <p className="text-sm text-[#77665f] leading-relaxed mb-6">
-              Tiếp tục hành trình chiêm nghiệm và soi chiếu tâm hồn cùng cội nguồn dân tộc.
-            </p>
-
-            {/* SECTION 1: NÚT VÀO TÀI KHOẢN DEMO MẪU AN NHIÊN (RIÊNG BIỆT) */}
-            <div className="mb-6 p-4 rounded-2xl bg-gradient-to-br from-[#fbf4ec] to-[#f6ebe0] border border-[#ecd5c3] shadow-xs">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#9e3b2e] animate-pulse"></span>
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e]">
-                    Tài khoản mẫu có sẵn dữ liệu
-                  </span>
-                </div>
-                <Badge variant="secondary" className="text-[10px] py-0 px-2 uppercase font-bold text-[#8c4e28]">
-                  Khuyên dùng
-                </Badge>
-              </div>
-
-              <p className="text-xs text-[#6e5d56] leading-relaxed mb-3">
-                Khám phá nhanh toàn bộ giao diện với sẵn các quẻ xăm, quẻ tín hiệu và điều ước mẫu của <strong>An Nhiên</strong> mà không cần điền biểu mẫu.
-              </p>
-
-              <Button
-                type="button"
-                variant="default"
-                size="lg"
-                onClick={handleQuickDemoLogin}
-                className="w-full bg-[#9e3b2e] hover:bg-[#863025] text-white font-semibold text-xs sm:text-sm py-2.5 shadow-xs flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <UserCheck className="w-4 h-4" />
-                <span>Vào tài khoản demo An Nhiên (1 chạm)</span>
-              </Button>
-            </div>
-
-            {/* Divider */}
-            <div className="relative my-6 text-center">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#f1e5d8]"></div>
-              </div>
-              <span className="relative bg-[#fffdfa] px-3 text-[11px] uppercase tracking-wider text-[#9f8f87] font-semibold">
-                ● Hoặc đăng nhập hồ sơ demo theo email ●
-              </span>
-            </div>
-
-            {/* SECTION 2: THÔNG BÁO MINH BẠCH VỀ CHẾ ĐỘ DEMO CỤC BỘ & BACKEND */}
-            <div className="mb-5 p-3 rounded-xl bg-[#faf6f0] border border-[#eddcd0] flex items-start gap-2.5 text-xs text-[#786962]">
-              <Info className="w-4 h-4 text-[#be8e5a] flex-shrink-0 mt-0.5" />
-              <div className="leading-relaxed">
-                <span className="font-semibold text-[#2e2624]">Hệ hồ sơ demo cục bộ trên máy:</span>{" "}
-                Điều ước và nhật ký được lưu riêng biệt theo từng email trên trình duyệt này.{" "}
-                <span className="text-[#9e3b2e] font-medium">Chưa có xác thực mật khẩu qua Backend máy chủ</span>{" "}
-                (Hệ thống xác thực đám mây chính thức: <strong>Sắp có</strong>).
-              </div>
-            </div>
-
-            {errorMessage && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-start gap-2">
-                <span className="font-bold mt-0.5">✕</span>
-                <span className="leading-relaxed">{errorMessage}</span>
-              </div>
-            )}
-
-            {/* FORM ĐĂNG NHẬP THEO EMAIL CỦA NGƯỜI DÙNG */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Field 1: Email */}
+      {/* BỐ CỤC TRÁI - PHẢI (LEFT: LƯ HƯƠNG KHỔNG LỒ CHIẾM ĐA SỐ, RIGHT: FORM ĐĂNG NHẬP) */}
+      <main className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8 py-3 sm:py-6 flex-1 flex flex-col lg:grid lg:grid-cols-12 lg:gap-8 items-center justify-center">
+        
+        {/* CỘT TRÁI: LƯ HƯƠNG KHỔNG LỒ (CHIẾM ~70% KHÔNG GIAN DESKTOP, CÀNG TO CÀNG TỐT) */}
+        <section
+          aria-label="Khu vực Lư hương truyền thống"
+          className="lg:col-span-7 xl:col-span-8 w-full flex flex-col items-center justify-center text-center select-none py-4 lg:py-6"
+        >
+          {/* Thông báo quẻ đang chờ nếu có */}
+          {pendingSignalMood && (
+            <div className="w-full max-w-md mb-4 p-2.5 rounded-panel bg-surface/90 backdrop-blur-md border border-accent/40 text-xs text-accent flex items-start gap-2 shadow-2xs animate-fade-in text-left">
+              <Sparkles className="w-4 h-4 text-accent shrink-0 mt-0.5" />
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-sm font-semibold text-[#4e403a]">
-                    Email tài khoản demo
-                  </label>
-                  <span className="text-[11px] text-[#9d8a82]">
-                    Lưu kho riêng theo email
-                  </span>
-                </div>
+                <strong className="font-semibold">Tín hiệu đang chờ:</strong> Quẻ "{pendingSignalMood}" sẽ tự động lưu vào Góc của bạn ngay khi hoàn tất.
+              </div>
+            </div>
+          )}
+
+          {/* LƯ HƯƠNG ĐỒNG KHỔNG LỒ VỚI 3 NÉN NHANG */}
+          <div className="relative w-full max-w-[480px] sm:max-w-[560px] md:max-w-[620px] xl:max-w-[680px] h-[340px] sm:h-[400px] md:h-[460px] xl:h-[500px] flex items-center justify-center mt-1 sm:mt-3">
+            {/* Vầng ánh sáng ấm trang trọng sau lưng lư hương */}
+            <div
+              className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-1000 pointer-events-none ${
+                isSuccess
+                  ? "w-80 sm:w-[480px] md:w-[560px] h-80 sm:h-[480px] md:h-[560px] bg-gradient-to-tr from-amber-500/20 via-amber-300/15 to-orange-400/10 blur-3xl scale-115 censer-aura-success"
+                  : "w-64 sm:w-80 md:w-96 h-64 sm:h-80 md:h-96 bg-amber-500/12 dark:bg-amber-400/12 blur-2xl scale-100"
+              }`}
+            />
+
+            <svg
+              viewBox="0 -20 340 350"
+              className={`w-full h-full overflow-visible transition-all duration-700 drop-shadow-2xl ${
+                isSuccess ? "scale-105 filter drop-shadow-[0_0_35px_rgba(245,158,11,0.6)]" : ""
+              }`}
+              xmlns="http://www.w3.org/2000/svg"
+              role="img"
+              aria-label="Lư hương đồng Việt Nam to lớn uy nghi với đúng ba nén nhang trầm"
+            >
+              <defs>
+                {/* Chất liệu đồng hun cổ truyền Việt Nam */}
+                <linearGradient id="bronzeCastBody" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#38210f" />
+                  <stop offset="25%" stopColor="#633918" />
+                  <stop offset="50%" stopColor="#a76e33" />
+                  <stop offset="70%" stopColor="#d49746" />
+                  <stop offset="85%" stopColor="#633918" />
+                  <stop offset="100%" stopColor="#241407" />
+                </linearGradient>
+
+                <linearGradient id="bronzeRimHighlight" x1="0%" y1="50%" x2="100%" y2="50%">
+                  <stop offset="0%" stopColor="#2c1708" />
+                  <stop offset="20%" stopColor="#7a461b" />
+                  <stop offset="50%" stopColor="#f3c278" />
+                  <stop offset="80%" stopColor="#7a461b" />
+                  <stop offset="100%" stopColor="#2c1708" />
+                </linearGradient>
+
+                <linearGradient id="bronzeHandles" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#241306" />
+                  <stop offset="45%" stopColor="#875525" />
+                  <stop offset="70%" stopColor="#c58a3e" />
+                  <stop offset="100%" stopColor="#301a09" />
+                </linearGradient>
+
+                {/* Bát tro xám mịn chân thực */}
+                <radialGradient id="ashBedTexture" cx="50%" cy="45%" r="52%">
+                  <stop
+                    offset="0%"
+                    stopColor={isSuccess ? "#fef08a" : "#78716c"}
+                    stopOpacity={isSuccess ? 0.95 : 0.9}
+                  />
+                  <stop
+                    offset="45%"
+                    stopColor={isSuccess ? "#f97316" : "#57534e"}
+                    stopOpacity={isSuccess ? 0.9 : 0.85}
+                  />
+                  <stop
+                    offset="85%"
+                    stopColor={isSuccess ? "#b91c1c" : "#44403c"}
+                    stopOpacity="0.95"
+                  />
+                  <stop offset="100%" stopColor="#292524" />
+                </radialGradient>
+
+                {/* Khói hương trầm chân thực - Gradient thanh khiết lan tỏa */}
+                <linearGradient id="realSmokeCoreGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#fff7ed" stopOpacity="0.85" />
+                  <stop offset="15%" stopColor="#ffffff" stopOpacity="0.75" />
+                  <stop offset="40%" stopColor="#f8fafc" stopOpacity="0.55" />
+                  <stop offset="70%" stopColor="#e2e8f0" stopOpacity="0.25" />
+                  <stop offset="90%" stopColor="#cbd5e1" stopOpacity="0.08" />
+                  <stop offset="100%" stopColor="#94a3b8" stopOpacity="0" />
+                </linearGradient>
+
+                <linearGradient id="realSmokeWispyGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.65" />
+                  <stop offset="25%" stopColor="#f1f5f9" stopOpacity="0.45" />
+                  <stop offset="60%" stopColor="#e2e8f0" stopOpacity="0.2" />
+                  <stop offset="85%" stopColor="#cbd5e1" stopOpacity="0.05" />
+                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                </linearGradient>
+
+                <linearGradient id="realSmokeMistGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.25" />
+                  <stop offset="25%" stopColor="#ffffff" stopOpacity="0.18" />
+                  <stop offset="65%" stopColor="#f1f5f9" stopOpacity="0.08" />
+                  <stop offset="100%" stopColor="#e2e8f0" stopOpacity="0" />
+                </linearGradient>
+
+                {/* Bộ lọc làm mềm tự nhiên cho làn khói */}
+                <filter id="realSmokeSoftFilter" x="-40%" y="-40%" width="180%" height="180%">
+                  <feGaussianBlur stdDeviation="0.7" />
+                </filter>
+
+                {/* Bộ lọc khuếch tán sương khói mờ ảo phía sau */}
+                <filter id="realSmokeMistFilter" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="4" />
+                </filter>
+
+                {/* Đốm than hồng ấm áp chân thực */}
+                <filter id="realEmberGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="1.4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* CHỈ HIỆN KHÓI KHI ĐĂNG NHẬP THÀNH CÔNG: KHÓI BỐC LÊN VÀ LAN TỎA THANH THOÁT NHƯ KHÓI NHANG THẬT */}
+              {isSuccess && (
+                <g className="censer-smoke-bloom-container pointer-events-none">
+                  {/* === NÉN TRÁI (Tip: 132, 82) === */}
+                  <g className="censer-smoke-stream-left">
+                    {/* Sương mờ tỏa khí trầm */}
+                    <path
+                      d="M 132 80 C 128 64, 118 50, 122 34 C 126 18, 115 4, 118 -12"
+                      fill="none"
+                      stroke="url(#realSmokeMistGrad)"
+                      strokeWidth="7"
+                      strokeLinecap="round"
+                      filter="url(#realSmokeMistFilter)"
+                    />
+                    {/* Sợi khói chính uốn lượn */}
+                    <g filter="url(#realSmokeSoftFilter)">
+                      <path
+                        d="M 132 82 C 132 72, 129 62, 125 50 C 120 38, 112 30, 116 16 C 120 2, 130 -8, 122 -22 C 117 -30, 108 -38, 112 -48"
+                        fill="none"
+                        stroke="url(#realSmokeCoreGrad)"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                      {/* Sợi tơ khói phụ quấn quýt */}
+                      <path
+                        d="M 132 82 C 133 74, 134 60, 128 48 C 122 36, 128 24, 123 10 C 118 -4, 112 -16, 116 -28 C 120 -38, 112 -46, 115 -55"
+                        fill="none"
+                        stroke="url(#realSmokeWispyGrad)"
+                        strokeWidth="1.1"
+                        strokeLinecap="round"
+                      />
+                      {/* Nhánh tơ khói tách nhẹ */}
+                      <path
+                        d="M 125 50 C 118 42, 110 36, 112 26 C 114 16, 122 10, 117 0"
+                        fill="none"
+                        stroke="url(#realSmokeWispyGrad)"
+                        strokeWidth="0.8"
+                        opacity="0.5"
+                        strokeLinecap="round"
+                      />
+                    </g>
+                  </g>
+
+                  {/* === NÉN GIỮA (Tip: 170, 58 - Cao & thanh thoát nhất) === */}
+                  <g className="censer-smoke-stream-center">
+                    {/* Sương mờ tỏa khí trầm */}
+                    <path
+                      d="M 170 54 C 172 38, 164 22, 168 6 C 172 -10, 164 -26, 166 -45"
+                      fill="none"
+                      stroke="url(#realSmokeMistGrad)"
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                      filter="url(#realSmokeMistFilter)"
+                    />
+                    {/* Sợi khói chính vút cao */}
+                    <g filter="url(#realSmokeSoftFilter)">
+                      <path
+                        d="M 170 58 C 170 46, 172 36, 168 24 C 163 10, 156 -2, 163 -16 C 170 -30, 178 -42, 170 -56 C 164 -66, 158 -74, 162 -85"
+                        fill="none"
+                        stroke="url(#realSmokeCoreGrad)"
+                        strokeWidth="1.7"
+                        strokeLinecap="round"
+                      />
+                      {/* Sợi tơ khói lượn sóng */}
+                      <path
+                        d="M 170 58 C 169 48, 166 36, 172 24 C 177 12, 175 0, 168 -14 C 162 -28, 166 -42, 173 -56 C 178 -68, 170 -78, 172 -90"
+                        fill="none"
+                        stroke="url(#realSmokeWispyGrad)"
+                        strokeWidth="1.2"
+                        strokeLinecap="round"
+                      />
+                      {/* Nhánh tơ khói phụ cuộn nhẹ */}
+                      <path
+                        d="M 168 24 C 162 14, 154 6, 156 -4 C 158 -14, 166 -22, 160 -32"
+                        fill="none"
+                        stroke="url(#realSmokeWispyGrad)"
+                        strokeWidth="0.9"
+                        opacity="0.5"
+                        strokeLinecap="round"
+                      />
+                    </g>
+                  </g>
+
+                  {/* === NÉN PHẢI (Tip: 208, 82) === */}
+                  <g className="censer-smoke-stream-right">
+                    {/* Sương mờ tỏa khí trầm */}
+                    <path
+                      d="M 208 80 C 212 64, 222 50, 218 34 C 214 18, 225 4, 222 -12"
+                      fill="none"
+                      stroke="url(#realSmokeMistGrad)"
+                      strokeWidth="7"
+                      strokeLinecap="round"
+                      filter="url(#realSmokeMistFilter)"
+                    />
+                    {/* Sợi khói chính uốn lượn */}
+                    <g filter="url(#realSmokeSoftFilter)">
+                      <path
+                        d="M 208 82 C 208 72, 211 62, 215 50 C 220 38, 228 30, 224 16 C 220 2, 210 -8, 218 -22 C 223 -30, 232 -38, 228 -48"
+                        fill="none"
+                        stroke="url(#realSmokeCoreGrad)"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                      {/* Sợi tơ khói phụ */}
+                      <path
+                        d="M 208 82 C 207 74, 206 60, 212 48 C 218 36, 212 24, 217 10 C 222 -4, 228 -16, 224 -28 C 220 -38, 228 -46, 225 -55"
+                        fill="none"
+                        stroke="url(#realSmokeWispyGrad)"
+                        strokeWidth="1.1"
+                        strokeLinecap="round"
+                      />
+                      {/* Nhánh tơ khói tách nhẹ */}
+                      <path
+                        d="M 215 50 C 222 42, 230 36, 228 26 C 226 16, 218 10, 223 0"
+                        fill="none"
+                        stroke="url(#realSmokeWispyGrad)"
+                        strokeWidth="0.8"
+                        opacity="0.5"
+                        strokeLinecap="round"
+                      />
+                    </g>
+                  </g>
+                </g>
+              )}
+
+              {/* BA NÉN NHANG TRẦM VIỆT NAM (REALISTIC INCENSE STICKS) */}
+              <g className="censer-sticks">
+                {/* NÉN 1: BÊN TRÁI (Nghiêng nhẹ ~5 độ) */}
+                <line
+                  x1="132"
+                  y1="82"
+                  x2="144"
+                  y2="190"
+                  stroke="#8b5a2b"
+                  strokeWidth="3.2"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="142"
+                  y1="172"
+                  x2="146"
+                  y2="200"
+                  stroke="#b91c1c"
+                  strokeWidth="2.5"
+                />
+                {/* Đầu tàn tro xám nhạt */}
+                <circle cx="132" cy="80.6" r="1.3" fill="#cbd5e1" opacity="0.8" />
+                {/* Đốm than hồng thật - Cháy âm ỉ chân thực */}
+                <circle
+                  cx="132"
+                  cy="82"
+                  r={isSuccess ? 2.5 : 1.9}
+                  fill="#ea580c"
+                  className={isSuccess ? "censer-ember-success" : "censer-ember-idle"}
+                  filter="url(#realEmberGlow)"
+                />
+                {/* Tia nhiệt cực nhỏ trong lõi than */}
+                <circle
+                  cx="132"
+                  cy="81.8"
+                  r={isSuccess ? 1.1 : 0.8}
+                  fill="#fffbeb"
+                  opacity={isSuccess ? 0.95 : 0.8}
+                />
+
+                {/* NÉN 2: Ở GIỮA (Thẳng đứng, cao hơn theo đúng phong tục Việt) */}
+                <line
+                  x1="170"
+                  y1="58"
+                  x2="170"
+                  y2="190"
+                  stroke="#9a6332"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="170"
+                  y1="172"
+                  x2="170"
+                  y2="200"
+                  stroke="#b91c1c"
+                  strokeWidth="2.8"
+                />
+                <circle cx="170" cy="56.5" r="1.5" fill="#cbd5e1" opacity="0.85" />
+                <circle
+                  cx="170"
+                  cy="58"
+                  r={isSuccess ? 2.8 : 2.2}
+                  fill="#f97316"
+                  className={isSuccess ? "censer-ember-success" : "censer-ember-idle"}
+                  filter="url(#realEmberGlow)"
+                />
+                <circle
+                  cx="170"
+                  cy="57.8"
+                  r={isSuccess ? 1.3 : 0.9}
+                  fill="#fffbeb"
+                  opacity={isSuccess ? 1 : 0.85}
+                />
+
+                {/* NÉN 3: BÊN PHẢI (Nghiêng nhẹ ~5 độ) */}
+                <line
+                  x1="208"
+                  y1="82"
+                  x2="196"
+                  y2="190"
+                  stroke="#8b5a2b"
+                  strokeWidth="3.2"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="198"
+                  y1="172"
+                  x2="194"
+                  y2="200"
+                  stroke="#b91c1c"
+                  strokeWidth="2.5"
+                />
+                <circle cx="208" cy="80.6" r="1.3" fill="#cbd5e1" opacity="0.8" />
+                <circle
+                  cx="208"
+                  cy="82"
+                  r={isSuccess ? 2.5 : 1.9}
+                  fill="#ea580c"
+                  className={isSuccess ? "censer-ember-success" : "censer-ember-idle"}
+                  filter="url(#realEmberGlow)"
+                />
+                <circle
+                  cx="208"
+                  cy="81.8"
+                  r={isSuccess ? 1.1 : 0.8}
+                  fill="#fffbeb"
+                  opacity={isSuccess ? 0.95 : 0.8}
+                />
+              </g>
+
+              {/* ĐẾ GỖ MUN CHẠM TRUYỀN THỐNG (WOOD PEDESTAL) */}
+              <g className="censer-wood-base">
+                <ellipse cx="170" cy="302" rx="84" ry="14" fill="#170c06" />
+                <rect x="90" y="293" width="160" height="9" rx="3.5" fill="#201209" />
+                <ellipse cx="170" cy="293" rx="77" ry="9" fill="#361e0f" />
+                <path d="M 104 302 L 102 312 L 118 312 L 115 302 Z" fill="#0d0704" />
+                <path d="M 162 304 L 162 313 L 178 313 L 178 304 Z" fill="#0d0704" />
+                <path d="M 225 302 L 227 312 L 243 312 L 241 302 Z" fill="#0d0704" />
+              </g>
+
+              {/* BA CHÂN ĐỈNH ĐỒNG VỮNG CHÃI (TRIPOD LEGS) */}
+              <g className="censer-tripod-legs">
+                <path
+                  d="M 122 242 C 115 260, 104 282, 111 295 C 118 295, 129 295, 133 291 C 129 275, 136 257, 142 244 Z"
+                  fill="url(#bronzeCastBody)"
+                  stroke="#241407"
+                  strokeWidth="1.3"
+                />
+                <path
+                  d="M 218 242 C 225 260, 236 282, 229 295 C 222 295, 211 295, 207 291 C 211 275, 204 257, 198 244 Z"
+                  fill="url(#bronzeCastBody)"
+                  stroke="#241407"
+                  strokeWidth="1.3"
+                />
+                <path
+                  d="M 161 251 C 159 269, 160 286, 163 297 C 168 298, 172 298, 177 297 C 180 286, 181 269, 179 251 Z"
+                  fill="url(#bronzeCastBody)"
+                  stroke="#241407"
+                  strokeWidth="1.3"
+                />
+              </g>
+
+              {/* TAI MÂY ĐỈNH ĐỒNG (CLOUD HANDLES CÓ ĐỘ DÀY 3D) */}
+              <g className="censer-handles">
+                <path
+                  d="M 108 192 C 68 183, 57 216, 72 238 C 83 251, 99 249, 110 231 C 99 227, 88 218, 88 207 C 88 198, 97 196, 108 196 Z"
+                  fill="url(#bronzeHandles)"
+                  stroke="#241407"
+                  strokeWidth="1.8"
+                />
+                <path
+                  d="M 106 194 C 75 187, 66 214, 77 232"
+                  fill="none"
+                  stroke="#f3c278"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  opacity="0.9"
+                />
+
+                <path
+                  d="M 232 192 C 272 183, 283 216, 268 238 C 257 251, 241 249, 230 231 C 241 227, 252 218, 252 207 C 252 198, 243 196, 232 196 Z"
+                  fill="url(#bronzeHandles)"
+                  stroke="#241407"
+                  strokeWidth="1.8"
+                />
+                <path
+                  d="M 234 194 C 265 187, 274 214, 263 232"
+                  fill="none"
+                  stroke="#f3c278"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  opacity="0.9"
+                />
+              </g>
+
+              {/* THÂN BỤNG LƯ HƯƠNG ĐỒNG (MAIN CENSER BOWL BODY) */}
+              <g className="censer-body">
+                <path
+                  d="M 100 192 C 98 234, 117 257, 170 257 C 223 257, 242 234, 240 192 Z"
+                  fill="url(#bronzeCastBody)"
+                  stroke="#241407"
+                  strokeWidth="2.2"
+                />
+
+                {/* Cánh sen đắp nổi */}
+                <path
+                  d="M 141 255 C 143 231, 157 218, 170 213 C 183 218, 197 231, 199 255 Z"
+                  fill="#6e3d16"
+                  stroke="#d49746"
+                  strokeWidth="1.4"
+                  opacity="0.95"
+                />
+                <path
+                  d="M 115 244 C 119 226, 130 218, 141 218 C 139 236, 135 246, 128 251 Z"
+                  fill="#542e0e"
+                  stroke="#d49746"
+                  strokeWidth="1.1"
+                  opacity="0.85"
+                />
+                <path
+                  d="M 225 244 C 221 226, 210 218, 199 218 C 201 236, 205 246, 212 251 Z"
+                  fill="#542e0e"
+                  stroke="#d49746"
+                  strokeWidth="1.1"
+                  opacity="0.85"
+                />
+
+                {/* Mặt trời / Ấn triện cát tường chính giữa */}
+                <circle
+                  cx="170"
+                  cy="216"
+                  r="9.5"
+                  fill={isSuccess ? "#fef08a" : "#d97706"}
+                  stroke="#78350f"
+                  strokeWidth="1.4"
+                  className={isSuccess ? "animate-pulse" : ""}
+                />
+                <circle cx="170" cy="216" r="4.8" fill={isSuccess ? "#ffffff" : "#fef3c7"} />
+
+                {/* Miệng đỉnh loe tròn */}
+                <ellipse
+                  cx="170"
+                  cy="190"
+                  rx="73"
+                  ry="14.5"
+                  fill="url(#bronzeRimHighlight)"
+                  stroke="#241407"
+                  strokeWidth="2.2"
+                />
+
+                {/* Gờ miệng trong */}
+                <ellipse
+                  cx="170"
+                  cy="190"
+                  rx="65"
+                  ry="11"
+                  fill="#241306"
+                  stroke="#9a6332"
+                  strokeWidth="1.1"
+                />
+
+                {/* LÒNG BÁT TRO TÀN & THAN HỒNG THẬT */}
+                <ellipse
+                  cx="170"
+                  cy="189"
+                  rx="60"
+                  ry="9.5"
+                  fill="url(#ashBedTexture)"
+                />
+
+                {/* Hạt than hồng li ti vùi trong tro */}
+                <circle
+                  cx="155"
+                  cy="188"
+                  r={isSuccess ? 1.6 : 1.3}
+                  fill={isSuccess ? "#f97316" : "#ea580c"}
+                  opacity={isSuccess ? 0.85 : 0.65}
+                />
+                <circle
+                  cx="179"
+                  cy="190"
+                  r={isSuccess ? 1.8 : 1.4}
+                  fill={isSuccess ? "#fb923c" : "#c2410c"}
+                  opacity={isSuccess ? 0.9 : 0.7}
+                />
+                <circle
+                  cx="167"
+                  cy="187"
+                  r={isSuccess ? 1.4 : 1.2}
+                  fill={isSuccess ? "#fdba74" : "#9a3412"}
+                  opacity={isSuccess ? 0.8 : 0.55}
+                />
+                <circle
+                  cx="191"
+                  cy="189"
+                  r={isSuccess ? 1.5 : 1.2}
+                  fill={isSuccess ? "#f97316" : "#7c2d12"}
+                  opacity={isSuccess ? 0.75 : 0.45}
+                />
+              </g>
+            </svg>
+          </div>
+
+          {/* DÒNG TÂM PHÁP DẪN DẮT */}
+          <div className="mt-4 px-4 max-w-lg mx-auto text-center">
+            <h1 className="font-display font-bold text-2xl sm:text-3xl md:text-4xl text-ink leading-tight tracking-wide">
+              Điểm Tựa Tĩnh Lặng
+            </h1>
+            <p className="text-xs sm:text-sm md:text-base text-muted mt-1.5 font-serif italic leading-relaxed">
+              "Một nén tâm hương tỏ tấc lòng,
+              <span className="inline sm:hidden"><br /></span>
+              {" "}muôn sự trần ai lắng về không."
+            </p>
+          </div>
+        </section>
+
+        {/* CỘT PHẢI: FORM ĐĂNG NHẬP TINH GỌN, SANG TRỌNG (CHIẾM ~30% DESKTOP, KHÔNG CÓ FOOTER) */}
+        <section
+          aria-label="Biểu mẫu đăng nhập"
+          className="lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center justify-center py-2 sm:py-4 lg:py-6"
+        >
+          <div className="w-full max-w-[340px] sm:max-w-md bg-surface/85 dark:bg-surface/80 backdrop-blur-xl border border-line/80 dark:border-line rounded-2xl shadow-2xl p-4 sm:p-7 transition-all duration-300">
+            {/* Header form tinh gọn */}
+            <div className="flex items-center justify-between mb-4 border-b border-line/50 pb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-action animate-pulse" />
+                <h2 className="text-sm font-bold uppercase tracking-wider text-ink font-serif">
+                  Đăng nhập vào Góc an trú
+                </h2>
+              </div>
+              {isSuccess ? (
+                <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1 animate-pulse">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Viên mãn
+                </span>
+              ) : isSubmitting ? (
+                <span className="text-xs font-semibold text-accent animate-pulse">
+                  Đang dâng hương...
+                </span>
+              ) : null}
+            </div>
+
+            {/* Hộp thông báo lỗi nếu có */}
+            {errorMessage && (
+              <div
+                role="alert"
+                className="mb-4 p-3 rounded-panel bg-danger-soft border border-danger/25 text-xs text-danger flex items-start gap-2 animate-shake"
+              >
+                <span className="font-bold text-sm leading-none mt-0.5">✕</span>
+                <span className="leading-relaxed flex-1">{errorMessage}</span>
+              </div>
+            )}
+
+            {/* CÁC TRƯỜNG FORM */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Trường 1: Tài khoản / Email */}
+              <div>
+                <label
+                  htmlFor="login-email"
+                  className="block text-xs font-semibold uppercase tracking-wider text-ink mb-1.5"
+                >
+                  Tài khoản / Email
+                </label>
                 <div className="relative">
                   <input
+                    id="login-email"
+                    autoComplete="email"
                     type="email"
                     required
+                    disabled={isSubmitting || isSuccess}
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="vidu@domain.vn"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#faf3ec]/70 border border-[#eddcd0] text-sm text-[#2e2624] placeholder-[#a6968e] focus:outline-none focus:ring-1 focus:ring-[#9e3b2e]"
+                    placeholder="tenban@domain.com"
+                    className="w-full min-h-12 pl-10 pr-4 py-2.5 rounded-panel bg-surface/90 border border-line text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-all disabled:opacity-60"
                   />
-                  <AtSign className="w-4 h-4 text-[#9d8a82] absolute left-3.5 top-3" />
+                  <AtSign className="w-4 h-4 text-muted absolute left-3.5 top-4 pointer-events-none" />
                 </div>
               </div>
 
-              {/* Field 2: Password */}
+              {/* Trường 2: Mật khẩu */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-sm font-semibold text-[#4e403a]">
+                  <label
+                    htmlFor="login-password"
+                    className="text-xs font-semibold uppercase tracking-wider text-ink"
+                  >
                     Mật khẩu
                   </label>
-                  <button
-                    type="button"
-                    onClick={onGoToForgotPassword}
-                    className="text-xs text-[#9e3b2e] hover:underline cursor-pointer"
-                  >
-                    Quên mật khẩu?
-                  </button>
+                  {onGoToForgotPassword && (
+                    <button
+                      type="button"
+                      onClick={onGoToForgotPassword}
+                      disabled={isSubmitting || isSuccess}
+                      className="text-xs text-accent hover:underline cursor-pointer disabled:opacity-50"
+                    >
+                      Quên mật khẩu?
+                    </button>
+                  )}
                 </div>
                 <div className="relative">
                   <input
+                    id="login-password"
+                    autoComplete="current-password"
                     type={showPassword ? "text" : "password"}
+                    required
+                    disabled={isSubmitting || isSuccess}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="•••••••••••• (Chấp nhận mọi mật khẩu trong demo)"
-                    className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#faf3ec]/70 border border-[#eddcd0] text-sm text-[#2e2624] placeholder-[#a6968e] focus:outline-none focus:ring-1 focus:ring-[#9e3b2e]"
+                    placeholder="••••••••••••"
+                    className="w-full min-h-12 pl-10 pr-12 py-2.5 rounded-panel bg-surface/90 border border-line text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-all disabled:opacity-60"
                   />
-                  <Lock className="w-4 h-4 text-[#9d8a82] absolute left-3.5 top-3" />
+                  <Lock className="w-4 h-4 text-muted absolute left-3.5 top-4 pointer-events-none" />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-3 text-[#9d8a82] hover:text-[#2e2624]"
+                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                    disabled={isSubmitting || isSuccess}
+                    className="absolute right-0 top-0 h-12 w-12 grid place-items-center text-muted hover:text-ink cursor-pointer disabled:opacity-50 transition-colors"
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <span className="text-[11px] text-[#91817a] mt-1 block">
-                  * Bản demo cục bộ chưa kiểm tra mật khẩu qua máy chủ.
-                </span>
               </div>
 
-              {/* Remember me checkbox */}
-              <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6e5e57]">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded border-[#cfbcaf] text-[#9e3b2e] focus:ring-[#9e3b2e]"
-                />
-                <span>Ghi nhớ phiên đăng nhập trên thiết bị này</span>
-              </label>
+              {/* Ghi nhớ đăng nhập */}
+              <div className="flex items-center justify-between text-xs pt-1">
+                <label className="flex items-center gap-2 cursor-pointer text-ink/80 select-none">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    disabled={isSubmitting || isSuccess}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded border-line text-action focus:ring-accent cursor-pointer"
+                  />
+                  <span className="text-xs">Ghi nhớ đăng nhập</span>
+                </label>
+              </div>
 
-              {/* Submit Button */}
+              {/* Nút bấm chính: Đỏ Sơn Mài Huế */}
               <Button
-                variant="outline"
+                variant="default"
                 size="lg"
                 type="submit"
-                className="w-full mt-2 font-semibold gap-2 shadow-xs text-sm border-[#ecd5c3] hover:bg-[#faf3ec] text-[#2a211e]"
+                disabled={isSubmitting || isSuccess}
+                className={`w-full min-h-12 py-3 text-sm font-semibold tracking-wide gap-2 shadow-lg rounded-panel transition-all duration-300 cursor-pointer ${
+                  isSuccess
+                    ? "bg-amber-600 text-white hover:bg-amber-600 scale-[1.01] shadow-amber-500/40"
+                    : "bg-action text-white hover:bg-action-hover active:scale-[0.99]"
+                }`}
               >
-                <LogIn className="w-4 h-4 text-[#9e3b2e]" />
-                <span>Đăng nhập hồ sơ demo này</span>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Đang dâng nén tâm hương...</span>
+                  </>
+                ) : isSuccess ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-white animate-bounce" />
+                    <span>Tâm ý viên mãn • Đang vào trang...</span>
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-4 h-4" />
+                    <span>Đăng nhập</span>
+                  </>
+                )}
               </Button>
             </form>
 
-            {/* Google / Apple Social (Locked - Sắp có) */}
-            <div className="mt-5 pt-5 border-t border-[#f1e5d8]">
-              <Button
-                variant="outline"
-                type="button"
-                disabled
-                className="w-full bg-[#faede2]/40 border-[#ecd9cb] text-xs font-semibold gap-2 py-2.5 opacity-65 cursor-not-allowed flex items-center justify-between"
-              >
-                <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
-                  </svg>
-                  <span>Đăng nhập qua Google</span>
-                </div>
-                <span className="text-[10px] uppercase font-bold text-[#9e3b2e] bg-[#faede2] px-2 py-0.5 rounded-full border border-[#ecd2bf]">
-                  Sắp có (Chờ Backend)
-                </span>
-              </Button>
-            </div>
-
-            {/* Bottom link to Register */}
-            <div className="text-center text-xs text-[#7d6d66] mt-5">
-              <span>Chưa có hồ sơ demo riêng? </span>
+            {/* Dòng link nhẹ chuyển sang đăng ký (tinh gọn, không có footer riêng) */}
+            <div className="text-center text-xs text-muted mt-4 pt-3 border-t border-line/40">
+              <span>Chưa có tài khoản? </span>
               <button
                 type="button"
                 onClick={onGoToRegister}
-                className="text-[#9e3b2e] font-bold hover:underline cursor-pointer"
+                disabled={isSubmitting || isSuccess}
+                className="text-accent font-semibold hover:underline cursor-pointer ml-1 inline-flex items-center gap-0.5"
               >
-                Khởi tạo hồ sơ mới trên máy
+                <span>Đăng ký ngay</span>
+                <span>→</span>
               </button>
             </div>
-
-            {/* Motivational Quote pill */}
-            <div className="mt-4 p-3 rounded-xl bg-[#faf4ed] border border-[#f0e2d5] text-center text-xs font-['Noto_Serif',serif] italic text-[#705e57]">
-              “Trở về với chính mình là chuyến đi bình an nhất.”
-            </div>
           </div>
-        </div>
-      </Card>
+        </section>
+
+      </main>
     </div>
   );
 };

@@ -101,30 +101,30 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
   const relatedRituals = RITUAL_GUIDES.filter((item) => item.id !== ritual.id).slice(0, 3);
 
   return (
-    <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif]">
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-20">
+    <div className="screen-shell">
+      <main className="page-container max-w-6xl">
         {/* Top Breadcrumb & Tag */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-[#8a7971]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-muted">
           <div className="flex items-center gap-2 flex-wrap">
             <span
               onClick={onBackToRitualList}
-              className="hover:text-[#9e3b2e] cursor-pointer transition-colors"
+              className="hover:text-accent cursor-pointer transition-colors"
             >
               Khám phá
             </span>
             <span>/</span>
             <span
               onClick={onBackToRitualList}
-              className="hover:text-[#9e3b2e] cursor-pointer transition-colors"
+              className="hover:text-accent cursor-pointer transition-colors"
             >
               Cẩm nang nghi lễ
             </span>
             <span>/</span>
-            <span className="text-[#9e3b2e] font-semibold">{ritual.title}</span>
+            <span className="text-accent font-semibold">{ritual.title}</span>
           </div>
 
-          <div className="flex items-center gap-1.5 uppercase font-semibold text-[11px] text-[#938279]">
-            <span className="w-2 h-2 rounded-full bg-[#9e3b2e] inline-block"></span>
+          <div className="flex items-center gap-1.5 uppercase font-semibold text-xs text-muted">
+            <span className="w-2 h-2 rounded-full bg-action inline-block"></span>
             <span>HƯỚNG DẪN NGHI LỄ THÍCH ỨNG</span>
           </div>
         </div>
@@ -133,34 +133,34 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
         <div className="mb-6">
           <Badge
             variant="terracotta"
-            className="mb-3 px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-[#faece1] text-[#9e3b2e] border-[#eedcd0]"
+            className="mb-3 px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-surface text-accent border-line"
           >
             THỰC HÀNH TẠI GIA TIẾT GIẢM • PHÙ HỢP CĂN HỘ & NHÀ PHỐ TRẺ
           </Badge>
 
-          <h1 className="font-['Noto_Serif',serif] font-bold text-2xl sm:text-3xl lg:text-[38px] text-[#2a2220] leading-tight mb-3">
+          <h1 className="page-title mb-3">
             {detail.fullTitle}
           </h1>
 
-          <p className="text-sm sm:text-base text-[#6f5e57] leading-relaxed max-w-3xl mb-4">
+          <p className="text-sm sm:text-base text-ink leading-relaxed max-w-3xl mb-4">
             {detail.subtitle}
           </p>
 
           {/* 4 Metadata Pills */}
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="px-3 py-1.5 rounded-full bg-white border border-[#eddcd0] text-[#6d5c55] font-medium flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5 text-[#9e3b2e]" />
+            <span className="px-3 py-1.5 rounded-full bg-surface border border-line text-ink font-medium flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5 text-accent" />
               <span>4 bước giản dị</span>
             </span>
-            <span className="px-3 py-1.5 rounded-full bg-white border border-[#eddcd0] text-[#6d5c55] font-medium flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-[#9e3b2e]" />
+            <span className="px-3 py-1.5 rounded-full bg-surface border border-line text-ink font-medium flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-accent" />
               <span>Khoảng 15 - 20 phút</span>
             </span>
-            <span className="px-3 py-1.5 rounded-full bg-white border border-[#eddcd0] text-[#6d5c55] font-medium flex items-center gap-1.5">
-              <Home className="w-3.5 h-3.5 text-[#9e3b2e]" />
+            <span className="px-3 py-1.5 rounded-full bg-surface border border-line text-ink font-medium flex items-center gap-1.5">
+              <Home className="w-3.5 h-3.5 text-accent" />
               <span>Phù hợp căn hộ & nhà phố</span>
             </span>
-            <span className="px-3 py-1.5 rounded-full bg-[#fbf3ec] border border-[#ecd9cb] text-[#9e3b2e] font-semibold flex items-center gap-1.5">
+            <span className="px-3 py-1.5 rounded-full bg-surface border border-line text-accent font-semibold flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Điểm an yên: Lắng đọng tâm</span>
             </span>
@@ -168,17 +168,17 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
         </div>
 
         {/* Hero Artwork Banner */}
-        <div className="mb-10 rounded-3xl overflow-hidden border border-[#eddcd0] bg-white shadow-2xs">
-          <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden bg-[#faede2]">
+        <div className="mb-10 rounded-card overflow-hidden border border-line bg-surface shadow-2xs">
+          <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden bg-surface">
             <img
               src={detail.heroImage}
               alt={detail.fullTitle}
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="p-3.5 bg-[#fbf5ee] border-t border-[#f0e2d5] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-[#8c7b74]">
+          <div className="p-3.5 bg-surface border-t border-line flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-muted">
             <span className="italic">{detail.heroCaption}</span>
-            <span className="font-medium text-[#a19088]">{detail.heroArtCredit}</span>
+            <span className="font-medium text-muted">{detail.heroArtCredit}</span>
           </div>
         </div>
 
@@ -189,20 +189,20 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
             {/* Section 1: Ý nghĩa của việc dành thời gian tưởng nhớ */}
             <section>
               <div className="flex items-center gap-2 mb-3">
-                <span className="w-1.5 h-4 rounded-full bg-[#9e3b2e]"></span>
-                <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220]">
+                <span className="w-1.5 h-4 rounded-full bg-action"></span>
+                <h2 className="section-title text-xl sm:text-2xl">
                   {detail.meaningTitle}
                 </h2>
               </div>
 
-              <div className="space-y-4 text-sm sm:text-base text-[#5c4c45] leading-relaxed mb-5">
+              <div className="space-y-4 text-sm sm:text-base text-ink leading-relaxed mb-5">
                 {detail.meaningParagraphs.map((p, idx) => (
                   <p key={idx}>{p}</p>
                 ))}
               </div>
 
               {/* Callout Quote */}
-              <div className="p-5 rounded-2xl bg-[#faece1]/60 border-l-4 border-[#9e3b2e] text-[#843226] font-['Noto_Serif',serif] italic text-sm sm:text-base leading-relaxed">
+              <div className="p-5 rounded-panel bg-surface/60 border-l-4 border-accent text-accent font-display italic text-sm sm:text-base leading-relaxed">
                 {detail.meaningQuote}
               </div>
             </section>
@@ -210,16 +210,16 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
             {/* Section 2: Danh sách vật phẩm tinh gọn */}
             <section>
               <div className="flex items-center gap-2 mb-3">
-                <span className="w-1.5 h-4 rounded-full bg-[#9e3b2e]"></span>
-                <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220]">
+                <span className="w-1.5 h-4 rounded-full bg-action"></span>
+                <h2 className="section-title text-xl sm:text-2xl">
                   Danh sách vật phẩm tinh gọn có thể điều chỉnh theo gia đình
                 </h2>
               </div>
 
               {/* Advice Alert Banner */}
-              <div className="p-4 rounded-2xl bg-[#fbf2eb] border border-[#ecdacb] mb-6 flex items-start gap-3">
-                <Info className="w-5 h-5 text-[#9e3b2e] shrink-0 mt-0.5" />
-                <p className="text-xs sm:text-sm text-[#736057] leading-relaxed">
+              <div className="p-4 rounded-panel bg-surface border border-line mb-6 flex items-start gap-3">
+                <Info className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+                <p className="text-sm text-muted leading-relaxed">
                   {detail.offeringAdvice}
                 </p>
               </div>
@@ -229,23 +229,23 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
                 {detail.offerings.map((offering) => (
                   <div
                     key={offering.id}
-                    className="p-4 rounded-2xl bg-white border border-[#eddcd0] hover:border-[#dfc3af] transition-all flex items-start gap-3.5 shadow-2xs"
+                    className="py-4 border-b border-line flex items-start gap-3.5"
                   >
-                    <div className="w-6 h-6 rounded-lg bg-[#faede2] text-[#9e3b2e] flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-lg bg-surface text-accent flex items-center justify-center shrink-0 mt-0.5">
                       <Check className="w-4 h-4 stroke-[2.5]" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <strong className="text-sm sm:text-base text-[#2a2220] font-bold">
+                        <strong className="text-sm sm:text-base text-ink font-bold">
                           {offering.name}
                         </strong>
                         {offering.subname && (
-                          <span className="text-xs text-[#95837b] italic">
+                          <span className="text-xs text-muted italic">
                             {offering.subname}
                           </span>
                         )}
                       </div>
-                      <p className="text-xs sm:text-sm text-[#6c5a52] leading-relaxed">
+                      <p className="text-sm text-ink leading-relaxed">
                         {offering.desc}
                       </p>
                     </div>
@@ -257,8 +257,8 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
             {/* Section 3: 4 bước thực hành an tịnh nơi tổ ấm */}
             <section>
               <div className="flex items-center gap-2 mb-6">
-                <span className="w-1.5 h-4 rounded-full bg-[#9e3b2e]"></span>
-                <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220]">
+                <span className="w-1.5 h-4 rounded-full bg-action"></span>
+                <h2 className="section-title text-xl sm:text-2xl">
                   4 bước: Thực hành an tịnh nơi tổ ấm
                 </h2>
               </div>
@@ -267,23 +267,23 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
                 {detail.steps.map((st) => (
                   <div
                     key={st.stepNumber}
-                    className="p-5 sm:p-6 rounded-3xl bg-white border border-[#eddcd0] relative overflow-hidden flex flex-col justify-between shadow-2xs"
+                    className="py-5 border-b border-line relative flex flex-col justify-between"
                   >
                     <div className="flex items-start justify-between gap-4 mb-3">
                       <div className="flex items-center gap-3">
-                        <span className="w-8 h-8 rounded-full bg-[#9e3b2e] text-white font-bold font-serif text-sm flex items-center justify-center shrink-0">
+                        <span className="w-8 h-8 rounded-full bg-action text-white font-bold font-serif text-sm flex items-center justify-center shrink-0">
                           {parseInt(st.stepNumber, 10)}
                         </span>
-                        <h3 className="font-['Noto_Serif',serif] font-bold text-base sm:text-lg text-[#2a2220]">
+                        <h3 className="font-display font-bold text-base sm:text-lg text-ink">
                           {st.title}
                         </h3>
                       </div>
-                      <span className="font-serif font-bold text-3xl sm:text-4xl text-[#edd6c7] select-none">
+                      <span className="font-serif font-bold text-3xl sm:text-4xl text-subtle select-none">
                         {st.stepNumber}
                       </span>
                     </div>
 
-                    <p className="text-sm text-[#615049] leading-relaxed pl-11">
+                    <p className="text-sm text-ink leading-relaxed pl-11">
                       {st.desc}
                     </p>
                   </div>
@@ -294,8 +294,8 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
             {/* Section 4: Khác biệt phong tục 3 miền & An toàn khói lửa */}
             <section className="space-y-6">
               <div className="flex items-center gap-2 mb-2">
-                <span className="w-1.5 h-4 rounded-full bg-[#9e3b2e]"></span>
-                <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220]">
+                <span className="w-1.5 h-4 rounded-full bg-action"></span>
+                <h2 className="section-title text-xl sm:text-2xl">
                   Khác biệt phong tục vùng miền & Ưu tiên an toàn khói lửa
                 </h2>
               </div>
@@ -303,12 +303,12 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
               {/* 3 Regional Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {detail.regionalDetails.map((rd) => (
-                  <Card key={rd.region} className="p-4 rounded-2xl bg-white border-[#eddcd0]">
-                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-2">
-                      <span className="w-2 h-2 rounded-full bg-[#9e3b2e]"></span>
+                  <Card key={rd.region} className="p-4 rounded-panel bg-surface border-line">
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-2">
+                      <span className="w-2 h-2 rounded-full bg-action"></span>
                       <span>{rd.region}</span>
                     </div>
-                    <p className="text-xs sm:text-sm text-[#68564e] leading-relaxed">
+                    <p className="text-sm text-ink leading-relaxed">
                       {rd.desc}
                     </p>
                   </Card>
@@ -316,12 +316,12 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
               </div>
 
               {/* PCCC Fire Safety Box */}
-              <div className="p-5 rounded-2xl bg-[#fff7f0] border border-[#f0d6c0] space-y-3">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#b84a39]">
+              <div className="p-5 rounded-panel bg-surface border border-line space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent">
                   <Flame className="w-4 h-4" />
                   <span>Nguyên tắc vàng an toàn PCCC tại chung cư & nhà phố</span>
                 </div>
-                <ul className="space-y-2 text-xs sm:text-sm text-[#735e54] pl-5 list-disc leading-relaxed">
+                <ul className="space-y-2 text-xs sm:text-sm text-ink pl-5 list-disc leading-relaxed">
                   {detail.fireSafetyRules.map((rule, idx) => (
                     <li key={idx}>{rule}</li>
                   ))}
@@ -329,14 +329,14 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
               </div>
 
               {/* Classical Excerpt Quote */}
-              <div className="p-4 rounded-2xl bg-[#faece1]/70 border border-[#ecd5c4] text-center">
-                <p className="font-['Noto_Serif',serif] italic font-semibold text-sm sm:text-base text-[#9e3b2e]">
+              <div className="p-4 rounded-panel bg-surface/70 border border-line text-center">
+                <p className="font-display italic font-semibold text-sm sm:text-base text-accent">
                   {detail.closingQuote}
                 </p>
               </div>
 
               {/* Bottom Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[#eddcd0] dark:border-[#3d2f2b]">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-line ">
                 <Button
                   variant="outline"
                   size="sm"
@@ -366,26 +366,26 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
 
           {/* Right Sidebar: Sticky Checklist & Safety Controls (4 cols) */}
           <div className="lg:col-span-4">
-            <div className="sticky top-24 space-y-6">
+            <div className="lg:sticky lg:top-24 space-y-6">
               {/* Checklist Card */}
-              <Card className="p-5 rounded-3xl bg-white border-[#ecdcd0] shadow-xs">
+              <Card className="p-5 rounded-card bg-surface border-line shadow-xs">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220]">
+                  <div className="font-display font-bold text-lg text-ink">
                     Tiến trình chuẩn bị
                   </div>
-                  <Badge variant="outline" className="text-xs text-[#9e3b2e] border-[#eedcd0]">
+                  <Badge variant="outline" className="text-xs text-accent border-line">
                     Tự do
                   </Badge>
                 </div>
 
-                <p className="text-xs text-[#8c7b74] leading-relaxed mb-4">
+                <p className="text-sm text-muted leading-relaxed mb-4">
                   Đánh dấu từng việc để kiểm tra không gian thờ an yên mà không áp lực.
                 </p>
 
                 {/* Counter */}
-                <div className="p-3 rounded-2xl bg-[#fbece1]/70 border border-[#ecd5c4] text-xs font-semibold text-[#9e3b2e] mb-4 flex items-center justify-between">
+                <div className="p-3 rounded-panel bg-surface/70 border border-line text-xs font-semibold text-accent mb-4 flex items-center justify-between">
                   <span>Tiến độ thực hiện:</span>
-                  <span className="font-mono text-sm">
+                  <span className="font-sans tabular-nums text-sm">
                     {checkedIds.length} / {detail.checklists.length} việc hoàn thành
                   </span>
                 </div>
@@ -400,18 +400,18 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
                         onClick={() => toggleCheck(chk.id)}
                         className={`p-3 rounded-xl border text-xs sm:text-sm flex items-start gap-2.5 cursor-pointer transition-all ${
                           isDone
-                            ? "bg-[#faf0e6] border-[#9e3b2e]/40 text-[#2a2220] font-medium"
-                            : "bg-[#fffdfa] border-[#eddcd0] text-[#6d5c55] hover:border-[#dfc3af]"
+                            ? "bg-surface border-accent/40 text-ink font-medium"
+                            : "bg-surface border-line text-ink hover:border-line"
                         }`}
                       >
-                        <div className="mt-0.5 text-[#9e3b2e]">
+                        <div className="mt-0.5 text-accent">
                           {isDone ? (
                             <CheckSquare className="w-4 h-4" />
                           ) : (
-                            <Square className="w-4 h-4 text-[#a8958c]" />
+                            <Square className="w-4 h-4 text-muted" />
                           )}
                         </div>
-                        <span className={isDone ? "line-through text-[#8f7e77]" : ""}>
+                        <span className={isDone ? "line-through text-muted" : ""}>
                           {chk.label}
                         </span>
                       </div>
@@ -420,8 +420,8 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
                 </div>
 
                 {/* Safety Tip in sidebar */}
-                <div className="p-3.5 rounded-2xl bg-[#fffaf5] border border-[#f0dfd3] mb-5 text-xs text-[#7e6c64] space-y-1">
-                  <div className="font-bold text-[#9e3b2e] flex items-center gap-1">
+                <div className="p-3.5 rounded-panel bg-surface border border-line mb-5 text-xs text-muted space-y-1">
+                  <div className="font-bold text-accent flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5" />
                     <span>Lưu ý an toàn lửa & chung cư</span>
                   </div>
@@ -434,7 +434,7 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => window.print()}
-                    className="text-xs font-medium gap-1 text-[#66544d]"
+                    className="text-xs font-medium gap-1 text-ink"
                   >
                     <Printer className="w-3.5 h-3.5" />
                     <span>In lưu trữ</span>
@@ -444,7 +444,7 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={handleShare}
-                    className="text-xs font-medium gap-1 text-[#66544d]"
+                    className="text-xs font-medium gap-1 text-ink"
                   >
                     <Share2 className="w-3.5 h-3.5" />
                     <span>Chia sẻ</span>
@@ -452,7 +452,7 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
                 </div>
 
                 {showShareNotification && (
-                  <div className="mt-2 text-center text-xs text-[#9e3b2e] font-medium">
+                  <div className="mt-2 text-center text-xs text-accent font-medium">
                     ✓ Đã sao chép liên kết cẩm nang!
                   </div>
                 )}
@@ -462,14 +462,14 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
         </div>
 
         {/* Section: Cẩm nang nghi lễ liên quan */}
-        <div className="pt-10 border-t border-[#eddcd0] mb-12">
+        <div className="pt-10 border-t border-line mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#2a2220]">
+            <h2 className="section-title text-xl sm:text-2xl">
               Cẩm nang nghi lễ liên quan dành cho bạn
             </h2>
             <button
               onClick={onBackToRitualList}
-              className="text-xs text-[#9e3b2e] font-semibold hover:underline cursor-pointer"
+              className="text-xs text-accent font-semibold hover:underline cursor-pointer"
             >
               Xem tất cả cẩm nang →
             </button>
@@ -480,33 +480,33 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
               <Card
                 key={item.id}
                 onClick={() => onSelectRelatedRitual(item.id)}
-                className="rounded-3xl overflow-hidden bg-white border-[#eddcd0] hover:border-[#dfc3af] transition-all hover:shadow-md cursor-pointer flex flex-col justify-between"
+                className="rounded-card overflow-hidden bg-surface border-line hover:border-line transition-all hover:shadow-card cursor-pointer flex flex-col justify-between"
               >
                 <div>
-                  <div className="relative h-44 w-full overflow-hidden bg-[#faede2]">
+                  <div className="relative h-44 w-full overflow-hidden bg-surface">
                     <img
                       src={item.image}
                       alt={item.title}
                       className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                     />
                     <div className="absolute top-3 left-3">
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase bg-black/60 text-white backdrop-blur-xs">
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold tracking-wide uppercase bg-black/60 text-white backdrop-blur-xs">
                         {item.occasion}
                       </span>
                     </div>
                   </div>
 
                   <div className="p-4">
-                    <h3 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] leading-snug mb-1 hover:text-[#9e3b2e] transition-colors">
+                    <h3 className="font-display font-bold text-base text-ink leading-snug mb-1 hover:text-accent transition-colors">
                       {item.title}
                     </h3>
-                    <p className="text-xs text-[#705e57] line-clamp-2 leading-relaxed">
+                    <p className="text-sm text-ink line-clamp-2 leading-relaxed">
                       {item.desc}
                     </p>
                   </div>
                 </div>
 
-                <div className="p-4 pt-0 text-xs font-semibold text-[#9e3b2e] flex items-center justify-end">
+                <div className="p-4 pt-0 text-xs font-semibold text-accent flex items-center justify-end">
                   <span>Xem hướng dẫn →</span>
                 </div>
               </Card>
@@ -515,11 +515,8 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
         </div>
 
         {/* Footer Quote */}
-        <div className="text-center pt-6 border-t border-[#eddcd0]">
-          <p className="font-['Noto_Serif',serif] italic font-semibold text-lg text-[#9e3b2e] mb-1.5">
-            “Tâm bình thế giới bình, lòng an vạn sự tỏ.”
-          </p>
-          <div className="text-xs uppercase tracking-widest text-[#938279] font-medium">
+        <div className="text-center pt-6 border-t border-line">
+          <div className="text-xs uppercase tracking-widest text-muted font-medium">
             © {new Date().getFullYear()} Tin Lắm Tâm Linh • Chiêm nghiệm dân gian đương đại
           </div>
         </div>

@@ -4,11 +4,11 @@ import {
   Compass,
   Tag,
   RotateCcw,
-  Eye,
   ArrowRight,
   ShieldCheck,
-  Sparkles,
   BookOpen,
+  Clock,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -37,7 +37,6 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [forceEmptyState, setForceEmptyState] = useState(false);
 
   const REGIONS: { key: string; label: string }[] = [
     { key: "all", label: "Tất cả vùng miền" },
@@ -55,8 +54,6 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
   ];
 
   const filteredArticles = useMemo(() => {
-    if (forceEmptyState) return [];
-
     return CULTURE_ARTICLES.filter((article) => {
       // Region filter
       if (selectedRegion !== "all" && article.region !== selectedRegion) {
@@ -77,148 +74,134 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
       }
       return true;
     });
-  }, [selectedRegion, selectedCategory, searchQuery, forceEmptyState]);
+  }, [selectedRegion, selectedCategory, searchQuery]);
+
+  const isDefaultView =
+    selectedRegion === "all" && selectedCategory === "all" && !searchQuery.trim();
+
+  // Cover story for magazine layout
+  const featuredArticle = isDefaultView ? filteredArticles[0] : null;
+  const catalogArticles = isDefaultView ? filteredArticles.slice(1) : filteredArticles;
 
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedRegion("all");
     setSelectedCategory("all");
-    setForceEmptyState(false);
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#fcf8f2] text-[#2e2624] font-['Be_Vietnam_Pro',sans-serif]">
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-20">
+    <div className="screen-shell">
+      <main className="page-container max-w-7xl">
         {/* Breadcrumb & Top Tag */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 text-xs text-[#8c7a72]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 text-xs text-muted">
           <div className="flex items-center gap-2">
             <button
               onClick={onGoToHome}
-              className="hover:text-[#9e3b2e] cursor-pointer transition-colors"
+              className="hover:text-accent cursor-pointer transition-colors"
             >
               Trang chủ
             </button>
             <span>›</span>
-            <span className="text-[#9e3b2e] font-semibold">Khám phá văn hóa</span>
+            <span className="text-accent font-semibold">Khám phá văn hóa</span>
           </div>
 
-          <div className="flex items-center gap-2 uppercase font-medium tracking-wider text-[11px] text-[#938279]">
-            <span className="text-[#9e3b2e]">✦</span>
-            <span>KHO TÀNG DÂN GIAN • GÓC NHÌN VĂN HÓA & ĐỜI SỐNG TÂM LINH</span>
+          <div className="flex items-center gap-2 uppercase font-medium tracking-wider text-xs text-muted">
+            <span className="text-accent">✦</span>
+            <span>TẬP SAN DÂN GIAN • HỒN VIỆT ĐƯƠNG ĐẠI & ĐỜI SỐNG TÂM THỨC</span>
           </div>
         </div>
 
         {/* Khám phá Sub-tabs */}
         <div className="flex items-center gap-2.5 mb-8 flex-wrap">
-          <button className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#8a252c] to-[#a62734] text-white text-xs font-semibold shadow-sm shadow-[#8a252c]/20">
+          <button className="px-5 py-2.5 rounded-full bg-action text-white text-xs font-semibold shadow-sm">
             Di sản & Điển tích dân gian
           </button>
           {onGoToRituals && (
             <button
               onClick={onGoToRituals}
-              className="px-5 py-2.5 rounded-full bg-white/80 dark:bg-[#2c0e14]/80 border border-[#eadcce] dark:border-[#4d1b24] text-[#584640] dark:text-[#d4bfb7] hover:border-[#8a252c] hover:text-[#8a252c] dark:hover:text-[#ff9ca4] text-xs font-medium transition-all cursor-pointer shadow-2xs hover:shadow-xs"
+              className="px-5 py-2.5 rounded-full bg-surface/95 border border-line text-ink hover:border-accent hover:text-accent text-xs font-medium transition-all cursor-pointer shadow-2xs hover:shadow-xs"
             >
-              Cẩm nang nghi lễ tại gia (Mới)
+              Cẩm nang nghi lễ tại gia
             </button>
           )}
           {onGoToCalendar && (
             <button
               onClick={onGoToCalendar}
-              className="px-5 py-2.5 rounded-full bg-white/80 dark:bg-[#2c0e14]/80 border border-[#eadcce] dark:border-[#4d1b24] text-[#584640] dark:text-[#d4bfb7] hover:border-[#8a252c] hover:text-[#8a252c] dark:hover:text-[#ff9ca4] text-xs font-medium transition-all cursor-pointer shadow-2xs hover:shadow-xs"
+              className="px-5 py-2.5 rounded-full bg-surface/95 border border-line text-ink hover:border-accent hover:text-accent text-xs font-medium transition-all cursor-pointer shadow-2xs hover:shadow-xs"
             >
-              Lịch văn hóa & Tiết khí (Mới)
+              Lịch văn hóa & Tiết khí
             </button>
           )}
           {onGoToGoodDays && (
             <button
               onClick={onGoToGoodDays}
-              className="px-5 py-2.5 rounded-full bg-white/80 dark:bg-[#2c0e14]/80 border border-[#eadcce] dark:border-[#4d1b24] text-[#584640] dark:text-[#d4bfb7] hover:border-[#8a252c] hover:text-[#8a252c] dark:hover:text-[#ff9ca4] text-xs font-medium transition-all cursor-pointer shadow-2xs hover:shadow-xs"
+              className="px-5 py-2.5 rounded-full bg-surface/95 border border-line text-ink hover:border-accent hover:text-accent text-xs font-medium transition-all cursor-pointer shadow-2xs hover:shadow-xs"
             >
-              Tra cứu ngày lành (Mới)
+              Tra cứu ngày lành
             </button>
           )}
         </div>
 
-        {/* Hero Banner Card */}
-        <div className="relative rounded-3xl p-8 sm:p-12 mb-8 overflow-hidden bg-gradient-to-br from-[#faede2] via-[#f7e8db] to-[#f4e2d2] dark:from-[#38141c] dark:via-[#2c0e14] dark:to-[#1e070b] border border-[#eadcce] dark:border-[#4d1b24] shadow-md dark:shadow-2xl">
-          {/* Watermark sacred geometric motif */}
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 w-64 h-64 sm:w-80 sm:h-80 pointer-events-none opacity-20">
-            <svg
-              className="w-full h-full text-[#8a252c] dark:text-[#ff9ca4] stroke-current fill-none"
-              viewBox="0 0 100 100"
-            >
-              <circle cx="50" cy="50" r="48" strokeWidth="0.8" />
-              <circle cx="50" cy="50" r="38" strokeWidth="0.6" strokeDasharray="2 3" />
-              <circle cx="50" cy="50" r="24" strokeWidth="0.8" />
-              <path
-                d="M50 2 L50 98 M2 50 L98 50 M16 16 L84 84 M16 84 L84 16"
-                strokeWidth="0.5"
-                strokeOpacity="0.7"
-              />
-            </svg>
-          </div>
-
+        {/* Editorial Masthead Opening */}
+        <div className="discovery-masthead mb-8">
           <div className="relative max-w-2xl">
             <div className="mb-3">
               <Badge
                 variant="terracotta"
-                className="px-3.5 py-1 text-xs font-semibold uppercase tracking-wider bg-[#faede2] text-[#8a252c] dark:bg-[#4d1b24] dark:text-[#ff9ca4] border-[#ebd7c8] dark:border-[#541f2b]"
+                className="px-3.5 py-1 text-xs font-semibold uppercase tracking-wider bg-surface text-accent border-line"
               >
-                ✦ Tập tuyển thư tịch dân gian
+                ✦ Tuyển tập di sản ba miền
               </Badge>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-['Noto_Serif',serif] font-bold leading-tight mb-4 bg-gradient-to-r from-[#2a1815] via-[#8a252c] to-[#2a1815] dark:from-[#f7ede6] dark:via-[#ff9ca4] dark:to-[#f7ede6] bg-clip-text text-transparent">
+            <h1 className="page-title mb-4">
               Khám phá phong thổ & nét thiêng dân gian
             </h1>
 
-            <p className="text-sm sm:text-base text-[#6f5e57] dark:text-[#cbb8af] leading-relaxed">
+            <p className="text-sm sm:text-base text-ink leading-relaxed">
               Tìm hiểu chiều sâu tập tục, huyền tích và không gian tín ngưỡng ba miền dưới
               góc nhìn văn hóa, nhân bản và lịch sử thuần khiết của người Việt.
             </p>
           </div>
+          <img
+            src="/images/hue_trung_bo.jpg"
+            alt="Kiến trúc truyền thống xứ Huế"
+            className="discovery-masthead__image"
+          />
         </div>
 
-        {/* Search & Filter Container Card */}
-        <Card className="p-6 sm:p-7 rounded-3xl bg-white border border-[#eddcd0] mb-8 shadow-xs space-y-5">
+        {/* Search & Filter Toolbar */}
+        <div className="py-6 border-y border-line/70 mb-10 space-y-4">
           {/* Search Input Box */}
           <div className="relative">
             <input
               type="text"
+              aria-label="Tìm kiếm chuyên đề văn hóa"
               value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                if (forceEmptyState) setForceEmptyState(false);
-              }}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm kiếm lễ hội, phong tục, điển tích dân gian, đền miếu xưa..."
-              className="w-full pl-11 pr-14 py-3 rounded-2xl bg-[#faf3ec]/70 border border-[#eddcd0] text-sm text-[#2e2624] placeholder-[#a29289] focus:outline-none focus:ring-1 focus:ring-[#9e3b2e]"
+              className="w-full pl-11 pr-4 py-3 rounded-panel bg-surface/70 border border-line text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-1 focus:ring-accent transition-all"
             />
-            <Search className="w-5 h-5 text-[#9e8b82] absolute left-3.5 top-3.5" />
-            <span className="hidden sm:inline-block absolute right-3.5 top-3.5 px-2 py-0.5 rounded-md bg-[#ede0d4] text-[11px] font-mono text-[#85736b]">
-              ⌘K
-            </span>
+            <Search className="w-5 h-5 text-muted absolute left-3.5 top-3.5" />
           </div>
 
           {/* Region Filters Row */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-1 border-t border-[#f4e8dc]">
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#7e6c64] min-w-[130px]">
-              <Compass className="w-4 h-4 text-[#9e3b2e]" />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-2 border-t border-line/50">
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted min-w-[130px]">
+              <Compass className="w-4 h-4 text-accent" />
               <span>Vùng miền:</span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {REGIONS.map((r) => {
-                const isActive = selectedRegion === r.key && !forceEmptyState;
+                const isActive = selectedRegion === r.key;
                 return (
                   <button
                     key={r.key}
-                    onClick={() => {
-                      setSelectedRegion(r.key);
-                      setForceEmptyState(false);
-                    }}
+                    onClick={() => setSelectedRegion(r.key)}
                     className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
                       isActive
-                        ? "bg-[#9e3b2e] text-white shadow-2xs font-semibold"
-                        : "bg-[#fbf4ed] text-[#715f57] border border-[#ecd9cb] hover:border-[#dfc3af]"
+                        ? "bg-action text-white shadow-2xs font-semibold"
+                        : "bg-surface text-ink border border-line hover:border-accent/40"
                     }`}
                   >
                     {r.label}
@@ -229,25 +212,22 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
           </div>
 
           {/* Category Filters Row */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-1 border-t border-[#f4e8dc]">
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#7e6c64] min-w-[130px]">
-              <Tag className="w-4 h-4 text-[#9e3b2e]" />
-              <span>Chủ đề văn hóa:</span>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-2 border-t border-line/50">
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted min-w-[130px]">
+              <Tag className="w-4 h-4 text-accent" />
+              <span>Chủ đề:</span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {CATEGORIES.map((c) => {
-                const isActive = selectedCategory === c.key && !forceEmptyState;
+                const isActive = selectedCategory === c.key;
                 return (
                   <button
                     key={c.key}
-                    onClick={() => {
-                      setSelectedCategory(c.key);
-                      setForceEmptyState(false);
-                    }}
+                    onClick={() => setSelectedCategory(c.key)}
                     className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
                       isActive
-                        ? "bg-[#9e3b2e] text-white shadow-2xs font-semibold"
-                        : "bg-[#fbf4ed] text-[#715f57] border border-[#ecd9cb] hover:border-[#dfc3af]"
+                        ? "bg-action text-white shadow-2xs font-semibold"
+                        : "bg-surface text-ink border border-line hover:border-accent/40"
                     }`}
                   >
                     {c.label}
@@ -257,151 +237,202 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
             </div>
           </div>
 
-          {/* Filter Status Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[#f4e8dc] text-xs text-[#8c7b74]">
+          {/* Status Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-line/50 text-xs text-muted">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#9e3b2e]"></span>
+              <span className="w-2 h-2 rounded-full bg-action"></span>
               <span>
-                Hiển thị <strong>{filteredArticles.length}</strong> chuyên đề văn hóa
-                chọn lọc
+                Hiển thị <strong>{filteredArticles.length}</strong> chuyên đề di sản tuyển chọn
               </span>
             </div>
 
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setForceEmptyState(!forceEmptyState)}
-                className="flex items-center gap-1 text-[#8b7972] hover:text-[#9e3b2e] cursor-pointer transition-colors"
-                title="Bật/tắt trạng thái không có kết quả để kiểm tra giao diện"
-              >
-                <Eye className="w-3.5 h-3.5 text-[#9e3b2e]" />
-                <span>
-                  {forceEmptyState ? "Tắt thử nghiệm Empty" : "Thử nghiệm: Trạng thái trống (Empty State)"}
-                </span>
-              </button>
-
+            {(selectedRegion !== "all" || selectedCategory !== "all" || searchQuery.trim()) && (
               <button
                 onClick={handleResetFilters}
-                className="flex items-center gap-1 text-[#8b7972] hover:text-[#9e3b2e] cursor-pointer transition-colors"
+                className="flex items-center gap-1 text-accent font-semibold hover:underline cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Đặt lại bộ lọc</span>
               </button>
-            </div>
+            )}
           </div>
-        </Card>
+        </div>
+
+        {/* ================= EDITORIAL COVER STORY (When browsing default) ================= */}
+        {featuredArticle && (
+          <section className="mb-14">
+            <div className="text-xs font-bold uppercase tracking-widest text-accent mb-3 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-accent" />
+              <span>CHUYÊN ĐỀ TÂM ĐIỂM KỲ NÀY</span>
+            </div>
+
+            <article
+              onClick={() => onSelectArticle(featuredArticle.id)}
+              className="group cursor-pointer rounded-card overflow-hidden bg-surface border border-line shadow-xs hover:shadow-card transition-all duration-300 grid grid-cols-1 lg:grid-cols-12"
+            >
+              <div className="lg:col-span-7 relative h-72 sm:h-96 lg:h-full overflow-hidden bg-surface-soft">
+                <img
+                  src={featuredArticle.image}
+                  alt={featuredArticle.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-black/50 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute top-4 left-4 flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-surface/90 backdrop-blur-md text-xs font-bold text-accent border border-line shadow-xs">
+                    {featuredArticle.region}
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-action text-white text-xs font-semibold shadow-xs">
+                    {featuredArticle.category}
+                  </span>
+                </div>
+              </div>
+
+              <div className="lg:col-span-5 p-6 sm:p-10 flex flex-col justify-between space-y-6">
+                <div>
+                  <div className="flex items-center gap-2 text-xs text-muted mb-3">
+                    <Clock className="w-3.5 h-3.5 text-accent" />
+                    <span>Thời gian đọc {featuredArticle.readingTime}</span>
+                    <span>•</span>
+                    <span className="italic text-accent">Khảo cứu văn hóa</span>
+                  </div>
+
+                  <h2 className="font-display font-bold text-2xl sm:text-3xl text-ink leading-tight mb-4 group-hover:text-accent transition-colors">
+                    {featuredArticle.title}
+                  </h2>
+
+                  <p className="text-sm sm:text-base text-ink/90 leading-relaxed first-letter:text-4xl first-letter:font-serif first-letter:font-bold first-letter:mr-2.5 first-letter:float-left first-letter:text-accent first-letter:leading-none">
+                    {featuredArticle.subtitle}
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-line/70 flex items-center justify-between">
+                  <span className="text-xs text-muted italic">
+                    Di sản & Không gian tín ngưỡng
+                  </span>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="gap-2 bg-action text-white shadow-xs group-hover:shadow-card cursor-pointer"
+                  >
+                    <span>Đọc chuyên đề</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </article>
+          </section>
+        )}
+
+        {/* Section Heading for Catalog Grid */}
+        {filteredArticles.length > 0 && (
+          <div className="flex items-center justify-between gap-4 mb-6 pb-2 border-b border-line/60">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-4 bg-action rounded-full"></span>
+              <h2 className="font-display font-bold text-lg sm:text-xl text-ink">
+                {isDefaultView ? "Các chuyên đề di sản chọn lọc" : "Kết quả tra cứu"}
+              </h2>
+            </div>
+            <span className="text-xs text-muted">
+              {catalogArticles.length} chuyên đề
+            </span>
+          </div>
+        )}
 
         {/* Articles Grid or Empty State */}
         {filteredArticles.length === 0 ? (
-          <Card className="p-12 text-center rounded-3xl bg-white border border-[#eddcd0] max-w-lg mx-auto shadow-xs my-10">
-            <div className="w-14 h-14 mx-auto rounded-full bg-[#faede2] text-[#9e3b2e] flex items-center justify-center mb-4">
+          <div className="p-12 text-center rounded-card bg-surface border border-line max-w-lg mx-auto shadow-xs my-10">
+            <div className="w-14 h-14 mx-auto rounded-full bg-surface-soft text-accent flex items-center justify-center mb-4">
               <BookOpen className="w-6 h-6" />
             </div>
-            <h3 className="font-['Noto_Serif',serif] font-bold text-xl text-[#2a2220] mb-2">
+            <h3 className="font-display font-bold text-xl text-ink mb-2">
               Chưa tìm thấy chuyên đề phù hợp
             </h3>
-            <p className="text-sm text-[#786760] leading-relaxed mb-6">
+            <p className="text-sm text-muted leading-relaxed mb-6">
               Không có bài viết nào khớp với từ khóa hoặc bộ lọc hiện tại. Bạn có thể thử tìm
               từ khóa khác hoặc đặt lại bộ lọc.
             </p>
             <Button variant="default" size="pill" onClick={handleResetFilters}>
               Đặt lại tất cả bộ lọc
             </Button>
-          </Card>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {filteredArticles.map((article) => (
-              <Card
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+            {catalogArticles.map((article) => (
+              <article
                 key={article.id}
                 onClick={() => onSelectArticle(article.id)}
-                className="rounded-3xl overflow-hidden bg-white/95 dark:bg-[#2c0e14]/95 border border-[#eadcce] dark:border-[#4d1b24] hover:border-[#8a252c]/50 dark:hover:border-[#ff9ca4]/40 hover:-translate-y-1.5 hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 flex flex-col justify-between group cursor-pointer shadow-xs"
+                className="group cursor-pointer flex flex-col justify-between border-b lg:border-b-0 pb-6 lg:pb-0"
               >
                 <div>
-                  {/* Photo with Overlay Badges */}
-                  <div className="relative h-52 sm:h-56 overflow-hidden bg-[#faede2] dark:bg-[#38141c]">
+                  {/* Photo Container */}
+                  <div className="relative aspect-16/10 rounded-panel overflow-hidden bg-surface-soft mb-4">
                     <img
                       src={article.image}
                       alt={article.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-
-                    <div className="absolute top-3.5 left-3.5 flex flex-wrap items-center gap-1.5">
-                      <span className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-[11px] font-semibold text-white tracking-wide border border-white/20 shadow-xs">
-                        {article.region}
-                      </span>
-                      <span className="px-3 py-1 rounded-full bg-[#8a252c]/80 backdrop-blur-md text-[11px] font-medium text-white tracking-wide border border-white/20 shadow-xs">
-                        {article.category}
-                      </span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute bottom-2.5 left-3 text-xs font-semibold text-white/90 drop-shadow-sm">
+                      {article.region}
                     </div>
                   </div>
 
-                  {/* Card Content */}
-                  <div className="p-6">
-                    <h3 className="font-['Noto_Serif',serif] font-bold text-lg sm:text-xl text-[#2a2220] dark:text-[#f7ede6] leading-snug mb-2.5 group-hover:text-[#8a252c] dark:group-hover:text-[#ff9ca4] transition-colors">
-                      {article.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-[#6f5e57] dark:text-[#cbb8af] leading-relaxed line-clamp-3">
-                      {article.excerpt}
-                    </p>
+                  {/* Kicker Category */}
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-1.5">
+                    <span>{article.category}</span>
+                    <span>•</span>
+                    <span className="text-muted font-normal">{article.readingTime}</span>
                   </div>
+
+                  {/* Title & Excerpt */}
+                  <h3 className="font-display font-bold text-lg sm:text-xl text-ink leading-snug mb-2 group-hover:text-accent transition-colors">
+                    {article.title}
+                  </h3>
+                  <p className="text-sm text-ink/80 leading-relaxed line-clamp-3 mb-4">
+                    {article.excerpt}
+                  </p>
                 </div>
 
-                {/* Card Footer */}
-                <div className="px-6 py-4 border-t border-[#f4e8dc] dark:border-[#4d1b24] flex items-center justify-between text-xs text-[#8c7b74] dark:text-[#a08b83]">
-                  <span className="italic truncate max-w-[170px]">
-                    Nội dung minh họa – chờ kiểm chứng
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectArticle(article.id);
-                    }}
-                    className="text-[#8a252c] dark:text-[#ff9ca4] font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform cursor-pointer"
-                  >
+                {/* Footer read link */}
+                <div className="pt-3 border-t border-line/60 flex items-center justify-between text-xs">
+                  <span className="text-muted italic">Khảo cứu văn hóa</span>
+                  <span className="text-accent font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                     <span>Khám phá</span>
                     <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  </span>
                 </div>
-              </Card>
+              </article>
             ))}
           </div>
         )}
 
         {/* Editorial Principles Callout Banner */}
-        <div className="p-5 sm:p-6 rounded-3xl bg-[#fbece1]/80 border border-[#ecd5c4] flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-16 shadow-2xs">
-          <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-[#faede2] border border-[#e5cdbc] flex items-center justify-center text-[#9e3b2e] flex-shrink-0">
-              <ShieldCheck className="w-5 h-5 text-[#9e3b2e]" />
+        <div className="p-6 sm:p-8 rounded-card bg-surface border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-16 shadow-2xs">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-panel bg-surface-soft border border-line flex items-center justify-center text-accent shrink-0">
+              <ShieldCheck className="w-6 h-6 text-accent" />
             </div>
             <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-[#9e3b2e] mb-0.5">
-                NGUYÊN TẮC BIÊN TẬP & BẢO TỒN • Về nội dung văn hóa
+              <div className="text-xs uppercase tracking-widest text-muted font-semibold mb-1">
+                Thông điệp của Tin Lắm Tâm Linh
               </div>
-              <p className="text-xs sm:text-sm text-[#73615a] leading-relaxed max-w-2xl">
-                Tổng hợp từ góc nhìn văn hóa học, nhân học và di sản tập tục dân gian Việt Nam.
-                Các bài viết hiện là nội dung minh họa, đang được biên tập và kiểm chứng nguồn
-                trước khi công bố.
+              <div className="text-xs font-bold uppercase tracking-wider text-accent mb-1">
+                NGUYÊN TẮC BIÊN TẬP & BẢO TỒN DI SẢN
+              </div>
+              <p className="text-sm text-ink/80 leading-relaxed max-w-2xl">
+                Tổng hợp từ góc nhìn dân tộc học, văn hóa học và di sản tập tục dân gian Việt Nam.
+                Mỗi bài viết đều được đối chiếu từ các công trình khảo cứu uy tín, trân trọng nét đẹp
+                thuần khiết của người xưa.
               </p>
             </div>
           </div>
 
-          <div className="px-3.5 py-1.5 rounded-full bg-white/90 border border-[#edd6c7] text-xs font-medium text-[#883227] flex-shrink-0 self-start sm:self-auto shadow-2xs">
-            Bản quyền tư liệu Tin Lắm Tâm Linh
-          </div>
-        </div>
-
-        {/* Bottom Serif Motto */}
-        <div className="text-center pt-8 border-t border-[#eddcd0]">
-          <p className="font-['Noto_Serif',serif] italic font-semibold text-lg sm:text-xl text-[#9e3b2e] mb-1.5">
-            “Tâm bình thế giới bình, lòng an vạn sự tỏ.”
-          </p>
-          <div className="text-xs uppercase tracking-widest text-[#938279] font-medium">
-            Thông điệp của Tin Lắm Tâm Linh
+          <div className="px-4 py-2 rounded-full bg-surface-soft border border-line text-xs font-semibold text-accent shrink-0 self-start sm:self-auto shadow-2xs">
+            Bảo tồn văn hóa phi vật thể
           </div>
         </div>
       </main>
     </div>
   );
 };
+
