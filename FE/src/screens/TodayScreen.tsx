@@ -104,30 +104,33 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
           )}
         </div>
 
-        {/* Hero Header with decorative mandala */}
-        <div className="relative max-w-4xl mx-auto mb-10 text-center">
-          <div className="hidden lg:block absolute -right-8 -top-6 w-32 h-32 rounded-full border border-[#f0ded0] p-2 pointer-events-none opacity-60">
-            <div className="w-full h-full rounded-full border border-dashed border-[#e6cbba] flex items-center justify-center">
-              <div className="w-6 h-6 rounded-full bg-[#faece1]"></div>
+        {/* Hero Header with decorative mandala and ambient light */}
+        <div className="relative max-w-4xl mx-auto mb-12 text-center">
+          {/* Subtle Ambient Golden/Crimson Aura */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-64 bg-[#be8e5a]/10 dark:bg-[#a62734]/15 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="hidden lg:block absolute -right-8 -top-6 w-32 h-32 rounded-full border border-[#f0ded0] dark:border-[#4d1b24] p-2 pointer-events-none opacity-60">
+            <div className="w-full h-full rounded-full border border-dashed border-[#e6cbba] dark:border-[#541f2b] flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-[#faece1] dark:bg-[#38141c]"></div>
             </div>
           </div>
 
           {isCheckedIn ? (
             <>
-              <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-['Noto_Serif',serif] font-bold text-[#2a211e] leading-tight mb-3">
+              <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-['Noto_Serif',serif] font-bold leading-tight mb-3 bg-gradient-to-r from-[#2a1815] via-[#8a252c] to-[#2a1815] dark:from-[#f7ede6] dark:via-[#ff9ca4] dark:to-[#f7ede6] bg-clip-text text-transparent">
                 Tín hiệu hôm nay đã nở rộ trong lòng bạn
               </h1>
-              <p className="mt-2 text-sm sm:text-base text-[#6f6059] leading-relaxed max-w-2xl mx-auto">
+              <p className="mt-2 text-sm sm:text-base text-[#6f6059] dark:text-[#d4bfb7] leading-relaxed max-w-2xl mx-auto">
                 Sự {mood.toLowerCase()} vốn chỉ là khoảng lặng giữa hai nhịp bước. Khi
                 nhận biết rõ xao động trong tâm trí, bạn đã bắt đầu tiến dần về sự an ổn.
               </p>
             </>
           ) : (
             <>
-              <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-['Noto_Serif',serif] font-bold text-[#2a211e] leading-tight mb-3">
+              <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-['Noto_Serif',serif] font-bold leading-tight mb-3 bg-gradient-to-r from-[#2a1815] via-[#8a252c] to-[#2a1815] dark:from-[#f7ede6] dark:via-[#ff9ca4] dark:to-[#f7ede6] bg-clip-text text-transparent">
                 Hôm nay tâm bạn đang nương tựa nơi đâu?
               </h1>
-              <p className="mt-2 text-sm sm:text-base text-[#6f6059] leading-relaxed max-w-2xl mx-auto">
+              <p className="mt-2 text-sm sm:text-base text-[#6f6059] dark:text-[#d4bfb7] leading-relaxed max-w-2xl mx-auto">
                 Cuộc sống hối hả dễ làm ta quên mất việc tự hỏi lòng mình đang cảm thấy thế nào. Hãy dành ít phút lắng lòng nhận diện cảm xúc để đón nhận quẻ tín hiệu và lời nhắn an lành cho hôm nay.
               </p>
             </>
@@ -136,30 +139,30 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
 
         {/* Main Action Card: 2 distinct states */}
         {isCheckedIn ? (
-          <Card className="rounded-3xl p-6 sm:p-8 shadow-xs mb-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+          <Card className="rounded-3xl p-6 sm:p-8 shadow-md dark:shadow-2xl mb-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-center border-[#eadcce] dark:border-[#4d1b24] bg-white/95 dark:bg-[#2c0e14]/95 backdrop-blur-md">
             {/* Left Column */}
             <div className="md:col-span-8 space-y-4">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#9e3b2e]">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#8a252c] dark:text-[#ff9ca4]">
                 <span>Trích dẫn tỉnh thức</span>
                 <span className="text-[#be8e5a]">•</span>
-                <span className="text-[#887870] font-medium">Chiêm nghiệm ngày</span>
+                <span className="text-[#887870] dark:text-[#a8938c] font-medium">Chiêm nghiệm ngày</span>
               </div>
 
-              <p className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#9e3b2e] leading-snug">
+              <p className="font-['Noto_Serif',serif] font-bold text-xl sm:text-2xl text-[#8a252c] dark:text-[#ff9ca4] leading-snug">
                 “{signal.poem.line1} / {signal.poem.line2}”
               </p>
 
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fbf3ec] border border-[#f1e0d3] text-xs text-[#6e5d56]">
-                <span className={isActionDone ? "text-[#2e6930]" : "text-[#be8e5a]"}>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#fbf3ec] dark:bg-[#38141c] border border-[#f1e0d3] dark:border-[#541f2b] text-xs text-[#6e5d56] dark:text-[#d4bfb7]">
+                <span className={isActionDone ? "text-[#2e6930] dark:text-emerald-400 font-bold" : "text-[#be8e5a]"}>
                   {isActionDone ? "✔" : "✦"}
                 </span>
                 <span>
                   {isActionDone ? "Đã thực hiện: " : "Hành động nuôi tâm: "}
-                  <strong>{signal.action.title}</strong> ({signal.action.duration})
+                  <strong className="text-[#2a1815] dark:text-[#f7ede6]">{signal.action.title}</strong> ({signal.action.duration})
                 </span>
               </div>
 
-              <div className="text-xs text-[#9c8b84]">
+              <div className="text-xs text-[#9c8b84] dark:text-[#a08b83]">
                 Tín hiệu đã được đồng bộ cùng nhịp tâm trong ngày
               </div>
 
@@ -168,7 +171,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
                   variant="default"
                   size="pill"
                   onClick={onViewSignalDetails}
-                  className="gap-2 shadow-xs"
+                  className="gap-2 shadow-sm font-semibold"
                 >
                   <span>Xem lại tín hiệu trọn vẹn</span>
                   <ArrowRight className="w-4 h-4" />
@@ -178,9 +181,9 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
                   variant="outline"
                   size="pill"
                   onClick={onSelectMoodClick}
-                  className="gap-1.5"
+                  className="gap-1.5 font-medium"
                 >
-                  <RotateCw className="w-3.5 h-3.5 text-[#85736b]" />
+                  <RotateCw className="w-3.5 h-3.5 text-[#85736b] dark:text-[#cbb8af]" />
                   <span>Check-in lại nếu cảm xúc thay đổi</span>
                 </Button>
               </div>
@@ -188,57 +191,57 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
 
             {/* Right Column: Square Calligraphy Box */}
             <div className="md:col-span-4 flex justify-center md:justify-end">
-              <div className="w-full max-w-[200px] aspect-square rounded-2xl bg-[#fdf8f2] border border-[#ecd9cb] p-6 text-center flex flex-col items-center justify-center shadow-2xs">
-                <div className="font-['Noto_Serif',serif] font-bold text-5xl text-[#9e3b2e] mb-2 leading-none">
+              <div className="w-full max-w-[210px] aspect-square rounded-2xl bg-gradient-to-br from-[#fdf8f2] to-[#f7eedf] dark:from-[#38141c] dark:to-[#250b10] border-2 border-[#e6cbba] dark:border-[#541f2b] p-6 text-center flex flex-col items-center justify-center shadow-sm relative group hover:border-[#8a252c]/50 transition-colors">
+                <div className="font-['Noto_Serif',serif] font-bold text-5xl sm:text-6xl text-[#8a252c] dark:text-[#ff9ca4] mb-2 leading-none drop-shadow-xs">
                   Tĩnh
                 </div>
-                <div className="text-xs font-bold uppercase tracking-wider text-[#8b7972] mb-1">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8b7972] dark:text-[#caa89e] mb-1">
                   Tín hiệu cốt lõi
                 </div>
-                <p className="text-xs text-[#6d5b54] leading-relaxed">
+                <p className="text-xs text-[#6d5b54] dark:text-[#bda49c] leading-relaxed">
                   Hóa giải bồn chồn bằng hơi thở chậm nhẹ
                 </p>
               </div>
             </div>
           </Card>
         ) : (
-          <Card className="rounded-3xl p-6 sm:p-8 shadow-xs mb-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-center border-[#ebdcd0] bg-gradient-to-br from-[#fffdfa] to-[#fcf7f0]">
+          <Card className="rounded-3xl p-6 sm:p-8 shadow-md dark:shadow-2xl mb-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-center border-[#eadcce] dark:border-[#4d1b24] bg-white/95 dark:bg-[#2c0e14]/95 backdrop-blur-md">
             {/* Left Column */}
             <div className="md:col-span-8 space-y-4">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#9e3b2e]">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#8a252c] dark:text-[#ff9ca4]">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Khởi đầu ngày mới</span>
                 <span className="text-[#be8e5a]">•</span>
-                <span className="text-[#887870] font-medium">3 bước tĩnh tâm</span>
+                <span className="text-[#887870] dark:text-[#bda49c] font-medium">3 bước tĩnh tâm</span>
               </div>
 
-              <h2 className="font-['Noto_Serif',serif] font-bold text-2xl sm:text-3xl text-[#2a211e] leading-snug">
+              <h2 className="font-['Noto_Serif',serif] font-bold text-2xl sm:text-3xl text-[#2a211e] dark:text-[#f7ede6] leading-snug">
                 Lắng nghe nhịp lòng, gieo một niệm lành
               </h2>
 
-              <p className="text-xs sm:text-sm text-[#6f5e57] leading-relaxed max-w-xl">
+              <p className="text-xs sm:text-sm text-[#6f5e57] dark:text-[#cbb8af] leading-relaxed max-w-xl">
                 Mỗi sớm mai thức dậy là một cơ hội để kết nối lại với chính mình. Một nén hương lòng, một chén trà mộc, hay chỉ đơn giản là thành thật nhận diện nhịp cảm xúc đang hiện diện.
               </p>
 
               {/* 3 mini step cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                <div className="p-3.5 rounded-xl bg-[#faede2]/70 border border-[#f3dfce] text-left">
-                  <span className="inline-block text-xs font-bold text-[#9e3b2e] mb-1">1. Nhận diện</span>
-                  <p className="text-xs text-[#6e5d56] leading-snug">
+                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#faede2]/80 to-[#fdf7f2] dark:from-[#38141c] dark:to-[#2c0e14] border border-[#f0decf] dark:border-[#4d1b24] text-left hover:border-[#8a252c]/40 transition-colors shadow-2xs">
+                  <span className="inline-block text-xs font-bold text-[#8a252c] dark:text-[#ff9ca4] mb-1">1. Nhận diện</span>
+                  <p className="text-xs text-[#6e5d56] dark:text-[#d4bfb7] leading-snug">
                     Thành thật chọn 1 trong 6 nhịp tâm trạng
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#faede2]/70 border border-[#f3dfce] text-left">
-                  <span className="inline-block text-xs font-bold text-[#9e3b2e] mb-1">2. Lắng đọng</span>
-                  <p className="text-xs text-[#6e5d56] leading-snug">
+                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#faede2]/80 to-[#fdf7f2] dark:from-[#38141c] dark:to-[#2c0e14] border border-[#f0decf] dark:border-[#4d1b24] text-left hover:border-[#8a252c]/40 transition-colors shadow-2xs">
+                  <span className="inline-block text-xs font-bold text-[#8a252c] dark:text-[#ff9ca4] mb-1">2. Lắng đọng</span>
+                  <p className="text-xs text-[#6e5d56] dark:text-[#d4bfb7] leading-snug">
                     Quán chiếu hơi thở cùng la bàn tĩnh tâm
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#faede2]/70 border border-[#f3dfce] text-left">
-                  <span className="inline-block text-xs font-bold text-[#9e3b2e] mb-1">3. Khai mở</span>
-                  <p className="text-xs text-[#6e5d56] leading-snug">
+                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#faede2]/80 to-[#fdf7f2] dark:from-[#38141c] dark:to-[#2c0e14] border border-[#f0decf] dark:border-[#4d1b24] text-left hover:border-[#8a252c]/40 transition-colors shadow-2xs">
+                  <span className="inline-block text-xs font-bold text-[#8a252c] dark:text-[#ff9ca4] mb-1">3. Khai mở</span>
+                  <p className="text-xs text-[#6e5d56] dark:text-[#d4bfb7] leading-snug">
                     Đón nhận tín hiệu cổ thi & hành động nuôi tâm
                   </p>
                 </div>
@@ -249,14 +252,14 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
                   variant="default"
                   size="pill"
                   onClick={onSelectMoodClick}
-                  className="gap-2 shadow-xs px-6 py-2.5 font-semibold text-xs sm:text-sm"
+                  className="gap-2 shadow-md px-6 py-2.5 font-semibold text-xs sm:text-sm hover:scale-[1.02] transition-transform"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>Bắt đầu check-in ngày mới</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
 
-                <span className="text-xs text-[#8d7c75] italic">
+                <span className="text-xs text-[#8d7c75] dark:text-[#a08b83] italic">
                   Chỉ mất khoảng 1-2 phút
                 </span>
               </div>
@@ -264,17 +267,17 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
 
             {/* Right Column: Calligraphy Invitation Box */}
             <div className="md:col-span-4 flex justify-center md:justify-end">
-              <div className="w-full max-w-[220px] aspect-square rounded-2xl bg-[#fdf8f2] border-2 border-dashed border-[#e6cbba] p-6 text-center flex flex-col items-center justify-center shadow-2xs relative group hover:border-[#9e3b2e]/50 transition-colors">
-                <div className="w-9 h-9 rounded-full bg-[#faede2] text-[#9e3b2e] flex items-center justify-center mb-2">
+              <div className="w-full max-w-[210px] aspect-square rounded-2xl bg-gradient-to-br from-[#fdf8f2] to-[#f7eedf] dark:from-[#38141c] dark:to-[#250b10] border-2 border-dashed border-[#e6cbba] dark:border-[#541f2b] p-6 text-center flex flex-col items-center justify-center shadow-xs relative group hover:border-[#8a252c]/60 transition-all">
+                <div className="w-10 h-10 rounded-full bg-[#faede2] dark:bg-[#4d1b24] text-[#8a252c] dark:text-[#ff9ca4] flex items-center justify-center mb-2 shadow-2xs group-hover:scale-110 transition-transform">
                   <Flower2 className="w-5 h-5" />
                 </div>
-                <div className="font-['Noto_Serif',serif] font-bold text-4xl text-[#9e3b2e] mb-1.5 leading-none">
+                <div className="font-['Noto_Serif',serif] font-bold text-4xl sm:text-5xl text-[#8a252c] dark:text-[#ff9ca4] mb-1.5 leading-none">
                   An
                 </div>
-                <div className="text-xs font-bold uppercase tracking-wider text-[#8b7972] mb-1">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8b7972] dark:text-[#caa89e] mb-1">
                   Tâm an vạn sự an
                 </div>
-                <p className="text-xs text-[#6d5b54] leading-relaxed">
+                <p className="text-xs text-[#6d5b54] dark:text-[#bda49c] leading-relaxed">
                   Đang chờ bạn chọn một nhịp cảm xúc hôm nay
                 </p>
               </div>

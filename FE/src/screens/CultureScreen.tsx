@@ -109,14 +109,14 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
         </div>
 
         {/* Khám phá Sub-tabs */}
-        <div className="flex items-center gap-2 mb-6 flex-wrap">
-          <button className="px-4 py-2 rounded-full bg-[#9e3b2e] text-white text-xs font-semibold shadow-2xs">
+        <div className="flex items-center gap-2.5 mb-8 flex-wrap">
+          <button className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#8a252c] to-[#a62734] text-white text-xs font-semibold shadow-sm shadow-[#8a252c]/20">
             Di sản & Điển tích dân gian
           </button>
           {onGoToRituals && (
             <button
               onClick={onGoToRituals}
-              className="px-4 py-2 rounded-full bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#9e3b2e] hover:text-[#9e3b2e] text-xs font-medium transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-full bg-white/80 dark:bg-[#2c0e14]/80 border border-[#eadcce] dark:border-[#4d1b24] text-[#584640] dark:text-[#d4bfb7] hover:border-[#8a252c] hover:text-[#8a252c] dark:hover:text-[#ff9ca4] text-xs font-medium transition-all cursor-pointer shadow-2xs hover:shadow-xs"
             >
               Cẩm nang nghi lễ tại gia (Mới)
             </button>
@@ -124,7 +124,7 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
           {onGoToCalendar && (
             <button
               onClick={onGoToCalendar}
-              className="px-4 py-2 rounded-full bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#9e3b2e] hover:text-[#9e3b2e] text-xs font-medium transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-full bg-white/80 dark:bg-[#2c0e14]/80 border border-[#eadcce] dark:border-[#4d1b24] text-[#584640] dark:text-[#d4bfb7] hover:border-[#8a252c] hover:text-[#8a252c] dark:hover:text-[#ff9ca4] text-xs font-medium transition-all cursor-pointer shadow-2xs hover:shadow-xs"
             >
               Lịch văn hóa & Tiết khí (Mới)
             </button>
@@ -132,7 +132,7 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
           {onGoToGoodDays && (
             <button
               onClick={onGoToGoodDays}
-              className="px-4 py-2 rounded-full bg-white border border-[#eddcd0] text-[#6d5c55] hover:border-[#9e3b2e] hover:text-[#9e3b2e] text-xs font-medium transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-full bg-white/80 dark:bg-[#2c0e14]/80 border border-[#eadcce] dark:border-[#4d1b24] text-[#584640] dark:text-[#d4bfb7] hover:border-[#8a252c] hover:text-[#8a252c] dark:hover:text-[#ff9ca4] text-xs font-medium transition-all cursor-pointer shadow-2xs hover:shadow-xs"
             >
               Tra cứu ngày lành (Mới)
             </button>
@@ -140,11 +140,11 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
         </div>
 
         {/* Hero Banner Card */}
-        <div className="relative rounded-3xl p-8 sm:p-12 mb-8 overflow-hidden bg-gradient-to-br from-[#faece1] via-[#fbf1e7] to-[#faece1] border border-[#ebd6c5] shadow-xs">
+        <div className="relative rounded-3xl p-8 sm:p-12 mb-8 overflow-hidden bg-gradient-to-br from-[#faede2] via-[#f7e8db] to-[#f4e2d2] dark:from-[#38141c] dark:via-[#2c0e14] dark:to-[#1e070b] border border-[#eadcce] dark:border-[#4d1b24] shadow-md dark:shadow-2xl">
           {/* Watermark sacred geometric motif */}
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 w-64 h-64 sm:w-80 sm:h-80 pointer-events-none opacity-25">
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 w-64 h-64 sm:w-80 sm:h-80 pointer-events-none opacity-20">
             <svg
-              className="w-full h-full text-[#9e3b2e] stroke-current fill-none"
+              className="w-full h-full text-[#8a252c] dark:text-[#ff9ca4] stroke-current fill-none"
               viewBox="0 0 100 100"
             >
               <circle cx="50" cy="50" r="48" strokeWidth="0.8" />
@@ -162,17 +162,17 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
             <div className="mb-3">
               <Badge
                 variant="terracotta"
-                className="px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-[#faede2] text-[#9e3b2e] border-[#ebd7c8]"
+                className="px-3.5 py-1 text-xs font-semibold uppercase tracking-wider bg-[#faede2] text-[#8a252c] dark:bg-[#4d1b24] dark:text-[#ff9ca4] border-[#ebd7c8] dark:border-[#541f2b]"
               >
-                Tập tuyển thư tịch dân gian
+                ✦ Tập tuyển thư tịch dân gian
               </Badge>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-[40px] font-['Noto_Serif',serif] font-bold text-[#2a2220] leading-tight mb-4">
+            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-['Noto_Serif',serif] font-bold leading-tight mb-4 bg-gradient-to-r from-[#2a1815] via-[#8a252c] to-[#2a1815] dark:from-[#f7ede6] dark:via-[#ff9ca4] dark:to-[#f7ede6] bg-clip-text text-transparent">
               Khám phá phong thổ & nét thiêng dân gian
             </h1>
 
-            <p className="text-sm sm:text-base text-[#6f5e57] leading-relaxed">
+            <p className="text-sm sm:text-base text-[#6f5e57] dark:text-[#cbb8af] leading-relaxed">
               Tìm hiểu chiều sâu tập tục, huyền tích và không gian tín ngưỡng ba miền dưới
               góc nhìn văn hóa, nhân bản và lịch sử thuần khiết của người Việt.
             </p>
@@ -313,23 +313,23 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
               <Card
                 key={article.id}
                 onClick={() => onSelectArticle(article.id)}
-                className="rounded-3xl overflow-hidden bg-white border border-[#eddcd0] hover:border-[#dfc3af] hover:shadow-md transition-all duration-300 flex flex-col justify-between group cursor-pointer"
+                className="rounded-3xl overflow-hidden bg-white/95 dark:bg-[#2c0e14]/95 border border-[#eadcce] dark:border-[#4d1b24] hover:border-[#8a252c]/50 dark:hover:border-[#ff9ca4]/40 hover:-translate-y-1.5 hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 flex flex-col justify-between group cursor-pointer shadow-xs"
               >
                 <div>
                   {/* Photo with Overlay Badges */}
-                  <div className="relative h-52 sm:h-56 overflow-hidden bg-[#faede2]">
+                  <div className="relative h-52 sm:h-56 overflow-hidden bg-[#faede2] dark:bg-[#38141c]">
                     <img
                       src={article.image}
                       alt={article.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-                    <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
-                      <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-xs text-[11px] font-semibold text-white tracking-wide border border-white/20">
+                    <div className="absolute top-3.5 left-3.5 flex flex-wrap items-center gap-1.5">
+                      <span className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-[11px] font-semibold text-white tracking-wide border border-white/20 shadow-xs">
                         {article.region}
                       </span>
-                      <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-xs text-[11px] font-medium text-white/95 border border-white/20">
+                      <span className="px-3 py-1 rounded-full bg-[#8a252c]/80 backdrop-blur-md text-[11px] font-medium text-white tracking-wide border border-white/20 shadow-xs">
                         {article.category}
                       </span>
                     </div>
@@ -337,18 +337,18 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
 
                   {/* Card Content */}
                   <div className="p-6">
-                    <h3 className="font-['Noto_Serif',serif] font-bold text-lg sm:text-xl text-[#2a2220] leading-snug mb-2.5 group-hover:text-[#9e3b2e] transition-colors">
+                    <h3 className="font-['Noto_Serif',serif] font-bold text-lg sm:text-xl text-[#2a2220] dark:text-[#f7ede6] leading-snug mb-2.5 group-hover:text-[#8a252c] dark:group-hover:text-[#ff9ca4] transition-colors">
                       {article.title}
                     </h3>
-                    <p className="text-sm text-[#6f5e57] leading-relaxed line-clamp-3">
+                    <p className="text-xs sm:text-sm text-[#6f5e57] dark:text-[#cbb8af] leading-relaxed line-clamp-3">
                       {article.excerpt}
                     </p>
                   </div>
                 </div>
 
                 {/* Card Footer */}
-                <div className="px-6 py-4 border-t border-[#f4e8dc] flex items-center justify-between text-xs text-[#8c7b74]">
-                  <span className="italic truncate max-w-[170px] text-[#96847c]">
+                <div className="px-6 py-4 border-t border-[#f4e8dc] dark:border-[#4d1b24] flex items-center justify-between text-xs text-[#8c7b74] dark:text-[#a08b83]">
+                  <span className="italic truncate max-w-[170px]">
                     Nội dung minh họa – chờ kiểm chứng
                   </span>
 
@@ -358,9 +358,9 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
                       e.stopPropagation();
                       onSelectArticle(article.id);
                     }}
-                    className="text-[#9e3b2e] font-semibold flex items-center gap-1 hover:underline cursor-pointer"
+                    className="text-[#8a252c] dark:text-[#ff9ca4] font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform cursor-pointer"
                   >
-                    <span>Tìm hiểu</span>
+                    <span>Khám phá</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>

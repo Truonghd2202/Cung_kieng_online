@@ -627,10 +627,10 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
 
             {/* Big Serif Heading */}
             <div className="text-center max-w-2xl mx-auto mb-8">
-              <h1 className="font-['Noto_Serif',serif] font-bold text-3xl sm:text-4xl text-[#2a2220] leading-tight mb-3">
+              <h1 className="font-['Noto_Serif',serif] font-bold text-3xl sm:text-4xl leading-tight mb-3 bg-gradient-to-r from-[#2a1815] via-[#8a252c] to-[#2a1815] dark:from-[#f7ede6] dark:via-[#ff9ca4] dark:to-[#f7ede6] bg-clip-text text-transparent">
                 Lắng lòng và rút một thẻ xăm
               </h1>
-              <p className="text-sm text-[#73635b] leading-relaxed">
+              <p className="text-sm text-[#73635b] dark:text-[#cbb8af] leading-relaxed">
                 Giữ hơi thở chậm rãi, tĩnh tâm trong một khoảnh khắc ngắn. Thẻ xăm mở ra một
                 góc nhìn suy ngẫm cổ truyền, gợi ý thái độ an nhiên trước đời sống thường
                 nhật.
@@ -638,7 +638,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
             </div>
 
             {/* Center Altar: The Sacred Bamboo Tube Card */}
-            <Card className="max-w-2xl mx-auto rounded-3xl p-6 sm:p-10 bg-white border border-[#eddcd0] shadow-md text-center relative overflow-hidden mb-10">
+            <Card className="max-w-2xl mx-auto rounded-3xl p-6 sm:p-10 bg-white/95 dark:bg-[#2c0e14]/95 border border-[#eadcce] dark:border-[#4d1b24] shadow-lg dark:shadow-2xl text-center relative overflow-hidden mb-10">
               {/* Concentric Circle Aura Motif */}
               <div className="relative w-64 h-64 sm:w-72 sm:h-72 mx-auto mb-6 flex items-center justify-center">
                 <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#faece1]/70 via-[#f9efe5]/80 to-[#faece1]/50 animate-pulse" />
@@ -787,40 +787,43 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
 
             {/* 3 Cultural Guidance Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
-              <Card className="p-5 rounded-2xl bg-white border border-[#eddcd0] shadow-xs">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e] mb-1">
-                  CHIÊM NGHIỆM 01
+              <Card className="p-6 rounded-2xl bg-white/90 dark:bg-[#2c0e14]/90 border border-[#eadcce] dark:border-[#4d1b24] shadow-xs hover:-translate-y-1 hover:shadow-md transition-all duration-300">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8a252c] dark:text-[#ff9ca4] mb-1.5 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#8a252c] dark:bg-[#ff9ca4]"></span>
+                  <span>CHIÊM NGHIỆM 01</span>
                 </div>
-                <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] mb-1.5">
+                <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] dark:text-[#f7ede6] mb-1.5">
                   Tâm thành ý tịnh
                 </h4>
-                <p className="text-xs text-[#73635b] leading-relaxed">
+                <p className="text-xs text-[#73635b] dark:text-[#cbb8af] leading-relaxed">
                   Trước khi rút thẻ, buông xả những toan tính được mất. Giữ lòng thanh thản để đón nhận
                   lời khuyên với tâm thế sáng tỏ.
                 </p>
               </Card>
 
-              <Card className="p-5 rounded-2xl bg-white border border-[#eddcd0] shadow-xs">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e] mb-1">
-                  CHIÊM NGHIỆM 02
+              <Card className="p-6 rounded-2xl bg-white/90 dark:bg-[#2c0e14]/90 border border-[#eadcce] dark:border-[#4d1b24] shadow-xs hover:-translate-y-1 hover:shadow-md transition-all duration-300">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8a252c] dark:text-[#ff9ca4] mb-1.5 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#8a252c] dark:bg-[#ff9ca4]"></span>
+                  <span>CHIÊM NGHIỆM 02</span>
                 </div>
-                <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] mb-1.5">
+                <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] dark:text-[#f7ede6] mb-1.5">
                   Tự soi chiếu tâm tư
                 </h4>
-                <p className="text-xs text-[#73635b] leading-relaxed">
+                <p className="text-xs text-[#73635b] dark:text-[#cbb8af] leading-relaxed">
                   Lời quẻ dân gian tựa chiếc gương phản chiếu nỗi lòng, giúp nhận ra điều gì cần gìn
                   giữ và điều gì nên buông bỏ.
                 </p>
               </Card>
 
-              <Card className="p-5 rounded-2xl bg-white border border-[#eddcd0] shadow-xs">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#9e3b2e] mb-1">
-                  CHIÊM NGHIỆM 03
+              <Card className="p-6 rounded-2xl bg-white/90 dark:bg-[#2c0e14]/90 border border-[#eadcce] dark:border-[#4d1b24] shadow-xs hover:-translate-y-1 hover:shadow-md transition-all duration-300">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8a252c] dark:text-[#ff9ca4] mb-1.5 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#8a252c] dark:bg-[#ff9ca4]"></span>
+                  <span>CHIÊM NGHIỆM 03</span>
                 </div>
-                <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] mb-1.5">
+                <h4 className="font-['Noto_Serif',serif] font-bold text-base text-[#2a2220] dark:text-[#f7ede6] mb-1.5">
                   Thuận lẽ tự nhiên
                 </h4>
-                <p className="text-xs text-[#73635b] leading-relaxed">
+                <p className="text-xs text-[#73635b] dark:text-[#cbb8af] leading-relaxed">
                   Quẻ lành hay quẻ nhẫn nại đều hướng về đạo lý làm người. Tâm an vạn sự ắt sẽ hanh
                   thông, tự tại.
                 </p>

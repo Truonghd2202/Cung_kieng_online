@@ -30,12 +30,76 @@ body {
   padding: 0;
   min-height: 100vh;
   background-color: #f8efe4;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 10% 5%, rgba(190, 142, 90, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 15%, rgba(138, 37, 44, 0.07) 0%, transparent 55%),
+    radial-gradient(circle 800px at 50% 90%, rgba(206, 168, 126, 0.1) 0%, transparent 60%);
+  background-attachment: fixed;
   color: #2a1815;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 ::selection {
   background-color: #f2dbcc;
   color: #8a252c;
+}
+
+/* Custom Heritage Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f8efe4;
+}
+html.dark ::-webkit-scrollbar-track {
+  background: #1e070b;
+}
+::-webkit-scrollbar-thumb {
+  background: #d9c5b5;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8a252c;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #4d1b24;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #a62734;
+}
+
+/* Heritage Text & Glow Gradients */
+.heritage-gold-gradient {
+  background: linear-gradient(135deg, #be8e5a 0%, #e0b475 50%, #9e6d33 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.heritage-lacquer-gradient {
+  background: linear-gradient(135deg, #8a252c 0%, #b8333e 60%, #6e1920 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+html.dark .heritage-lacquer-gradient {
+  background: linear-gradient(135deg, #ff9ca4 0%, #f7ede6 55%, #f27c88 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.65; transform: scale(1); }
+  50% { opacity: 0.95; transform: scale(1.02); }
+}
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
 }
 
 /* Light mode primary overrides to ensure authentic beige theme */
@@ -114,6 +178,11 @@ body.dark,
 html.dark,
 body.dark {
   background-color: #1e070b !important;
+  background-image: 
+    radial-gradient(ellipse 90% 50% at 15% 10%, rgba(166, 39, 52, 0.22) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 45% at 85% 20%, rgba(120, 20, 32, 0.35) 0%, transparent 55%),
+    radial-gradient(circle 800px at 50% 90%, rgba(166, 39, 52, 0.16) 0%, transparent 60%) !important;
+  background-attachment: fixed !important;
   color: #f7ede6 !important;
 }
 

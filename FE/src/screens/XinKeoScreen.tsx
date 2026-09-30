@@ -150,11 +150,11 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
         </div>
 
         {/* Header Title Section */}
-        <div className="mb-8">
-          <h1 className="font-['Noto_Serif',serif] font-bold text-3xl sm:text-4xl lg:text-[40px] text-[#2a2220] leading-tight mb-3">
+        <div className="mb-10">
+          <h1 className="font-['Noto_Serif',serif] font-bold text-3xl sm:text-4xl lg:text-[42px] leading-tight mb-3 bg-gradient-to-r from-[#2a1815] via-[#8a252c] to-[#2a1815] dark:from-[#f7ede6] dark:via-[#ff9ca4] dark:to-[#f7ede6] bg-clip-text text-transparent">
             Xin keo âm dương
           </h1>
-          <p className="text-sm sm:text-base text-[#6a5951] leading-relaxed max-w-4xl">
+          <p className="text-sm sm:text-base text-[#6a5951] dark:text-[#cbb8af] leading-relaxed max-w-4xl">
             Tục gieo keo (âm dương bối) là một nét văn hóa dân gian truyền thống lâu đời của người Việt,
             từng được tiền nhân dùng như phương tiện tĩnh tại để lắng lòng, tự soi tỏ các mối phân vân
             trước khi khởi sự việc lớn. Trải nghiệm tại đây hoàn toàn mang tính chất phản tư tinh thần
@@ -332,11 +332,13 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
               {/* Action Button to Cast */}
               <div className="text-center">
                 <Button
+                  variant="default"
+                  size="lg"
                   onClick={handleCastKeo}
                   disabled={isCasting}
-                  className="w-full py-4 rounded-2xl bg-[#9e3b2e] hover:bg-[#852f24] text-white font-semibold text-base shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="w-full py-4 text-base font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  <Sparkles className="w-5 h-5" />
+                  <Sparkles className="w-5 h-5 shrink-0" />
                   <span>
                     {isCasting
                       ? "Đang gieo keo trong chánh niệm..."
@@ -345,7 +347,7 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
                       : "Gieo keo âm dương"}
                   </span>
                 </Button>
-                <p className="text-xs text-[#8c7b74] mt-2">
+                <p className="text-xs text-[#8c7b74] dark:text-[#a08b83] mt-2.5">
                   Chạm để gieo — Hãy hít một hơi thật sâu trước khi bắt đầu
                 </p>
               </div>
