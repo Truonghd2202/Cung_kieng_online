@@ -47,7 +47,14 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
 
   // Reminder widget state với đầy đủ các trạng thái quyền thông báo
   const [reminderEnabled, setReminderEnabled] = useState(true);
-  const [reminderOption, setReminderOption] = useState<"before1" | "exact" | "custom">("before1");
+  const [reminderOption, setReminderOption] = useState<"before1" | "exact" | "custom">(() => {
+    try {
+      const saved = localStorage.getItem(`tltl-reminder-opt-${event.id}`);
+      return (saved as "before1" | "exact" | "custom") || "before1";
+    } catch {
+      return "before1";
+    }
+  });
   const [notificationStatus, setNotificationStatus] = useState<NotificationStatus>(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
       if (Notification.permission === "granted") return "granted";
@@ -55,6 +62,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
     }
     return "idle";
   });
+  const [testNotificationSent, setTestNotificationSent] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string>("");
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -62,12 +70,40 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
   const handleToggleReminderSwitch = async () => {
     if (reminderEnabled) {
       setReminderEnabled(false);
+      try {
+        localStorage.setItem(`tltl-reminder-enabled-${event.id}`, "false");
+      } catch {}
       setStatusMessage("");
       return;
     }
 
     setReminderEnabled(true);
+    try {
+      localStorage.setItem(`tltl-reminder-enabled-${event.id}`, "true");
+    } catch {}
     await handleRequestNotificationPermission();
+  };
+
+  const handleSelectReminderOption = (opt: "before1" | "exact" | "custom") => {
+    setReminderOption(opt);
+    try {
+      localStorage.setItem(`tltl-reminder-opt-${event.id}`, opt);
+    } catch {}
+  };
+
+  const handleSendTestNotification = () => {
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+      try {
+        new Notification("Thích Cúng Kiếng • Nhắc lịch văn hóa", {
+          body: `[Thông báo thử nghiệm] Bạn đã thiết lập lời nhắc cho: ${event.title}.`,
+          icon: "/favicon.ico",
+        });
+        setTestNotificationSent(true);
+        setTimeout(() => setTestNotificationSent(false), 4000);
+      } catch {
+        // Fallback alert if browser blocks programmatic notifications
+      }
+    }
   };
 
   const handleRequestNotificationPermission = async () => {
@@ -81,7 +117,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
 
     if (Notification.permission === "granted") {
       setNotificationStatus("granted");
-      setStatusMessage("Đã bật lời nhắc trên thiết bị này.");
+      setStatusMessage("Đã cấp quyền; chức năng nhắc tự động chưa hoạt động trong bản demo.");
       return;
     }
 
@@ -98,7 +134,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
       const permission = await Notification.requestPermission();
       if (permission === "granted") {
         setNotificationStatus("granted");
-        setStatusMessage("Đã cấp quyền thành công. Bạn sẽ nhận thông báo nhắc nhở trước ngày lễ.");
+        setStatusMessage("Đã cấp quyền thành công; chức năng nhắc tự động chưa hoạt động trong bản demo.");
       } else {
         setNotificationStatus("denied");
         setStatusMessage(
@@ -461,7 +497,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                         type="radio"
                         name="reminder"
                         checked={reminderOption === "before1"}
-                        onChange={() => setReminderOption("before1")}
+                        onChange={() => handleSelectReminderOption("before1")}
                         className="text-[#9e3b2e] focus:ring-[#9e3b2e]"
                       />
                       <span>{beforeDayText}</span>
@@ -472,7 +508,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                         type="radio"
                         name="reminder"
                         checked={reminderOption === "exact"}
-                        onChange={() => setReminderOption("exact")}
+                        onChange={() => handleSelectReminderOption("exact")}
                         className="text-[#9e3b2e] focus:ring-[#9e3b2e]"
                       />
                       <span>{exactDayText}</span>
@@ -483,7 +519,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                         type="radio"
                         name="reminder"
                         checked={reminderOption === "custom"}
-                        onChange={() => setReminderOption("custom")}
+                        onChange={() => handleSelectReminderOption("custom")}
                         className="text-[#9e3b2e] focus:ring-[#9e3b2e]"
                       />
                       <span>Tùy chỉnh giờ nhắc riêng</span>
@@ -514,7 +550,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                     <div className="p-3 mb-4 rounded-xl bg-stone-100 border border-stone-200 text-stone-700 text-xs flex items-start gap-2">
                       <AlertCircle className="w-4 h-4 shrink-0 text-stone-500 mt-0.5" />
                       <div>
-                        <p className="font-semibold">Môi trường chưa hỗ trợ thông báo tự động</p>
+                        <p className="font-semibold">Môi trường chưa hỗ trợ thông báo Web Notification</p>
                         <p className="text-[11px] mt-0.5 leading-relaxed">
                           Bạn có thể tự lưu ngày này vào ứng dụng Lịch trên điện thoại hoặc máy tính.
                         </p>
@@ -523,14 +559,35 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                   )}
 
                   {notificationStatus === "granted" && (
-                    <div className="p-3 mb-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
-                      <div>
-                        <p className="font-bold">Đã bật thông báo thành công</p>
-                        <p className="text-[11px] text-emerald-800 mt-0.5 leading-relaxed">
-                          Hệ thống sẽ gửi thông báo nhẹ nhàng đến thiết bị của bạn trước thời điểm diễn ra.
-                        </p>
+                    <div className="p-3.5 mb-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-[#362a26] text-xs flex flex-col gap-2.5 shadow-2xs">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
+                        <div>
+                          <p className="font-bold text-[#2a2220]">Đã cấp quyền thông báo trình duyệt</p>
+                          <p className="text-[11px] text-[#715f57] mt-0.5 leading-relaxed">
+                            Quyền trình duyệt đã được thiết lập. <strong>Lưu ý:</strong> Chức năng gửi thông báo nhắc tự động nền theo lịch hẹn chưa hoạt động trong bản demo (tính năng máy chủ thông báo định kỳ: <strong>Sắp ra mắt khi kết nối Backend</strong>).
+                          </p>
+                        </div>
                       </div>
+
+                      <div className="pt-2 border-t border-amber-200/70 flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-[11px] text-[#844520] font-medium">Kiểm tra thông báo:</span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleSendTestNotification}
+                          className="text-xs font-semibold px-2.5 py-1 rounded-lg border-[#dfc4b1] bg-white text-[#9e3b2e] hover:bg-[#faede2] transition-colors cursor-pointer"
+                        >
+                          Gửi thông báo thử nghiệm
+                        </Button>
+                      </div>
+
+                      {testNotificationSent && (
+                        <div className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
+                          ✓ Đã kích hoạt 1 thông báo thử nghiệm trên màn hình của bạn.
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -539,15 +596,15 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                     size="default"
                     onClick={handleRequestNotificationPermission}
                     disabled={notificationStatus === "requesting"}
-                    className="w-full font-semibold gap-2 shadow-xs text-xs py-2.5 bg-[#9e3b2e] hover:bg-[#852f24] text-white"
+                    className="w-full font-semibold gap-2 shadow-xs text-xs py-2.5 bg-[#9e3b2e] hover:bg-[#852f24] text-white cursor-pointer"
                   >
                     <Bell className="w-4 h-4" />
                     <span>
                       {notificationStatus === "granted"
-                        ? "Đã kích hoạt lời nhắc trên máy"
+                        ? "Đã cấp quyền • Đang chờ kết nối Backend"
                         : notificationStatus === "denied"
                         ? "Kiểm tra lại quyền thông báo"
-                        : "Kích hoạt thông báo nhắc lịch"}
+                        : "Kích hoạt quyền thông báo trình duyệt"}
                     </span>
                   </Button>
                 </>

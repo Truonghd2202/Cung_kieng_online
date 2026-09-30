@@ -65,20 +65,76 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     "xinxam",
   ]);
 
-  // Notifications Checkboxes
-  const [notifyRam, setNotifyRam] = useState(true);
-  const [notifyMorning, setNotifyMorning] = useState(true);
-  const [notifyFestivals, setNotifyFestivals] = useState(true);
+  // Notifications Checkboxes (lưu trữ và đồng bộ cục bộ trên trình duyệt)
+  const [notifyRam, setNotifyRam] = useState(() => {
+    try {
+      const stored = localStorage.getItem("tltl-settings-notify-ram");
+      return stored !== null ? stored === "true" : true;
+    } catch {
+      return true;
+    }
+  });
+  const [notifyMorning, setNotifyMorning] = useState(() => {
+    try {
+      const stored = localStorage.getItem("tltl-settings-notify-morning");
+      return stored !== null ? stored === "true" : true;
+    } catch {
+      return true;
+    }
+  });
+  const [notifyFestivals, setNotifyFestivals] = useState(() => {
+    try {
+      const stored = localStorage.getItem("tltl-settings-notify-festivals");
+      return stored !== null ? stored === "true" : true;
+    } catch {
+      return true;
+    }
+  });
   const [notificationPermission, setNotificationPermission] = useState<string>(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
       return Notification.permission;
     }
     return "default";
   });
+  const [testNotificationSent, setTestNotificationSent] = useState(false);
 
   // Modal confirm clear data
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [dataClearedNotice, setDataClearedNotice] = useState(false);
+
+  const handleToggleNotifyRam = (val: boolean) => {
+    setNotifyRam(val);
+    try {
+      localStorage.setItem("tltl-settings-notify-ram", String(val));
+    } catch {}
+  };
+
+  const handleToggleNotifyMorning = (val: boolean) => {
+    setNotifyMorning(val);
+    try {
+      localStorage.setItem("tltl-settings-notify-morning", String(val));
+    } catch {}
+  };
+
+  const handleToggleNotifyFestivals = (val: boolean) => {
+    setNotifyFestivals(val);
+    try {
+      localStorage.setItem("tltl-settings-notify-festivals", String(val));
+    } catch {}
+  };
+
+  const handleSendTestNotification = () => {
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+      try {
+        new Notification("Thích Cúng Kiếng • Kiểm tra cài đặt", {
+          body: "Đã kích hoạt thử nghiệm thông báo từ mục Cài đặt trên máy của bạn.",
+          icon: "/favicon.ico",
+        });
+        setTestNotificationSent(true);
+        setTimeout(() => setTestNotificationSent(false), 4000);
+      } catch {}
+    }
+  };
 
   const handleSaveName = () => {
     if (tempName.trim()) {
@@ -543,44 +599,71 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               </p>
 
               {/* Permission Banner */}
-              <div className="p-4 rounded-2xl bg-[#faf3ec] border border-[#ebd5c3] flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-                <div className="flex items-start gap-2.5">
-                  <Bell className="w-4 h-4 text-[#9e3b2e] shrink-0 mt-0.5" />
-                  <div>
-                    <div className="font-bold text-xs text-[#2a2220]">
-                      Quyền thông báo trình duyệt:{" "}
-                      <span className="text-[#9e3b2e]">
-                        {notificationPermission === "granted"
-                          ? "Đã kích hoạt"
-                          : notificationPermission === "denied"
-                          ? "Bị chặn"
-                          : "Chưa kích hoạt"}
-                      </span>
+              <div className="p-4 rounded-2xl bg-[#faf3ec] border border-[#ebd5c3] flex flex-col gap-3 mb-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-start gap-2.5">
+                    <Bell className="w-4 h-4 text-[#9e3b2e] shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-xs text-[#2a2220]">
+                        Quyền thông báo trình duyệt:{" "}
+                        <span className="text-[#9e3b2e]">
+                          {notificationPermission === "granted"
+                            ? "Đã cấp quyền trên trình duyệt"
+                            : notificationPermission === "denied"
+                            ? "Bị chặn"
+                            : "Chưa kích hoạt"}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-[#7d6c65] mt-0.5">
+                        Cần cấp quyền để trình duyệt có thể hiển thị các lời nhắc ngày rằm và giờ tĩnh tâm sáng sớm.
+                      </div>
                     </div>
-                    <div className="text-[11px] text-[#7d6c65]">
-                      Cần cấp quyền để nhận thông báo nhắc nhở ngày rằm hoặc giờ tĩnh tâm sáng sớm.
-                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {notificationPermission !== "granted" ? (
+                      <Button
+                        size="sm"
+                        onClick={handleRequestPermission}
+                        className="text-xs bg-[#9e3b2e] hover:bg-[#852f24] text-white shrink-0 cursor-pointer"
+                      >
+                        Kích hoạt quyền thông báo
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleSendTestNotification}
+                        className="text-xs border-[#dfc4b1] bg-white text-[#9e3b2e] hover:bg-[#faede2] shrink-0 cursor-pointer"
+                      >
+                        Gửi thử 1 thông báo
+                      </Button>
+                    )}
                   </div>
                 </div>
 
-                {notificationPermission !== "granted" && (
-                  <Button
-                    size="sm"
-                    onClick={handleRequestPermission}
-                    className="text-xs bg-[#9e3b2e] hover:bg-[#852f24] text-white shrink-0"
-                  >
-                    Kích hoạt quyền thông báo
-                  </Button>
+                {testNotificationSent && (
+                  <div className="text-[11px] text-emerald-700 font-semibold pt-1 border-t border-[#ecd9cb]">
+                    ✓ Đã kích hoạt 1 thông báo mẫu thử nghiệm trên màn hình của bạn.
+                  </div>
                 )}
+              </div>
+
+              {/* Disclaimer callout about background push in demo */}
+              <div className="p-3 mb-4 rounded-xl bg-[#fbf5ee] border border-[#ecd9cb] text-[11px] text-[#786962] leading-relaxed flex items-start gap-2">
+                <Info className="w-4 h-4 text-[#be8e5a] shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-[#2a2220]">Lưu ý về cơ chế nhắc lịch:</strong> Các công tắc bên dưới được lưu trữ trên trình duyệt của bạn. Tính năng tự động gửi thông báo nền theo lịch hẹn định kỳ đang được hoàn thiện khi kết nối máy chủ Backend (Sắp ra mắt).
+                </div>
               </div>
 
               {/* Notification Toggles */}
               <div className="space-y-3 text-xs text-[#4e3f3a]">
-                <label className="flex items-center gap-3 p-3 rounded-2xl bg-[#fbf5ee] border border-[#ecd9cb] cursor-pointer">
+                <label className="flex items-center gap-3 p-3 rounded-2xl bg-[#fbf5ee] border border-[#ecd9cb] cursor-pointer hover:border-[#dfc3af] transition-colors">
                   <input
                     type="checkbox"
                     checked={notifyRam}
-                    onChange={(e) => setNotifyRam(e.target.checked)}
+                    onChange={(e) => handleToggleNotifyRam(e.target.checked)}
                     className="rounded text-[#9e3b2e] focus:ring-[#9e3b2e]"
                   />
                   <div>
@@ -589,11 +672,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 p-3 rounded-2xl bg-[#fbf5ee] border border-[#ecd9cb] cursor-pointer">
+                <label className="flex items-center gap-3 p-3 rounded-2xl bg-[#fbf5ee] border border-[#ecd9cb] cursor-pointer hover:border-[#dfc3af] transition-colors">
                   <input
                     type="checkbox"
                     checked={notifyMorning}
-                    onChange={(e) => setNotifyMorning(e.target.checked)}
+                    onChange={(e) => handleToggleNotifyMorning(e.target.checked)}
                     className="rounded text-[#9e3b2e] focus:ring-[#9e3b2e]"
                   />
                   <div>
@@ -602,11 +685,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 p-3 rounded-2xl bg-[#fbf5ee] border border-[#ecd9cb] cursor-pointer">
+                <label className="flex items-center gap-3 p-3 rounded-2xl bg-[#fbf5ee] border border-[#ecd9cb] cursor-pointer hover:border-[#dfc3af] transition-colors">
                   <input
                     type="checkbox"
                     checked={notifyFestivals}
-                    onChange={(e) => setNotifyFestivals(e.target.checked)}
+                    onChange={(e) => handleToggleNotifyFestivals(e.target.checked)}
                     className="rounded text-[#9e3b2e] focus:ring-[#9e3b2e]"
                   />
                   <div>
