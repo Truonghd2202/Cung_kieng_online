@@ -43,6 +43,11 @@ import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { Trash2, Calendar, BookOpen, ArrowRight, Flower2, Sparkles } from "lucide-react";
 import { saveLocalDemoAccount } from "./data/authService";
+import {
+  getCalendarNotesStorageKey,
+  loadCalendarPersonalNotes,
+  saveCalendarPersonalNotes,
+} from "./data/calendarData";
 
 export type SavedEntry = SavedSignalItem;
 
@@ -768,11 +773,13 @@ export default function App() {
   const handleSaveDayToCalendar = (dayData: { title: string; day: number; month: number; year?: number }) => {
     try {
       const currentYear = dayData.year || new Date().getFullYear();
-      const stored = localStorage.getItem("tltl-calendar-personal-notes");
-      const list = stored ? JSON.parse(stored) : [];
+      const currentList = loadCalendarPersonalNotes(currentUser?.email);
       const newNote = {
         id: `good-day-${Date.now()}`,
         title: dayData.title,
+        typeLabel: "Ngày lành đã lưu",
+        region: "Cá nhân",
+        shortDesc: `Ghi chú lưu từ phân hệ Tra cứu ngày lành: ${dayData.title}`,
         lunarDate: "Theo tiết khí cát lành",
         solarDate: `${dayData.day}/${dayData.month}/${currentYear}`,
         day: dayData.day,
@@ -782,8 +789,7 @@ export default function App() {
         description: `Ghi chú lưu từ phân hệ Tra cứu ngày lành: ${dayData.title}`,
         isImportant: true,
       };
-      list.push(newNote);
-      localStorage.setItem("tltl-calendar-personal-notes", JSON.stringify(list));
+      saveCalendarPersonalNotes(currentUser?.email, [newNote, ...currentList]);
     } catch {}
   };
 
@@ -1015,6 +1021,8 @@ export default function App() {
 
         {screen === "calendar" && (
           <CulturalCalendarScreen
+            key={currentUser?.email || "guest"}
+            currentUserEmail={currentUser?.email}
             onSelectEvent={(eventId) => {
               setSelectedCalendarEventId(eventId);
               navigateTo("calendar-detail", eventId);
@@ -1237,7 +1245,10 @@ export default function App() {
             onLogout={handleLogout}
             onClearAllLocalData={() => {
               try {
+                const calKey = getCalendarNotesStorageKey(currentUser?.email);
+                localStorage.removeItem(calKey);
                 localStorage.removeItem("tltl-calendar-personal-notes");
+                localStorage.removeItem("tltl-calendar-personal-notes_guest");
                 if (currentUser) {
                   saveUserCornerData(currentUser.email, { signals: [], xam: [], wishes: [] });
                   setUserCornerData({ signals: [], xam: [], wishes: [] });

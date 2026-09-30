@@ -490,3 +490,52 @@ export function getReliableLunarDate(
     specialBadge,
   };
 }
+
+/**
+ * Khóa lưu trữ ghi chú lịch cá nhân theo tài khoản độc lập
+ */
+export const getCalendarNotesStorageKey = (email?: string | null): string => {
+  const accountId = email ? email.trim().toLowerCase() : "guest";
+  return `tltl-calendar-personal-notes_${accountId}`;
+};
+
+/**
+ * Tải ghi chú lịch cá nhân của đúng tài khoản đang đăng nhập
+ */
+export const loadCalendarPersonalNotes = (email?: string | null): CalendarEventItem[] => {
+  try {
+    const key = getCalendarNotesStorageKey(email);
+    const stored = localStorage.getItem(key);
+    if (stored) return JSON.parse(stored);
+
+    // Dành cho tài khoản demo An Nhiên hoặc guest: nếu chưa có key riêng, kiểm tra dữ liệu từ key cũ
+    const accountId = email ? email.trim().toLowerCase() : "guest";
+    if (accountId === "annhien@tinlamtamlinh.vn" || accountId === "guest") {
+      const legacy = localStorage.getItem("tltl-calendar-personal-notes");
+      if (legacy) {
+        try {
+          const parsed = JSON.parse(legacy);
+          localStorage.setItem(key, legacy);
+          return parsed;
+        } catch {}
+      }
+    }
+    return [];
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Lưu ghi chú lịch cá nhân vào đúng namespace của tài khoản
+ */
+export const saveCalendarPersonalNotes = (
+  email: string | null | undefined,
+  notes: CalendarEventItem[]
+): void => {
+  try {
+    const key = getCalendarNotesStorageKey(email);
+    localStorage.setItem(key, JSON.stringify(notes));
+  } catch {}
+};
+

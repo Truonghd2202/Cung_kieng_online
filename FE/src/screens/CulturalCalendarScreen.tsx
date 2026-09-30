@@ -26,6 +26,8 @@ import {
   SAMPLE_CALENDAR_EVENTS,
   getReliableLunarDate,
   getCanChiYear,
+  loadCalendarPersonalNotes,
+  saveCalendarPersonalNotes,
 } from "../data/calendarData";
 
 interface CulturalCalendarScreenProps {
@@ -35,6 +37,7 @@ interface CulturalCalendarScreenProps {
   onGoToRituals?: () => void;
   onGoToCulture?: () => void;
   onGoToGoodDays?: () => void;
+  currentUserEmail?: string;
 }
 
 export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
@@ -44,6 +47,7 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   onGoToRituals,
   onGoToCulture,
   onGoToGoodDays,
+  currentUserEmail,
 }) => {
   // Lấy thời gian thực tế từ hệ thống (Date)
   const today = useMemo(() => new Date(), []);
@@ -61,21 +65,15 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   const [newNoteTitle, setNewNoteTitle] = useState("");
   const [newNoteDesc, setNewNoteDesc] = useState("");
 
-  // Dữ liệu "Ngày tôi lưu": lấy từ localStorage thực tế của người dùng
-  const [personalNotes, setPersonalNotes] = useState<CalendarEventItem[]>(() => {
-    try {
-      const stored = localStorage.getItem("tltl-calendar-personal-notes");
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  // Dữ liệu "Ngày tôi lưu": nạp trực tiếp theo tài khoản riêng biệt
+  const [personalNotes, setPersonalNotes] = useState<CalendarEventItem[]>(() =>
+    loadCalendarPersonalNotes(currentUserEmail)
+  );
 
+  // Khi tài khoản đăng nhập thay đổi hoặc đăng xuất, tự động nạp lại đúng dữ liệu lịch
   useEffect(() => {
-    try {
-      localStorage.setItem("tltl-calendar-personal-notes", JSON.stringify(personalNotes));
-    } catch {}
-  }, [personalNotes]);
+    setPersonalNotes(loadCalendarPersonalNotes(currentUserEmail));
+  }, [currentUserEmail]);
 
   // Tổng hợp sự kiện: sự kiện lịch sử văn hóa đã kiểm chứng + ngày cá nhân người dùng thực sự lưu
   const allEvents = useMemo(() => {
@@ -154,14 +152,22 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
       lunarDate: lunarStr,
     };
 
-    setPersonalNotes((prev) => [newNote, ...prev]);
+    setPersonalNotes((prev) => {
+      const updated = [newNote, ...prev];
+      saveCalendarPersonalNotes(currentUserEmail, updated);
+      return updated;
+    });
     setNewNoteTitle("");
     setNewNoteDesc("");
     setShowAddModal(false);
   };
 
   const handleDeleteNote = (noteId: string) => {
-    setPersonalNotes((prev) => prev.filter((n) => n.id !== noteId));
+    setPersonalNotes((prev) => {
+      const updated = prev.filter((n) => n.id !== noteId);
+      saveCalendarPersonalNotes(currentUserEmail, updated);
+      return updated;
+    });
   };
 
   // Các sự kiện hiển thị cho ngày được chọn (hoặc toàn bộ danh sách khi chọn tab "Ngày tôi lưu")

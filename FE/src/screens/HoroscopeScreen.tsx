@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowLeft,
   Sparkles,
@@ -17,6 +17,10 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
+import {
+  calculateHoroscope,
+  HoroscopeCalculationResult,
+} from "@/src/data/horoscopeEngine";
 
 interface HoroscopeScreenProps {
   onBackToExperience: () => void;
@@ -29,6 +33,8 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
   onGoToCulture,
   onGoToHome,
 }) => {
+  const currentMaxYear = new Date().getFullYear();
+
   const [day, setDay] = useState<number>(15);
   const [month, setMonth] = useState<number>(8);
   const [year, setYear] = useState<number>(1998);
@@ -37,11 +43,43 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
   const [region, setRegion] = useState("bac");
   const [agreedDisclaimer, setAgreedDisclaimer] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [calculationResult, setCalculationResult] =
+    useState<HoroscopeCalculationResult | null>(null);
 
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreedDisclaimer) return;
+
+    const res = calculateHoroscope({
+      day,
+      month,
+      year,
+      hourCanh,
+      noHour,
+      region,
+    });
+    setCalculationResult(res);
     setShowResult(true);
+  };
+
+  // Tự động cập nhật kết quả đối chiếu ngay khi người dùng điều chỉnh thông tin nếu đã xem
+  useEffect(() => {
+    if (showResult && agreedDisclaimer) {
+      const res = calculateHoroscope({
+        day,
+        month,
+        year,
+        hourCanh,
+        noHour,
+        region,
+      });
+      setCalculationResult(res);
+    }
+  }, [day, month, year, hourCanh, noHour, region, showResult, agreedDisclaimer]);
+
+  const handleReset = () => {
+    setShowResult(false);
+    setCalculationResult(null);
   };
 
   return (
@@ -135,8 +173,7 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
                   <span>Nhập thông tin chiêm nghiệm</span>
                 </h3>
                 <p className="text-xs text-[#827169] mt-1 leading-relaxed">
-                  Mỗi thông tin dưới đây chỉ phục vụ duy nhất mục đích tra cứu biểu tượng đối ứng trong
-                  buổi làm việc này.
+                  Thông tin được dùng để đối chiếu nhất quán ngũ hành và nạp âm tương ứng ngay trên trình duyệt của bạn.
                 </p>
               </div>
 
@@ -180,7 +217,10 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
                       onChange={(e) => setYear(Number(e.target.value))}
                       className="px-3 py-2.5 rounded-xl border border-[#eddcd0] text-xs font-medium text-[#2a2220] bg-white outline-none focus:border-[#9e3b2e]"
                     >
-                      {Array.from({ length: 70 }, (_, i) => 2024 - i).map((y) => (
+                      {Array.from(
+                        { length: currentMaxYear - 1920 + 1 },
+                        (_, i) => currentMaxYear - i
+                      ).map((y) => (
                         <option key={y} value={y}>
                           Năm {y}
                         </option>
@@ -188,7 +228,7 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
                     </select>
                   </div>
                   <p className="text-[11px] text-[#93827a] mt-1 italic">
-                    Dùng để xác định vị trí nhịp điệu thời gian và chu kỳ mùa vụ theo góc nhìn cổ truyền.
+                    Hỗ trợ đầy đủ các năm từ 1920 đến {currentMaxYear}.
                   </p>
                 </div>
 
@@ -240,12 +280,12 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
                     onChange={(e) => setRegion(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#eddcd0] text-xs font-medium text-[#2a2220] bg-white outline-none focus:border-[#9e3b2e]"
                   >
-                    <option value="bac">Miền Bắc (Khí hậu tứ thời phân minh)</option>
-                    <option value="trung">Miền Trung (Nắng gió trường tồn kiên định)</option>
-                    <option value="nam">Miền Nam (Mùa mưa nắng phù sa hào sảng)</option>
+                    <option value="bac">Miền Bắc (Khí hậu tứ thời phân minh, cội nguồn văn hóa)</option>
+                    <option value="trung">Miền Trung (Nắng gió dải Trường Sơn kiên cường, nhẫn nại)</option>
+                    <option value="nam">Miền Nam (Mùa mưa nắng phù sa hào sảng, phóng khoáng)</option>
                   </select>
                   <p className="text-[11px] text-[#93827a] mt-1 italic">
-                    Giúp tham chiếu tương quan múi giờ tự nhiên của vùng đất bạn chào đời.
+                    Tham chiếu sắc thái văn hóa và đặc trưng vùng miền địa lý.
                   </p>
                 </div>
 
@@ -261,21 +301,35 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
                     />
                     <span>
                       Tôi hiểu rằng đây là hoạt động tìm hiểu biểu tượng văn hóa để tự suy ngẫm,
-                      không phải dự đoán vận mệnh. Đồng ý sử dụng thông tin tạm thời để tạo kết quả
+                      không phải dự đoán vận mệnh. Đồng ý sử dụng thông tin tạm thời để đối chiếu
                       cho phiên làm việc này.
                     </span>
                   </label>
                 </div>
 
                 {/* Submit Action */}
-                <Button
-                  type="submit"
-                  disabled={!agreedDisclaimer}
-                  className="w-full py-3.5 rounded-2xl bg-[#9e3b2e] hover:bg-[#852f24] text-white font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  <Eye className="w-4 h-4" />
-                  <span>Xem bản chiêm nghiệm</span>
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    type="submit"
+                    disabled={!agreedDisclaimer}
+                    className="flex-1 py-3.5 rounded-2xl bg-[#9e3b2e] hover:bg-[#852f24] text-white font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>Xem bản chiêm nghiệm</span>
+                  </Button>
+
+                  {showResult && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleReset}
+                      className="px-3.5 rounded-2xl border-[#ecdcd0] hover:bg-[#fbf5ee] text-[#715f57] cursor-pointer"
+                      title="Thiết lập lại"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
               </form>
 
               {/* Data Commitment Note */}
@@ -283,8 +337,8 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
                 <Lock className="w-4 h-4 text-[#9e3b2e] shrink-0 mt-0.5" />
                 <div>
                   <strong className="text-[#2a2220]">Cam kết dữ liệu cá nhân: </strong>
-                  Bản demo hoạt động trực tiếp trên trình duyệt, không gửi hoặc lưu trữ ngày tháng
-                  năm sinh lên bất kỳ máy chủ nào. Bạn hoàn toàn làm chủ thông tin của mình.
+                  Toàn bộ thuật toán đối chiếu diễn ra nội bộ trên trình duyệt, không lưu trữ
+                  hoặc truyền tải ngày sinh lên bất kỳ máy chủ nào.
                 </div>
               </div>
             </Card>
@@ -296,12 +350,34 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#f3e6da]">
                 <h3 className="font-['Noto_Serif',serif] font-bold text-lg text-[#2a2220] flex items-center gap-2">
                   <Compass className="w-4 h-4 text-[#9e3b2e]" />
-                  <span>Cấu trúc bản chiêm nghiệm sẽ hiển thị</span>
+                  <span>Bản chiêm nghiệm văn hóa</span>
                 </h3>
-                <Badge variant="outline" className="text-xs border-[#eedcd0] text-[#8c7b74]">
-                  {showResult ? "Đã đối chiếu biểu tượng" : "Chờ nhập dữ liệu"}
+                <Badge
+                  variant="outline"
+                  className={`text-xs ${
+                    showResult
+                      ? "border-emerald-300 text-emerald-800 bg-emerald-50"
+                      : "border-[#eedcd0] text-[#8c7b74]"
+                  }`}
+                >
+                  {showResult ? "✓ Đã đối chiếu biểu tượng" : "Chờ nhập dữ liệu"}
                 </Badge>
               </div>
+
+              {/* Thông báo minh bạch kết quả */}
+              {showResult && calculationResult && (
+                <div className="mb-5 p-3.5 rounded-2xl bg-[#f5fbf7] border border-[#d2edd9] text-xs text-[#2a683b] flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <div>
+                    <strong>Kết quả đối chiếu văn hóa nhất quán: </strong>
+                    Tính toán theo ngày Dương lịch{" "}
+                    <strong>{calculationResult.solarDate}</strong> (tương ứng ngày{" "}
+                    <strong>{calculationResult.lunarDate}</strong>, năm Can Chi{" "}
+                    <strong>{calculationResult.canChiYear}</strong>). Mang tính chất biểu tượng
+                    tham chiếu, không áp đặt số phận.
+                  </div>
+                </div>
+              )}
 
               {/* Block 1: Thông tin lá số & Khung biểu tượng */}
               <div className="p-5 rounded-2xl bg-[#fbf5ee] border border-[#eedcd0] mb-5">
@@ -310,78 +386,194 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
                     <span className="w-4 h-4 rounded-full bg-[#9e3b2e] text-white text-[10px] flex items-center justify-center font-bold">
                       1
                     </span>
-                    <span>Thông tin lá số & Khung biểu tượng</span>
+                    <span>Thông tin bản mệnh & Khung biểu tượng đối ứng</span>
                   </h4>
                   <Lock className="w-3.5 h-3.5 text-[#9e3b2e]" />
                 </div>
                 <p className="text-xs text-[#715f57] mb-3">
-                  Xem trước sơ đồ vị trí các cung nếp xưa, ngũ hành tương phối và mùa sinh đối ứng nhịp điệu vũ trụ.
+                  Sơ đồ vị trí các cung nếp xưa, ngũ hành nạp âm tương phối và mùa sinh đối ứng nhịp điệu tự nhiên.
                 </p>
 
-                {showResult ? (
-                  <div className="p-4 rounded-xl bg-white border border-[#ebd6c5] grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                    <div>
-                      <div className="text-[10px] uppercase text-[#9e3b2e] font-bold">Năm sinh</div>
-                      <div className="font-bold text-sm text-[#2a2220]">Mậu Dần</div>
-                      <div className="text-[11px] text-[#8c7b74]">Thành Đầu Thổ</div>
+                {showResult && calculationResult ? (
+                  <div className="space-y-3">
+                    <div className="p-4 rounded-xl bg-white border border-[#ebd6c5] grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                      <div>
+                        <div className="text-[10px] uppercase text-[#9e3b2e] font-bold">
+                          Năm Can Chi
+                        </div>
+                        <div className="font-bold text-sm text-[#2a2220]">
+                          {calculationResult.canChiYear}
+                        </div>
+                        <div className="text-[11px] text-[#8c7b74]">
+                          {calculationResult.napAm}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase text-[#9e3b2e] font-bold">
+                          Mùa sinh
+                        </div>
+                        <div className="font-bold text-sm text-[#2a2220]">
+                          {calculationResult.seasonName}
+                        </div>
+                        <div className="text-[11px] text-[#8c7b74] truncate" title={calculationResult.seasonDetail}>
+                          {calculationResult.seasonDetail.split("•")[0] || calculationResult.seasonName}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase text-[#9e3b2e] font-bold">
+                          Phương vị
+                        </div>
+                        <div className="font-bold text-sm text-[#2a2220]">
+                          {calculationResult.regionName}
+                        </div>
+                        <div className="text-[11px] text-[#8c7b74]">
+                          {region === "bac" ? "Tứ thời luân chuyển" : region === "trung" ? "Trường Sơn kiên định" : "Cửu Long trù phú"}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase text-[#9e3b2e] font-bold">
+                          Bản Mệnh
+                        </div>
+                        <div className="font-bold text-sm text-[#9e3b2e]">
+                          Hành {calculationResult.element}
+                        </div>
+                        <div className="text-[11px] text-[#8c7b74]">
+                          {calculationResult.supportElement.split("(")[0]}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-[10px] uppercase text-[#9e3b2e] font-bold">Mùa sinh</div>
-                      <div className="font-bold text-sm text-[#2a2220]">Mùa Thu</div>
-                      <div className="text-[11px] text-[#8c7b74]">Khí Kim thanh tú</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] uppercase text-[#9e3b2e] font-bold">Phương vị</div>
-                      <div className="font-bold text-sm text-[#2a2220]">Bắc Bộ</div>
-                      <div className="text-[11px] text-[#8c7b74]">Tứ thời luân chuyển</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] uppercase text-[#9e3b2e] font-bold">Chủ khí</div>
-                      <div className="font-bold text-sm text-[#2a2220]">Đất dưỡng</div>
-                      <div className="text-[11px] text-[#8c7b74]">Bền bỉ, che chở</div>
+
+                    <div className="p-3 rounded-xl bg-[#faf3ec] border border-[#f0e3d5] text-xs text-[#5c4941] flex items-center justify-between">
+                      <div>
+                        <strong className="text-[#9e3b2e]">Ý nghĩa Nạp âm: </strong>
+                        <span>{calculationResult.elementMeaning}</span>
+                      </div>
                     </div>
                   </div>
                 ) : (
                   <div className="p-4 rounded-xl bg-white/60 border border-dashed border-[#dfcfc2] text-center text-xs text-[#8c7b74]">
-                    Tứ trụ khí & Vòng quay mùa vụ sẽ hiển thị tự động sau khi nhập thông tin.
+                    Tứ trụ khí & Vòng quay mùa vụ sẽ hiển thị chính xác theo ngày tháng năm sinh sau khi bạn bấm xem.
                   </div>
                 )}
               </div>
 
               {/* Block 2: Biểu tượng và ý nghĩa văn hóa */}
               <div className="p-5 rounded-2xl bg-[#fbf5ee] border border-[#eedcd0] mb-5">
-                <h4 className="font-bold text-sm text-[#2a2220] mb-1 flex items-center gap-1.5">
-                  <span className="w-4 h-4 rounded-full bg-[#9e3b2e] text-white text-[10px] flex items-center justify-center font-bold">
-                    2
-                  </span>
-                  <span>Biểu tượng và ý nghĩa văn hóa</span>
-                </h4>
+                <div className="flex items-center justify-between mb-1">
+                  <h4 className="font-bold text-sm text-[#2a2220] flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-full bg-[#9e3b2e] text-white text-[10px] flex items-center justify-center font-bold">
+                      2
+                    </span>
+                    <span>Biểu tượng ngũ hành & Phẩm cách tương quan</span>
+                  </h4>
+                  {showResult && calculationResult && (
+                    <span className="text-[11px] font-semibold text-[#9e3b2e] bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                      Bản mệnh: {calculationResult.element}
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-[#715f57] mb-4">
-                  Diễn giải hình tượng tự nhiên (Cây cỏ, Dòng nước, Đất lành, Ngọn lửa) và các bài học nhân sinh cha ông đúc kết.
+                  Diễn giải hình tượng tự nhiên (Cây cỏ, Dòng nước, Đất lành, Ngọn lửa, Kim khí) và bài học nhân sinh cha ông đúc kết.
                 </p>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  <div className="p-3 rounded-xl bg-white border border-[#eedcd0] text-center">
-                    <div className="text-sm font-bold text-[#2d6a59] mb-0.5">Mộc</div>
-                    <div className="text-xs font-semibold text-[#2a2220]">Điềm đạm</div>
-                    <div className="text-[10px] text-[#8a7972] mt-1">Như rừng cây vươn đón nắng</div>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                  {/* Kim */}
+                  <div
+                    className={`p-3 rounded-xl border text-center transition-all ${
+                      calculationResult?.element === "Kim"
+                        ? "bg-amber-50/80 border-amber-400 ring-2 ring-amber-300 shadow-xs"
+                        : "bg-white border-[#eedcd0]"
+                    }`}
+                  >
+                    <div className="text-sm font-bold text-[#b45309] mb-0.5">Kim</div>
+                    <div className="text-xs font-semibold text-[#2a2220]">Cương trực</div>
+                    <div className="text-[10px] text-[#8a7972] mt-1">Sắc bén, thanh khiết, trọng nghĩa khí</div>
+                    {calculationResult?.element === "Kim" && (
+                      <span className="mt-1.5 inline-block text-[9px] font-bold text-amber-800 bg-amber-200/60 px-1.5 py-0.5 rounded">
+                        Bản mệnh
+                      </span>
+                    )}
                   </div>
-                  <div className="p-3 rounded-xl bg-white border border-[#eedcd0] text-center">
+
+                  {/* Mộc */}
+                  <div
+                    className={`p-3 rounded-xl border text-center transition-all ${
+                      calculationResult?.element === "Mộc"
+                        ? "bg-emerald-50/80 border-emerald-400 ring-2 ring-emerald-300 shadow-xs"
+                        : "bg-white border-[#eedcd0]"
+                    }`}
+                  >
+                    <div className="text-sm font-bold text-[#2d6a59] mb-0.5">Mộc</div>
+                    <div className="text-xs font-semibold text-[#2a2220]">Nhân ái</div>
+                    <div className="text-[10px] text-[#8a7972] mt-1">Rừng cây vươn cao, che chở muôn loài</div>
+                    {calculationResult?.element === "Mộc" && (
+                      <span className="mt-1.5 inline-block text-[9px] font-bold text-emerald-800 bg-emerald-200/60 px-1.5 py-0.5 rounded">
+                        Bản mệnh
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Thủy */}
+                  <div
+                    className={`p-3 rounded-xl border text-center transition-all ${
+                      calculationResult?.element === "Thủy"
+                        ? "bg-sky-50/80 border-sky-400 ring-2 ring-sky-300 shadow-xs"
+                        : "bg-white border-[#eedcd0]"
+                    }`}
+                  >
                     <div className="text-sm font-bold text-[#1d5b79] mb-0.5">Thủy</div>
                     <div className="text-xs font-semibold text-[#2a2220]">Bao dung</div>
-                    <div className="text-[10px] text-[#8a7972] mt-1">Như dòng sông ôm lấy phù sa</div>
+                    <div className="text-[10px] text-[#8a7972] mt-1">Dòng suối thích nghi, nuôi dưỡng phù sa</div>
+                    {calculationResult?.element === "Thủy" && (
+                      <span className="mt-1.5 inline-block text-[9px] font-bold text-sky-800 bg-sky-200/60 px-1.5 py-0.5 rounded">
+                        Bản mệnh
+                      </span>
+                    )}
                   </div>
-                  <div className="p-3 rounded-xl bg-white border border-[#eedcd0] text-center">
+
+                  {/* Hỏa */}
+                  <div
+                    className={`p-3 rounded-xl border text-center transition-all ${
+                      calculationResult?.element === "Hỏa"
+                        ? "bg-rose-50/80 border-rose-400 ring-2 ring-rose-300 shadow-xs"
+                        : "bg-white border-[#eedcd0]"
+                    }`}
+                  >
                     <div className="text-sm font-bold text-[#9e3b2e] mb-0.5">Hỏa</div>
                     <div className="text-xs font-semibold text-[#2a2220]">Nhiệt thành</div>
-                    <div className="text-[10px] text-[#8a7972] mt-1">Như ngọn lửa sưởi ấm gia đình</div>
+                    <div className="text-[10px] text-[#8a7972] mt-1">Ngọn lửa ấm áp, soi sáng đêm tối</div>
+                    {calculationResult?.element === "Hỏa" && (
+                      <span className="mt-1.5 inline-block text-[9px] font-bold text-rose-800 bg-rose-200/60 px-1.5 py-0.5 rounded">
+                        Bản mệnh
+                      </span>
+                    )}
                   </div>
-                  <div className="p-3 rounded-xl bg-white border border-[#eedcd0] text-center">
+
+                  {/* Thổ */}
+                  <div
+                    className={`p-3 rounded-xl border text-center transition-all ${
+                      calculationResult?.element === "Thổ"
+                        ? "bg-amber-100/80 border-amber-500 ring-2 ring-amber-400 shadow-xs"
+                        : "bg-white border-[#eedcd0]"
+                    }`}
+                  >
                     <div className="text-sm font-bold text-[#8a5a22] mb-0.5">Thổ</div>
                     <div className="text-xs font-semibold text-[#2a2220]">Vững vàng</div>
-                    <div className="text-[10px] text-[#8a7972] mt-1">Như mảnh đất nuôi dưỡng muôn hoa</div>
+                    <div className="text-[10px] text-[#8a7972] mt-1">Mảnh đất bền bỉ, nâng đỡ vạn vật</div>
+                    {calculationResult?.element === "Thổ" && (
+                      <span className="mt-1.5 inline-block text-[9px] font-bold text-amber-900 bg-amber-300/60 px-1.5 py-0.5 rounded">
+                        Bản mệnh
+                      </span>
+                    )}
                   </div>
                 </div>
+
+                {showResult && calculationResult && (
+                  <div className="mt-4 p-3 rounded-xl bg-white border border-[#ebd6c5] text-xs text-[#6e5d55]">
+                    <span className="font-semibold text-[#9e3b2e]">Gợi ý tương phối ngũ hành: </span>
+                    <span>{calculationResult.supportAdvice}</span>
+                  </div>
+                )}
               </div>
 
               {/* Block 3: Góc nhìn để tự suy ngẫm */}
@@ -393,19 +585,39 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
                   <span>Góc nhìn để tự suy ngẫm</span>
                 </h4>
                 <p className="text-xs text-[#715f57] mb-3">
-                  Các câu hỏi mở để người dùng tự lắng nghe điểm mạnh, điểm cần tôi luyện của bản thân
-                  thay vì nhận phán xét áp đặt.
+                  Các câu hỏi mở để người dùng tự lắng nghe điểm mạnh, điểm cần tôi luyện của bản thân thay vì nhận phán xét áp đặt.
                 </p>
 
-                <div className="p-4 rounded-xl bg-white border border-[#ebd6c5] text-xs sm:text-sm font-['Noto_Serif',serif] italic text-[#4a3a33] leading-relaxed">
-                  “Khi lòng dừng lại, vạn cảnh mới tự thông suốt. Bản mệnh không phải là chiếc lồng giam
-                  hãm, mà là bài học nuôi dưỡng tâm từ và sự kiên định giữa đời.”
-                </div>
+                {showResult && calculationResult ? (
+                  <div className="space-y-3">
+                    <div className="p-4 rounded-xl bg-white border border-[#ebd6c5] text-xs sm:text-sm font-['Noto_Serif',serif] italic text-[#4a3a33] leading-relaxed">
+                      {calculationResult.philosophicalQuote}
+                    </div>
+
+                    <div className="p-3.5 rounded-xl bg-[#fffcf9] border border-[#eedcd0] text-xs space-y-2">
+                      <div className="text-[#3b2e28]">
+                        <strong className="text-emerald-800">✦ Điểm mạnh tự nhiên: </strong>
+                        <span>{calculationResult.coreStrength}</span>
+                      </div>
+                      <div className="text-[#3b2e28]">
+                        <strong className="text-amber-800">✦ Điều cần lưu tâm: </strong>
+                        <span>{calculationResult.innerWatchout}</span>
+                      </div>
+                      <div className="pt-2 border-t border-[#f0e4d7] text-[#9e3b2e] font-medium">
+                        <strong>Câu hỏi tự vấn cho hôm nay: </strong>
+                        <span>{calculationResult.selfInquiryQuestion}</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl bg-white border border-[#ebd6c5] text-xs sm:text-sm font-['Noto_Serif',serif] italic text-[#4a3a33] leading-relaxed">
+                    “Khi lòng dừng lại, vạn cảnh mới tự thông suốt. Bản mệnh không phải là chiếc lồng giam hãm, mà là bài học nuôi dưỡng tâm từ và sự kiên định giữa đời.”
+                  </div>
+                )}
               </div>
 
               <div className="text-[11px] text-[#89776f] italic text-center">
-                Mỗi biểu tượng chỉ là một lăng kính mộc mạc để bạn thấu hiểu chính mình sâu sắc hơn
-                trong dòng chảy cuộc sống hôm nay.
+                Mỗi biểu tượng chỉ là một lăng kính mộc mạc để bạn thấu hiểu chính mình sâu sắc hơn trong dòng chảy cuộc sống hôm nay.
               </div>
             </Card>
           </div>
