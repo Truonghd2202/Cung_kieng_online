@@ -9,12 +9,14 @@ import {
   Sparkles,
   Flower2,
   ArrowLeft,
+  UserCheck,
+  Info,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 
-import { registerAccount } from "../data/authService";
+import { registerAccount, DEMO_USER } from "../data/authService";
 
 interface RegisterScreenProps {
   onBack?: () => void;
@@ -36,9 +38,26 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   const [agreed, setAgreed] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const handleQuickDemo = () => {
+    onSuccess(DEMO_USER.name, DEMO_USER.email);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSuccess(name.trim() || "An Nhiên", "annhien@tinlamtamlinh.vn");
+    setErrorMessage("");
+
+    if (!name.trim()) {
+      setErrorMessage("Vui lòng nhập họ và tên hoặc pháp danh.");
+      return;
+    }
+
+    const result = registerAccount(name, email, password);
+    if (!result.success) {
+      setErrorMessage(result.error || "Không thể tạo hồ sơ. Vui lòng thử lại.");
+      return;
+    }
+
+    onSuccess(result.user.name, result.user.email);
   };
 
   return (
@@ -69,8 +88,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
             </h3>
 
             <p className="font-['Noto_Serif',serif] italic text-xs sm:text-sm text-[#6f5e57] leading-relaxed max-w-xs mx-auto">
-              “Lòng tĩnh lặng như mặt hồ soi bóng mây trời. Mỗi dòng tự sự là một
-              đóa sen an nhiên giữa dòng đời hối hả.”
+              “Lòng tĩnh lặng như mặt hồ soi bóng mây trời. Mỗi dòng tự sự là một đóa sen an nhiên giữa dòng đời hối hả.”
             </p>
           </div>
 
@@ -104,12 +122,22 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
               </div>
             )}
 
-            {/* Demo Notice Banner */}
-            <div className="mb-5 p-2.5 rounded-xl bg-[#fbf5ee] border border-[#eddcd0] flex items-center gap-2 text-xs text-[#786962]">
-              <Badge variant="secondary" className="text-xs py-0 px-2 uppercase font-bold text-[#9e3b2e]">
-                Demo
-              </Badge>
-              <span>Nội dung bản demo được lưu trên trình duyệt này.</span>
+            {/* Nút vào nhanh tài khoản demo mẫu An Nhiên */}
+            <div className="mb-5 p-3 rounded-2xl bg-[#fbf5ee] border border-[#ecd9cb] flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-[10px] py-0 px-2 uppercase font-bold text-[#9e3b2e]">
+                  Demo mẫu
+                </Badge>
+                <span className="text-[#685750]">Muốn xem nhanh không cần đăng ký?</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleQuickDemo}
+                className="text-[#9e3b2e] font-bold hover:underline inline-flex items-center gap-1 text-xs cursor-pointer shrink-0"
+              >
+                <UserCheck className="w-3.5 h-3.5" />
+                <span>Vào An Nhiên</span>
+              </button>
             </div>
 
             <Badge
@@ -121,12 +149,22 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
             </Badge>
 
             <h2 className="font-['Noto_Serif',serif] font-bold text-2xl sm:text-[28px] text-[#2a211e] leading-snug mb-1.5">
-              Khởi tạo góc an trú của bạn
+              Khởi tạo hồ sơ riêng trên thiết bị
             </h2>
-            <p className="text-sm text-[#77665f] leading-relaxed mb-6">
-              Lưu giữ những tín hiệu dân gian đã thấu cảm và bồi đắp thói quen
-              lắng lòng mỗi ngày.
+            <p className="text-sm text-[#77665f] leading-relaxed mb-4">
+              Lưu giữ những tín hiệu dân gian và điều ước tâm sự trong kho lưu trữ độc lập theo email của bạn.
             </p>
+
+            {/* Thông báo minh bạch về Demo & Backend */}
+            <div className="mb-5 p-3 rounded-xl bg-[#faf6f0] border border-[#eddcd0] flex items-start gap-2.5 text-xs text-[#786962]">
+              <Info className="w-4 h-4 text-[#be8e5a] flex-shrink-0 mt-0.5" />
+              <div className="leading-relaxed">
+                <span className="font-semibold text-[#2e2624]">Hồ sơ độc lập trên trình duyệt:</span>{" "}
+                Dữ liệu của bạn được tách riêng hoàn toàn theo email này.{" "}
+                <span className="text-[#9e3b2e] font-medium">Chưa có xác thực mật khẩu qua Backend máy chủ</span>{" "}
+                (Đăng ký tài khoản trực tuyến chính thức: <strong>Sắp có</strong>).
+              </div>
+            </div>
 
             {errorMessage && (
               <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-start gap-2">
@@ -147,7 +185,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Ví dụ: An Nhiên"
+                    placeholder="Ví dụ: Minh Tâm"
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#faf3ec]/70 border border-[#eddcd0] text-sm text-[#2e2624] placeholder-[#a6968e] focus:outline-none focus:ring-1 focus:ring-[#9e3b2e]"
                   />
                   <Smile className="w-4 h-4 text-[#9d8a82] absolute left-3.5 top-3" />
@@ -156,9 +194,14 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
 
               {/* Field 2: Email */}
               <div>
-                <label className="block text-sm font-semibold text-[#4e403a] mb-1.5">
-                  Địa chỉ Email
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-sm font-semibold text-[#4e403a]">
+                    Địa chỉ Email của bạn
+                  </label>
+                  <span className="text-[11px] text-[#9d8a82]">
+                    Dùng làm khóa lưu kho riêng
+                  </span>
+                </div>
                 <div className="relative">
                   <input
                     type="email"
@@ -178,17 +221,16 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                   <label className="text-sm font-semibold text-[#4e403a]">
                     Mật khẩu
                   </label>
-                  <span className="text-xs text-[#9a8982]">
-                    Tối thiểu 8 ký tự an toàn
+                  <span className="text-[11px] text-[#9a8982]">
+                    Chưa kiểm tra máy chủ trong bản demo
                   </span>
                 </div>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
-                    required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••••••"
+                    placeholder="•••••••••••• (Chấp nhận mọi mật khẩu trong demo)"
                     className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#faf3ec]/70 border border-[#eddcd0] text-sm text-[#2e2624] placeholder-[#a6968e] focus:outline-none focus:ring-1 focus:ring-[#9e3b2e]"
                   />
                   <Lock className="w-4 h-4 text-[#9d8a82] absolute left-3.5 top-3" />
@@ -207,7 +249,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
               </div>
 
               {/* Terms checkbox */}
-              <label className="flex items-start gap-2.5 cursor-pointer text-sm text-[#6e5e57] pt-1">
+              <label className="flex items-start gap-2.5 cursor-pointer text-xs text-[#6e5e57] pt-1">
                 <input
                   type="checkbox"
                   checked={agreed}
@@ -216,7 +258,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                 />
                 <span>
                   Tôi đồng ý với{" "}
-                  <strong className="text-[#9e3b2e]">Quy ước bảo mật</strong> &{" "}
+                  <strong className="text-[#9e3b2e]">Quy ước lưu trữ cục bộ</strong> &{" "}
                   <strong className="text-[#9e3b2e]">
                     Tôn trọng bản sắc văn hóa
                   </strong>
@@ -231,7 +273,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                 disabled={!agreed}
                 className="w-full mt-2 font-semibold shadow-xs"
               >
-                <span>Vào tài khoản demo</span>
+                <span>Tạo hồ sơ demo trên máy</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </form>
@@ -241,12 +283,12 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-[#f1e5d8]"></div>
               </div>
-              <span className="relative bg-[#fffdfa] px-3 text-xs uppercase tracking-wider text-[#9f8f87] font-medium">
-                Hoặc đăng nhập bằng
+              <span className="relative bg-[#fffdfa] px-3 text-[11px] uppercase tracking-wider text-[#9f8f87] font-semibold">
+                Đăng ký qua mạng xã hội
               </span>
             </div>
 
-            {/* Social Buttons */}
+            {/* Social Buttons (Disabled) */}
             <div className="grid grid-cols-2 gap-3 mb-6">
               <Button
                 variant="outline"
@@ -276,7 +318,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                   <span>Google</span>
                 </div>
                 <span className="text-[9px] uppercase font-bold text-[#9e3b2e] bg-[#faede2] px-1.5 py-0.5 rounded-full">
-                  Sắp ra mắt
+                  Sắp có
                 </span>
               </Button>
 
@@ -293,14 +335,14 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                   <span>Apple</span>
                 </div>
                 <span className="text-[9px] uppercase font-bold text-[#9e3b2e] bg-[#faede2] px-1.5 py-0.5 rounded-full">
-                  Sắp ra mắt
+                  Sắp có
                 </span>
               </Button>
             </div>
 
             {/* Bottom link */}
             <div className="text-center text-xs text-[#7d6d66]">
-              <span>Đã có tài khoản? </span>
+              <span>Đã có tài khoản hoặc hồ sơ? </span>
               <button
                 type="button"
                 onClick={onGoToLogin}

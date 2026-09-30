@@ -359,8 +359,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                     Địa chỉ hòm thư (Email):
                   </label>
                   <div className="px-3.5 py-2.5 rounded-xl border border-[#eddcd0] bg-stone-50 text-xs font-medium text-stone-600 flex items-center justify-between">
-                    <span>{user?.email || "annhien.tamlinh@example.com"}</span>
-                    <span className="text-[10px] text-[#8e7e77]">Cố định trong demo</span>
+                    <span className="font-mono text-xs">{user?.email || "annhien@tinlamtamlinh.vn"}</span>
+                    <span className="text-[10px] text-[#8e7e77]">
+                      {user?.email === "annhien@tinlamtamlinh.vn" ? "Tài khoản mẫu" : "Hồ sơ cục bộ trên máy"}
+                    </span>
                   </div>
                 </div>
               </div>

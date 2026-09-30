@@ -298,8 +298,16 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                     ✓
                   </span>
                 </div>
-                <div className="text-xs text-[#8c7a72] mb-1.5">
-                  Bạn đồng hành
+                <div className="text-xs text-[#8c7a72] mb-1.5 flex flex-col gap-0.5">
+                  <span className="font-mono text-[11px] text-[#7d6c65]">
+                    {currentUser?.email || "annhien@tinlamtamlinh.vn"}
+                  </span>
+                  <span className="text-[10px] font-medium inline-flex items-center gap-1 text-[#be8e5a]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#be8e5a]" />
+                    {currentUser?.email === "annhien@tinlamtamlinh.vn"
+                      ? "Tài khoản demo mẫu"
+                      : "Hồ sơ demo thiết bị"}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-[#9e3b2e] font-semibold">
                   <BookOpen className="w-3.5 h-3.5" />
