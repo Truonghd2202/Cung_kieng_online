@@ -11,9 +11,7 @@ import {
   getDefaultSignalForMood,
   getNextSignalForMood,
 } from "./data/demoSignals";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Card } from "@/src/components/ui/card";
+
 import { Trash2, Calendar, BookOpen, ArrowRight, Flower2, Sparkles } from "lucide-react";
 import { saveLocalDemoAccount } from "./data/authService";
 import {
