@@ -29,6 +29,7 @@ interface SettingsScreenProps {
   dark: boolean;
   onToggleDark: () => void;
   user?: { name: string; email: string } | null;
+  onUpdateProfile?: (updated: { name: string; email?: string }) => void;
   onLogout?: () => void;
   onClearAllLocalData?: () => void;
 }
@@ -39,6 +40,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   dark,
   onToggleDark,
   user,
+  onUpdateProfile,
   onLogout,
   onClearAllLocalData,
 }) => {
@@ -49,6 +51,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [displayName, setDisplayName] = useState(user?.name || "An Nhiên");
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(displayName);
+
+  // Đồng bộ displayName khi user prop từ App thay đổi
+  useEffect(() => {
+    if (user?.name) {
+      setDisplayName(user.name);
+      setTempName(user.name);
+    }
+  }, [user?.name]);
 
   // Experience Settings
   const [displayMode, setDisplayMode] = useState<"light" | "dark" | "system">(() => {
@@ -137,16 +147,21 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   };
 
   const handleSaveName = () => {
-    if (tempName.trim()) {
-      setDisplayName(tempName.trim());
-      try {
-        const stored = localStorage.getItem("tltl-current-user");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          parsed.name = tempName.trim();
-          localStorage.setItem("tltl-current-user", JSON.stringify(parsed));
-        }
-      } catch {}
+    const cleanName = tempName.trim();
+    if (cleanName) {
+      setDisplayName(cleanName);
+      if (onUpdateProfile) {
+        onUpdateProfile({ name: cleanName, email: user?.email });
+      } else {
+        try {
+          const stored = localStorage.getItem("tltl-current-user");
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            parsed.name = cleanName;
+            localStorage.setItem("tltl-current-user", JSON.stringify(parsed));
+          }
+        } catch {}
+      }
     }
     setIsEditingName(false);
   };

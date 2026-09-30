@@ -42,6 +42,7 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { Trash2, Calendar, BookOpen, ArrowRight, Flower2, Sparkles } from "lucide-react";
+import { saveLocalDemoAccount } from "./data/authService";
 
 export type SavedEntry = SavedSignalItem;
 
@@ -665,6 +666,26 @@ export default function App() {
     navigateTo("guest");
   };
 
+  const handleUpdateProfile = (updated: { name: string; email?: string }) => {
+    if (!currentUser) return;
+    const updatedUser: UserProfile = {
+      ...currentUser,
+      name: updated.name.trim() || currentUser.name,
+      email: updated.email ? updated.email.trim().toLowerCase() : currentUser.email,
+    };
+
+    // 1. Cập nhật state duy nhất tại App để toàn bộ Header, Account, Settings lập tức nhận tên mới
+    setCurrentUser(updatedUser);
+
+    // 2. Lưu vào localStorage
+    try {
+      localStorage.setItem("tltl-current-user", JSON.stringify(updatedUser));
+    } catch {}
+
+    // 3. Đồng bộ vào danh sách tài khoản demo cục bộ
+    saveLocalDemoAccount(updatedUser);
+  };
+
   const handleDeleteSignal = (id: string) => {
     if (!currentUser) return;
     setUserCornerData((prev) => {
@@ -1212,6 +1233,7 @@ export default function App() {
               } catch {}
             }}
             user={currentUser}
+            onUpdateProfile={handleUpdateProfile}
             onLogout={handleLogout}
             onClearAllLocalData={() => {
               try {
