@@ -28,6 +28,7 @@ import {
   TopicType,
   getXinXamResult,
   XinXamResult,
+  XIN_XAM_RESULTS,
 } from "../data/xinXamData";
 
 interface XinXamScreenProps {
@@ -82,14 +83,39 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
     setIsSaved(false);
     setDrawPhase("shaking");
 
-    // Dynamic selection from culture pool
-    const result = getXinXamResult(selectedRegion, selectedTopic);
-    setCurrentResult(result);
+    // Rung phản hồi haptic trên mobile (nếu thiết bị hỗ trợ)
+    try {
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate([60, 40, 60, 40, 80, 50, 120]);
+      }
+    } catch {
+      // ignore
+    }
+
+    // Chọn ngẫu nhiên quẻ trong kho văn hóa
+    const allResults = Object.values(XIN_XAM_RESULTS);
+    const matching = allResults.filter(
+      (r) => r.region === selectedRegion || r.topic === selectedTopic
+    );
+    const pool = matching.length > 0 ? matching : allResults;
+    const otherResults = pool.filter((r) => r.stickNumber !== currentResult.stickNumber);
+    const chosen =
+      otherResults.length > 0
+        ? otherResults[Math.floor(Math.random() * otherResults.length)]
+        : pool[Math.floor(Math.random() * pool.length)];
 
     setTimeout(() => {
+      setCurrentResult(chosen);
       setIsShaking(false);
       setDrawPhase("dropped");
-    }, 1400);
+      try {
+        if (typeof navigator !== "undefined" && navigator.vibrate) {
+          navigator.vibrate([160]);
+        }
+      } catch {
+        // ignore
+      }
+    }, 1800);
   };
 
   const handleSaveResult = () => {
@@ -634,59 +660,164 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
             {/* Center Altar: Open Sacred Space without Box Boundary */}
             <div className="max-w-xl mx-auto py-4 text-center relative mb-12">
               {/* Concentric Circle Aura Motif with Warm Ambient Glow */}
-              <div className="relative w-64 h-64 sm:w-80 sm:h-80 mx-auto mb-6 flex items-center justify-center">
+              <div className="relative w-72 h-80 sm:w-96 sm:h-96 mx-auto mb-6 flex items-center justify-center">
                 {/* Golden/Warm Ambient Aura */}
-                <div className="absolute inset-0 rounded-full bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent blur-2xl pointer-events-none" />
+                <div
+                  className={`absolute inset-0 rounded-full transition-all duration-700 pointer-events-none blur-2xl ${
+                    drawPhase === "dropped"
+                      ? "bg-gradient-to-b from-amber-400/25 via-amber-500/15 to-transparent scale-110"
+                      : isShaking
+                      ? "bg-gradient-to-b from-amber-500/20 via-amber-500/10 to-transparent animate-pulse"
+                      : "bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent"
+                  }`}
+                />
                 <div className="absolute inset-4 rounded-full border border-line/50" />
                 <div className="absolute inset-10 rounded-full border border-dashed border-line/40" />
 
-                {/* Bamboo Stick Cylinder Container */}
-                <div
-                  onClick={drawPhase !== "shaking" ? handleStartDraw : undefined}
-                  className={`relative flex flex-col items-center justify-end z-10 transition-transform duration-300 cursor-pointer ${
-                    isShaking ? "animate-bounce" : "hover:scale-105"
-                  }`}
-                  title="Chạm vào ống xăm để rút thẻ"
-                >
-                  {/* Rising Bamboo Stick during Shaking & Dropped */}
+                {/* Khu vực Bó Xăm & Thẻ Tre Rơi */}
+                <div className="relative flex flex-col items-center justify-center z-10 w-full">
+                  {/* Ống xăm thuần Việt & Bó xăm 13 que đầy đặn - Chỉ 1 que nhô cao, không rơi ra ngoài */}
                   <div
-                    className={`transition-all duration-700 ease-out flex flex-col items-center ${
-                      drawPhase === "shaking" || drawPhase === "dropped"
-                        ? "-translate-y-9 opacity-100"
-                        : "translate-y-4 opacity-75"
+                    onClick={drawPhase !== "shaking" ? handleStartDraw : undefined}
+                    className={`relative flex flex-col items-center select-none transition-transform duration-300 cursor-pointer ${
+                      isShaking ? "anim-xam-up-down" : "hover:scale-105 active:scale-95"
                     }`}
+                    title={
+                      isShaking
+                        ? "Đang lắc xăm lên xuống..."
+                        : drawPhase === "dropped"
+                        ? `Thẻ số ${currentResult.stickNumber} đã nhô lên`
+                        : "Chạm để lắc ống xăm"
+                    }
                   >
-                    <div className="w-5 h-24 sm:h-28 rounded-t-lg bg-action border border-accent shadow-md flex items-start justify-center pt-2">
-                      <span className="text-xs font-sans tabular-nums font-bold text-white [writing-mode:vertical-rl]">
-                        {drawPhase === "dropped" ? `SỐ ${currentResult.stickNumber}` : "THẺ TRE"}
-                      </span>
-                    </div>
-                  </div>
+                    {/* 1. BÓ QUE XĂM: 13 que cắm san sát dày dặn trong miệng ống, nửa trên đỏ son, nửa dưới ngà kem có số */}
+                    <div className="flex items-end justify-center -space-x-1 sm:-space-x-1.5 pointer-events-none relative z-10 px-2 overflow-visible">
+                      {[
+                        { num: "05", h: 84, rot: -7 },
+                        { num: "18", h: 90, rot: -5 },
+                        { num: "33", h: 86, rot: -4 },
+                        { num: "12", h: 93, rot: -3 },
+                        { num: "21", h: 88, rot: -2 },
+                        { num: "07", h: 95, rot: -1 },
+                        // QUE CHÍNH Ở GIỮA
+                        { isMain: true, num: currentResult.stickNumber, h: 98, rot: 0 },
+                        { num: "16", h: 95, rot: 1 },
+                        { num: "28", h: 88, rot: 2 },
+                        { num: "45", h: 93, rot: 3 },
+                        { num: "68", h: 86, rot: 4 },
+                        { num: "79", h: 90, rot: 5 },
+                        { num: "88", h: 84, rot: 7 },
+                      ].map((s, idx) => {
+                        const isChosen = s.isMain;
+                        return (
+                          <div
+                            key={idx}
+                            style={{
+                              height: `${s.h}px`,
+                              transform:
+                                isChosen && drawPhase === "dropped"
+                                  ? `translateY(-48px) rotate(0deg)`
+                                  : isChosen && isShaking
+                                  ? `translateY(-28px) rotate(0deg)`
+                                  : `rotate(${s.rot}deg)`,
+                              transformOrigin: "bottom center",
+                            }}
+                            className={`w-3.5 sm:w-4 rounded-t-sm flex flex-col overflow-hidden border border-[#8a5525] shadow-xs transition-all duration-500 ${
+                              isChosen && drawPhase === "dropped"
+                                ? "z-40 ring-2 ring-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.95)]"
+                                : isChosen
+                                ? "z-30"
+                                : "z-10"
+                            } ${
+                              isShaking && !isChosen
+                                ? idx % 2 === 0
+                                ? "anim-stick-bounce"
+                                : "anim-stick-bounce-alt"
+                                : ""
+                            }`}
+                          >
+                            {/* Nửa trên đỏ son chu sa */}
+                            <div
+                              className={`w-full h-1/2 flex items-center justify-center ${
+                                isChosen
+                                  ? "bg-gradient-to-b from-[#bd2626] to-[#871616]"
+                                  : "bg-[#9e2424]"
+                              }`}
+                            >
+                              {isChosen && drawPhase === "dropped" && (
+                                <div className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse shadow-xs" />
+                              )}
+                            </div>
 
-                  {/* Bamboo Tube Cylinder */}
-                  <div className="w-28 sm:w-32 h-36 sm:h-40 rounded-panel bg-surface border-2 border-line shadow-md relative flex flex-col items-center justify-between p-3">
-                    <div className="w-full flex justify-between px-1 text-xs text-gold font-bold">
-                      <span>✤</span>
-                      <span>✤</span>
+                            {/* Nửa dưới ngà tre khắc số mực đen rõ nét */}
+                            <div
+                              className={`w-full h-1/2 flex items-start justify-center pt-0.5 ${
+                                isChosen
+                                  ? "bg-gradient-to-b from-[#fffaf0] to-[#f5ead2]"
+                                  : "bg-[#f5ead2]"
+                              }`}
+                            >
+                              <span
+                                className={`[writing-mode:vertical-rl] leading-none ${
+                                  isChosen
+                                    ? "text-[10px] font-black text-[#7a141b] tracking-wider"
+                                    : "text-[8px] font-bold text-[#2b180d] opacity-90"
+                                }`}
+                              >
+                                {s.num}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
 
-                    <div className="text-center my-auto">
-                      <div className="w-7 h-7 mx-auto rounded-full bg-accent-soft border border-line flex items-center justify-center mb-1 text-accent">
-                        <Flower2 className="w-4 h-4" />
-                      </div>
-                      <div className="text-xs font-bold tracking-widest text-gold uppercase">
-                        {selectedRegion === "Bắc Bộ"
-                          ? "XỨ BẮC"
-                          : selectedRegion === "Trung Bộ"
-                          ? "XỨ HUẾ"
-                          : "PHƯƠNG NAM"}
-                      </div>
-                      <div className="text-xs font-serif tracking-widest text-accent font-semibold">
-                        AN NHIÊN MÔN
-                      </div>
-                    </div>
+                    {/* 2. THÂN ỐNG TRE HÌNH TRỤ CÓ ĐAI ĐỎ CHỮ VIỆT & CHỮ THƯ PHÁP "TÂM" (Miệng ống che chân bó xăm) */}
+                    <div
+                      className="w-34 sm:w-40 h-44 sm:h-48 rounded-2xl relative flex flex-col items-center justify-between p-0 z-20 overflow-hidden shadow-2xl border border-[#7a481d] -mt-3.5"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, #965b25 0%, #c4833f 15%, #df9f58 35%, #f2be7e 50%, #d89852 68%, #ba7733 85%, #884d1c 100%)",
+                        boxShadow:
+                          "inset 2px 0 5px rgba(255,255,255,0.25), inset -2px 0 6px rgba(0,0,0,0.4), 0 16px 32px rgba(35,20,10,0.35)",
+                      }}
+                    >
+                      {/* Miệng Ống Tre & Đai Đỏ Chữ Việt */}
+                      <div className="w-full">
+                        {/* Vành miệng tre */}
+                        <div className="w-full h-1.5 bg-[#663812] border-b border-[#d89750]/40" />
 
-                    <div className="w-full h-1.5 rounded-full bg-surface-soft/60" />
+                        {/* Đai Đỏ Chu Sa Chữ Việt thuần túy */}
+                        <div className="w-full h-9 bg-gradient-to-r from-[#7a1518] via-[#a31f24] to-[#6e1114] border-y border-[#d4af37]/60 flex items-center justify-center shadow-inner">
+                          <span
+                            className="text-[11px] sm:text-xs font-serif font-bold tracking-[0.2em] uppercase"
+                            style={{ color: "#f8e192" }}
+                          >
+                            ✦ AN NHIÊN ✦
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Thân Ống Tre: Chữ Thư Pháp Quốc Ngữ "Tâm" Mực Đen Thuần Việt */}
+                      <div className="my-auto flex flex-col items-center justify-center select-none py-1">
+                        <span
+                          className="font-serif italic font-black text-4xl sm:text-5xl tracking-tight leading-none"
+                          style={{
+                            color: "#18100a",
+                            textShadow: "0 1px 2px rgba(255,230,190,0.35)",
+                            fontFamily: "var(--font-fraunces), serif",
+                          }}
+                        >
+                          Tâm
+                        </span>
+                        <span className="text-[9px] uppercase font-bold tracking-widest text-[#5c3716] mt-1">
+                          An Lạc
+                        </span>
+                      </div>
+
+                      {/* Đáy Ống Tre bo cong tự nhiên */}
+                      <div className="w-full h-3 bg-gradient-to-t from-[#5a300d] to-transparent rounded-b-2xl border-t border-[#462408]/30" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -702,7 +833,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                 </h3>
                 <p className="text-sm text-muted max-w-md mx-auto leading-relaxed">
                   {drawPhase === "dropped"
-                    ? `Thẻ xăm số ${currentResult.stickNumber} đã rơi ra. Hãy mở xem lời quẻ chiêm nghiệm và thông điệp dành cho bạn.`
+                    ? `Thẻ xăm số ${currentResult.stickNumber} đã ứng hiện nhô cao trong bó xăm. Hãy mở xem lời quẻ chiêm nghiệm và thông điệp dành cho bạn.`
                     : "Chạm vào ống xăm hoặc bấm nút bên dưới để rút thẻ tre lưu dấu hôm nay."}
                 </p>
               </div>

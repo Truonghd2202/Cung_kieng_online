@@ -25,6 +25,7 @@ interface CultureScreenProps {
   onGoToRituals?: () => void;
   onGoToCalendar?: () => void;
   onGoToGoodDays?: () => void;
+  onGoToMap?: () => void;
 }
 
 export const CultureScreen: React.FC<CultureScreenProps> = ({
@@ -33,6 +34,7 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
   onGoToRituals,
   onGoToCalendar,
   onGoToGoodDays,
+  onGoToMap,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
@@ -138,6 +140,14 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
               className="px-5 py-2.5 rounded-full bg-surface/95 border border-line text-ink hover:border-accent hover:text-accent text-xs font-medium transition-all cursor-pointer shadow-2xs hover:shadow-xs"
             >
               Tra cứu ngày lành
+            </button>
+          )}
+          {onGoToMap && (
+            <button
+              onClick={onGoToMap}
+              className="px-5 py-2.5 rounded-full bg-surface/95 border border-line text-ink hover:border-accent hover:text-accent text-xs font-medium transition-all cursor-pointer shadow-2xs hover:shadow-xs"
+            >
+              Bản đồ văn hóa 3 miền
             </button>
           )}
         </div>

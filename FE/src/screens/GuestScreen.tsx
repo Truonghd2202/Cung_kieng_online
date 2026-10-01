@@ -55,34 +55,44 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
   return (
     <div className="screen-shell">
       <main className="page-container max-w-7xl">
+        {/* Editorial Hero Header - Style Image 1: Toàn màn hình thoáng đãng, trọn vẹn 2 dòng */}
+        <section className="mb-8 sm:mb-12">
+          {/* Eyebrow */}
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-accent mb-3.5">
+            <Flower2 className="w-3.5 h-3.5 text-accent" />
+            <span>Gieo mầm an lành • Lắng đọng tâm tư</span>
+          </div>
+
+          {/* Main Title - Trọn vẹn 2 dòng không rớt chữ */}
+          <h1 className="greeting-hero mb-4">
+            <span className="greeting-line-1">Chào bạn hữu duyên ghé lại</span>
+            <span className="greeting-line-2">
+              Gieo một nhịp an lành hôm nay
+            </span>
+          </h1>
+
+          <p className="text-base sm:text-lg text-muted leading-relaxed max-w-2xl">
+            Chọn một nhịp cảm xúc để đón nhận lời chúc lành và tích truyện văn
+            hóa thuần hậu của tiền nhân.
+          </p>
+        </section>
+
         <section className="guest-first-look mb-14">
           <div className="guest-first-look__content flex flex-col justify-center">
-            {/* Editorial Eyebrow */}
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-accent mb-3">
-              <Flower2 className="w-3.5 h-3.5 text-accent" />
-              <span>Gieo mầm an lành • Lắng đọng tâm tư</span>
-            </div>
-
-            {/* Serif Main Title */}
-            <h1 className="page-title text-3xl sm:text-4xl lg:text-[42px] leading-tight font-display mb-4 text-ink">
-              Chào bạn hữu duyên ghé lại —{" "}
-              <span className="font-semibold italic text-accent block sm:inline">
-                Gieo một nhịp an lành hôm nay
-              </span>
-            </h1>
-
-            <p className="text-base sm:text-lg text-muted leading-relaxed max-w-xl mb-7">
-              Chọn một nhịp cảm xúc để đón nhận lời chúc lành và tích truyện văn hóa thuần hậu của tiền nhân.
-            </p>
-
             {/* Mood Selection - Open Editorial Layout (No CRM Card Box) */}
             <div className="mb-6">
               <div className="flex items-center justify-between text-xs text-muted mb-3">
-                <span className="font-medium text-ink">Bạn đang thấy lòng mình thế nào?</span>
+                <span className="font-medium text-ink">
+                  Bạn đang thấy lòng mình thế nào?
+                </span>
                 <span className="italic">Chạm để chọn</span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5" role="group" aria-label="Chọn tâm trạng hiện tại">
+              <div
+                className="grid grid-cols-2 sm:grid-cols-3 gap-2.5"
+                role="group"
+                aria-label="Chọn tâm trạng hiện tại"
+              >
                 {MOODS_LIST.map((m) => {
                   const isSelected = selectedMood === m.key;
                   return (
@@ -98,10 +108,15 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                       }`}
                     >
                       <span className="flex items-center gap-2 truncate">
-                        <span className={`h-1.5 w-1.5 shrink-0 rounded-full transition-colors ${isSelected ? "bg-action" : "bg-line group-hover:bg-gold"}`} />
+                        <span
+                          className={`h-1.5 w-1.5 shrink-0 rounded-full transition-colors ${isSelected ? "bg-action" : "bg-line group-hover:bg-gold"}`}
+                        />
                         <span className="truncate">{m.name}</span>
                       </span>
-                      <span aria-hidden="true" className="shrink-0 ml-1 opacity-80 group-hover:opacity-100">
+                      <span
+                        aria-hidden="true"
+                        className="shrink-0 ml-1 opacity-80 group-hover:opacity-100"
+                      >
                         {getMoodIcon(m.iconType)}
                       </span>
                     </button>
@@ -166,7 +181,10 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
           </div>
         </section>
 
-        <section className="guest-cultural-note mb-16" aria-label="Góc văn hóa dân gian">
+        <section
+          className="guest-cultural-note mb-16"
+          aria-label="Góc văn hóa dân gian"
+        >
           <div className="flex flex-col justify-center">
             <span className="text-xs font-semibold uppercase tracking-widest text-accent mb-1.5">
               Khoảng lặng hôm nay
@@ -175,26 +193,38 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
               Thuận Hòa • An Nhiên
             </p>
             <p className="mt-2 text-sm text-muted leading-relaxed">
-              Trải nghiệm mở cho khách thập phương. Dành vài phút lắng đọng để tái tạo năng lượng an lành.
+              Trải nghiệm mở cho khách thập phương. Dành vài phút lắng đọng để
+              tái tạo năng lượng an lành.
             </p>
           </div>
           <div className="border-l-2 border-gold/70 pl-6 flex flex-col justify-center">
             <p className="font-display text-lg sm:text-xl font-medium italic leading-relaxed text-ink">
-              “Nước trong hoa nở ngát dòng,<br />Tâm an vạn nẻo bụi trần hóa sen.”
+              “Nước trong hoa nở ngát dòng,
+              <br />
+              Tâm an vạn nẻo bụi trần hóa sen.”
             </p>
-            <p className="mt-2 text-xs text-muted/80">✦ Ca dao dân gian • Gieo một niềm an</p>
+            <p className="mt-2 text-xs text-muted/80">
+              ✦ Ca dao dân gian • Gieo một niềm an
+            </p>
           </div>
         </section>
 
-        {/* 3 Pillars Section */}
+        {/* 3 Pillars Section - Style Image 2 */}
         <section className="mb-16">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
             <div>
-              <div className="text-xs font-bold text-accent uppercase tracking-wider mb-1">
-                — Ba trụ cột trải nghiệm
+              <div className="flex flex-wrap items-center gap-2.5 mb-2.5">
+                <span className="badge-crimson">TRIẾT LÝ DÂN GIAN</span>
+                <span className="text-[11px] font-bold tracking-widest text-gold uppercase">
+                  DI SẢN TRÍ TUỆ · TỰA NGUỒN CỘI VIỆT
+                </span>
               </div>
-              <h2 className="section-title text-2xl sm:text-3xl">
-                Tinh hoa dân gian, nếp sống tỉnh thức
+              <h2 className="font-luxury text-2xl sm:text-3xl lg:text-4xl font-bold uppercase tracking-wider text-ink leading-tight">
+                TINH HOA DÂN GIAN <br className="hidden sm:inline" />
+                <span className="ampersand-gold text-3xl sm:text-4xl lg:text-5xl">
+                  &
+                </span>{" "}
+                NẾP SỐNG TỈNH THỨC
               </h2>
               <p className="mt-2 text-sm text-muted max-w-2xl leading-relaxed">
                 Không ly kỳ huyền hoặc, không gieo rắc sợ hãi. Mỗi lời chiêm
@@ -306,8 +336,9 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
               Mỗi ngày một nét mực Dó, góp một nhánh an lành
             </h3>
             <p className="mt-2 text-sm text-ink leading-relaxed">
-              Con số minh họa cho định hướng cộng đồng: hơn 12.400 người bạn hữu duyên
-              ghé thăm trong một tuần để đón nhận một chỉ dẫn văn hóa nhẹ nhàng trước khi bắt đầu ngày làm việc.
+              Con số minh họa cho định hướng cộng đồng: hơn 12.400 người bạn hữu
+              duyên ghé thăm trong một tuần để đón nhận một chỉ dẫn văn hóa nhẹ
+              nhàng trước khi bắt đầu ngày làm việc.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-4 text-xs font-medium text-muted">
               <span className="flex items-center gap-1.5">

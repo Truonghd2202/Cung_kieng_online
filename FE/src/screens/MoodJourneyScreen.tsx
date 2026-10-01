@@ -1,0 +1,22 @@
+import React from "react";
+import { ArrowLeft, ArrowRight, BarChart3, CalendarDays, CheckCircle2, Sparkles } from "lucide-react";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
+import { Card } from "@/src/components/ui/card";
+import type { SavedSignalItem } from "./AccountScreen";
+
+interface MoodJourneyScreenProps { savedSignals: SavedSignalItem[]; onBack: () => void; onGoToMood: () => void; onGoToSignalResult: (signalId: string) => void; }
+
+export const MoodJourneyScreen: React.FC<MoodJourneyScreenProps> = ({ savedSignals, onBack, onGoToMood, onGoToSignalResult }) => {
+  const points = [36, 58, 44, 72, 54, 68, 82];
+  return <div className="screen-shell"><main className="page-container max-w-6xl">
+    <div className="flex items-center justify-between gap-3 mb-6 text-xs text-muted"><button onClick={onBack} className="inline-flex items-center gap-1.5 hover:text-accent transition-colors"><ArrowLeft className="w-3.5 h-3.5" /> Góc của tôi</button><Badge variant="outline">Tự phản chiếu · Không chẩn đoán</Badge></div>
+    <header className="max-w-3xl mb-8"><span className="text-xs font-semibold uppercase tracking-widest text-accent">Nhìn lại thật nhẹ</span><h1 className="page-title mt-2 mb-3">Hành trình cảm xúc</h1><p className="text-sm sm:text-base text-muted leading-relaxed">Một cách nhìn lại những nhịp cảm xúc bạn đã ghi nhận, không phải thang điểm hay kết luận về sức khỏe.</p></header>
+    {!savedSignals.length ? <Card className="p-8 sm:p-14 text-center border-line mb-10"><div className="w-16 h-16 rounded-full bg-surface-soft border border-line mx-auto mb-5 flex items-center justify-center text-accent"><Sparkles className="w-7 h-7" /></div><h2 className="font-display text-2xl font-bold mb-3">Bạn chưa có đủ dữ liệu</h2><p className="text-sm text-muted max-w-lg mx-auto leading-relaxed mb-7">Hãy bắt đầu bằng một lần check-in. Sau vài ngày, bạn có thể nhìn lại những điều đã đi qua.</p><Button onClick={onGoToMood} className="gap-2">Check-in hôm nay <ArrowRight className="w-4 h-4" /></Button></Card> : <>
+      <div className="grid sm:grid-cols-3 gap-4 mb-6">{[["Tuần này", `${Math.min(savedSignals.length, 7)} lần ghi nhận`], ["Tháng này", `${savedSignals.length} tín hiệu đã lưu`], ["Điều thường trở lại", savedSignals[0]?.mood || "Đang lắng nghe"]].map(([label, value]) => <Card key={label} className="p-5 border-line"><span className="text-xs text-muted">{label}</span><p className="font-display font-bold text-xl mt-2">{value}</p></Card>)}</div>
+      <Card className="p-6 sm:p-8 border-line mb-6"><div className="flex items-center gap-2 mb-6"><BarChart3 className="w-5 h-5 text-accent" /><h2 className="section-title">Nhịp ghi nhận gần đây</h2></div><div className="h-44 flex items-end gap-2 sm:gap-4 border-b border-line px-2">{points.map((height, index) => <div key={index} className="flex-1 flex flex-col items-center gap-2"><div className="w-full max-w-10 rounded-t-panel bg-accent-soft border border-accent/20 transition-all" style={{ height: `${height}%` }} title={`Ngày ${index + 1}`} /><span className="text-[10px] text-muted">{index + 1}</span></div>)}</div><p className="text-xs text-muted mt-4">Biểu đồ minh họa nhịp tự ghi nhận, không phải điểm số tâm lý.</p></Card>
+      <section className="mb-12"><div className="flex items-center gap-2 mb-5"><CalendarDays className="w-5 h-5 text-accent" /><h2 className="section-title">Dòng thời gian</h2></div><div className="space-y-3">{savedSignals.map((signal) => <Card key={signal.id} onClick={() => onGoToSignalResult(signal.signalId)} className="group p-5 border-line cursor-pointer hover:bg-surface-soft"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div><div className="flex items-center gap-2 mb-1"><Badge variant="terracotta">{signal.mood}</Badge><span className="text-xs text-muted">{signal.date}</span></div><p className="font-display italic text-sm text-ink">{signal.poemLine1}</p></div><span className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent">Mở tín hiệu <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" /></span></div></Card>)}</div></section>
+    </>}
+    <div className="flex items-center justify-center gap-2 text-xs text-muted pb-8"><CheckCircle2 className="w-3.5 h-3.5 text-success" /> Mỗi lần ghi nhận là một lời nhắc để trở về với chính mình.</div>
+  </main></div>;
+};

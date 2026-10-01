@@ -36,6 +36,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [rememberMe, setRememberMe] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [authState, setAuthState] = useState<AuthState>("idle");
+  const [prefersReducedMotion] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
 
   const isSubmitting = authState === "submitting";
   const isSuccess = authState === "success";
@@ -62,7 +65,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       // Chuyển vào trang tiếp theo sau khi làn khói bốc lên tuyệt đẹp (~750ms)
       setTimeout(() => {
         onSuccess(result.user?.name, result.user?.email);
-      }, 750);
+      }, prefersReducedMotion ? 160 : 2800);
     }, 180);
   };
 
@@ -84,7 +87,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       </div>
 
       {/* TOP: Nút trở về tinh gọn góc trên */}
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-8 pt-3 flex items-center justify-between">
+      <div className="login-screen-back relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-8 pt-3 flex items-center justify-between">
         {onBack ? (
           <button
             type="button"
@@ -101,12 +104,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       </div>
 
       {/* BỐ CỤC TRÁI - PHẢI (LEFT: LƯ HƯƠNG KHỔNG LỒ CHIẾM ĐA SỐ, RIGHT: FORM ĐĂNG NHẬP) */}
-      <main className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8 py-3 sm:py-6 flex-1 flex flex-col lg:grid lg:grid-cols-12 lg:gap-8 items-center justify-center">
+      <main className="login-screen-layout relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8 py-3 sm:py-6 flex-1 flex flex-col lg:grid lg:grid-cols-3 lg:gap-8 items-center justify-center">
         
         {/* CỘT TRÁI: LƯ HƯƠNG KHỔNG LỒ (CHIẾM ~70% KHÔNG GIAN DESKTOP, CÀNG TO CÀNG TỐT) */}
         <section
           aria-label="Khu vực Lư hương truyền thống"
-          className="lg:col-span-7 xl:col-span-8 w-full flex flex-col items-center justify-center text-center select-none py-4 lg:py-6"
+          className="login-altar-column lg:col-span-2 w-full flex flex-col items-center justify-center text-center select-none py-4 lg:py-0"
         >
           {/* Thông báo quẻ đang chờ nếu có */}
           {pendingSignalMood && (
@@ -119,10 +122,22 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           )}
 
           {/* LƯ HƯƠNG ĐỒNG KHỔNG LỒ VỚI 3 NÉN NHANG */}
-          <div className="relative w-full max-w-[480px] sm:max-w-[560px] md:max-w-[620px] xl:max-w-[680px] h-[340px] sm:h-[400px] md:h-[460px] xl:h-[500px] flex items-center justify-center mt-1 sm:mt-3">
+          <div className={`login-altar-stage relative w-full max-w-[480px] sm:max-w-[560px] md:max-w-[620px] xl:max-w-[680px] h-[340px] sm:h-[400px] md:h-[460px] xl:h-[500px] flex items-center justify-center mt-1 sm:mt-3 ${isSuccess ? "login-altar-stage--success" : ""}`}>
+            <div className="login-altar-backdrop" aria-hidden="true">
+              <img src="/images/login-altar-scene-v2.png" alt="" className="login-altar-image" />
+              <div className="login-altar-panel" />
+              <div className="login-altar-crown" />
+              <div className="login-altar-candle login-altar-candle--left"><span /></div>
+              <div className="login-altar-candle login-altar-candle--right"><span /></div>
+              <div className="login-altar-vase"><span className="login-altar-flower login-altar-flower--one" /><span className="login-altar-flower login-altar-flower--two" /><span className="login-altar-flower login-altar-flower--three" /></div>
+              <div className="login-altar-fruit login-altar-fruit--one" />
+              <div className="login-altar-fruit login-altar-fruit--two" />
+              <div className="login-altar-fruit login-altar-fruit--three" />
+              <div className="login-altar-table" />
+            </div>
             {/* Vầng ánh sáng ấm trang trọng sau lưng lư hương */}
             <div
-              className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-1000 pointer-events-none ${
+                className={`login-altar-legacy-aura absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-1000 pointer-events-none ${
                 isSuccess
                   ? "w-80 sm:w-[480px] md:w-[560px] h-80 sm:h-[480px] md:h-[560px] bg-gradient-to-tr from-amber-500/20 via-amber-300/15 to-orange-400/10 blur-3xl scale-115 censer-aura-success"
                   : "w-64 sm:w-80 md:w-96 h-64 sm:h-80 md:h-96 bg-amber-500/12 dark:bg-amber-400/12 blur-2xl scale-100"
@@ -131,7 +146,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
             <svg
               viewBox="0 -20 340 350"
-              className={`w-full h-full overflow-visible transition-all duration-700 drop-shadow-2xl ${
+              className={`login-altar-censer w-full h-full overflow-visible transition-all duration-700 drop-shadow-2xl ${
                 isSuccess ? "scale-105 filter drop-shadow-[0_0_35px_rgba(245,158,11,0.6)]" : ""
               }`}
               xmlns="http://www.w3.org/2000/svg"
@@ -355,7 +370,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               )}
 
               {/* BA NÉN NHANG TRẦM VIỆT NAM (REALISTIC INCENSE STICKS) */}
-              <g className="censer-sticks">
+              <g className={`censer-sticks ${isSuccess ? "censer-sticks-success" : ""}`}>
                 {/* NÉN 1: BÊN TRÁI (Nghiêng nhẹ ~5 độ) */}
                 <line
                   x1="132"
@@ -636,10 +651,28 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 />
               </g>
             </svg>
+
+            {isSuccess && (
+              <svg className={`login-incense-overlay ${isSuccess ? "login-incense-overlay--success" : ""}`} viewBox="0 0 680 500" aria-hidden="true">
+                <g className="login-incense-sticks">
+                  <line x1="258" y1="335" x2="247" y2="244" />
+                  <line x1="276" y1="335" x2="276" y2="225" />
+                  <line x1="294" y1="335" x2="305" y2="244" />
+                  <circle cx="247" cy="244" r="3" />
+                  <circle cx="276" cy="225" r="3" />
+                  <circle cx="305" cy="244" r="3" />
+                </g>
+                <g className="login-incense-smoke">
+                  <path d="M247 244 C238 224 258 214 247 193 C238 176 257 163 250 143" />
+                  <path d="M276 225 C267 203 288 190 276 169 C265 149 288 134 279 111" />
+                  <path d="M305 244 C314 224 294 214 305 193 C314 176 295 163 302 143" />
+                </g>
+              </svg>
+            )}
           </div>
 
           {/* DÒNG TÂM PHÁP DẪN DẮT */}
-          <div className="mt-4 px-4 max-w-lg mx-auto text-center">
+          <div className="login-altar-caption mt-4 px-4 max-w-lg mx-auto text-center">
             <h1 className="font-display font-bold text-2xl sm:text-3xl md:text-4xl text-ink leading-tight tracking-wide">
               Điểm Tựa Tĩnh Lặng
             </h1>
@@ -654,14 +687,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         {/* CỘT PHẢI: FORM ĐĂNG NHẬP TINH GỌN, SANG TRỌNG (CHIẾM ~30% DESKTOP, KHÔNG CÓ FOOTER) */}
         <section
           aria-label="Biểu mẫu đăng nhập"
-          className="lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center justify-center py-2 sm:py-4 lg:py-6"
+          className="relative isolate overflow-hidden lg:col-span-1 w-full flex flex-col items-center justify-center py-5 sm:py-6 lg:py-8"
         >
-          <div className="w-full max-w-[340px] sm:max-w-md bg-surface/85 dark:bg-surface/80 backdrop-blur-xl border border-line/80 dark:border-line rounded-2xl shadow-2xl p-4 sm:p-7 transition-all duration-300">
+          <svg
+            className="login-form-incense-smoke"
+            viewBox="0 0 400 760"
+            aria-hidden="true"
+          >
+            <g className="login-form-smoke-haze">
+              <path d="M112 220 C76 174 151 143 116 94 C90 57 124 30 145 0" />
+              <path d="M286 178 C330 133 260 97 298 58 C320 34 294 15 278 0" />
+              <path d="M130 760 C163 708 95 682 132 630 C157 595 126 571 112 542" />
+              <path d="M276 760 C242 711 309 674 271 635 C249 612 273 583 288 555" />
+            </g>
+            <path className="login-form-smoke-path login-form-smoke-path--one" d="M112 220 C76 174 151 143 116 94 C90 57 124 30 145 0" />
+            <path className="login-form-smoke-path login-form-smoke-path--two" d="M286 178 C330 133 260 97 298 58 C320 34 294 15 278 0" />
+            <path className="login-form-smoke-path login-form-smoke-path--three" d="M130 760 C163 708 95 682 132 630 C157 595 126 571 112 542" />
+            <path className="login-form-smoke-path login-form-smoke-path--four" d="M276 760 C242 711 309 674 271 635 C249 612 273 583 288 555" />
+          </svg>
+          <div className="login-form-card relative z-10 w-full max-w-[400px] bg-surface/90 dark:bg-surface/85 backdrop-blur-xl border border-line/80 dark:border-line rounded-card shadow-2xl p-6 sm:p-7 transition-all duration-300">
             {/* Header form tinh gọn */}
-            <div className="flex items-center justify-between mb-4 border-b border-line/50 pb-2.5">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between mb-4 border-b border-line/50 pb-3">
+              <div className="flex items-center gap-2.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-action animate-pulse" />
-                <h2 className="text-sm font-bold uppercase tracking-wider text-ink font-serif">
+                <h2 className="text-base sm:text-lg font-bold uppercase tracking-wide text-ink font-serif">
                   Đăng nhập vào Góc an trú
                 </h2>
               </div>
@@ -689,12 +738,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             )}
 
             {/* CÁC TRƯỜNG FORM */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {/* Trường 1: Tài khoản / Email */}
               <div>
                 <label
                   htmlFor="login-email"
-                  className="block text-xs font-semibold uppercase tracking-wider text-ink mb-1.5"
+                  className="block text-xs sm:text-sm font-semibold uppercase tracking-wider text-ink mb-2"
                 >
                   Tài khoản / Email
                 </label>
@@ -708,9 +757,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     placeholder="tenban@domain.com"
-                    className="w-full min-h-12 pl-10 pr-4 py-2.5 rounded-panel bg-surface/90 border border-line text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-all disabled:opacity-60"
+                    className="w-full min-h-[58px] pl-11 pr-4 py-3 rounded-card bg-surface/90 border border-line text-sm sm:text-base text-ink placeholder:text-subtle focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-all disabled:opacity-60"
                   />
-                  <AtSign className="w-4 h-4 text-muted absolute left-3.5 top-4 pointer-events-none" />
+                  <AtSign className="w-4 h-4 text-muted absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
 
@@ -719,7 +768,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 <div className="flex items-center justify-between mb-1.5">
                   <label
                     htmlFor="login-password"
-                    className="text-xs font-semibold uppercase tracking-wider text-ink"
+                    className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-ink"
                   >
                     Mật khẩu
                   </label>
@@ -728,7 +777,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                       type="button"
                       onClick={onGoToForgotPassword}
                       disabled={isSubmitting || isSuccess}
-                      className="text-xs text-accent hover:underline cursor-pointer disabled:opacity-50"
+                      className="text-xs sm:text-sm text-accent hover:underline cursor-pointer disabled:opacity-50"
                     >
                       Quên mật khẩu?
                     </button>
@@ -744,15 +793,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
-                    className="w-full min-h-12 pl-10 pr-12 py-2.5 rounded-panel bg-surface/90 border border-line text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-all disabled:opacity-60"
+                    className="w-full min-h-[58px] pl-11 pr-12 py-3 rounded-card bg-surface/90 border border-line text-sm sm:text-base text-ink placeholder:text-subtle focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-all disabled:opacity-60"
                   />
-                  <Lock className="w-4 h-4 text-muted absolute left-3.5 top-4 pointer-events-none" />
+                  <Lock className="w-4 h-4 text-muted absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                     disabled={isSubmitting || isSuccess}
-                    className="absolute right-0 top-0 h-12 w-12 grid place-items-center text-muted hover:text-ink cursor-pointer disabled:opacity-50 transition-colors"
+                    className="absolute right-0 top-0 min-h-[58px] w-12 grid place-items-center text-muted hover:text-ink cursor-pointer disabled:opacity-50 transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -760,8 +809,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               </div>
 
               {/* Ghi nhớ đăng nhập */}
-              <div className="flex items-center justify-between text-xs pt-1">
-                <label className="flex items-center gap-2 cursor-pointer text-ink/80 select-none">
+              <div className="flex items-center justify-between text-sm pt-0">
+                <label className="flex items-center gap-2.5 cursor-pointer text-ink/80 select-none">
                   <input
                     type="checkbox"
                     checked={rememberMe}
@@ -769,7 +818,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="w-4 h-4 rounded border-line text-action focus:ring-accent cursor-pointer"
                   />
-                  <span className="text-xs">Ghi nhớ đăng nhập</span>
+                  <span className="text-sm">Ghi nhớ đăng nhập</span>
                 </label>
               </div>
 
@@ -779,7 +828,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 size="lg"
                 type="submit"
                 disabled={isSubmitting || isSuccess}
-                className={`w-full min-h-12 py-3 text-sm font-semibold tracking-wide gap-2 shadow-lg rounded-panel transition-all duration-300 cursor-pointer ${
+                className={`w-full min-h-[58px] py-3 text-sm sm:text-base font-semibold tracking-wide gap-2.5 shadow-lg rounded-card transition-all duration-300 cursor-pointer ${
                   isSuccess
                     ? "bg-amber-600 text-white hover:bg-amber-600 scale-[1.01] shadow-amber-500/40"
                     : "bg-action text-white hover:bg-action-hover active:scale-[0.99]"
@@ -797,7 +846,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   </>
                 ) : (
                   <>
-                    <LogIn className="w-4 h-4" />
+                    <LogIn className="w-5 h-5" />
                     <span>Đăng nhập</span>
                   </>
                 )}
@@ -805,7 +854,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             </form>
 
             {/* Dòng link nhẹ chuyển sang đăng ký (tinh gọn, không có footer riêng) */}
-            <div className="text-center text-xs text-muted mt-4 pt-3 border-t border-line/40">
+            <div className="text-center text-sm text-muted mt-4 pt-3 border-t border-line/40">
               <span>Chưa có tài khoản? </span>
               <button
                 type="button"

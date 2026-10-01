@@ -18,6 +18,7 @@ import {
   RotateCcw,
   Compass,
   Settings,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -71,6 +72,8 @@ interface AccountScreenProps {
   onGoToXinXam: () => void;
   onGoToWish: () => void;
   onGoToMood: () => void;
+  onGoToMoodJourney?: () => void;
+  onGoToNotifications?: () => void;
   onGoToHome: () => void;
   onGoToSettings?: () => void;
 }
@@ -90,6 +93,8 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
   onGoToXinXam,
   onGoToWish,
   onGoToMood,
+  onGoToMoodJourney,
+  onGoToNotifications,
   onGoToHome,
   onGoToSettings,
 }) => {
@@ -326,6 +331,21 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
             )}
           </div>
         </div>
+
+        {onGoToMoodJourney && (
+          <Card onClick={onGoToMoodJourney} className="group p-5 mb-8 border-line bg-surface-soft cursor-pointer hover:bg-surface">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-surface border border-line flex items-center justify-center text-accent"><Sparkles className="w-4 h-4" /></div><div><h2 className="font-display font-bold text-lg group-hover:text-accent">Hành trình cảm xúc</h2><p className="text-xs text-muted mt-0.5">Nhìn lại những nhịp bạn đã ghi nhận, thật nhẹ nhàng.</p></div></div>
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent">Mở hành trình <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" /></span>
+            </div>
+          </Card>
+        )}
+
+        {onGoToNotifications && (
+          <Card onClick={onGoToNotifications} className="group p-5 mb-8 border-line cursor-pointer hover:bg-surface-soft">
+            <div className="flex items-center justify-between gap-4"><span className="flex items-center gap-3 font-semibold"><Bell className="w-4 h-4 text-accent" /> Thông báo & lời nhắc</span><span className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent">Mở trung tâm <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" /></span></div>
+          </Card>
+        )}
 
         {/* 3 Primary Navigation Tabs */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-6">

@@ -37,6 +37,8 @@ interface ExperienceScreenProps {
   onGoToGratitude?: () => void;
   onGoToXinKeo?: () => void;
   onGoToHoroscope?: () => void;
+  onGoToAstrology?: () => void;
+  onGoToSanctuary?: () => void;
 }
 
 export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
@@ -49,6 +51,8 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
   onGoToGratitude,
   onGoToXinKeo,
   onGoToHoroscope,
+  onGoToAstrology,
+  onGoToSanctuary,
 }) => {
   // Quản lý các chủ đề đã chọn
   const [selectedIds, setSelectedIds] = useState<string[]>(initialTopics);
@@ -228,7 +232,28 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
                 </Card>
               )}
 
-              {/* Card 3: Lá số chiêm nghiệm (Mới) */}
+              {/* Card 3: Hub tử vi */}
+              {onGoToAstrology && (
+                <Card
+                  role="link"
+                  onClick={onGoToAstrology}
+                  className="group p-6 border-0 border-t border-line hover:bg-surface-soft text-left transition-colors cursor-pointer relative flex flex-col justify-between"
+                >
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 rounded-panel bg-surface border border-line flex items-center justify-center text-accent">
+                        <Sparkles className="w-6 h-6" />
+                      </div>
+                      <Badge variant="outline" className="text-xs text-accent border-line bg-surface">Tự soi chiếu</Badge>
+                    </div>
+                    <h3 className="font-display font-bold text-xl text-ink group-hover:text-accent transition-colors mb-2">Tử vi & Lá số</h3>
+                    <p className="text-sm text-ink leading-relaxed mb-4">Mở một không gian tìm hiểu biểu tượng thời gian, ngũ hành và câu hỏi dành cho chính mình.</p>
+                  </div>
+                  <div className="relative z-10 pt-4 border-t border-line flex items-center justify-between text-sm font-semibold text-accent"><span>Khám phá tử vi</span><ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></div>
+                </Card>
+              )}
+
+              {/* Card 4: Lá số chiêm nghiệm (Mới) */}
               {onGoToHoroscope && (
                 <Card
                   role="link"
@@ -261,6 +286,26 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
               )}
 
               {/* Card 4: Gửi gắm điều ước */}
+              {onGoToSanctuary && (
+                <Card
+                  role="link"
+                  onClick={onGoToSanctuary}
+                  className="group p-6 border-0 border-t border-line hover:bg-surface-soft text-left transition-colors cursor-pointer relative flex flex-col justify-between"
+                >
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 rounded-panel bg-surface border border-line flex items-center justify-center text-accent">
+                        <Landmark className="w-6 h-6" />
+                      </div>
+                      <Badge variant="outline" className="text-xs text-accent border-line bg-surface">Không gian riêng</Badge>
+                    </div>
+                    <h3 className="font-display font-bold text-xl text-ink group-hover:text-accent transition-colors mb-2">Không gian của tôi</h3>
+                    <p className="text-sm text-ink leading-relaxed mb-4">Ghé bàn thờ gia tiên, góc tưởng niệm và một khoảng an yên dành riêng cho bạn.</p>
+                  </div>
+                  <div className="relative z-10 pt-4 border-t border-line flex items-center justify-between text-sm font-semibold text-accent"><span>Ghé không gian riêng</span><ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></div>
+                </Card>
+              )}
+
               {onGoToWish && (
                 <Card
                   role="link"

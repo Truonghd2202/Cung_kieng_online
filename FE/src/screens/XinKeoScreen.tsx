@@ -77,111 +77,209 @@ const KEO_OUTCOMES: Record<KeoResultType, KeoOutcome> = {
 };
 
 // SVG Crescent Moon Divination Piece
+// Keo âm dương — hình lưỡi liềm gỗ hương đỏ cổ truyền
+// Hình dạng: crescent nằm ngang, dày ở giữa, 2 đầu bo tròn
+// Mặt Dương (Úp)  = lưng cong vòm bóng loáng (thấy mặt cong)
+// Mặt Âm  (Ngửa) = mặt phẳng xẻ gỗ, thớ gỗ nổi rõ
 const CrescentKeoPiece: React.FC<{
   side: "am" | "duong";
+  mirror?: boolean;
   rotationClass: string;
   isCasting: boolean;
-}> = ({ side, rotationClass, isCasting }) => {
+  hasCast: boolean;
+  animClass?: string;
+  shadowClass?: string;
+  settledClass?: string;
+  settledShadowClass?: string;
+}> = ({
+  side,
+  mirror = false,
+  rotationClass,
+  isCasting,
+  hasCast,
+  animClass = "",
+  shadowClass = "",
+  settledClass = "",
+  settledShadowClass = "",
+}) => {
+  // Keo thật là nửa bầu dục dựng đứng: mép ngoài tròn, mép trong cắt cong.
+  const outerPath = "M 96,10 C 140,18 164,52 162,94 C 160,137 133,166 98,172";
+  const innerReturn = "C 86,174 77,166 80,151 C 89,115 88,64 78,28 C 75,15 83,7 96,10 Z";
+  const fullPath = outerPath + " " + innerReturn;
+
   return (
-    <div
-      className={`relative w-28 sm:w-36 h-20 sm:h-24 transition-all duration-700 select-none ${
-        isCasting ? "animate-bounce scale-90 opacity-75" : "scale-100 opacity-100"
-      } ${rotationClass}`}
-    >
-      {/* Realistic Wooden Crescent Shape */}
-      <svg
-        viewBox="0 0 140 90"
-        className="w-full h-full drop-shadow-[0_10px_15px_rgba(0,0,0,0.35)]"
+    <div className="flex flex-col items-center">
+      <div
+        className={`relative w-44 sm:w-56 h-28 sm:h-36 select-none ${
+          isCasting
+            ? animClass
+            : hasCast
+            ? `transition-none ${settledClass}`
+            : `transition-transform duration-700 ${rotationClass}`
+        }`}
       >
-        <defs>
-          {/* Convex Lacquer Gradient (Dương) */}
-          <linearGradient id="convexWoodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#8d3d27" />
-            <stop offset="35%" stopColor="#5c2617" />
-            <stop offset="70%" stopColor="#3d180e" />
-            <stop offset="100%" stopColor="#220d07" />
-          </linearGradient>
+        <svg viewBox="0 0 180 180" className="w-full h-full overflow-visible">
+          <defs>
+            {/* ── Base rosewood gradient ─────────────── */}
+            <linearGradient id="rw_duong" x1="30%" y1="0%" x2="70%" y2="100%">
+              <stop offset="0%"   stopColor="#d8835e" />
+              <stop offset="30%"  stopColor="#a9472d" />
+              <stop offset="70%"  stopColor="#6e2419" />
+              <stop offset="100%" stopColor="#3b120d" />
+            </linearGradient>
 
-          {/* Flat Bamboo/Wood Grain Gradient (Âm) */}
-          <linearGradient id="flatWoodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#d8a474" />
-            <stop offset="45%" stopColor="#be8556" />
-            <stop offset="85%" stopColor="#9a653c" />
-            <stop offset="100%" stopColor="#7a4e2c" />
-          </linearGradient>
+            <linearGradient id="rw_am" x1="20%" y1="0%" x2="80%" y2="100%">
+              <stop offset="0%"   stopColor="#f0ba82" />
+              <stop offset="45%"  stopColor="#d98d60" />
+              <stop offset="80%"  stopColor="#b96340" />
+              <stop offset="100%" stopColor="#854027" />
+            </linearGradient>
 
-          {/* Specular Highlight */}
-          <linearGradient id="specularGlow" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-          </linearGradient>
-        </defs>
+            {/* ── Convex dome highlight (Dương) ──────── */}
+            <radialGradient id="dome_hl" cx="50%" cy="30%" r="60%" fx="48%" fy="18%">
+              <stop offset="0%"   stopColor="#ffd2ab" stopOpacity="0.9" />
+              <stop offset="30%"  stopColor="#e18a64" stopOpacity="0.55" />
+              <stop offset="70%"  stopColor="#8b3020" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#3b120d" stopOpacity="0" />
+            </radialGradient>
 
-        {side === "duong" ? (
-          // DƯƠNG: Curved Convex Back (Úp)
-          <g>
-            {/* Base Crescent path */}
-            <path
-              d="M 15,75 C 10,40 45,10 70,10 C 95,10 130,40 125,75 C 105,48 85,38 70,38 C 55,38 35,48 15,75 Z"
-              fill="url(#convexWoodGrad)"
-              stroke="#2a1008"
-              strokeWidth="2"
-            />
-            {/* Convex curve ridge reflection */}
-            <path
-              d="M 25,68 C 22,42 48,16 70,16 C 92,16 118,42 115,68 C 102,46 84,36 70,36 C 56,36 38,46 25,68 Z"
-              fill="url(#specularGlow)"
-              opacity="0.6"
-            />
-            {/* Subtle wood lacquer shine */}
-            <ellipse cx="70" cy="24" rx="22" ry="5" fill="#ffffff" opacity="0.2" />
+            {/* Gloss lacquer overlay (Dương) */}
+            <radialGradient id="gloss" cx="50%" cy="22%" r="55%">
+              <stop offset="0%"   stopColor="#ffffff" stopOpacity="0.32" />
+              <stop offset="45%"  stopColor="#ff9aaa" stopOpacity="0.12" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </radialGradient>
+
+            {/* ── Wood grain pattern (Âm face) ───────── */}
+            <pattern id="grain" width="28" height="28"
+              patternUnits="userSpaceOnUse" patternTransform="rotate(-30) scale(1)">
+              <line x1="0" y1="2"  x2="28" y2="2"  stroke="#9c5436" strokeWidth="0.7" strokeOpacity="0.5" />
+              <line x1="0" y1="7"  x2="28" y2="7"  stroke="#6e321e" strokeWidth="1.1" strokeOpacity="0.52" />
+              <line x1="0" y1="13" x2="28" y2="13" stroke="#bd7048" strokeWidth="0.5" strokeOpacity="0.5" />
+              <line x1="0" y1="19" x2="28" y2="19" stroke="#7e3e26" strokeWidth="1.3" strokeOpacity="0.48" />
+              <line x1="0" y1="25" x2="28" y2="25" stroke="#e8a572" strokeWidth="0.5" strokeOpacity="0.4"/>
+            </pattern>
+
+            {/* ── Drop shadow filter ──────────────────── */}
+            <filter id="kshadow" x="-12%" y="-20%" width="124%" height="150%">
+              <feDropShadow dx="0" dy="7" stdDeviation="5" floodColor="#000" floodOpacity="0.7" />
+            </filter>
+          </defs>
+
+          <g
+            transform={mirror ? "translate(180 0) scale(-1 1)" : undefined}
+            className={isCasting ? `keo-toss-face keo-toss-face-duong keo-toss-face--lands-${side}` : side === "duong" ? "" : "hidden"}
+          >
+            {/* Mặt úp (dương): lưng gỗ cong, phủ sơn bóng. */}
+            <g filter="url(#kshadow)">
+              {/* Phần thành/rìa dày tối ở mép dưới (hiệu ứng 3D chiều dày) */}
+              <path
+                d="M 98,172 C 133,166 160,137 162,94 L 168,100
+                   C 166,143 139,174 102,180 Z"
+                fill="#1e0306"
+                opacity="0.85"
+              />
+              {/* Thân chính — mặt lưng cong */}
+              <path
+                d={fullPath}
+                fill="url(#rw_duong)"
+                stroke="#1e0306"
+                strokeWidth="1.5"
+              />
+              {/* Radial dome highlight — tạo cảm giác vòm tròn 3D */}
+              <path d={fullPath} fill="url(#dome_hl)" />
+              {/* Gloss lacquer */}
+              <path d={fullPath} fill="url(#gloss)" />
+              {/* Đường gân sáng dọc theo sống lưng vòm */}
+              <path
+                d="M 101,20 C 134,28 151,57 150,92"
+                fill="none"
+                stroke="#ef8090"
+                strokeWidth="1.6"
+                strokeOpacity="0.45"
+                strokeLinecap="round"
+              />
+            </g>
           </g>
-        ) : (
-          // ÂM: Planar Flat Face (Ngửa)
-          <g>
-            {/* Flat Crescent base */}
-            <path
-              d="M 15,75 C 10,40 45,10 70,10 C 95,10 130,40 125,75 C 105,48 85,38 70,38 C 55,38 35,48 15,75 Z"
-              fill="url(#flatWoodGrad)"
-              stroke="#543118"
-              strokeWidth="2"
-            />
-            {/* Inner chamfer edge */}
-            <path
-              d="M 18,72 C 14,42 46,13 70,13 C 94,13 126,42 122,72 C 103,47 84,40 70,40 C 56,40 37,47 18,72 Z"
-              fill="none"
-              stroke="#f1c79e"
-              strokeWidth="1"
-              opacity="0.4"
-            />
-            {/* Ancient bamboo grain lines */}
-            <path
-              d="M 40,32 Q 55,24 70,24 Q 85,24 100,32"
-              fill="none"
-              stroke="#6b3f20"
-              strokeWidth="1"
-              strokeDasharray="2,3"
-              opacity="0.5"
-            />
-            <path
-              d="M 48,46 Q 60,39 70,39 Q 80,39 92,46"
-              fill="none"
-              stroke="#6b3f20"
-              strokeWidth="1"
-              opacity="0.4"
-            />
-            {/* Traditional Yin circle marker */}
-            <circle cx="70" cy="27" r="4.5" fill="#502812" opacity="0.75" />
-            <circle cx="70" cy="27" r="2" fill="#d8a474" opacity="0.9" />
+          <g
+            transform={mirror ? "translate(180 0) scale(-1 1)" : undefined}
+            className={isCasting ? `keo-toss-face keo-toss-face-am keo-toss-face--lands-${side}` : side === "am" ? "" : "hidden"}
+          >
+            {/* Mặt ngửa (âm): mặt gỗ phẳng với thớ gỗ rõ nét. */}
+            <g filter="url(#kshadow)">
+              {/* Viền rìa/thành mỏng tối bên dưới (cho thấy chiều dày gỗ) */}
+              <path
+                d="M 98,172 C 133,166 160,137 162,94 L 168,100
+                   C 166,143 139,174 102,180 Z"
+                fill="#280408"
+                opacity="0.9"
+              />
+              {/* Mặt phẳng chính */}
+              <path
+                d={fullPath}
+                fill="url(#rw_am)"
+                stroke="#280408"
+                strokeWidth="1.5"
+              />
+              {/* Thớ gỗ nổi rõ trên mặt phẳng */}
+              <path d={fullPath} fill="url(#grain)" opacity="0.95" />
+              {/* Vòng tuổi gỗ tự nhiên (annual rings) trên mặt xẻ */}
+              <path
+                d="M 96,38 Q 126,63 151,100"
+                fill="none" stroke="#2e0508" strokeWidth="1.0" strokeOpacity="0.42"
+              />
+              <path
+                d="M 94,72 Q 120,96 145,132"
+                fill="none" stroke="#2e0508" strokeWidth="0.8" strokeOpacity="0.32"
+              />
+              {/* Vát mép bên trong (chamfer) */}
+              <path
+                d="M 96,14 C 136,22 159,54 157,94
+                   C 155,132 131,160 100,168 C 90,168 84,162 87,151
+                   C 96,113 95,64 83,27 C 81,19 87,12 96,14 Z"
+                fill="none"
+                stroke="#e08090"
+                strokeWidth="0.8"
+                strokeOpacity="0.35"
+              />
+              {/* Ánh sáng khuếch tán nhẹ (mặt phẳng phản chiếu ánh sáng đều) */}
+              <ellipse cx="126" cy="84" rx="14" ry="49" fill="#ffffff" opacity="0.07" transform="rotate(-28 126 84)" />
+            </g>
           </g>
-        )}
-      </svg>
+        </svg>
+      </div>
 
-      {/* Subtle indicator caption below piece */}
-      <div className="text-center mt-1">
-        <span className="text-[11px] font-bold tracking-wider uppercase text-ink/75 bg-surface/80 px-2 py-0.5 rounded-full border border-line">
-          {side === "am" ? "Mặt phẳng (Âm)" : "Mặt cong (Dương)"}
-        </span>
+      {/* Ground shadow */}
+      <div
+        className={`w-36 sm:w-48 h-3.5 rounded-full bg-black/55 blur-[5px] -mt-3 ${
+          isCasting
+            ? shadowClass
+            : hasCast
+            ? `transition-none ${settledShadowClass}`
+            : "opacity-60 scale-100 transition-all"
+        }`}
+      />
+
+      {/* Badge nhận diện */}
+      <div className="text-center mt-3">
+        <div
+          className={`inline-flex flex-col items-center px-3 py-1.5 rounded-xl border text-xs font-medium ${
+            side === "am"
+              ? "bg-amber-950/70 text-amber-200 border-amber-600/50"
+              : "bg-rose-950/70 text-rose-200 border-rose-700/50"
+          }`}
+        >
+          <span className="font-bold tracking-wide uppercase text-[11px] flex items-center gap-1.5">
+            {side === "am" ? (
+              <><span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]" />MẶT PHẲNG (ÂM • NGỬA)</>
+            ) : (
+              <><span className="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.9)]" />MẶT CONG (DƯƠNG • ÚP)</>
+            )}
+          </span>
+          <span className="text-[10px] opacity-80 mt-0.5">
+            {side === "am" ? "Thớ gỗ xẻ • mặt phẳng ngửa lên" : "Vòm cong bóng loáng • úp xuống đĩa"}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -196,6 +294,9 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
   const [reflectionText, setReflectionText] = useState("");
   const [isCasting, setIsCasting] = useState(false);
   const [castResult, setCastResult] = useState<KeoOutcome | null>(null);
+  // Chốt quẻ trước khi tung. Nhờ vậy mặt nhìn thấy trong lúc xoay chính là
+  // mặt sẽ chạm đĩa, không bị thay hình ở khoảnh khắc animation kết thúc.
+  const [landingResult, setLandingResult] = useState<KeoOutcome | null>(null);
 
   const topics = [
     { id: "hoctap", label: "Học tập & Thi cử" },
@@ -205,15 +306,42 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
   ];
 
   const handleCastKeo = () => {
-    setIsCasting(true);
-    setCastResult(null);
+    if (isCasting) return;
+    const weightedPool: KeoResultType[] = [
+      "nhat-am-nhat-duong",
+      "nhat-am-nhat-duong",
+      "nhi-duong",
+      "nhi-am",
+    ];
+    const picked = weightedPool[Math.floor(Math.random() * weightedPool.length)];
+    const outcome = KEO_OUTCOMES[picked];
 
+    setLandingResult(outcome);
+    setCastResult(null);
+    setIsCasting(true);
+
+    // Haptic feedback
+    try {
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate([60, 40, 80]);
+      }
+    } catch {
+      // ignore
+    }
+
+    // Chừa một frame sau khi CSS animation kết thúc để trạng thái cố định
+    // nhận đúng vị trí/góc tiếp đất, không bị kéo về giữa khi công bố quẻ.
     setTimeout(() => {
-      const keys: KeoResultType[] = ["nhat-am-nhat-duong", "nhi-duong", "nhi-am"];
-      const picked = keys[Math.floor(Math.random() * keys.length)];
-      setCastResult(KEO_OUTCOMES[picked]);
+      setCastResult(outcome);
       setIsCasting(false);
-    }, 1200);
+      try {
+        if (typeof navigator !== "undefined" && navigator.vibrate) {
+          navigator.vibrate([140]);
+        }
+      } catch {
+        // ignore
+      }
+    }, 2200);
   };
 
   return (
@@ -374,44 +502,63 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
               </div>
 
               {/* Sacred Altar Tray with Ambient Aura */}
-              <div className="relative rounded-card overflow-hidden bg-gradient-to-b from-surface-soft/80 via-surface/60 to-surface-soft border border-line p-6 sm:p-12 text-center mb-6">
+              <div className="relative rounded-card overflow-visible pt-16 sm:pt-20 bg-gradient-to-b from-surface-soft/80 via-surface/60 to-surface-soft border border-line p-6 sm:p-12 text-center mb-6">
                 {/* Ambient Golden Glow Aura */}
-                <div className="absolute inset-0 bg-radial from-amber-500/15 via-orange-500/5 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-radial from-amber-500/15 via-orange-500/5 to-transparent pointer-events-none rounded-card" />
 
                 {/* Circular Stone/Woven Mat Platform */}
-                <div className="relative mx-auto max-w-sm rounded-full border border-accent/25 bg-surface/90 backdrop-blur-xs p-8 sm:p-10 shadow-inner">
-                  <div className="flex items-center justify-center gap-6 sm:gap-10 py-4">
+                <div className="relative mx-auto max-w-lg rounded-3xl border border-accent/25 bg-surface/90 backdrop-blur-xs p-6 sm:p-10 shadow-inner">
+                  <div className="flex items-center justify-center gap-6 sm:gap-10 py-4" aria-live="polite">
                     {/* Keo Piece 1 */}
                     <CrescentKeoPiece
-                      side={castResult ? castResult.piece1 : "am"}
+                      side={landingResult ? landingResult.piece1 : "am"}
+                      mirror
                       rotationClass={
-                        castResult
-                          ? castResult.piece1 === "am"
+                        landingResult
+                          ? landingResult.piece1 === "am"
                             ? "rotate-12"
                             : "-rotate-12"
                           : "rotate-6"
                       }
                       isCasting={isCasting}
+                      hasCast={!!castResult}
+                      animClass="anim-keo-toss-left"
+                      shadowClass="anim-keo-shadow-left"
+                      settledClass="keo-settled-left"
+                      settledShadowClass="keo-shadow-settled-left"
                     />
 
                     {/* Keo Piece 2 */}
                     <CrescentKeoPiece
-                      side={castResult ? castResult.piece2 : "duong"}
+                      side={landingResult ? landingResult.piece2 : "duong"}
                       rotationClass={
-                        castResult
-                          ? castResult.piece2 === "am"
+                        landingResult
+                          ? landingResult.piece2 === "am"
                             ? "-rotate-12"
                             : "rotate-12"
                           : "-rotate-6"
                       }
                       isCasting={isCasting}
+                      hasCast={!!castResult}
+                      animClass="anim-keo-toss-right"
+                      shadowClass="anim-keo-shadow-right"
+                      settledClass="keo-settled-right"
+                      settledShadowClass="keo-shadow-settled-right"
                     />
                   </div>
 
-                  <div className="h-px w-24 mx-auto bg-line/80 my-3" />
-                  <p className="text-xs text-muted italic">
-                    Hai mảnh keo gỗ hình trăng khuyết: một mặt cong (Dương / Úp) và một mặt phẳng (Âm / Ngửa)
-                  </p>
+                  <div className="h-px w-28 mx-auto bg-line/80 my-4" />
+                  <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-ink/80">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block shadow-[0_0_6px_rgba(244,63,94,0.6)]"></span>
+                      <span><strong>Mặt cong (Dương / Úp):</strong> Lưng vòm cong tròn</span>
+                    </span>
+                    <span className="hidden sm:inline text-muted">•</span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block shadow-[0_0_6px_rgba(251,191,36,0.6)]"></span>
+                      <span><strong>Mặt phẳng (Âm / Ngửa):</strong> Thớ gỗ xẻ phẳng</span>
+                    </span>
+                  </div>
                 </div>
               </div>
 

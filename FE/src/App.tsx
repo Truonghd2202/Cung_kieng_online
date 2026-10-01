@@ -1,6 +1,9 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { AppHeader, NavScreen } from "./components/AppHeader";
 import { AppFooter } from "./components/AppFooter";
+import type { MemorialRecord } from "./screens/MemorialSpaceScreen";
+import type { CultureRegionSlug } from "./screens/CulturalMapScreen";
+import type { RegionalExperienceKind } from "./screens/RegionalExperienceScreen";
 import { GuestScreen } from "./screens/GuestScreen";
 import { TodayScreen } from "./screens/TodayScreen";
 import type { WishTopic } from "./screens/WishScreen";
@@ -41,9 +44,19 @@ const ZenScreen = lazy(() => import("./screens/ZenScreen").then((module) => ({ d
 const XinKeoScreen = lazy(() => import("./screens/XinKeoScreen").then((module) => ({ default: module.XinKeoScreen })));
 const GoodDayScreen = lazy(() => import("./screens/GoodDayScreen").then((module) => ({ default: module.GoodDayScreen })));
 const HoroscopeScreen = lazy(() => import("./screens/HoroscopeScreen").then((module) => ({ default: module.HoroscopeScreen })));
+const AstrologyHubScreen = lazy(() => import("./screens/AstrologyHubScreen").then((module) => ({ default: module.AstrologyHubScreen })));
 const MembershipScreen = lazy(() => import("./screens/MembershipScreen").then((module) => ({ default: module.MembershipScreen })));
 const SettingsScreen = lazy(() => import("./screens/SettingsScreen").then((module) => ({ default: module.SettingsScreen })));
 const AccountScreen = lazy(() => import("./screens/AccountScreen").then((module) => ({ default: module.AccountScreen })));
+const VirtualSanctuaryScreen = lazy(() => import("./screens/VirtualSanctuaryScreen").then((module) => ({ default: module.VirtualSanctuaryScreen })));
+const AncestorAltarScreen = lazy(() => import("./screens/AncestorAltarScreen").then((module) => ({ default: module.AncestorAltarScreen })));
+const MemorialSpaceScreen = lazy(() => import("./screens/MemorialSpaceScreen").then((module) => ({ default: module.MemorialSpaceScreen })));
+const MemorialFormScreen = lazy(() => import("./screens/MemorialFormScreen").then((module) => ({ default: module.MemorialFormScreen })));
+const CulturalMapScreen = lazy(() => import("./screens/CulturalMapScreen").then((module) => ({ default: module.CulturalMapScreen })));
+const RegionCultureScreen = lazy(() => import("./screens/RegionCultureScreen").then((module) => ({ default: module.RegionCultureScreen })));
+const RegionalExperienceScreen = lazy(() => import("./screens/RegionalExperienceScreen").then((module) => ({ default: module.RegionalExperienceScreen })));
+const MoodJourneyScreen = lazy(() => import("./screens/MoodJourneyScreen").then((module) => ({ default: module.MoodJourneyScreen })));
+const NotificationScreen = lazy(() => import("./screens/NotificationScreen").then((module) => ({ default: module.NotificationScreen })));
 
 export type SavedEntry = SavedSignalItem;
 
@@ -261,11 +274,22 @@ export default function App() {
         "account",
         "culture",
         "culture-detail",
+        "culture-map",
+        "region-culture",
+        "chau-van",
+        "sea-prayer",
+        "southern-culture",
+        "mood-journey",
+        "notifications",
         "rituals",
         "ritual-detail",
         "calendar",
         "calendar-detail",
         "experience",
+        "sanctuary",
+        "ancestor-altar",
+        "memorial",
+        "memorial-form",
         "xinxam",
         "wish",
         "zen",
@@ -276,6 +300,7 @@ export default function App() {
         "xinkeo",
         "good-days",
         "horoscope",
+        "astrology",
         "membership",
         "settings",
       ].includes(path)
@@ -300,6 +325,7 @@ export default function App() {
 
   const [screen, setScreen] = useState<NavScreen>(getInitialScreen);
   const [selectedArticleId, setSelectedArticleId] = useState<string>(initialUrlArticleId);
+  const [selectedCultureRegion, setSelectedCultureRegion] = useState<CultureRegionSlug>("north");
   const [selectedRitualId, setSelectedRitualId] = useState<string>(initialUrlRitualId);
   const [selectedCalendarEventId, setSelectedCalendarEventId] = useState<string>(initialUrlCalendarEventId);
   const [journalText, setJournalText] = useState("");
@@ -338,6 +364,16 @@ export default function App() {
     return loadUserCornerData(initialUser);
   });
 
+  const [memorial, setMemorial] = useState<MemorialRecord | null>(() => {
+    try {
+      const email = initialUser?.email?.trim().toLowerCase() || "guest";
+      const stored = localStorage.getItem(`tltl-memorial-${email}`);
+      return stored ? (JSON.parse(stored) as MemorialRecord) : null;
+    } catch {
+      return null;
+    }
+  });
+
   // Active signal computed from currentSignalId
   const activeSignal = getSignalById(currentSignalId) || getDefaultSignalForMood(selectedMood);
 
@@ -349,6 +385,16 @@ export default function App() {
       document.documentElement.classList.remove("dark");
     }
   }, [dark]);
+
+  useEffect(() => {
+    try {
+      const email = currentUser?.email?.trim().toLowerCase() || "guest";
+      const stored = localStorage.getItem(`tltl-memorial-${email}`);
+      setMemorial(stored ? (JSON.parse(stored) as MemorialRecord) : null);
+    } catch {
+      setMemorial(null);
+    }
+  }, [currentUser?.email]);
 
   // Bảo vệ màn Account: chỉ cho người đã đăng nhập truy cập
   useEffect(() => {
@@ -452,11 +498,22 @@ export default function App() {
           "account",
           "culture",
           "culture-detail",
+          "culture-map",
+          "region-culture",
+          "chau-van",
+          "sea-prayer",
+          "southern-culture",
+          "mood-journey",
+          "notifications",
           "rituals",
           "ritual-detail",
           "calendar",
           "calendar-detail",
           "experience",
+          "sanctuary",
+          "ancestor-altar",
+          "memorial",
+          "memorial-form",
           "xinxam",
           "wish",
           "zen",
@@ -467,6 +524,7 @@ export default function App() {
           "xinkeo",
           "good-days",
           "horoscope",
+          "astrology",
           "membership",
           "settings",
         ].includes(path)
@@ -902,6 +960,49 @@ export default function App() {
             onGoToGratitude={() => navigateTo("gratitude")}
             onGoToXinKeo={() => navigateTo("xinkeo")}
             onGoToHoroscope={() => navigateTo("horoscope")}
+            onGoToAstrology={() => navigateTo("astrology")}
+            onGoToSanctuary={() => navigateTo("sanctuary")}
+          />
+        )}
+
+        {screen === "sanctuary" && (
+          <VirtualSanctuaryScreen
+            onBackToExperience={() => navigateTo("experience")}
+            onGoToAltar={() => navigateTo("ancestor-altar")}
+            onGoToMemorial={() => navigateTo("memorial")}
+            onGoToZen={() => navigateTo("zen")}
+          />
+        )}
+
+        {screen === "ancestor-altar" && (
+          <AncestorAltarScreen
+            onBack={() => navigateTo("sanctuary")}
+            onGoToMemorial={() => navigateTo("memorial")}
+          />
+        )}
+
+        {screen === "memorial" && (
+          <MemorialSpaceScreen
+            memorial={memorial}
+            onBack={() => navigateTo("sanctuary")}
+            onCreate={() => navigateTo("memorial-form")}
+            onEdit={() => navigateTo("memorial-form")}
+            onGoToAltar={() => navigateTo("ancestor-altar")}
+          />
+        )}
+
+        {screen === "memorial-form" && (
+          <MemorialFormScreen
+            initialValue={memorial}
+            onBack={() => navigateTo("memorial")}
+            onSave={(nextMemorial) => {
+              const email = currentUser?.email?.trim().toLowerCase() || "guest";
+              setMemorial(nextMemorial);
+              try {
+                localStorage.setItem(`tltl-memorial-${email}`, JSON.stringify(nextMemorial));
+              } catch {}
+              navigateTo("memorial");
+            }}
           />
         )}
 
@@ -915,6 +1016,39 @@ export default function App() {
             onGoToRituals={() => navigateTo("rituals")}
             onGoToCalendar={() => navigateTo("calendar")}
             onGoToGoodDays={() => navigateTo("good-days")}
+            onGoToMap={() => navigateTo("culture-map")}
+          />
+        )}
+
+        {screen === "culture-map" && (
+          <CulturalMapScreen
+            onBackToCulture={() => navigateTo("culture")}
+            onSelectRegion={(region) => {
+              setSelectedCultureRegion(region);
+              navigateTo("region-culture");
+            }}
+          />
+        )}
+
+        {screen === "region-culture" && (
+          <RegionCultureScreen
+            region={selectedCultureRegion}
+            onBack={() => navigateTo("culture-map")}
+            onSelectArticle={(id) => {
+              setSelectedArticleId(id);
+              navigateTo("culture-detail", id);
+            }}
+            onGoToExperience={() => navigateTo("experience")}
+            onGoToRegionalExperience={(kind) => navigateTo(kind)}
+          />
+        )}
+
+        {(screen === "chau-van" || screen === "sea-prayer" || screen === "southern-culture") && (
+          <RegionalExperienceScreen
+            kind={screen as RegionalExperienceKind}
+            onBack={() => navigateTo("region-culture")}
+            onGoToWish={() => navigateTo("wish")}
+            onGoToMemorial={() => navigateTo("memorial")}
           />
         )}
 
@@ -1208,9 +1342,27 @@ export default function App() {
             onGoToXinXam={() => navigateTo("xinxam")}
             onGoToWish={() => navigateTo("wish")}
             onGoToMood={() => navigateTo("mood")}
+            onGoToMoodJourney={() => navigateTo("mood-journey")}
+            onGoToNotifications={() => navigateTo("notifications")}
             onGoToHome={() => navigateTo("today")}
             onGoToSettings={() => navigateTo("settings")}
           />
+        )}
+
+        {screen === "mood-journey" && (
+          <MoodJourneyScreen
+            savedSignals={userCornerData.signals}
+            onBack={() => navigateTo("account")}
+            onGoToMood={() => navigateTo("mood")}
+            onGoToSignalResult={(signalId) => {
+              setCurrentSignalId(signalId);
+              navigateTo("result", signalId);
+            }}
+          />
+        )}
+
+        {screen === "notifications" && (
+          <NotificationScreen onBack={() => navigateTo("account")} />
         )}
 
         {screen === "xinkeo" && (
@@ -1236,6 +1388,13 @@ export default function App() {
             onBackToExperience={() => navigateTo("experience")}
             onGoToCulture={() => navigateTo("culture")}
             onGoToHome={() => navigateTo("today")}
+          />
+        )}
+
+        {screen === "astrology" && (
+          <AstrologyHubScreen
+            onBackToExperience={() => navigateTo("experience")}
+            onGoToHoroscope={() => navigateTo("horoscope")}
           />
         )}
 
