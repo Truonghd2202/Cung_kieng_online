@@ -1,22 +1,16 @@
 import React, { useState } from "react";
 import {
-  Smile,
+  User,
   Mail,
   Lock,
   Eye,
   EyeOff,
-  ArrowRight,
   Sparkles,
   Flower2,
   ArrowLeft,
-  UserCheck,
-  Info,
+  ArrowRight,
 } from "lucide-react";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Card } from "@/src/components/ui/card";
-
-import { registerAccount, DEMO_USER } from "../data/authService";
+import { registerAccount } from "../data/authService";
 
 interface RegisterScreenProps {
   onBack?: () => void;
@@ -34,336 +28,306 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreed, setAgreed] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-
-  const handleQuickDemo = () => {
-    onSuccess(DEMO_USER.name, DEMO_USER.email);
-  };
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
 
     if (!name.trim()) {
-      setErrorMessage("Vui lòng nhập họ và tên hoặc pháp danh.");
+      setErrorMessage("Vui lòng nhập họ và tên hoặc pháp danh của bạn.");
       return;
     }
 
-    const result = registerAccount(name, email, password);
-    if (!result.success) {
-      setErrorMessage(result.error || "Không thể tạo hồ sơ. Vui lòng thử lại.");
+    if (!email.trim()) {
+      setErrorMessage("Vui lòng nhập địa chỉ email hợp lệ.");
       return;
     }
 
-    onSuccess(result.user.name, result.user.email);
+    if (password.length < 6) {
+      setErrorMessage("Mật khẩu nên có tối thiểu 6 ký tự để bảo mật.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMessage("Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại.");
+      return;
+    }
+
+    if (!agreed) {
+      setErrorMessage("Vui lòng đồng ý với quy ước giữ gìn không gian an trú.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setTimeout(() => {
+      const result = registerAccount(name, email, password);
+      setIsSubmitting(false);
+
+      if (!result.success) {
+        setErrorMessage(result.error || "Không thể tạo tài khoản. Vui lòng thử lại.");
+        return;
+      }
+
+      onSuccess(result.user.name, result.user.email);
+    }, 300);
   };
 
   return (
-    <div className="screen-shell screen-shell--auth">
-      <Card className="w-full max-w-4xl bg-surface border border-line rounded-card shadow-card overflow-hidden grid grid-cols-1 md:grid-cols-12">
-        {/* Left Column: Peach Parchment Artistic Panel */}
-        <div className="order-2 md:order-1 md:col-span-5 bg-surface-soft p-8 sm:p-10 border-b md:border-b-0 md:border-r border-line flex flex-col justify-between relative overflow-hidden">
-          {/* Subtle background texture pattern */}
+    <div className="relative min-h-[calc(100vh-64px)] w-full flex items-center justify-center p-4 sm:p-8 lg:p-12 bg-canvas text-ink transition-colors duration-500 overflow-hidden">
+      {/* Đường vân khói lượn sóng mờ tinh tế phía sau nền */}
+      <svg
+        className="absolute inset-0 w-full h-full pointer-events-none stroke-[var(--ui-line)] fill-none opacity-50"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="none"
+        viewBox="0 0 100 100"
+        aria-hidden="true"
+      >
+        <path
+          d="M 28 0 C 37 24, 24 44, 34 64 C 42 80, 27 90, 32 100"
+          strokeWidth="0.55"
+        />
+        <path
+          d="M 20 0 C 14 28, 30 50, 19 74 C 13 88, 24 95, 20 100"
+          strokeWidth="0.4"
+        />
+      </svg>
 
-          {/* Top tag */}
-          <div className="relative text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-action"></span>
-            <span>Sổ tay tâm thức • Khởi tâm</span>
+      {/* THẺ ĐĂNG KÝ CHIÊM NGHIỆM ĐƯƠNG ĐẠI (ĐỒNG BỘ NGHỆ THUẬT VỚI LOGIN) */}
+      <div className="relative z-10 w-full max-w-[460px] bg-surface rounded-2xl border border-line px-7 sm:px-9 py-7 sm:py-8 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.14)] dark:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.7)] backdrop-blur-sm transition-colors duration-300">
+        {/* 4 GÓC TRIỆN KỶ HÀ HOÀNG KIM (HOA VĂN TRUYỀN THỐNG VIỆT NAM) */}
+        <span className="absolute top-2.5 left-2.5 w-3.5 h-3.5 border-t-2 border-l-2 border-[#d4af37]/65 dark:border-amber-400/60 pointer-events-none rounded-tl-[3px]" />
+        <span className="absolute top-2.5 right-2.5 w-3.5 h-3.5 border-t-2 border-r-2 border-[#d4af37]/65 dark:border-amber-400/60 pointer-events-none rounded-tr-[3px]" />
+        <span className="absolute bottom-2.5 left-2.5 w-3.5 h-3.5 border-b-2 border-l-2 border-[#d4af37]/65 dark:border-amber-400/60 pointer-events-none rounded-bl-[3px]" />
+        <span className="absolute bottom-2.5 right-2.5 w-3.5 h-3.5 border-b-2 border-r-2 border-[#d4af37]/65 dark:border-amber-400/60 pointer-events-none rounded-br-[3px]" />
+
+        {/* Nút quay lại (nếu có) */}
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="text-xs text-muted hover:text-accent flex items-center gap-1.5 mb-4 cursor-pointer transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span className="font-serif">Quay lại</span>
+          </button>
+        )}
+
+        {/* Tiêu đề & Ấn son Khởi Tâm */}
+        <div className="flex items-center gap-3 pb-1">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8b1e28] to-[#5b1219] flex items-center justify-center shadow-md shadow-[#8b1e28]/25 border border-amber-400/35 text-amber-200 shrink-0">
+            <Flower2 className="w-4 h-4 text-amber-300" />
           </div>
-
-          {/* Center lotus emblem & quotation */}
-          <div className="relative my-8 text-center">
-            {/* Medallion */}
-            <div className="w-24 h-24 mx-auto mb-6 rounded-full border border-dashed border-line p-1.5 flex items-center justify-center">
-              <div className="w-full h-full rounded-full bg-surface flex items-center justify-center text-accent shadow-2xs">
-                <Flower2 className="w-10 h-10 text-accent" />
-              </div>
-            </div>
-
-            <h3 className="font-display font-bold text-2xl text-ink mb-3">
-              Thư thái gieo hạt
-            </h3>
-
-            <p className="font-display italic text-sm text-ink leading-relaxed max-w-xs mx-auto">
-              “Lòng tĩnh lặng như mặt hồ soi bóng mây trời. Mỗi dòng tự sự là một đóa sen an nhiên giữa dòng đời hối hả.”
+          <div className="flex-1">
+            <h1 className="font-serif font-bold text-xs sm:text-[13px] tracking-[0.16em] text-ink uppercase">
+              KHỞI TẠO GÓC AN TRÚ
+            </h1>
+            <p className="font-serif italic text-[11px] text-muted tracking-wide mt-0.5">
+              Ghi danh tâm thức • Gieo duyên an lành
             </p>
-          </div>
-
-          {/* Bottom footnote */}
-          <div className="relative text-xs text-muted text-center font-medium">
-            Kỳ An Nhiên &nbsp;•&nbsp; Tháng Giêng Giáp Thìn
           </div>
         </div>
 
-        {/* Right Column: Register Form */}
-        <div className="order-1 md:order-2 md:col-span-7 p-5 sm:p-10 bg-surface flex flex-col justify-between">
+        {/* Dải phân cách viền kim với biểu tượng hoa sen kỷ hà ❖ */}
+        <div className="flex items-center gap-3 my-4">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#d4af37]/45 dark:via-amber-400/35 to-transparent" />
+          <span className="text-[#c5a059] dark:text-amber-400 text-[10px] select-none">❖</span>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#d4af37]/45 dark:via-amber-400/35 to-transparent" />
+        </div>
+
+        {/* Quẻ / Tín hiệu chờ lưu */}
+        {pendingSignalMood && (
+          <div className="mb-4 p-2.5 rounded-xl bg-accent-soft border border-line text-xs text-ink flex items-start gap-2 shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 shrink-0 mt-0.5 text-accent" />
+            <span>Tín hiệu <strong>"{pendingSignalMood}"</strong> sẽ tự động được lưu vào sổ tay ngay sau khi tạo tài khoản.</span>
+          </div>
+        )}
+
+        {/* Hộp thông báo lỗi */}
+        {errorMessage && (
+          <div
+            role="alert"
+            className="mb-4 p-2.5 rounded-xl bg-danger-soft border border-danger/40 text-xs text-danger flex items-start gap-2 animate-fade-in"
+          >
+            <span className="font-bold leading-none mt-0.5">✕</span>
+            <span className="leading-relaxed flex-1">{errorMessage}</span>
+          </div>
+        )}
+
+        {/* Biểu mẫu đăng ký */}
+        <form onSubmit={handleSubmit} className="space-y-3.5">
+          {/* Trường 1: Họ tên hoặc Pháp danh */}
           <div>
-            {onBack && (
-              <button
-                type="button"
-                onClick={onBack}
-                className="text-xs text-muted hover:text-accent flex items-center gap-1 mb-4 cursor-pointer"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Quay lại</span>
-              </button>
-            )}
-
-            {/* Pending Signal Notice */}
-            {pendingSignalMood && (
-              <div className="mb-5 p-3.5 rounded-panel bg-surface border border-line text-xs text-accent flex items-start gap-2.5 shadow-2xs">
-                <Sparkles className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong className="font-semibold">Tín hiệu đang chờ lưu:</strong> Quẻ "{pendingSignalMood}" sẽ tự động được lưu vào Góc của bạn ngay khi tạo tài khoản.
-                </div>
-              </div>
-            )}
-
-            {/* Nút vào nhanh tài khoản demo mẫu An Nhiên */}
-            <div className="mb-5 p-3 rounded-panel bg-surface border border-line flex items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs py-0 px-2 uppercase font-bold text-accent">
-                  Demo mẫu
-                </Badge>
-                <span className="text-ink">Muốn xem nhanh không cần đăng ký?</span>
-              </div>
-              <button
-                type="button"
-                onClick={handleQuickDemo}
-                className="text-accent font-bold hover:underline inline-flex items-center gap-1 text-xs cursor-pointer shrink-0"
-              >
-                <UserCheck className="w-3.5 h-3.5" />
-                <span>Vào An Nhiên</span>
-              </button>
-            </div>
-
-            <Badge
-              variant="secondary"
-              className="gap-1.5 px-3 py-1 mb-2 text-xs font-medium"
+            <label
+              htmlFor="register-name"
+              className="block text-[11px] font-serif font-bold tracking-wider text-ink uppercase mb-1.5 flex items-center gap-1.5"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Tạo không gian tĩnh tại</span>
-            </Badge>
-
-            <h2 className="section-title text-2xl sm:text-[28px] leading-snug mb-1.5">
-              Khởi tạo hồ sơ riêng trên thiết bị
-            </h2>
-            <p className="text-sm text-muted leading-relaxed mb-4">
-              Lưu giữ những tín hiệu dân gian và điều ước tâm sự trong kho lưu trữ độc lập theo email của bạn.
-            </p>
-
-            {/* Thông báo minh bạch về Demo & Backend */}
-            <div className="mb-5 p-3 rounded-xl bg-surface border border-line flex items-start gap-2.5 text-xs text-muted">
-              <Info className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
-              <div className="leading-relaxed">
-                <span className="font-semibold text-ink">Hồ sơ độc lập trên trình duyệt:</span>{" "}
-                Dữ liệu của bạn được tách riêng hoàn toàn theo email này.{" "}
-                <span className="text-accent font-medium">Chưa có xác thực mật khẩu qua Backend máy chủ</span>{" "}
-                (Đăng ký tài khoản trực tuyến chính thức: <strong>Sắp có</strong>).
-              </div>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#8b1e28]" />
+              HỌ VÀ TÊN HOẶC PHÁP DANH
+            </label>
+            <div className="relative group">
+              <User className="w-4 h-4 text-subtle group-focus-within:text-accent transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                id="register-name"
+                type="text"
+                required
+                disabled={isSubmitting}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ví dụ: Minh Tâm hoặc Tuệ An"
+                className="w-full h-11 pl-10 pr-3.5 rounded-xl border border-line bg-surface-soft text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent focus:bg-surface transition-all shadow-xs disabled:opacity-60"
+              />
             </div>
+          </div>
 
-            {errorMessage && (
-              <div className="mb-4 p-3 rounded-xl bg-danger-soft border border-danger/25 text-xs text-danger flex items-start gap-2">
-                <span className="font-bold mt-0.5">✕</span>
-                <span className="leading-relaxed">{errorMessage}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Field 1: Name */}
-              <div>
-                <label htmlFor="register-name" className="block text-sm font-semibold text-ink mb-1.5">
-                  Họ và tên hoặc Pháp danh / Biệt hiệu thân mật
-                </label>
-                <div className="relative">
-                  <input
-                    id="register-name"
-                    autoComplete="name"
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Ví dụ: Minh Tâm"
-                    className="w-full min-h-11 pl-10 pr-4 py-2.5 rounded-control bg-surface border border-line text-base text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-accent"
-                  />
-                  <Smile className="w-4 h-4 text-muted absolute left-3.5 top-3" />
-                </div>
-              </div>
-
-              {/* Field 2: Email */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label htmlFor="register-email" className="block text-sm font-semibold text-ink">
-                    Địa chỉ Email của bạn
-                  </label>
-                  <span className="text-xs text-muted">
-                    Dùng làm khóa lưu kho riêng
-                  </span>
-                </div>
-                <div className="relative">
-                  <input
-                    id="register-email"
-                    autoComplete="email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="ban@email.com"
-                    className="w-full min-h-11 pl-10 pr-4 py-2.5 rounded-control bg-surface border border-line text-base text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-accent"
-                  />
-                  <Mail className="w-4 h-4 text-muted absolute left-3.5 top-3" />
-                </div>
-              </div>
-
-              {/* Field 3: Password */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label htmlFor="register-password" className="text-sm font-semibold text-ink">
-                    Mật khẩu
-                  </label>
-                  <span className="text-xs text-muted">
-                    Chưa kiểm tra máy chủ trong bản demo
-                  </span>
-                </div>
-                <div className="relative">
-                  <input
-                    id="register-password"
-                    autoComplete="new-password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="•••••••••••• (Chấp nhận mọi mật khẩu trong demo)"
-                    className="w-full min-h-11 pl-10 pr-12 py-2.5 rounded-control bg-surface border border-line text-base text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-accent"
-                  />
-                  <Lock className="w-4 h-4 text-muted absolute left-3.5 top-3" />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                    className="absolute right-0 top-0 h-11 w-11 grid place-items-center text-muted hover:text-ink"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Terms checkbox */}
-              <label className="flex items-start gap-2.5 cursor-pointer text-xs text-ink pt-1">
-                <input
-                  type="checkbox"
-                  checked={agreed}
-                  onChange={(e) => setAgreed(e.target.checked)}
-                  className="mt-0.5 rounded border-line text-accent focus:ring-accent"
-                />
-                <span>
-                  Tôi đồng ý với{" "}
-                  <strong className="text-accent">Quy ước lưu trữ cục bộ</strong> &{" "}
-                  <strong className="text-accent">
-                    Tôn trọng bản sắc văn hóa
-                  </strong>
-                </span>
-              </label>
-
-              {/* Submit Button */}
-              <Button
-                variant="default"
-                size="lg"
-                type="submit"
-                disabled={!agreed}
-                className="w-full mt-2 font-semibold shadow-xs"
-              >
-                <span>Tạo hồ sơ demo trên máy</span>
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </form>
-
-            {/* Social Divider */}
-            <div className="relative my-6 text-center">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-line"></div>
-              </div>
-              <span className="relative bg-surface px-3 text-xs uppercase tracking-wider text-muted font-semibold">
-                Đăng ký qua mạng xã hội
-              </span>
+          {/* Trường 2: Email */}
+          <div>
+            <label
+              htmlFor="register-email"
+              className="block text-[11px] font-serif font-bold tracking-wider text-ink uppercase mb-1.5 flex items-center gap-1.5"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-[#8b1e28]" />
+              ĐỊA CHỈ EMAIL
+            </label>
+            <div className="relative group">
+              <Mail className="w-4 h-4 text-subtle group-focus-within:text-accent transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                id="register-email"
+                type="email"
+                required
+                disabled={isSubmitting}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="tenban@domain.com"
+                className="w-full h-11 pl-10 pr-3.5 rounded-xl border border-line bg-surface-soft text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent focus:bg-surface transition-all shadow-xs disabled:opacity-60"
+              />
             </div>
+          </div>
 
-            {/* Social Buttons (Disabled) */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <Button
-                variant="outline"
-                type="button"
-                disabled
-                className="bg-surface/60 border-line text-xs font-semibold gap-1.5 py-2.5 opacity-60 cursor-not-allowed justify-between px-3"
-              >
-                <div className="flex items-center gap-1.5">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
-                  </svg>
-                  <span>Google</span>
-                </div>
-                <span className="text-xs uppercase font-bold text-accent bg-surface px-1.5 py-0.5 rounded-full">
-                  Sắp có
-                </span>
-              </Button>
-
-              <Button
-                variant="outline"
-                type="button"
-                disabled
-                className="bg-surface/60 border-line text-xs font-semibold gap-1.5 py-2.5 opacity-60 cursor-not-allowed justify-between px-3"
-              >
-                <div className="flex items-center gap-1.5">
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.84c.66-.8 1.11-1.92.99-3.04-1 .04-2.14.67-2.82 1.47-.6.7-1.12 1.83-.98 2.92 1.11.09 2.16-.57 2.81-1.35z" />
-                  </svg>
-                  <span>Apple</span>
-                </div>
-                <span className="text-xs uppercase font-bold text-accent bg-surface px-1.5 py-0.5 rounded-full">
-                  Sắp có
-                </span>
-              </Button>
-            </div>
-
-            {/* Bottom link */}
-            <div className="text-center text-xs text-muted">
-              <span>Đã có tài khoản hoặc hồ sơ? </span>
+          {/* Trường 3: Mật khẩu */}
+          <div>
+            <label
+              htmlFor="register-password"
+              className="block text-[11px] font-serif font-bold tracking-wider text-ink uppercase mb-1.5 flex items-center gap-1.5"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-[#8b1e28]" />
+              MẬT KHẨU
+            </label>
+            <div className="relative group">
+              <Lock className="w-4 h-4 text-subtle group-focus-within:text-accent transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                id="register-password"
+                type={showPassword ? "text" : "password"}
+                required
+                disabled={isSubmitting}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Tối thiểu 6 ký tự"
+                className="w-full h-11 pl-10 pr-10 rounded-xl border border-line bg-surface-soft text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent focus:bg-surface transition-all tracking-wider shadow-xs disabled:opacity-60"
+              />
               <button
                 type="button"
-                onClick={onGoToLogin}
-                className="text-accent font-bold hover:underline cursor-pointer"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                disabled={isSubmitting}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-subtle hover:text-ink cursor-pointer disabled:opacity-50 transition-colors"
               >
-                Đăng nhập ngay
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
-        </div>
-      </Card>
 
-      {/* Outer bottom watermark */}
-      <div className="mt-8 text-center text-xs tracking-wider uppercase text-muted font-medium">
-        ● Giữ gìn nét đẹp chiêm nghiệm người Việt ●
+          {/* Trường 4: Xác nhận mật khẩu */}
+          <div>
+            <label
+              htmlFor="register-confirm-password"
+              className="block text-[11px] font-serif font-bold tracking-wider text-ink uppercase mb-1.5 flex items-center gap-1.5"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-[#8b1e28]" />
+              XÁC NHẬN MẬT KHẨU
+            </label>
+            <div className="relative group">
+              <Lock className="w-4 h-4 text-subtle group-focus-within:text-accent transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                id="register-confirm-password"
+                type={showConfirmPassword ? "text" : "password"}
+                required
+                disabled={isSubmitting}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Nhập lại mật khẩu trên"
+                className="w-full h-11 pl-10 pr-10 rounded-xl border border-line bg-surface-soft text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent focus:bg-surface transition-all tracking-wider shadow-xs disabled:opacity-60"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                disabled={isSubmitting}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-subtle hover:text-ink cursor-pointer disabled:opacity-50 transition-colors"
+              >
+                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Quy ước gìn giữ không gian an trú */}
+          <div className="flex items-start gap-2 pt-1 pb-1">
+            <input
+              type="checkbox"
+              id="agreed"
+              checked={agreed}
+              disabled={isSubmitting}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="w-4 h-4 mt-0.5 rounded border-line text-accent accent-[#8b1e28] focus:ring-accent/30 cursor-pointer"
+            />
+            <label
+              htmlFor="agreed"
+              className="text-xs text-muted cursor-pointer select-none font-medium leading-relaxed"
+            >
+              Tôi đồng ý với{" "}
+              <span className="text-accent underline font-semibold">Điều khoản sử dụng</span> &{" "}
+              <span>Quy ước gìn giữ góc an trú thanh tịnh</span>
+            </label>
+          </div>
+
+          {/* Nút bấm chính Đăng ký sơn mài đỏ truyền thống */}
+          <button
+            type="submit"
+            disabled={isSubmitting || !agreed}
+            className="group relative w-full h-11 sm:h-12 rounded-xl font-serif font-semibold text-xs sm:text-[13px] tracking-widest text-[#fff8ed] uppercase flex items-center justify-center gap-2.5 overflow-hidden transition-all duration-300 cursor-pointer bg-gradient-to-r from-[#8b1e28] via-[#a02330] to-[#761821] hover:from-[#761821] hover:via-[#8b1e28] hover:to-[#63131b] active:scale-[0.985] shadow-[0_6px_20px_rgba(139,30,40,0.32)] hover:shadow-[0_8px_25px_rgba(139,30,40,0.45)] border border-amber-400/30 disabled:opacity-50"
+          >
+            {/* Ánh kim lướt nhẹ khi hover */}
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
+
+            <span>Đăng ký góc an trú</span>
+            <ArrowRight className="w-4 h-4 text-amber-200/90" />
+          </button>
+        </form>
+
+        {/* Dòng link quay về đăng nhập */}
+        <div className="text-center text-xs text-muted mt-5 pt-1">
+          <span>Đã có tài khoản? </span>
+          <button
+            type="button"
+            onClick={onGoToLogin}
+            disabled={isSubmitting}
+            className="text-accent font-serif font-bold hover:underline cursor-pointer ml-1"
+          >
+            Đăng nhập ngay →
+          </button>
+        </div>
+
+        {/* Châm ngôn thiền định tinh tế dưới đáy thẻ */}
+        <div className="mt-4 pt-3 border-t border-line text-center">
+          <p className="font-serif italic text-[11px] text-subtle tracking-wide">
+            "Một niệm an lành • Muôn duyên cát tường"
+          </p>
+        </div>
       </div>
     </div>
   );
