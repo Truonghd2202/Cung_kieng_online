@@ -333,6 +333,13 @@ export default function App() {
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(initialUser);
   const [pendingSave, setPendingSave] = useState<PendingSave | null>(null);
+  const [isLoginImmersive, setIsLoginImmersive] = useState(false);
+
+  useEffect(() => {
+    if (screen !== "login") {
+      setIsLoginImmersive(false);
+    }
+  }, [screen]);
 
   // Lưu và đồng bộ chủ đề yêu thích theo từng tài khoản
   const [selectedTopics, setSelectedTopics] = useState<string[]>(initialSession.topics);
@@ -878,20 +885,22 @@ export default function App() {
     : false;
 
   return (
-    <div className={`app-shell ${dark ? "dark" : ""}`}>
-      {/* Universal Header */}
-      <AppHeader
-        currentScreen={screen}
-        onNavigate={navigateTo}
-        dark={dark}
-        onToggleDark={() => setDark(!dark)}
-        onLoginClick={() => navigateTo("login")}
-        user={currentUser}
-        onLogout={handleLogout}
-      />
+    <div className={`app-shell ${dark ? "dark" : ""} ${["login", "register", "forgot"].includes(screen) ? "lg:h-screen lg:max-h-screen lg:overflow-hidden" : ""}`}>
+      {/* Universal Header - tự động ẩn khi ấn đăng nhập tại LoginScreen */}
+      {!isLoginImmersive && (
+        <AppHeader
+          currentScreen={screen}
+          onNavigate={navigateTo}
+          dark={dark}
+          onToggleDark={() => setDark(!dark)}
+          onLoginClick={() => navigateTo("login")}
+          user={currentUser}
+          onLogout={handleLogout}
+        />
+      )}
 
       {/* Screen Router */}
-      <div className="app-screen-outlet">
+      <div className={`app-screen-outlet ${["login", "register", "forgot"].includes(screen) ? "flex-1 min-h-0 lg:overflow-hidden" : ""}`}>
         <Suspense fallback={<div className="page-container max-w-7xl text-sm text-muted" role="status">Đang mở nội dung…</div>}>
         {screen === "guest" && (
           <GuestScreen
@@ -1268,6 +1277,7 @@ export default function App() {
             onSuccess={handleSimulatedLogin}
             onGoToRegister={() => navigateTo("register")}
             onGoToForgotPassword={() => navigateTo("forgot")}
+            onImmersiveChange={setIsLoginImmersive}
             pendingSignalMood={
               pendingSave?.type === "signal"
                 ? `Tín hiệu "${pendingSave.item.mood}"`
@@ -1283,7 +1293,10 @@ export default function App() {
         {screen === "register" && (
           <RegisterScreen
             onBack={() => navigateTo("login")}
-            onSuccess={handleSimulatedLogin}
+            onSuccess={() => {
+              // Đăng ký thành công -> tự chuyển qua trang Đăng nhập (không cắm nhang)
+              navigateTo("login");
+            }}
             onGoToLogin={() => navigateTo("login")}
             pendingSignalMood={
               pendingSave?.type === "signal"
@@ -1442,8 +1455,8 @@ export default function App() {
         </Suspense>
       </div>
 
-      {/* Universal Footer - Ẩn trên màn Đăng nhập theo yêu cầu */}
-      {screen !== "login" && <AppFooter onNavigate={navigateTo} />}
+      {/* Universal Footer - Ẩn trên các màn Auth (login, register, forgot) */}
+      {!["login", "register", "forgot"].includes(screen) && <AppFooter onNavigate={navigateTo} />}
     </div>
   );
 }
