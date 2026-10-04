@@ -20,6 +20,7 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
+import { AppDialog } from "../components/AppDialog";
 import {
   CalendarEventType,
   CalendarEventItem,
@@ -67,6 +68,8 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   const [showAddModal, setShowAddModal] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState("");
   const [newNoteDesc, setNewNoteDesc] = useState("");
+  const [noteSaveError, setNoteSaveError] = useState("");
+  const [noteDeleteError, setNoteDeleteError] = useState("");
 
   // Dữ liệu "Ngày tôi lưu": nạp trực tiếp theo tài khoản riêng biệt
   const [personalNotes, setPersonalNotes] = useState<CalendarEventItem[]>(() =>
@@ -149,44 +152,91 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
     setSelectedDay(17);
   };
 
-  const handleAddPersonalNote = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newNoteTitle.trim()) return;
+  const handleAddPersonalNote = (
+    event: React.FormEvent
+  ) => {
+    event.preventDefault();
+    setNoteSaveError("");
 
-    const lunarInfo = getReliableLunarDate(selectedDay, selectedMonth, selectedYear);
-    const lunarStr = lunarInfo
+    const cleanTitle = newNoteTitle.trim();
+
+    if (!cleanTitle) {
+      setNoteSaveError(
+        "Bạn hãy nhập tên ngày hoặc việc muốn ghi nhớ."
+      );
+      return;
+    }
+
+    const lunarInfo = getReliableLunarDate(
+      selectedDay,
+      selectedMonth,
+      selectedYear
+    );
+
+    const lunarDate = lunarInfo
       ? `Ngày ${lunarInfo.lunarDay}/${lunarInfo.lunarMonth} Âm lịch (${lunarInfo.canChiYear})`
       : "Dấu mốc tự lưu";
 
     const newNote: CalendarEventItem = {
-      id: `personal-${Date.now()}`,
+      id: crypto.randomUUID(),
       day: selectedDay,
       month: selectedMonth,
       year: selectedYear,
       type: "personal",
       typeLabel: "Ghi chú của tôi",
       region: "Cá nhân",
-      title: newNoteTitle.trim(),
-      shortDesc: newNoteDesc.trim() || "Dấu mốc nếp nhà bạn ghi nhớ cho riêng mình.",
-      lunarDate: lunarStr,
+      title: cleanTitle,
+      shortDesc:
+        newNoteDesc.trim() ||
+        "Dấu mốc nếp nhà bạn ghi nhớ cho riêng mình.",
+      lunarDate,
     };
 
-    setPersonalNotes((prev) => {
-      const updated = [newNote, ...prev];
-      saveCalendarPersonalNotes(currentUserEmail, updated);
-      return updated;
-    });
+    const updatedNotes = [
+      newNote,
+      ...personalNotes,
+    ];
+
+    const saved = saveCalendarPersonalNotes(
+      currentUserEmail,
+      updatedNotes
+    );
+
+    if (!saved) {
+      setNoteSaveError(
+        "Chưa lưu được ghi chú trên trình duyệt này. Nội dung bạn nhập vẫn được giữ; hãy thử lại."
+      );
+      return;
+    }
+
+    // Chỉ cập nhật màn hình sau khi lưu thành công.
+    setPersonalNotes(updatedNotes);
     setNewNoteTitle("");
     setNewNoteDesc("");
+    setNoteSaveError("");
     setShowAddModal(false);
   };
 
   const handleDeleteNote = (noteId: string) => {
-    setPersonalNotes((prev) => {
-      const updated = prev.filter((n) => n.id !== noteId);
-      saveCalendarPersonalNotes(currentUserEmail, updated);
-      return updated;
-    });
+    setNoteDeleteError("");
+
+    const updatedNotes = personalNotes.filter(
+      (note) => note.id !== noteId
+    );
+
+    const saved = saveCalendarPersonalNotes(
+      currentUserEmail,
+      updatedNotes
+    );
+
+    if (!saved) {
+      setNoteDeleteError(
+        "Chưa xóa được ghi chú. Nội dung vẫn được giữ nguyên; hãy thử lại."
+      );
+      return;
+    }
+
+    setPersonalNotes(updatedNotes);
   };
 
   // Các sự kiện hiển thị cho ngày được chọn (hoặc toàn bộ danh sách khi chọn tab "Ngày tôi lưu")
@@ -319,6 +369,15 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   return (
     <div className="screen-shell">
       <main className="page-container max-w-7xl">
+        {noteDeleteError && (
+          <p
+            role="alert"
+            className="mb-5 rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm leading-relaxed text-danger"
+          >
+            {noteDeleteError}
+          </p>
+        )}
+
         {/* Top Breadcrumb & Status Ribbon */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-muted">
           <div className="flex items-center gap-2">
@@ -799,75 +858,96 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
 
         {/* Modal: Thêm ngày lưu riêng */}
         {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-            <Card className="max-w-md w-full p-6 rounded-card bg-surface border border-line shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-line">
-                <h3 className="font-display font-bold text-lg text-ink">
-                  Thêm ghi chú ngày {selectedDay}/{selectedMonth}/{selectedYear}
-                </h3>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="w-7 h-7 rounded-full text-xs text-muted hover:text-ink flex items-center justify-center cursor-pointer"
+          <AppDialog
+            labelledBy="calendar-note-dialog-title"
+            onClose={() => {
+              setShowAddModal(false);
+              setNoteSaveError("");
+            }}
+          >
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-line">
+              <h3 id="calendar-note-dialog-title" className="font-display font-bold text-lg text-ink">
+                Thêm ghi chú ngày {selectedDay}/{selectedMonth}/{selectedYear}
+              </h3>
+              <button
+                type="button"
+                aria-label="Đóng hộp thoại thêm ghi chú"
+                onClick={() => {
+                  setShowAddModal(false);
+                  setNoteSaveError("");
+                }}
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-surface-soft hover:text-ink"
+              >
+                <span aria-hidden="true">✕</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleAddPersonalNote} className="space-y-4">
+              {noteSaveError && (
+                <p
+                  role="alert"
+                  className="rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm leading-relaxed text-danger"
                 >
-                  ✕
-                </button>
+                  {noteSaveError}
+                </p>
+              )}
+              <div>
+                <label htmlFor="calendar-note-title" className="block text-xs font-semibold text-ink mb-1.5">
+                  Tiêu đề dấu mốc / sự kiện nếp nhà:
+                </label>
+                <input
+                  id="calendar-note-title"
+                  type="text"
+                  autoFocus
+                  required
+                  value={newNoteTitle}
+                  onChange={(e) => setNewNoteTitle(e.target.value)}
+                  placeholder="Ví dụ: Giỗ cụ cố, Lễ mừng thọ, Họp mặt gia đình..."
+                  className="w-full min-h-11 px-3.5 py-2.5 rounded-control border border-line text-base text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-accent bg-surface"
+                />
               </div>
 
-              <form onSubmit={handleAddPersonalNote} className="space-y-4">
-                <div>
-                  <label htmlFor="calendar-note-title" className="block text-xs font-semibold text-ink mb-1.5">
-                    Tiêu đề dấu mốc / sự kiện nếp nhà:
-                  </label>
-                  <input
-                    id="calendar-note-title"
-                    type="text"
-                    required
-                    value={newNoteTitle}
-                    onChange={(e) => setNewNoteTitle(e.target.value)}
-                    placeholder="Ví dụ: Giỗ cụ cố, Lễ mừng thọ, Họp mặt gia đình..."
-                    className="w-full min-h-11 px-3.5 py-2.5 rounded-control border border-line text-base text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-accent bg-surface"
-                  />
-                </div>
+              <div>
+                <label htmlFor="calendar-note-description" className="block text-xs font-semibold text-ink mb-1.5">
+                  Ghi chú chi tiết (nếu có):
+                </label>
+                <textarea
+                  id="calendar-note-description"
+                  rows={3}
+                  value={newNoteDesc}
+                  onChange={(e) => setNewNoteDesc(e.target.value)}
+                  placeholder="Chuẩn bị lễ vật mộc mạc, dặn dò các thành viên trong gia đình..."
+                  className="w-full px-3.5 py-2.5 rounded-control border border-line text-base text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-accent bg-surface resize-none"
+                />
+              </div>
 
-                <div>
-                  <label htmlFor="calendar-note-description" className="block text-xs font-semibold text-ink mb-1.5">
-                    Ghi chú chi tiết (nếu có):
-                  </label>
-                  <textarea
-                    id="calendar-note-description"
-                    rows={3}
-                    value={newNoteDesc}
-                    onChange={(e) => setNewNoteDesc(e.target.value)}
-                    placeholder="Chuẩn bị lễ vật mộc mạc, dặn dò các thành viên trong gia đình..."
-                    className="w-full px-3.5 py-2.5 rounded-control border border-line text-base text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-accent bg-surface resize-none"
-                  />
-                </div>
+              <div className="p-3 rounded-xl bg-surface border border-line text-xs text-muted leading-relaxed">
+                ✦ Dữ liệu ghi chú được lưu trữ cục bộ trên máy của bạn và gắn với ngày {selectedDay}/{selectedMonth}/{selectedYear}.
+              </div>
 
-                <div className="p-3 rounded-xl bg-surface border border-line text-xs text-muted leading-relaxed">
-                  ✦ Dữ liệu ghi chú được lưu trữ cục bộ trên máy của bạn và gắn với ngày {selectedDay}/{selectedMonth}/{selectedYear}.
-                </div>
-
-                <div className="flex items-center justify-end gap-2 pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowAddModal(false)}
-                    className="border-line text-xs"
-                  >
-                    Hủy bỏ
-                  </Button>
-                  <Button
-                    type="submit"
-                    size="sm"
-                    className="bg-action hover:bg-action text-white text-xs px-4"
-                  >
-                    Lưu vào lịch
-                  </Button>
-                </div>
-              </form>
-            </Card>
-          </div>
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setNoteSaveError("");
+                  }}
+                  className="border-line text-xs"
+                >
+                  Hủy bỏ
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="bg-action hover:bg-action text-white text-xs px-4"
+                >
+                  Lưu vào lịch
+                </Button>
+              </div>
+            </form>
+          </AppDialog>
         )}
       </main>
     </div>

@@ -3,24 +3,15 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
-  Sparkles,
   Lock,
-  Flame,
-  Check,
-  CheckCircle2,
   Trash2,
   Lightbulb,
-  ShieldCheck,
   ExternalLink,
-  RotateCcw,
   Flower2,
-  Home,
-  Waves,
-  Feather,
 } from "lucide-react";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Card } from "@/src/components/ui/card";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Card } from "../components/ui/card";
 
 export type WishTopic = "Bình an" | "Gia đình" | "Học tập" | "Công việc" | "Khác";
 export type WishMode = "journal" | "ephemeral";
@@ -30,7 +21,7 @@ interface WishScreenProps {
   onGoToDiary: () => void;
   onGoToHome: () => void;
   onGoToExplore: () => void;
-  onSaveJournal?: (text: string, topic: WishTopic) => boolean | void;
+  onSaveJournal?: (text: string, topic: WishTopic) => boolean;
   isLoggedIn?: boolean;
 }
 
@@ -62,14 +53,33 @@ export const WishScreen: React.FC<WishScreenProps> = ({
   const [content, setContent] = useState("");
   const [topic, setTopic] = useState<WishTopic>("Bình an");
   const [mode, setMode] = useState<WishMode>("journal");
-  const [isGentleAnimation, setIsGentleAnimation] = useState(true);
   const [hasActuallySaved, setHasActuallySaved] = useState(false);
   const [saveError, setSaveError] = useState("");
 
   const TOPICS: WishTopic[] = ["Bình an", "Gia đình", "Học tập", "Công việc", "Khác"];
 
   const handleApplySample = () => {
-    setContent(SAMPLE_WISHES[topic] || SAMPLE_WISHES["Bình an"]);
+    if (content.trim()) {
+      setSaveError(
+        "Ô viết đang có nội dung. Nếu muốn dùng mẫu, bạn hãy xóa nội dung trước."
+      );
+      return;
+    }
+
+    setContent(SAMPLE_WISHES[topic]);
+    setSaveError("");
+  };
+
+  const handleWriteAnother = () => {
+    setContent("");
+    setHasActuallySaved(false);
+    setSaveError("");
+    setViewState("form");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "auto",
+    });
   };
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -79,9 +89,25 @@ export const WishScreen: React.FC<WishScreenProps> = ({
     const cleanContent = content.trim();
     if (!cleanContent) return;
 
+    if (cleanContent.length > 1000) {
+      setSaveError("Lời gửi gắm tối đa 1000 ký tự.");
+      return;
+    }
+
     if (mode === "journal") {
-      const saved =
-        onSaveJournal?.(cleanContent, topic) === true;
+      if (!onSaveJournal) {
+        setSaveError("Chức năng lưu chưa sẵn sàng trong phiên này.");
+        return;
+      }
+
+      let saved = false;
+
+      try {
+        saved = onSaveJournal(cleanContent, topic) === true;
+      } catch {
+        setSaveError("Chưa lưu được lời gửi gắm. Bạn hãy thử lại.");
+        return;
+      }
 
       setHasActuallySaved(saved);
 
@@ -137,15 +163,12 @@ export const WishScreen: React.FC<WishScreenProps> = ({
             </div>
 
             {/* Main Header */}
-            <div className="text-center max-w-2xl mx-auto mb-10">
-              <h1 className="page-title mb-3">
-                Có điều gì bạn muốn gửi gắm hôm nay?
-              </h1>
-              <p className="text-sm sm:text-base text-ink leading-relaxed">
-                Đây là không gian tĩnh tại để bạn viết ra những nỗi niềm, ước nguyện hay tâm
-                sự đang chất chứa trong lòng. Như một bước tự lắng đọng và buông bớt âu lo –
-                không phải nghi thức bùa chú hay lời bảo đảm điều ước sẽ tự biến thành hiện
-                thực.
+            <div className="mx-auto mb-6 max-w-2xl text-center">
+              <h1 className="page-title mb-3">Lời gửi gắm</h1>
+
+              <p className="text-sm leading-relaxed text-muted sm:text-base">
+                Viết điều bạn đang nghĩ. Bạn có thể lưu để đọc lại
+                hoặc thả hoa đăng như một cách khép lại lần viết này.
               </p>
             </div>
 
@@ -157,10 +180,12 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                   {/* Card 1: Textarea Card */}
                   <Card className="p-6 rounded-card bg-surface border border-line shadow-xs">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2 font-bold text-base text-ink">
-                        <span>✏</span>
-                        <span>Điều bạn muốn viết</span>
-                      </div>
+                      <label
+                        htmlFor="wish-content"
+                        className="text-base font-semibold text-ink"
+                      >
+                        Điều bạn muốn viết
+                      </label>
 
                       <button
                         type="button"
@@ -172,33 +197,42 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                       </button>
                     </div>
 
-                    <p className="text-sm text-muted mb-3 leading-relaxed">
-                      Viết thật lòng với cảm xúc hiện tại. Không cần điền họ tên thật, địa chỉ
-                      hay bất kỳ thông tin cá nhân nhạy cảm nào.
+                    <p
+                      id="wish-content-help"
+                      className="mb-3 text-sm leading-relaxed text-muted"
+                    >
+                      Không cần viết thật hay. Tránh nhập thông tin cá nhân nhạy cảm.
                     </p>
 
                     <div className="relative mb-2">
                       <textarea
-                        rows={5}
+                        id="wish-content"
+                        rows={6}
                         required
                         maxLength={1000}
                         value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        placeholder="Hãy viết ra điều đang trăn trở hoặc ước mong trong lòng bạn..."
-                        className="w-full p-4 rounded-panel bg-surface/70 border border-line text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-1 focus:ring-accent leading-relaxed resize-none"
+                        onChange={(event) => {
+                          setContent(event.target.value);
+                          setSaveError("");
+                        }}
+                        aria-describedby="wish-content-help wish-content-count"
+                        placeholder="Hôm nay, mình muốn gửi gắm..."
+                        className="w-full resize-y rounded-panel border border-line bg-surface/70 p-4 text-base leading-relaxed text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-accent"
                       />
                     </div>
 
                     {/* Counter & Clear Button */}
                     <div className="flex items-center justify-between text-xs text-muted mb-5">
-                      <span>
-                        ⏱ {content.length} / 1000 ký tự{" "}
-                        <span className="italic">(Giới hạn vừa đủ cho một lần trải lòng)</span>
+                      <span id="wish-content-count" className="text-xs text-muted">
+                        {content.length}/1000 ký tự
                       </span>
 
                       <button
                         type="button"
-                        onClick={() => setContent("")}
+                        onClick={() => {
+                          setContent("");
+                          setSaveError("");
+                        }}
                         className="text-muted hover:text-accent flex items-center gap-1 cursor-pointer transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -233,100 +267,73 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                     </div>
                   </Card>
 
-                  {/* Card 2: Cách thức lưu giữ hay buông bỏ */}
-                  <div className="space-y-3">
-                    <h3 className="font-display font-bold text-lg text-ink">
-                      Cách thức lưu giữ hay buông bỏ
-                    </h3>
-                    <p className="text-sm text-muted">
-                      Lựa chọn hành vi dữ liệu phù hợp với cảm xúc và ý định của bạn:
-                    </p>
+                  <fieldset className="space-y-3">
+                    <legend className="text-base font-semibold text-ink">
+                      Bạn muốn giữ lại lời viết này thế nào?
+                    </legend>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Option 1: Lưu riêng vào nhật ký */}
-                      <Card
-                        onClick={() => setMode("journal")}
-                        className={`p-5 rounded-card cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
-                          mode === "journal"
-                            ? "bg-accent-soft border-accent ring-1 ring-accent/20"
-                            : "bg-surface border-line hover:border-line"
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">📜</span>
-                              <h4 className="font-bold text-sm sm:text-base text-ink">
-                                Lưu riêng vào nhật ký
-                              </h4>
-                            </div>
-                            <div
-                              className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                                mode === "journal"
-                                  ? "bg-action text-white"
-                                  : "border-2 border-line bg-surface text-transparent"
-                              }`}
-                            >
-                              <Check className="w-3 h-3 stroke-[3]" />
-                            </div>
-                          </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {(
+                        [
+                          {
+                            value: "journal",
+                            title: "Lưu để đọc lại",
+                            description: isLoggedIn
+                              ? "Lưu vào Góc của tôi trên trình duyệt này."
+                              : "Cần đăng nhập để lưu. Bản nháp chưa được giữ khi tải lại trang.",
+                          },
+                          {
+                            value: "ephemeral",
+                            title: "Thả hoa đăng",
+                            description:
+                              "Không lưu vào nhật ký. Nội dung được xóa khỏi ô viết khi bạn gửi.",
+                          },
+                        ] satisfies {
+                          value: WishMode;
+                          title: string;
+                          description: string;
+                        }[]
+                      ).map((option) => (
+                        <label
+                          key={option.value}
+                          className={`flex cursor-pointer items-start gap-3 rounded-card border p-4 transition-colors ${
+                            mode === option.value
+                              ? "border-accent bg-accent/5"
+                              : "border-line bg-surface hover:border-accent/50"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="wish-mode"
+                            value={option.value}
+                            checked={mode === option.value}
+                            onChange={() => {
+                              setMode(option.value);
+                              setSaveError("");
+                            }}
+                            className="mt-1 h-4 w-4 shrink-0 accent-accent"
+                          />
 
-                          <p className="text-sm text-ink leading-relaxed mb-4">
-                            Nội dung được lưu trong Góc của tôi trên trình duyệt này.
-                            Bản thử nghiệm chưa có cơ chế mã hóa hoặc đồng bộ tài khoản
-                            qua máy chủ.
-                          </p>
-                        </div>
+                          <span>
+                            <span className="block text-sm font-semibold text-ink">
+                              {option.title}
+                            </span>
 
-                        <div className="p-2.5 rounded-xl bg-surface border border-line text-xs text-muted leading-relaxed">
-                          ⓘ {isLoggedIn
-                            ? "Bạn có thể lưu nội dung trên trình duyệt này."
-                            : "Bạn sẽ được chuyển đến đăng nhập để lưu. Nội dung chờ lưu chưa được giữ khi tải lại trang."}
-                        </div>
-                      </Card>
-
-                      {/* Option 2: Gửi đi dưới dạng biểu tượng */}
-                      <Card
-                        onClick={() => setMode("ephemeral")}
-                        className={`p-5 rounded-card cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
-                          mode === "ephemeral"
-                            ? "bg-accent-soft border-accent ring-1 ring-accent/20"
-                            : "bg-surface border-line hover:border-line"
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">🏮</span>
-                              <h4 className="font-bold text-sm sm:text-base text-ink">
-                                Gửi đi dưới dạng biểu tượng
-                              </h4>
-                            </div>
-                            <div
-                              className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                                mode === "ephemeral"
-                                  ? "bg-action text-white"
-                                  : "border-2 border-line bg-surface text-transparent"
-                              }`}
-                            >
-                              <Check className="w-3 h-3 stroke-[3]" />
-                            </div>
-                          </div>
-
-                          <p className="text-sm text-ink leading-relaxed mb-4">
-                            Tượng trưng cho sự buông bỏ ưu tư vào dòng nước. Hệ thống chỉ kích
-                            hoạt hiệu ứng hoa đăng số nhẹ nhàng; toàn bộ câu chữ bạn vừa viết
-                            sẽ KHÔNG được lưu trữ trong nhật ký và tuyệt đối KHÔNG công khai.
-                          </p>
-                        </div>
-
-                        <div className="p-2.5 rounded-xl bg-surface border border-line text-xs text-accent leading-relaxed">
-                          🔒 Cam kết: Không lưu trữ nội dung văn bản sau khi gửi. Dữ liệu xóa
-                          ngay khi hoa đăng trôi xa.
-                        </div>
-                      </Card>
+                            <span className="mt-1 block text-sm leading-relaxed text-muted">
+                              {option.description}
+                            </span>
+                          </span>
+                        </label>
+                      ))}
                     </div>
-                  </div>
+
+                    {mode === "journal" && (
+                      <p className="text-xs leading-relaxed text-muted">
+                        Bản thử nghiệm lưu dữ liệu trên thiết bị, chưa có đồng bộ
+                        qua máy chủ hoặc mã hóa nội dung.
+                      </p>
+                    )}
+                  </fieldset>
 
                   {saveError && (
                     <p role="alert" className="text-sm text-danger">
@@ -370,102 +377,51 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                   </div>
                 </form>
 
-                {/* Assurance Callout */}
-                <div className="p-4 rounded-panel bg-surface border border-line flex items-start gap-3 text-xs text-ink leading-relaxed">
-                  <ShieldCheck className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-accent block mb-0.5">
-                      KHÔNG GIAN AN TỊNH THUẦN KHIẾT
-                    </strong>
-                    Tại Tin Lắm Tâm Linh, tuyệt đối không có bảng điều ước công khai, không nút
-                    chia sẻ câu tương tác, không thương mại hóa nỗi buồn hay hứa hẹn phép màu
-                    tức thì.
-                  </div>
-                </div>
+                <p className="text-xs leading-relaxed text-muted">
+                  Lời gửi gắm không được đăng lên bảng công khai trong trải nghiệm này.
+                  Bạn quyết định lưu lại hoặc thả hoa đăng trước khi gửi.
+                </p>
               </div>
 
-              {/* Right Column: Cultural Companion (5 columns) */}
-              <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-24 self-start">
-                {/* Visual Card: Viết để tháo gỡ, không phải để níu giữ */}
-                <Card className="rounded-card overflow-hidden bg-surface border border-line shadow-xs">
-                  <div className="relative h-48 overflow-hidden bg-surface">
-                    <img
-                      src="/images/relic_box.jpg"
-                      alt="Gửi gắm điều ước"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-                    <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-surface/95 text-xs font-semibold text-accent">
-                      Góc nhìn
-                    </div>
-                    <div className="absolute top-3 right-3 text-xs font-serif italic text-white/90">
-                      Hồn Việt Tĩnh Tại
-                    </div>
-                  </div>
+              {/* Writing companion */}
+              <aside className="self-start lg:col-span-5 lg:sticky lg:top-24">
+                <Card className="overflow-hidden rounded-card border border-line bg-surface shadow-xs">
+                  <img
+                    src="/images/relic_box.jpg"
+                    alt=""
+                    loading="lazy"
+                    className="h-40 w-full object-cover sm:h-48"
+                  />
 
-                  <div className="p-6">
-                    <h3 className="font-display font-bold text-lg text-ink mb-2 leading-snug">
-                      Viết để tháo gỡ, không phải để níu giữ
-                    </h3>
-                    <p className="text-sm text-ink leading-relaxed">
-                      Tổ tiên người Việt coi trọng việc thuận lẽ tự nhiên. Gửi gắm một ý nghĩ
-                      không phải để nài ép tương lai phải diễn ra như ý, mà là để tâm trí được
-                      nhẹ lòng đón nhận mọi sự bằng một thái độ an nhiên.
+                  <div className="space-y-4 p-5">
+                    <h2 className="text-lg font-semibold text-ink">
+                      Một khoảng dừng cho bạn
+                    </h2>
+
+                    <p className="text-sm leading-relaxed text-muted">
+                      Bạn có thể bắt đầu bằng một câu đơn giản:
+                      “Điều mình đang cần lúc này là…”
+                    </p>
+
+                    <details className="border-t border-line pt-3">
+                      <summary className="cursor-pointer py-2 text-sm font-medium text-ink">
+                        Chưa biết viết gì?
+                      </summary>
+
+                      <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-relaxed text-muted">
+                        <li>Điều gì khiến mình bận lòng hôm nay?</li>
+                        <li>Mình muốn nói điều gì với người thân?</li>
+                        <li>Một việc nhỏ mình có thể làm sau khi viết là gì?</li>
+                      </ul>
+                    </details>
+
+                    <p className="border-t border-line pt-3 text-xs leading-relaxed text-muted">
+                      Hoa đăng trong màn này là hình ảnh tượng trưng.
+                      Trải nghiệm không bảo đảm điều ước sẽ thành hiện thực.
                     </p>
                   </div>
                 </Card>
-
-                {/* Card 2: Nhịp thở tâm trí hôm nay */}
-                <Card className="py-5 border-0 border-t border-line bg-transparent rounded-none">
-                  <div className="flex items-center justify-between mb-3 text-xs">
-                    <span className="font-bold uppercase tracking-wider text-ink flex items-center gap-1.5">
-                      <span>〰</span>
-                      <span>Nhịp thở tâm trí hôm nay</span>
-                    </span>
-                    <Badge variant="terracotta" className="text-xs py-0 px-2">
-                      An định
-                    </Badge>
-                  </div>
-
-                  {/* Soft wave curve representation */}
-                  <div className="py-2 mb-2">
-                    <svg
-                      className="w-full h-10 text-accent"
-                      viewBox="0 0 200 40"
-                      fill="none"
-                    >
-                      <path
-                        d="M0 25 C40 10, 60 10, 100 25 C140 40, 160 10, 200 25"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="opacity-70"
-                      />
-                      <circle cx="100" cy="25" r="4" fill="#9e3b2e" />
-                    </svg>
-                    <div className="flex items-center justify-between text-xs text-muted px-1">
-                      <span>Bồn chồn ban sáng</span>
-                      <span>Tĩnh lặng lúc này</span>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-line text-xs text-muted italic text-center">
-                    “Nước đọng lại thì trong, tâm dừng lại thì tỏ.”
-                  </div>
-                </Card>
-
-                {/* Card 3: Biểu tượng Hoa đăng số */}
-                <Card className="p-5 rounded-card bg-surface/70 border border-line shadow-xs">
-                  <div className="text-xs font-bold uppercase tracking-wider text-accent mb-1.5 flex items-center gap-1.5">
-                    <span>🏮</span>
-                    <span>Biểu tượng Hoa đăng số</span>
-                  </div>
-                  <p className="text-sm text-ink leading-relaxed">
-                    Ngọn nến trên đóa sen trôi theo con nước vốn là cử chỉ nguyện cầu an bình
-                    cổ truyền. Thay vì thả xốp nến thật gây ô nhiễm môi trường sông ngòi, hoa
-                    đăng số gói ghém lời chúc của bạn thành năng lượng tích cực lan tỏa vô hình.
-                  </p>
-                </Card>
-              </div>
+              </aside>
             </div>
 
             {/* Bottom Privacy Banner */}
@@ -495,26 +451,39 @@ export const WishScreen: React.FC<WishScreenProps> = ({
           <div>
             {/* Top Bar with Variant Switchers */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-muted">
-              <div className="flex items-center gap-2">
+              <nav
+                aria-label="Đường dẫn"
+                className="flex flex-wrap items-center gap-2"
+              >
                 <button
-                  onClick={() => setViewState("form")}
-                  className="hover:text-accent cursor-pointer"
+                  type="button"
+                  onClick={onBackToExperience}
+                  className="min-h-11 hover:text-accent"
                 >
                   Trải nghiệm
                 </button>
-                <span>/</span>
-                <span className="hover:text-accent cursor-pointer" onClick={() => setViewState("form")}>
-                  Gửi gắm điều ước
+
+                <span aria-hidden="true">/</span>
+
+                <button
+                  type="button"
+                  onClick={handleWriteAnother}
+                  className="min-h-11 hover:text-accent"
+                >
+                  Lời gửi gắm
+                </button>
+
+                <span aria-hidden="true">/</span>
+
+                <span aria-current="page" className="font-semibold text-accent">
+                  Đã lưu
                 </span>
-                <span>/</span>
-                <span className="text-accent font-semibold">Xác nhận lưu giữ</span>
-              </div>
+              </nav>
 
               <div className="flex items-center gap-3">
                 <span className="px-3 py-1 rounded-full bg-action text-white font-semibold text-xs">
                   ● Lưu vào nhật ký cá nhân
                 </span>
-                <span className="text-xs text-muted">Chuyển động: Êm ái</span>
               </div>
             </div>
 
@@ -537,8 +506,8 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                 Đã lưu vào Góc của tôi
               </h1>
               <p className="text-sm text-muted max-w-xl mx-auto leading-relaxed">
-                Khoảng lặng này đã được cất giữ an toàn. Chỉ một mình bạn có thể mở lại khi
-                lòng cần một nhịp dừng chân.
+                Lời gửi gắm đã được lưu vào Góc của tôi trên trình duyệt này.
+                Bạn có thể mở lại để đọc hoặc xóa khi muốn.
               </p>
             </div>
 
@@ -554,8 +523,9 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                     <span className="text-xs text-accent">🛡</span>
                   </h4>
                   <p className="text-sm text-muted leading-relaxed">
-                    Nội dung bản demo được lưu trên trình duyệt này và chỉ xuất hiện trong mục <strong>Góc của tôi</strong>.
-                    Chưa kết nối máy chủ hay lưu trữ đám mây.
+                    Nội dung được lưu theo hồ sơ demo trên trình duyệt này.
+                    Chưa có mã hóa nội dung hoặc đồng bộ qua máy chủ.
+                    Nếu xóa dữ liệu trang web trong trình duyệt, nội dung đã lưu có thể mất.
                   </p>
                 </div>
               </div>
@@ -571,10 +541,11 @@ export const WishScreen: React.FC<WishScreenProps> = ({
 
                 <div className="p-3.5 rounded-panel bg-surface border border-line">
                   <div className="text-xs text-muted uppercase mb-0.5">
-                    Thời khắc gửi gắm
+                    Nơi lưu
                   </div>
-                  <div className="font-semibold text-xs text-ink">
-                    Hôm nay, một chiều tĩnh lặng
+
+                  <div className="font-semibold text-sm text-ink">
+                    Góc của tôi
                   </div>
                 </div>
 
@@ -583,7 +554,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                     Trạng thái
                   </div>
                   <div className="font-semibold text-xs text-ink">
-                    {content.length} ký tự trong lời gửi gắm
+                    {content.trim().length} ký tự đã lưu
                   </div>
                 </div>
               </div>
@@ -619,83 +590,22 @@ export const WishScreen: React.FC<WishScreenProps> = ({
               <Button
                 variant="ghost"
                 size="default"
-                onClick={() => {
-                  setContent("");
-                  setHasActuallySaved(false);
-                  setViewState("form");
-                }}
+                onClick={handleWriteAnother}
                 className="text-xs text-muted hover:text-accent"
               >
                 Viết điều khác nếu cần
               </Button>
             </div>
 
-            {/* 3 Step Guidance Cards */}
-            <div className="max-w-3xl mx-auto mb-10">
-              <div className="text-center text-xs font-bold uppercase tracking-wider text-accent mb-1">
-                TỪNG BƯỚC GÌN GIỮ
-              </div>
-              <h3 className="font-display font-bold text-xl text-ink text-center mb-6">
-                Điều gì diễn ra tiếp theo với ước nguyện?
-              </h3>
+            <div className="max-w-2xl mx-auto mb-8 rounded-card border border-line bg-surface p-5">
+              <h2 className="mb-2 text-base font-semibold text-ink">
+                Khi muốn đọc lại
+              </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <Card className="py-5 border-0 border-t border-line bg-transparent rounded-none">
-                  <div className="w-6 h-6 rounded-full bg-surface text-accent text-xs font-bold flex items-center justify-center mb-3">
-                    1
-                  </div>
-                  <h4 className="font-display font-bold text-sm text-ink mb-1">
-                    Nằm yên trong sổ
-                  </h4>
-                  <p className="text-sm text-muted leading-relaxed">
-                    Ước nguyện được bảo lưu nguyên vẹn theo dòng thời gian mà không bị đẩy
-                    thông báo hay làm phiền nhịp sống.
-                  </p>
-                </Card>
-
-                <Card className="py-5 border-0 border-t border-line bg-transparent rounded-none">
-                  <div className="w-6 h-6 rounded-full bg-surface text-accent text-xs font-bold flex items-center justify-center mb-3">
-                    2
-                  </div>
-                  <h4 className="font-display font-bold text-sm text-ink mb-1">
-                    Chiêm nghiệm khi tròn tháng
-                  </h4>
-                  <p className="text-sm text-muted leading-relaxed">
-                    Vào ngày rằm hoặc đầu tháng âm lịch, bạn có thể tự mở lại để nhìn nhận sự
-                    chuyển hóa trong tâm thức.
-                  </p>
-                </Card>
-
-                <Card className="py-5 border-0 border-t border-line bg-transparent rounded-none">
-                  <div className="w-6 h-6 rounded-full bg-surface text-accent text-xs font-bold flex items-center justify-center mb-3">
-                    3
-                  </div>
-                  <h4 className="font-display font-bold text-sm text-ink mb-1">
-                    Tự do hóa giải & lưu giữ
-                  </h4>
-                  <p className="text-sm text-muted leading-relaxed">
-                    Bạn có toàn quyền "hóa quẻ" (xóa vĩnh viễn) hoặc đóng dấu hoàn thành bất
-                    cứ lúc nào trong trang cá nhân.
-                  </p>
-                </Card>
-              </div>
-            </div>
-
-            {/* Bottom Assurance */}
-            <div className="max-w-3xl mx-auto p-4 rounded-panel bg-surface border border-line flex items-center justify-between gap-3 text-xs text-muted">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-accent flex-shrink-0" />
-                <span>
-                  Cam kết bảo mật & tôn trọng tâm trí: Tin Lắm Tâm Linh không thương mại hóa
-                  nỗi niềm riêng tư, không phân tích bán quảng cáo.
-                </span>
-              </div>
-              <button
-                onClick={() => alert("Toàn bộ dữ liệu được quản lý minh bạch.")}
-                className="text-accent font-semibold hover:underline flex-shrink-0 cursor-pointer"
-              >
-                Tìm hiểu chuẩn mực đạo đức →
-              </button>
+              <p className="text-sm leading-relaxed text-muted">
+                Mở Góc của tôi và chọn mục Điều ước & Lời tri ân.
+                Bạn có thể xem nội dung, đánh dấu yêu thích hoặc xóa bản ghi.
+              </p>
             </div>
           </div>
         )}
@@ -707,26 +617,39 @@ export const WishScreen: React.FC<WishScreenProps> = ({
           <div>
             {/* Top Bar with Variant Switchers */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-muted">
-              <div className="flex items-center gap-2">
+              <nav
+                aria-label="Đường dẫn"
+                className="flex flex-wrap items-center gap-2"
+              >
                 <button
-                  onClick={() => setViewState("form")}
-                  className="hover:text-accent cursor-pointer"
+                  type="button"
+                  onClick={onBackToExperience}
+                  className="min-h-11 hover:text-accent"
                 >
                   Trải nghiệm
                 </button>
-                <span>/</span>
-                <span className="hover:text-accent cursor-pointer" onClick={() => setViewState("form")}>
-                  Gửi gắm điều ước
+
+                <span aria-hidden="true">/</span>
+
+                <button
+                  type="button"
+                  onClick={handleWriteAnother}
+                  className="min-h-11 hover:text-accent"
+                >
+                  Lời gửi gắm
+                </button>
+
+                <span aria-hidden="true">/</span>
+
+                <span aria-current="page" className="font-semibold text-accent">
+                  Đã thả hoa đăng
                 </span>
-                <span>/</span>
-                <span className="text-accent font-semibold">Buông bỏ ưu tư</span>
-              </div>
+              </nav>
 
               <div className="flex items-center gap-3">
                 <span className="px-3 py-1 rounded-full bg-action text-white font-semibold text-xs">
                   ● Thả trôi an nhiên
                 </span>
-                <span className="text-xs text-muted">Chuyển động êm dịu: Bật</span>
               </div>
             </div>
 
@@ -736,12 +659,12 @@ export const WishScreen: React.FC<WishScreenProps> = ({
               </span>
 
               {/* Floating Lantern Motif */}
-              <div className="w-20 h-20 mx-auto rounded-card bg-surface-soft border-2 border-line flex items-center justify-center text-accent shadow-md mb-2 relative animate-pulse">
+              <div className="w-20 h-20 mx-auto rounded-card bg-surface-soft border-2 border-line flex items-center justify-center text-accent shadow-md mb-2 relative animate-pulse motion-reduce:animate-none">
                 <span className="text-3xl">🏮</span>
               </div>
 
               <div className="text-xs uppercase font-serif tracking-widest text-muted mb-4">
-                THỦY ĐĂNG SỐ HÓA • TIÊU DUNG AN NHIÊN
+                HOA ĐĂNG TƯỢNG TRƯNG
               </div>
 
               <h1 className="page-title mb-3">
@@ -765,7 +688,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                       LỜI NHẮC VỀ SỰ BUÔNG BỎ
                     </span>
                     <Badge variant="secondary" className="text-xs bg-surface">
-                      Không lưu trữ
+                      Không lưu vào nhật ký
                     </Badge>
                   </div>
 
@@ -773,9 +696,8 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                     Nội dung vừa viết không được lưu và không thể xem lại.
                   </h4>
                   <p className="text-sm text-muted leading-relaxed">
-                    Toàn bộ câu chữ đã được xóa hoàn toàn khỏi bộ nhớ tạm ngay khoảnh khắc
-                    bạn gửi đi. Không có bản lưu nhật ký, không gửi tới bất kỳ ai, và không
-                    hiển thị ở bất cứ nơi nào trong cõi mạng này.
+                    Nội dung đã được xóa khỏi ô viết và không được thêm vào nhật ký.
+                    Bạn có thể bắt đầu một lời gửi gắm mới.
                   </p>
                 </div>
               </div>
@@ -801,10 +723,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
               <Button
                 variant="outline"
                 size="default"
-                onClick={() => {
-                  setContent("");
-                  setViewState("form");
-                }}
+                onClick={handleWriteAnother}
                 className="text-xs text-muted border-line"
               >
                 Viết điều khác
@@ -821,61 +740,15 @@ export const WishScreen: React.FC<WishScreenProps> = ({
               )}
             </div>
 
-            {/* 3 Philosophy Guidance Cards */}
-            <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
-              <Card className="py-5 border-0 border-t border-line bg-transparent rounded-none">
-                <div className="text-xs font-bold text-accent mb-1.5 flex items-center gap-1.5">
-                  <span>🏮</span>
-                  <span>Vạn vật thuận tự nhiên</span>
-                </div>
-                <p className="text-sm text-muted leading-relaxed mb-3">
-                  Biểu tượng hoa đăng số lấy cảm hứng từ tục thả đèn hoa trên sông Hương
-                  (Huế) và sông Hoài (Hội An), biểu trưng cho sự tiễn đưa điều cũ để bừng
-                  sáng tâm thức mới.
-                </p>
-                <button
-                  onClick={onGoToExplore}
-                  className="text-xs font-semibold text-accent hover:underline cursor-pointer"
-                >
-                  TẬP TỤC CỔ TRUYỀN ↗
-                </button>
-              </Card>
+            <div className="max-w-2xl mx-auto mb-8 rounded-card border border-line bg-surface p-5">
+              <h2 className="mb-2 text-base font-semibold text-ink">
+                Một khoảng dừng nhỏ
+              </h2>
 
-              <Card className="py-5 border-0 border-t border-line bg-transparent rounded-none">
-                <div className="text-xs font-bold text-accent mb-1.5 flex items-center gap-1.5">
-                  <span>🛡</span>
-                  <span>Minh bạch lưu trữ bản demo</span>
-                </div>
-                <p className="text-sm text-muted leading-relaxed mb-3">
-                  Nội dung bản demo được lưu trên trình duyệt này. Chế độ gửi đi thả trôi sẽ tiêu hủy ngay trên client, không gửi lên bất kỳ máy chủ nào.
-                </p>
-                <span className="text-xs font-semibold text-accent">
-                  CAM KẾT MINH BẠCH ⓘ
-                </span>
-              </Card>
-
-              <Card className="py-5 border-0 border-t border-line bg-transparent rounded-none">
-                <div className="text-xs font-bold text-accent mb-1.5 flex items-center gap-1.5">
-                  <span>🍵</span>
-                  <span>Gợi ý tĩnh tại đêm nay</span>
-                </div>
-                <p className="text-sm text-muted leading-relaxed mb-3">
-                  Uống một tách trà gừng ấm, ngắt các thông báo mạng xã hội khoảng 30 phút
-                  trước giờ ngủ và hít thở nhịp nhàng 4 thì để giữ trọn sự nhẹ nhõm này.
-                </p>
-                <span className="text-xs font-semibold text-accent">
-                  HÀNH THIỀN ĐƠN GIẢN ⓘ
-                </span>
-              </Card>
-            </div>
-
-            {/* Bottom Callout */}
-            <div className="max-w-3xl mx-auto p-4 rounded-panel bg-surface border border-line text-center text-xs text-muted leading-relaxed">
-              <strong className="text-accent block mb-0.5">
-                Tin Lắm Tâm Linh • Không gian thanh tịnh thuần khiết
-              </strong>
-              Không bùa chú, không thương mại hóa nỗi buồn, không mê tín dị đoan. Chỉ có sự an
-              ủi chân thành từ vẻ đẹp minh triết của văn hóa dân gian Việt Nam.
+              <p className="text-sm leading-relaxed text-muted">
+                Nếu muốn, bạn có thể dừng một lát, thả lỏng vai
+                rồi quay lại việc đang làm. Không cần thực hiện thêm nghi thức.
+              </p>
             </div>
           </div>
         )}

@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { AppHeader, NavScreen } from "./components/AppHeader";
 import { AppFooter } from "./components/AppFooter";
+import { ScreenFocus } from "./components/ScreenFocus";
 import { SavedSignalDialog } from "./components/SavedSignalDialog";
 import { useTheme } from "./hooks/useTheme";
 import type { MemorialRecord } from "./screens/MemorialSpaceScreen";
@@ -18,7 +19,10 @@ import {
 } from "./data/demoSignals";
 
 import { Trash2, Calendar, BookOpen, ArrowRight, Flower2, Sparkles } from "lucide-react";
-import { saveLocalDemoAccount } from "./data/authService";
+import {
+  loadCurrentDemoUser,
+  saveLocalDemoAccount,
+} from "./data/authService";
 import {
   getCalendarNotesStorageKey,
   getReliableLunarDate,
@@ -135,51 +139,259 @@ export const getUserCornerStorageKey = (email: string) => {
   return `tltl-user-corner-${email.trim().toLowerCase()}`;
 };
 
-export const loadUserCornerData = (user: UserProfile | null): UserCornerData => {
-  if (!user || !user.email) {
-    return { signals: [], xam: [], wishes: [] };
+const hasStringFields = (
+  value: unknown,
+  fields: string[]
+): value is Record<string, unknown> => {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value)
+  ) {
+    return false;
   }
+
+  const record = value as Record<string, unknown>;
+
+  return fields.every(
+    (field) => typeof record[field] === "string"
+  );
+};
+
+const validSavedMoods: MoodKey[] = [
+  "An yên",
+  "Chênh vênh",
+  "Băn khoăn",
+  "Nôn nóng",
+  "Biết ơn",
+  "Cần điểm tựa",
+];
+
+const hasValidOptionalFields = (
+  record: Record<string, unknown>
+): boolean => {
+  return (
+    (record.starred === undefined ||
+      typeof record.starred === "boolean") &&
+    (record.createdAt === undefined ||
+      (typeof record.createdAt === "number" &&
+        Number.isFinite(record.createdAt) &&
+        record.createdAt > 0 &&
+        Number.isFinite(new Date(record.createdAt).getTime())))
+  );
+};
+
+const isSavedSignalItem = (
+  value: unknown
+): value is SavedSignalItem => {
+  if (
+    !hasStringFields(value, [
+      "id",
+      "signalId",
+      "mood",
+      "date",
+      "poemLine1",
+      "poemLine2",
+    ])
+  ) {
+    return false;
+  }
+
+  return (
+    Boolean((value.id as string).trim()) &&
+    validSavedMoods.includes(value.mood as MoodKey) &&
+    (value.journal === undefined ||
+      typeof value.journal === "string") &&
+    (value.actionTitle === undefined ||
+      typeof value.actionTitle === "string") &&
+    hasValidOptionalFields(value)
+  );
+};
+
+const isSavedXinXamItem = (
+  value: unknown
+): value is SavedXinXamItem => {
+  return (
+    hasStringFields(value, [
+      "id",
+      "stickNumber",
+      "fortuneType",
+      "category",
+      "region",
+      "quote",
+      "date",
+    ]) &&
+    Boolean((value.id as string).trim()) &&
+    (
+      value.drawId === undefined ||
+      (
+        typeof value.drawId === "string" &&
+        value.drawId.trim().length > 0
+      )
+    ) &&
+    hasValidOptionalFields(value)
+  );
+};
+
+const isSavedWishItem = (
+  value: unknown
+): value is SavedWishItem => {
+  return (
+    hasStringFields(value, [
+      "id",
+      "category",
+      "content",
+      "date",
+    ]) &&
+    Boolean((value.id as string).trim()) &&
+    typeof value.sealed === "boolean" &&
+    hasValidOptionalFields(value)
+  );
+};
+
+const parseUserCornerData = (
+  value: unknown
+): UserCornerData => {
+  const empty: UserCornerData = {
+    signals: [],
+    xam: [],
+    wishes: [],
+  };
+
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value)
+  ) {
+    return empty;
+  }
+
+  const record = value as Record<string, unknown>;
+
+  return {
+    signals: Array.isArray(record.signals)
+      ? record.signals.filter(isSavedSignalItem)
+      : [],
+    xam: Array.isArray(record.xam)
+      ? record.xam.filter(isSavedXinXamItem)
+      : [],
+    wishes: Array.isArray(record.wishes)
+      ? record.wishes.filter(isSavedWishItem)
+      : [],
+  };
+};
+
+const isCompleteUserCornerData = (
+  value: unknown
+): boolean => {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value)
+  ) {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+
+  return (
+    Array.isArray(record.signals) &&
+    record.signals.every(isSavedSignalItem) &&
+    Array.isArray(record.xam) &&
+    record.xam.every(isSavedXinXamItem) &&
+    Array.isArray(record.wishes) &&
+    record.wishes.every(isSavedWishItem)
+  );
+};
+
+export const loadUserCornerData = (
+  user: UserProfile | null
+): UserCornerData => {
+  const empty: UserCornerData = {
+    signals: [],
+    xam: [],
+    wishes: [],
+  };
+
+  if (!user?.email) return empty;
+
   const key = getUserCornerStorageKey(user.email);
-  try {
-    const stored = localStorage.getItem(key);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (parsed && typeof parsed === "object") {
-        return {
-          signals: Array.isArray(parsed.signals) ? parsed.signals : [],
-          xam: Array.isArray(parsed.xam) ? parsed.xam : [],
-          wishes: Array.isArray(parsed.wishes) ? parsed.wishes : [],
-        };
-      }
-    }
-  } catch {}
+  let stored: string | null;
 
-  // If An Nhien demo account has no records yet, seed with demo showcase
-  const normEmail = user.email.trim().toLowerCase();
-  if (normEmail === "annhien@tinlamtamlinh.vn" || normEmail === "annhien@tinlam.vn") {
-    const demoData = getAnNhienDefaultData();
-    try {
-      localStorage.setItem(key, JSON.stringify(demoData));
-    } catch {}
-    return demoData;
+  try {
+    stored = localStorage.getItem(key);
+  } catch {
+    return empty;
   }
 
-  // Any other real/new user starts completely clean
-  return { signals: [], xam: [], wishes: [] };
+  // Khóa đã tồn tại: đọc dữ liệu, không tự tạo lại mẫu.
+  if (stored !== null) {
+    try {
+      const parsed: unknown = JSON.parse(stored);
+      return parseUserCornerData(parsed);
+    } catch {
+      // Giữ nguyên dữ liệu gốc trong bộ nhớ trình duyệt.
+      return empty;
+    }
+  }
+
+  // Chỉ tạo dữ liệu mẫu nếu chưa từng có khóa.
+  const email = user.email.trim().toLowerCase();
+
+  const isDemoAccount =
+    email === "annhien@tinlamtamlinh.vn" ||
+    email === "annhien@tinlam.vn";
+
+  if (!isDemoAccount) return empty;
+
+  const demoData = getAnNhienDefaultData();
+
+  try {
+    localStorage.setItem(key, JSON.stringify(demoData));
+  } catch {
+    // Vẫn cho xem dữ liệu mẫu trong phiên hiện tại.
+  }
+
+  return demoData;
 };
 
 export const saveUserCornerData = (
   email: string,
   data: UserCornerData
 ): boolean => {
-  try {
-    localStorage.setItem(
-      getUserCornerStorageKey(email),
-      JSON.stringify(data)
-    );
+  if (!isCompleteUserCornerData(data)) {
+    return false;
+  }
 
+  const key = getUserCornerStorageKey(email);
+
+  try {
+    const previousRaw = localStorage.getItem(key);
+
+    if (previousRaw !== null) {
+      let previousIsValid = false;
+
+      try {
+        const previousParsed: unknown = JSON.parse(previousRaw);
+        previousIsValid =
+          isCompleteUserCornerData(previousParsed);
+      } catch {
+        previousIsValid = false;
+      }
+
+      if (!previousIsValid) {
+        const backupKey =
+          `${key}-recovery-${crypto.randomUUID()}`;
+
+        // Giữ nguyên nội dung gốc, kể cả JSON không đọc được.
+        localStorage.setItem(backupKey, previousRaw);
+      }
+    }
+
+    localStorage.setItem(key, JSON.stringify(data));
     return true;
   } catch {
+    // Nếu sao lưu hoặc ghi dữ liệu mới thất bại, không báo thành công.
     return false;
   }
 };
@@ -288,6 +500,22 @@ export type PendingSave =
   | { type: "xam"; item: SavedXinXamItem }
   | { type: "wish"; item: SavedWishItem };
 
+const isSameSavedReflection = (
+  entry: SavedSignalItem,
+  candidate: {
+    signalId: string;
+    date: string;
+    journal?: string;
+  }
+): boolean => {
+  return (
+    entry.signalId === candidate.signalId &&
+    entry.date === candidate.date &&
+    (entry.journal || "").trim() ===
+      (candidate.journal || "").trim()
+  );
+};
+
 const getCultureRegionFromLocation = (): CultureRegionSlug => {
   const path = window.location.pathname.replace(/^\/+/, "");
 
@@ -311,40 +539,125 @@ const getCultureRegionFromLocation = (): CultureRegionSlug => {
   return "north";
 };
 
+const parseMemorialRecord = (
+  value: unknown
+): MemorialRecord | null => {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value)
+  ) {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+
+  if (
+    typeof record.name !== "string" ||
+    typeof record.relation !== "string" ||
+    typeof record.date !== "string"
+  ) {
+    return null;
+  }
+
+  const name = record.name.trim();
+  const relation = record.relation.trim();
+  const date = record.date.trim();
+
+  if (!name || !relation) return null;
+
+  if (
+    record.note !== undefined &&
+    record.note !== null &&
+    typeof record.note !== "string"
+  ) {
+    return null;
+  }
+
+  const match = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+
+  if (
+    year < 1 ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31
+  ) {
+    return null;
+  }
+
+  const parsedDate = new Date(0);
+  parsedDate.setHours(0, 0, 0, 0);
+  parsedDate.setFullYear(year, month - 1, day);
+
+  if (
+    parsedDate.getFullYear() !== year ||
+    parsedDate.getMonth() !== month - 1 ||
+    parsedDate.getDate() !== day
+  ) {
+    return null;
+  }
+
+  const note =
+    typeof record.note === "string"
+      ? record.note.trim()
+      : "";
+
+  return {
+    name,
+    relation,
+    date,
+    note: note || undefined,
+  };
+};
+
+const loadMemorialRecord = (
+  email?: string | null
+): MemorialRecord | null => {
+  const accountId = email?.trim().toLowerCase() || "guest";
+
+  try {
+    const raw = localStorage.getItem(
+      `tltl-memorial-${accountId}`
+    );
+
+    if (!raw) return null;
+
+    const parsed: unknown = JSON.parse(raw);
+
+    return parseMemorialRecord(parsed);
+  } catch {
+    return null;
+  }
+};
+
 export default function App() {
   const todayDateString = new Date().toDateString();
 
-  const getInitialUser = (): UserProfile | null => {
-    try {
-      const stored = localStorage.getItem("tltl-current-user");
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  };
-
-  const initialUser = getInitialUser();
+  const initialUser = loadCurrentDemoUser();
   const initialSession = loadUserSessionState(initialUser, todayDateString);
 
   // Helper to resolve initial screen from URL safely with prerequisite checks
   const getInitialScreen = (): NavScreen => {
     const path = window.location.pathname.replace(/^\//, "");
-    if (path === "account" && !initialUser) {
+    if (
+      ["account", "settings"].includes(path) &&
+      !initialUser
+    ) {
       return "login";
     }
-    // loading requires active check-in flow; if opened directly, redirect safely
     if (path === "loading") {
-      const lastCheck = localStorage.getItem(
-        getAccountScopedKey("tltl-last-checkin-date", initialUser?.email)
-      );
-      return lastCheck === todayDateString ? "today" : "mood";
+      return initialSession.checkedIn ? "today" : "mood";
     }
-    // saved requires completed ritual/action context; if opened directly, redirect to today or guest
+
     if (path === "saved") {
-      const lastCheck = localStorage.getItem(
-        getAccountScopedKey("tltl-last-checkin-date", initialUser?.email)
-      );
-      return lastCheck === todayDateString ? "today" : "guest";
+      return initialSession.checkedIn ? "today" : "guest";
     }
     if (
       [
@@ -503,43 +816,52 @@ export default function App() {
     setOpenedSavedSignal(null);
   }, [currentUser?.email]);
 
-  const [memorial, setMemorial] = useState<MemorialRecord | null>(() => {
-    try {
-      const email = initialUser?.email?.trim().toLowerCase() || "guest";
-      const stored = localStorage.getItem(`tltl-memorial-${email}`);
-      return stored ? (JSON.parse(stored) as MemorialRecord) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [memorial, setMemorial] =
+    useState<MemorialRecord | null>(() =>
+      loadMemorialRecord(initialUser?.email)
+    );
 
   // Active signal computed from currentSignalId
   const activeSignal = getSignalById(currentSignalId) || getDefaultSignalForMood(selectedMood);
 
   useEffect(() => {
-    try {
-      const email = currentUser?.email?.trim().toLowerCase() || "guest";
-      const stored = localStorage.getItem(`tltl-memorial-${email}`);
-      setMemorial(stored ? (JSON.parse(stored) as MemorialRecord) : null);
-    } catch {
-      setMemorial(null);
-    }
+    setMemorial(loadMemorialRecord(currentUser?.email));
   }, [currentUser?.email]);
 
-  // Bảo vệ màn Account: chỉ cho người đã đăng nhập truy cập
+  // Account và Settings yêu cầu hồ sơ đăng nhập.
   useEffect(() => {
-    const storedUser = (() => {
-      try {
-        const stored = localStorage.getItem("tltl-current-user");
-        return stored ? JSON.parse(stored) : null;
-      } catch {
-        return null;
-      }
-    })();
+    if (currentUser) return;
 
-    if (screen === "account" && !currentUser && !storedUser) {
-      navigateTo("login");
-    }
+    const path = window.location.pathname.replace(
+      /^\/+/,
+      ""
+    );
+
+    const protectedScreens = [
+      "account",
+      "settings",
+    ];
+
+    const needsLogin =
+      protectedScreens.includes(screen) ||
+      protectedScreens.includes(path);
+
+    if (!needsLogin) return;
+
+    setScreen("login");
+
+    // Đồng bộ URL và tránh thêm một trang bị chặn
+    // vào lịch sử điều hướng.
+    window.history.replaceState(
+      { screen: "login" },
+      "",
+      "/login"
+    );
+
+    window.scrollTo({
+      top: 0,
+      behavior: "auto",
+    });
   }, [screen, currentUser]);
 
   useEffect(() => {
@@ -623,7 +945,10 @@ export default function App() {
       }
 
       // Handle screen routing with guards for missing context
-      if (path === "account" && !currentUser) {
+      if (
+        ["account", "settings"].includes(path) &&
+        !currentUser
+      ) {
         setScreen("login");
       } else if (path === "loading") {
         // Direct hit or back to loading: do not trap in loading spinner
@@ -698,18 +1023,12 @@ export default function App() {
     const effectiveUser =
       authenticatedUser !== undefined
         ? authenticatedUser
-        : currentUser ||
-          (() => {
-            try {
-              const stored = localStorage.getItem("tltl-current-user");
-              return stored ? JSON.parse(stored) : null;
-            } catch {
-              return null;
-            }
-          })();
+        : currentUser ?? loadCurrentDemoUser();
 
-    // Chuyển hướng về login nếu chưa đăng nhập mà muốn vào account
-    if (targetScreen === "account" && !effectiveUser) {
+    if (
+      ["account", "settings"].includes(targetScreen) &&
+      !effectiveUser
+    ) {
       targetScreen = "login";
     }
     setScreen(targetScreen);
@@ -913,11 +1232,14 @@ export default function App() {
       localStorage.setItem(getAccountScopedKey("tltl-current-signal-id", email), activeSignal.id);
     } catch {}
 
+    const createdAt = Date.now();
+
     const newEntry: SavedSignalItem = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       signalId: activeSignal.id,
       mood: activeSignal.mood,
-      date: new Date().toLocaleDateString("vi-VN"),
+      createdAt,
+      date: new Date(createdAt).toLocaleDateString("vi-VN"),
       journal: journalText.trim() || undefined,
       poemLine1: activeSignal.poem.line1,
       poemLine2: activeSignal.poem.line2,
@@ -935,10 +1257,8 @@ export default function App() {
       return;
     }
 
-    const exists = userCornerData.signals.some(
-      (entry) =>
-        entry.signalId === newEntry.signalId &&
-        entry.date === newEntry.date
+    const exists = userCornerData.signals.some((entry) =>
+      isSameSavedReflection(entry, newEntry)
     );
 
     if (exists) return;
@@ -991,10 +1311,8 @@ export default function App() {
     if (pending?.type === "signal") {
       const item = pending.item;
 
-      const exists = nextData.signals.some(
-        (entry) =>
-          entry.signalId === item.signalId &&
-          entry.date === item.date
+      const exists = nextData.signals.some((entry) =>
+        isSameSavedReflection(entry, item)
       );
 
       if (!exists) {
@@ -1007,9 +1325,11 @@ export default function App() {
 
       const exists = nextData.xam.some(
         (entry) =>
-          entry.stickNumber === item.stickNumber &&
-          entry.category === item.category &&
-          entry.region === item.region
+          entry.id === item.id ||
+          (
+            Boolean(item.drawId) &&
+            entry.drawId === item.drawId
+          )
       );
 
       if (!exists) {
@@ -1032,10 +1352,11 @@ export default function App() {
     // Ghi trực tiếp để lỗi lưu không bị hàm helper bỏ qua.
     try {
       if (pending) {
-        localStorage.setItem(
-          getUserCornerStorageKey(user.email),
-          JSON.stringify(nextData)
-        );
+        const saved = saveUserCornerData(user.email, nextData);
+
+        if (!saved) {
+          throw new Error("Không thể lưu nội dung đang chờ.");
+        }
       }
 
       localStorage.setItem(
@@ -1136,41 +1457,93 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem("tltl-current-user");
-    setUserCornerData({ signals: [], xam: [], wishes: [] });
+    try {
+      localStorage.removeItem("tltl-current-user");
+    } catch {
+      window.alert(
+        "Chưa đăng xuất được vì trình duyệt đang chặn thao tác bộ nhớ. Bạn hãy thử lại."
+      );
+      return;
+    }
 
-    // Reset các trạng thái session về tài khoản khách (guest)
-    const guestSession = loadUserSessionState(null, todayDateString);
+    const guestSession = loadUserSessionState(
+      null,
+      todayDateString
+    );
+
+    setCurrentUser(null);
+
+    setUserCornerData({
+      signals: [],
+      xam: [],
+      wishes: [],
+    });
+
+    setOpenedSavedSignal(null);
+
     setIsCheckedIn(guestSession.checkedIn);
     setSelectedMood(guestSession.mood);
     setSelectedTopics(guestSession.topics);
     setIsActionDone(guestSession.actionDone);
     setCurrentSignalId(guestSession.signalId);
+
     setJournalText("");
     setPendingSave(null);
 
-    navigateTo("guest");
+    // Truyền null rõ ràng để không dùng hồ sơ của lần render cũ.
+    navigateTo("guest", undefined, null);
   };
 
-  const handleUpdateProfile = (updated: { name: string; email?: string }) => {
-    if (!currentUser) return;
+  const handleUpdateProfile = (
+    updated: { name: string; email?: string }
+  ): boolean => {
+    if (!currentUser) return false;
+
+    const cleanName = updated.name.trim();
+
+    if (!cleanName || cleanName.length > 80) {
+      return false;
+    }
+
     const updatedUser: UserProfile = {
       ...currentUser,
-      name: updated.name.trim() || currentUser.name,
-      email: updated.email ? updated.email.trim().toLowerCase() : currentUser.email,
+      name: cleanName,
     };
 
-    // 1. Cập nhật state duy nhất tại App để toàn bộ Header, Account, Settings lập tức nhận tên mới
-    setCurrentUser(updatedUser);
+    const sessionKey = "tltl-current-user";
+    let previousSession: string | null;
 
-    // 2. Lưu vào localStorage
     try {
-      localStorage.setItem("tltl-current-user", JSON.stringify(updatedUser));
-    } catch {}
+      previousSession = localStorage.getItem(sessionKey);
 
-    // 3. Đồng bộ vào danh sách tài khoản demo cục bộ
-    saveLocalDemoAccount(updatedUser);
+      localStorage.setItem(
+        sessionKey,
+        JSON.stringify(updatedUser)
+      );
+    } catch {
+      return false;
+    }
+
+    // Dùng hàm trả boolean đã sửa ở đợt trước.
+    const saved = saveLocalDemoAccount(updatedUser);
+
+    if (!saved) {
+      // Khôi phục hồ sơ phiên trước nếu lưu danh sách thất bại.
+      try {
+        if (previousSession === null) {
+          localStorage.removeItem(sessionKey);
+        } else {
+          localStorage.setItem(sessionKey, previousSession);
+        }
+      } catch {
+        // Không báo thành công nếu khôi phục cũng thất bại.
+      }
+
+      return false;
+    }
+
+    setCurrentUser(updatedUser);
+    return true;
   };
 
   const handleSaveTopics = (topics: string[]): boolean => {
@@ -1193,7 +1566,8 @@ export default function App() {
   };
 
   const commitCornerData = (
-    updated: UserCornerData
+    updated: UserCornerData,
+    showErrorAlert = true
   ): boolean => {
     if (!currentUser) return false;
 
@@ -1203,9 +1577,11 @@ export default function App() {
     );
 
     if (!saved) {
-      window.alert(
-        "Chưa lưu được thay đổi. Nội dung trên màn hình vẫn được giữ nguyên. Bạn hãy thử lại."
-      );
+      if (showErrorAlert) {
+        window.alert(
+          "Chưa lưu được thay đổi. Nội dung trên màn hình vẫn được giữ nguyên. Bạn hãy thử lại."
+        );
+      }
 
       return false;
     }
@@ -1214,35 +1590,46 @@ export default function App() {
     return true;
   };
 
-  const handleDeleteSignal = (id: string) => {
-    const saved = commitCornerData({
-      ...userCornerData,
-      signals: userCornerData.signals.filter(
-        (item) => item.id !== id
-      ),
-    });
+  const handleDeleteSignal = (id: string): boolean => {
+    const saved = commitCornerData(
+      {
+        ...userCornerData,
+        signals: userCornerData.signals.filter(
+          (item) => item.id !== id
+        ),
+      },
+      false
+    );
 
     if (saved && openedSavedSignal?.id === id) {
       setOpenedSavedSignal(null);
     }
+
+    return saved;
   };
 
-  const handleDeleteXam = (id: string) => {
-    commitCornerData({
-      ...userCornerData,
-      xam: userCornerData.xam.filter(
-        (item) => item.id !== id
-      ),
-    });
+  const handleDeleteXam = (id: string): boolean => {
+    return commitCornerData(
+      {
+        ...userCornerData,
+        xam: userCornerData.xam.filter(
+          (item) => item.id !== id
+        ),
+      },
+      false
+    );
   };
 
-  const handleDeleteWish = (id: string) => {
-    commitCornerData({
-      ...userCornerData,
-      wishes: userCornerData.wishes.filter(
-        (item) => item.id !== id
-      ),
-    });
+  const handleDeleteWish = (id: string): boolean => {
+    return commitCornerData(
+      {
+        ...userCornerData,
+        wishes: userCornerData.wishes.filter(
+          (item) => item.id !== id
+        ),
+      },
+      false
+    );
   };
 
   const handleToggleStarSignal = (id: string) => {
@@ -1288,11 +1675,14 @@ export default function App() {
     const cleanContent = content.trim();
     if (!cleanContent) return false;
 
+    const createdAt = Date.now();
+
     const newWish: SavedWishItem = {
       id: crypto.randomUUID(),
       category,
       content: cleanContent,
-      date: new Date().toLocaleDateString("vi-VN"),
+      createdAt,
+      date: new Date(createdAt).toLocaleDateString("vi-VN"),
       sealed: true,
       starred: false,
     };
@@ -1312,14 +1702,12 @@ export default function App() {
       wishes: [newWish, ...userCornerData.wishes],
     };
 
-    try {
-      localStorage.setItem(
-        getUserCornerStorageKey(currentUser.email),
-        JSON.stringify(nextData)
-      );
-    } catch {
-      return false;
-    }
+    const saved = saveUserCornerData(
+      currentUser.email,
+      nextData
+    );
+
+    if (!saved) return false;
 
     setUserCornerData(nextData);
     return true;
@@ -1383,10 +1771,12 @@ export default function App() {
 
   const isCurrentSignalSaved = Boolean(
     currentUser &&
-      userCornerData.signals.some(
-        (entry) =>
-          entry.signalId === activeSignal.id &&
-          entry.date === currentDateLabel
+      userCornerData.signals.some((entry) =>
+        isSameSavedReflection(entry, {
+          signalId: activeSignal.id,
+          date: currentDateLabel,
+          journal: journalText,
+        })
       )
   );
 
@@ -1407,7 +1797,17 @@ export default function App() {
 
       {/* Screen Router */}
       <div className={`app-screen-outlet ${["login", "register", "forgot"].includes(screen) ? "flex-1 min-h-0 lg:overflow-hidden" : ""}`}>
-        <Suspense fallback={<div className="page-container max-w-7xl text-sm text-muted" role="status">Đang mở nội dung…</div>}>
+        <Suspense
+          fallback={
+            <div
+              className="page-container max-w-7xl text-sm text-muted"
+              role="status"
+            >
+              Đang mở nội dung…
+            </div>
+          }
+        >
+          <ScreenFocus key={screen}>
         {screen === "guest" && (
           <GuestScreen
             onSelectMood={() => navigateTo("mood")}
@@ -1457,6 +1857,7 @@ export default function App() {
 
         {screen === "result" && (
           <SignalResultScreen
+            journalText={journalText}
             mood={selectedMood}
             signal={activeSignal}
             isActionDone={isActionDone}
@@ -1494,6 +1895,7 @@ export default function App() {
 
         {screen === "ancestor-altar" && (
           <AncestorAltarScreen
+            memorial={memorial}
             onBack={() => navigateTo("sanctuary")}
             onGoToMemorial={() => navigateTo("memorial")}
             isLoggedIn={Boolean(currentUser)}
@@ -1580,6 +1982,8 @@ export default function App() {
 
         {(screen === "chau-van" || screen === "sea-prayer" || screen === "southern-culture") && (
           <RegionalExperienceScreen
+            key={`${screen}-${currentUser?.email || "guest"}`}
+            currentUserEmail={currentUser?.email}
             kind={screen as RegionalExperienceKind}
             onBack={() => {
               const region: CultureRegionSlug =
@@ -1622,8 +2026,11 @@ export default function App() {
               navigateTo("culture-detail", articleId);
             }}
             onSaveToAccount={(result) => {
+              const createdAt = Date.now();
+
               const newXam: SavedXinXamItem = {
                 id: crypto.randomUUID(),
+                drawId: result.drawId,
                 stickNumber: result.stickNumber,
                 fortuneType:
                   result.fortuneType ||
@@ -1632,7 +2039,8 @@ export default function App() {
                 category: result.category || result.topic,
                 region: result.region,
                 quote: result.quote,
-                date: new Date().toLocaleDateString("vi-VN"),
+                createdAt,
+                date: new Date(createdAt).toLocaleDateString("vi-VN"),
                 starred: false,
               };
 
@@ -1648,9 +2056,8 @@ export default function App() {
 
               const exists = userCornerData.xam.some(
                 (item) =>
-                  item.stickNumber === newXam.stickNumber &&
-                  item.category === newXam.category &&
-                  item.region === newXam.region
+                  Boolean(newXam.drawId) &&
+                  item.drawId === newXam.drawId
               );
 
               if (exists) return true;
@@ -1669,10 +2076,6 @@ export default function App() {
               );
 
               if (!saved) {
-                window.alert(
-                  "Chưa lưu được thẻ xăm. Trình duyệt có thể hết dung lượng hoặc đang chặn lưu dữ liệu. Bạn hãy thử lại."
-                );
-
                 return false;
               }
 
@@ -1715,6 +2118,7 @@ export default function App() {
 
         {screen === "ritual-detail" && (
           <RitualDetailScreen
+            currentUserEmail={currentUser?.email}
             ritualId={selectedRitualId}
             onBackToRitualList={() => navigateTo("rituals")}
             onSelectRelatedRitual={(id) => {
@@ -1726,7 +2130,7 @@ export default function App() {
 
         {screen === "zen" && (
           <ZenScreen
-            onBackToExperience={() => navigateTo("xinxam")}
+            onBackToExperience={() => navigateTo("experience")}
             onGoToHome={() => navigateTo("today")}
           />
         )}
@@ -1999,6 +2403,7 @@ export default function App() {
             }}
           />
         )}
+          </ScreenFocus>
         </Suspense>
       </div>
 

@@ -43,6 +43,9 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
   const [secondsRemaining, setSecondsRemaining] =
     useState(SESSION_SECONDS);
   const [isPaused, setIsPaused] = useState(false);
+  const [isPageVisible, setIsPageVisible] = useState(
+    () => document.visibilityState === "visible"
+  );
   const [breathPhase, setBreathPhase] = useState<"inhale" | "hold" | "exhale">("inhale");
 
   const accumulatedTimeRef = useRef(0);
@@ -141,21 +144,53 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
   };
 
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      const visible =
+        document.visibilityState === "visible";
+
+      setIsPageVisible(visible);
+
+      if (!visible) {
+        setIsPaused(true);
+      }
+    };
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+
+    return () => {
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+    };
+  }, []);
+
+  useEffect(() => {
     if (
       soundEnabled &&
       zenState === "active" &&
-      !isPaused
+      !isPaused &&
+      isPageVisible
     ) {
       startAmbientSound();
     } else {
       stopAmbientSound();
     }
     return () => stopAmbientSound();
-  }, [soundEnabled, zenState, isPaused]);
+  }, [soundEnabled, zenState, isPaused, isPageVisible]);
 
   // Timer interval & Breathing Cycle
   useEffect(() => {
-    if (zenState !== "active" || isPaused) return;
+    if (
+      zenState !== "active" ||
+      isPaused ||
+      !isPageVisible
+    ) {
+      return;
+    }
 
     const version = sessionVersionRef.current;
     const startedAt = performance.now();
@@ -202,11 +237,11 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
         );
       }
     };
-  }, [zenState, isPaused]);
+  }, [zenState, isPaused, isPageVisible]);
 
   // 3D Canvas Rendering Engine (Perspective Projection with 3D Particles & Golden Bell)
   useEffect(() => {
-    if (viewMode !== "3D") return;
+    if (viewMode !== "3D" || !isPageVisible) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -252,7 +287,9 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
       const centerY = height / 2;
 
       // Draw 3D rotating lotus / meditation platform
-      angle += reducedMotion ? 0 : 0.008;
+      if (!reducedMotion && !isPaused) {
+        angle += 0.008;
+      }
       const pulse =
         breathPhase === "inhale"
           ? 1.08
@@ -288,7 +325,9 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
 
       // Render 3D Perspective Particles
       particles.forEach((p) => {
-        p.z -= p.speedZ;
+        if (!reducedMotion && !isPaused) {
+          p.z -= p.speedZ;
+        }
         if (p.z <= 10) {
           p.z = 800;
           p.x = (Math.random() - 0.5) * 600;
@@ -310,7 +349,9 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
         }
       });
 
-      if (!reducedMotion) animationFrameId = requestAnimationFrame(render);
+      if (!reducedMotion && !isPaused) {
+        animationFrameId = requestAnimationFrame(render);
+      }
     };
 
     render();
@@ -318,7 +359,14 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
     return () => {
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
-  }, [viewMode, breathPhase, isLampLit, reducedMotion]);
+  }, [
+    viewMode,
+    breathPhase,
+    isLampLit,
+    reducedMotion,
+    isPaused,
+    isPageVisible,
+  ]);
 
   const handleStartZen = () => {
     sessionVersionRef.current += 1;
@@ -356,23 +404,27 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
       <main className="page-container max-w-6xl">
         {/* Top Breadcrumb & Tag */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-muted">
-          <div className="flex items-center gap-2">
-            <span
+          <nav
+            aria-label="Đường dẫn"
+            className="flex flex-wrap items-center gap-2"
+          >
+            <button
+              type="button"
               onClick={onBackToExperience}
-              className="hover:text-accent cursor-pointer transition-colors"
+              className="min-h-11 rounded-control hover:text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               Trải nghiệm
-            </span>
-            <span>/</span>
+            </button>
+
+            <span aria-hidden="true">/</span>
+
             <span
-              onClick={onBackToExperience}
-              className="hover:text-accent cursor-pointer transition-colors"
+              aria-current="page"
+              className="font-semibold text-accent"
             >
-              Khoảng lặng
+              Không gian tĩnh tâm
             </span>
-            <span>/</span>
-            <span className="text-accent font-semibold">Không gian tĩnh tâm</span>
-          </div>
+          </nav>
 
           <div className="flex items-center gap-1.5 uppercase font-semibold text-xs text-muted">
             <span className="w-2 h-2 rounded-full bg-action inline-block"></span>
@@ -608,6 +660,11 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
                     Kết thúc sớm
                   </button>
                 </div>
+
+                <p className="mt-3 text-xs leading-relaxed text-muted">
+                  Phiên tự tạm dừng khi bạn chuyển sang tab khác.
+                  Khi quay lại, bấm Tiếp tục để tiếp tục phiên.
+                </p>
               </div>
             )}
 

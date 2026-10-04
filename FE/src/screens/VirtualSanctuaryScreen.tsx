@@ -10,6 +10,7 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
+import { SceneErrorBoundary } from "../components/SceneErrorBoundary";
 
 import type { MemorialRecord } from "./MemorialSpaceScreen";
 
@@ -110,18 +111,23 @@ export const VirtualSanctuaryScreen: React.FC<
 
           <div id="sanctuary-3d-panel">
             {show3D && (
-              <Suspense
-                fallback={
-                  <p role="status" className="p-4 text-sm text-muted">
-                    Đang mở không gian…
-                  </p>
-                }
+              <SceneErrorBoundary
+                onClose={() => setShow3D(false)}
+                onOpenAltar={onGoToAltar}
               >
-                <SanctuaryScene
-                  memorial={memorial}
-                  onOpenMemorial={onGoToMemorial}
-                />
-              </Suspense>
+                <Suspense
+                  fallback={
+                    <p role="status" className="p-4 text-sm text-muted">
+                      Đang mở không gian…
+                    </p>
+                  }
+                >
+                  <SanctuaryScene
+                    memorial={memorial}
+                    onOpenMemorial={onGoToMemorial}
+                  />
+                </Suspense>
+              </SceneErrorBoundary>
             )}
           </div>
         </section>

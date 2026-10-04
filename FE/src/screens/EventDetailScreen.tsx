@@ -8,13 +8,14 @@ import {
   Clock,
   Compass,
   Flower2,
-  ShieldCheck,
+  BookOpen,
   ArrowRight,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { getCalendarEventById } from "../data/calendarData";
+import { DetailNotFound } from "../components/DetailNotFound";
 
 interface EventDetailScreenProps {
   eventId?: string;
@@ -24,7 +25,7 @@ interface EventDetailScreenProps {
   onGoToExplore?: () => void;
 }
 
-export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
+const EventDetailContent: React.FC<EventDetailScreenProps> = ({
   eventId = "le-soc-vong-ngay-ram",
   onBackToCalendar,
   onGoToRituals,
@@ -32,7 +33,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
   onGoToExplore,
 }) => {
   // Lấy sự kiện chuẩn xác từ eventId được truyền từ màn 22
-  const event = getCalendarEventById(eventId) || getCalendarEventById("le-soc-vong-ngay-ram")!;
+  const event = getCalendarEventById(eventId)!;
 
   const eventDate = new Date(
     event.year,
@@ -366,18 +367,38 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
               </Card>
             )}
 
-            {/* Section 5: Nguồn tư liệu kiểm chứng */}
-            <Card className="p-5 sm:p-6 rounded-card bg-surface border border-line text-xs text-muted leading-relaxed flex items-start gap-3">
-              <ShieldCheck className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-              <div>
-                <strong className="font-semibold text-ink">Nguồn tư liệu đã kiểm chứng:</strong>{" "}
-                {event.verifiedSource ||
-                  "Tư liệu khảo cứu dựa trên nếp sống văn hóa dân gian Việt Nam và tài liệu nghiên cứu phong tục tập quán truyền thống."}
-                <div className="text-xs text-muted mt-1 italic">
-                  * Nền tảng chỉ đăng tải các tư liệu đã xác minh niên đại, đối chiếu lịch âm thiên văn học và tuyệt đối không phục vụ mục đích bói toán dị đoan.
+            {/* Nguồn tham khảo trong bản thử nghiệm */}
+            <section
+              aria-labelledby="event-sources-title"
+              className="rounded-card border border-line bg-surface p-5 sm:p-6"
+            >
+              <div className="flex items-start gap-3">
+                <BookOpen
+                  aria-hidden="true"
+                  className="w-5 h-5 text-accent shrink-0 mt-1"
+                />
+
+                <div className="min-w-0">
+                  <h2
+                    id="event-sources-title"
+                    className="font-display font-semibold text-lg text-ink"
+                  >
+                    Nguồn tham khảo
+                  </h2>
+
+                  <p className="mt-2 text-sm text-ink leading-relaxed [overflow-wrap:anywhere]">
+                    {event.verifiedSource?.trim() ||
+                      "Sự kiện này chưa có thông tin nguồn tham khảo cụ thể."}
+                  </p>
+
+                  <p className="mt-3 text-sm text-muted leading-relaxed">
+                    Thông tin nguồn trong bản thử nghiệm cần được bổ sung
+                    tác giả, thông tin xuất bản, đường dẫn hoặc trang trích
+                    dẫn để đối chiếu trước khi phát hành chính thức.
+                  </p>
                 </div>
               </div>
-            </Card>
+            </section>
           </div>
 
           {/* Right Column (4 cols): Sticky Sidebar Widgets */}
@@ -450,5 +471,30 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         </div>
       </main>
     </div>
+  );
+};
+
+export const EventDetailScreen: React.FC<
+  EventDetailScreenProps
+> = (props) => {
+  const eventId = props.eventId ?? "le-soc-vong-ngay-ram";
+  const event = getCalendarEventById(eventId);
+
+  if (!event) {
+    return (
+      <DetailNotFound
+        title="Không tìm thấy sự kiện"
+        backLabel="Về Lịch văn hóa"
+        onBack={props.onBackToCalendar}
+      />
+    );
+  }
+
+  return (
+    <EventDetailContent
+      {...props}
+      eventId={eventId}
+      key={eventId}
+    />
   );
 };

@@ -64,6 +64,15 @@ export const GratitudeScreen: React.FC<GratitudeScreenProps> = ({
 
   const maxChars = 500;
 
+  const handleChangeSendMode = (
+    nextMode: "ephemeral" | "save"
+  ) => {
+    if (isSubmitting) return;
+
+    setSendMode(nextMode);
+    setSaveError("");
+  };
+
   const handleClear = () => {
     setContent("");
     setSaveSuccess(false);
@@ -334,87 +343,103 @@ export const GratitudeScreen: React.FC<GratitudeScreenProps> = ({
 
               {/* Send Mode Selection */}
               <div className="mt-6 pt-5 border-t border-line">
-                <h4 className="text-sm font-bold text-ink mb-3">
-                  Chọn hình thức gửi gắm:
-                </h4>
+                <fieldset
+                  disabled={isSubmitting}
+                  className="min-w-0"
+                >
+                  <legend className="mb-3 text-sm font-semibold text-ink">
+                    Chọn hình thức gửi gắm
+                  </legend>
 
-                <div className="space-y-3">
-                  {/* Option 1: Ephemeral Release */}
-                  <label
-                    onClick={() => setSendMode("ephemeral")}
-                    className={`block p-4 rounded-panel border cursor-pointer transition-all ${
-                      sendMode === "ephemeral"
-                        ? "bg-accent-soft border-accent"
-                        : "bg-surface hover:bg-surface border-line"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="pt-0.5">
-                        <div
-                          className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                            sendMode === "ephemeral"
-                              ? "border-accent bg-surface"
-                              : "border-line bg-surface"
-                          }`}
-                        >
-                          {sendMode === "ephemeral" && (
-                            <div className="w-2 h-2 rounded-full bg-action"></div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-1.5 font-bold text-sm text-ink">
-                          <span>Gửi biểu tượng rồi buông xuống</span>
-                          <span className="text-accent">●</span>
-                        </div>
-                        <p className="text-sm text-muted leading-relaxed mt-1">
-                          Lời tri ân sẽ hóa thành làn hương thơm hoặc cánh sen thả trôi vô vi trong tâm tưởng.
-                          Hệ thống hoàn toàn không lưu giữ lời viết của bạn.
-                        </p>
-                        <p className="text-sm text-muted mt-1.5 font-medium italic">
-                          ✦ Bạn có thể để trống ô viết nếu chỉ muốn gửi đi một nén tâm hương thuần khiết vào hư không.
-                        </p>
-                      </div>
-                    </div>
-                  </label>
+                  <div className="space-y-3">
+                    <label
+                      className={[
+                        "flex items-start gap-3 rounded-panel border p-4",
+                        "transition-colors",
+                        "focus-within:ring-2 focus-within:ring-accent",
+                        "focus-within:ring-offset-2",
+                        "focus-within:ring-offset-canvas",
+                        isSubmitting
+                          ? "cursor-wait opacity-60"
+                          : "cursor-pointer",
+                        sendMode === "ephemeral"
+                          ? "border-accent bg-accent-soft"
+                          : "border-line bg-surface hover:bg-surface-soft",
+                      ].join(" ")}
+                    >
+                      <input
+                        type="radio"
+                        name="gratitude-send-mode"
+                        value="ephemeral"
+                        checked={sendMode === "ephemeral"}
+                        onChange={() =>
+                          handleChangeSendMode("ephemeral")
+                        }
+                        className="mt-1 h-5 w-5 shrink-0 accent-action"
+                      />
 
-                  {/* Option 2: Save to Account */}
-                  <label
-                    onClick={() => setSendMode("save")}
-                    className={`block p-4 rounded-panel border cursor-pointer transition-all ${
-                      sendMode === "save"
-                        ? "bg-accent-soft border-accent"
-                        : "bg-surface hover:bg-surface border-line"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="pt-0.5">
-                        <div
-                          className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                            sendMode === "save"
-                              ? "border-accent bg-surface"
-                              : "border-line bg-surface"
-                          }`}
-                        >
-                          {sendMode === "save" && (
-                            <div className="w-2 h-2 rounded-full bg-action"></div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center flex-wrap gap-2 font-bold text-sm text-ink">
-                          <span>Lưu riêng để đọc lại</span>
-                          <span className="px-2 py-0.5 rounded-full text-xs font-normal bg-surface text-accent border border-line">
-                            {user ? `Đang ở phiên ${user.name}` : "Cần đăng nhập"}
-                          </span>
-                        </div>
-                        <p className="text-sm text-muted leading-relaxed mt-1">
-                          Nội dung sẽ được lưu kín đáo trong mục <strong>“Điều ước & Lời tri ân”</strong> tại Góc của tôi để bạn có thể xem lại khi cần một điểm tựa an lành.
-                        </p>
-                      </div>
-                    </div>
-                  </label>
-                </div>
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-ink">
+                          Gửi biểu tượng rồi buông xuống
+                        </span>
+
+                        <span className="mt-1 block text-sm leading-relaxed text-muted">
+                          Lời viết được xóa khỏi ô nhập sau khi gửi,
+                          không được lưu vào nhật ký.
+                        </span>
+
+                        <span className="mt-2 block text-xs leading-relaxed text-muted">
+                          Bạn có thể để trống nếu chỉ muốn thực hiện
+                          một tương tác tri ân.
+                        </span>
+                      </span>
+                    </label>
+
+                    <label
+                      className={[
+                        "flex items-start gap-3 rounded-panel border p-4",
+                        "transition-colors",
+                        "focus-within:ring-2 focus-within:ring-accent",
+                        "focus-within:ring-offset-2",
+                        "focus-within:ring-offset-canvas",
+                        isSubmitting
+                          ? "cursor-wait opacity-60"
+                          : "cursor-pointer",
+                        sendMode === "save"
+                          ? "border-accent bg-accent-soft"
+                          : "border-line bg-surface hover:bg-surface-soft",
+                      ].join(" ")}
+                    >
+                      <input
+                        type="radio"
+                        name="gratitude-send-mode"
+                        value="save"
+                        checked={sendMode === "save"}
+                        onChange={() =>
+                          handleChangeSendMode("save")
+                        }
+                        className="mt-1 h-5 w-5 shrink-0 accent-action"
+                      />
+
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-ink">
+                          Lưu riêng để đọc lại
+                        </span>
+
+                        <span className="mt-1 block text-sm leading-relaxed text-muted">
+                          Giữ lời tri ân trong mục “Điều ước & Lời tri ân”
+                          tại Góc của tôi trên trình duyệt này.
+                        </span>
+
+                        <span className="mt-2 block text-xs leading-relaxed text-muted [overflow-wrap:anywhere]">
+                          {user
+                            ? `Hồ sơ hiện tại: ${user.name}`
+                            : "Bạn sẽ được chuyển đến đăng nhập để lưu."}
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+                </fieldset>
               </div>
 
               {/* Status Message (Releasing or Saved) */}

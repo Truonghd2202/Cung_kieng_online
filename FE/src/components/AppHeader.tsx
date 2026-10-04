@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { LogOut, Menu, Moon, Sun, UserRound, X } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 
@@ -70,6 +70,27 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [currentScreen]);
+
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1024px)");
+
+    const closeOnDesktop = () => {
+      if (desktop.matches) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    closeOnDesktop();
+    desktop.addEventListener("change", closeOnDesktop);
+
+    return () => {
+      desktop.removeEventListener("change", closeOnDesktop);
+    };
+  }, []);
   const closeMenu = () => setMobileMenuOpen(false);
   const goTo = (screen: NavScreen) => {
     onNavigate(screen);
@@ -85,7 +106,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             key={item.target}
             type="button"
             className="nav-link"
-            aria-current={active ? "page" : undefined}
+            aria-current={
+              currentScreen === item.target
+                ? "page"
+                : active
+                  ? "location"
+                  : undefined
+            }
             onClick={() => goTo(item.target)}
           >
             {item.label}
@@ -156,6 +183,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 className="header-account inline-flex min-h-11 max-w-44 items-center gap-2 rounded-control px-2.5 text-sm font-semibold text-ink hover:bg-surface-soft"
                 onClick={() => goTo("account")}
                 title={`Tài khoản: ${user.name}`}
+                aria-label={`Mở Góc của tôi — ${user.name}`}
               >
                 <UserRound className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
                 <span className="hidden truncate sm:inline">{user.name}</span>

@@ -14,50 +14,191 @@ export const DEMO_USER: UserProfile = {
 
 export const LOCAL_ACCOUNTS_STORAGE_KEY = "tltl_local_demo_accounts";
 
-/**
- * Lấy danh sách các tài khoản demo đã lưu trên trình duyệt máy này.
- */
-export function getLocalDemoAccounts(): UserProfile[] {
-  try {
-    const raw = localStorage.getItem(LOCAL_ACCOUNTS_STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
-    }
-  } catch {}
-  return [DEMO_USER];
+export function parseLocalDemoProfile(
+  value: unknown
+): UserProfile | null {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value)
+  ) {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+
+  if (
+    typeof record.name !== "string" ||
+    typeof record.email !== "string"
+  ) {
+    return null;
+  }
+
+  const name = record.name.trim();
+  const email = record.email.trim().toLowerCase();
+
+  if (
+    !name ||
+    !email ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  ) {
+    return null;
+  }
+
+  return { name, email };
 }
 
-/**
- * Lưu hoặc cập nhật một tài khoản demo cục bộ vào localStorage.
- */
-export function saveLocalDemoAccount(user: UserProfile): void {
+export function loadCurrentDemoUser(): UserProfile | null {
   try {
-    const accounts = getLocalDemoAccounts();
-    const index = accounts.findIndex(
-      (a) => a.email.toLowerCase() === user.email.toLowerCase()
+    const raw = localStorage.getItem("tltl-current-user");
+
+    if (raw === null) return null;
+
+    const parsed: unknown = JSON.parse(raw);
+
+    return parseLocalDemoProfile(parsed);
+  } catch {
+    return null;
+  }
+}
+
+function parseLocalDemoAccounts(
+  value: unknown
+): UserProfile[] {
+  if (!Array.isArray(value)) return [];
+
+  const accounts: UserProfile[] = [];
+
+  for (const item of value) {
+    const profile = parseLocalDemoProfile(item);
+
+    if (!profile) continue;
+
+    const alreadyExists = accounts.some(
+      (account) => account.email === profile.email
     );
-    if (index >= 0) {
-      accounts[index] = user;
-    } else {
-      accounts.push(user);
+
+    if (!alreadyExists) {
+      accounts.push(profile);
     }
-    localStorage.setItem(LOCAL_ACCOUNTS_STORAGE_KEY, JSON.stringify(accounts));
-  } catch {}
+  }
+
+  return accounts;
+}
+
+function isCompleteLocalDemoAccounts(
+  value: unknown
+): boolean {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (item) => parseLocalDemoProfile(item) !== null
+    )
+  );
+}
+
+export function getLocalDemoAccounts(): UserProfile[] {
+  try {
+    const raw = localStorage.getItem(
+      LOCAL_ACCOUNTS_STORAGE_KEY
+    );
+
+    if (raw === null) {
+      return [{ ...DEMO_USER }];
+    }
+
+    const parsed: unknown = JSON.parse(raw);
+
+    return parseLocalDemoAccounts(parsed);
+  } catch {
+    return [];
+  }
+}
+
+export function saveLocalDemoAccount(
+  user: UserProfile
+): boolean {
+  const profile = parseLocalDemoProfile(user);
+
+  if (!profile || profile.name.length > 80) {
+    return false;
+  }
+
+  try {
+    const previousRaw = localStorage.getItem(
+      LOCAL_ACCOUNTS_STORAGE_KEY
+    );
+
+    let accounts: UserProfile[];
+
+    if (previousRaw === null) {
+      accounts = [{ ...DEMO_USER }];
+    } else {
+      let parsed: unknown;
+
+      try {
+        parsed = JSON.parse(previousRaw);
+      } catch {
+        parsed = undefined;
+      }
+
+      if (!isCompleteLocalDemoAccounts(parsed)) {
+        const backupKey =
+          `${LOCAL_ACCOUNTS_STORAGE_KEY}-recovery-${crypto.randomUUID()}`;
+
+        // Sao lưu nguyên văn trước khi ghi đè.
+        // Nếu sao lưu lỗi, hàm dừng và trả false.
+        localStorage.setItem(backupKey, previousRaw);
+      }
+
+      accounts = parseLocalDemoAccounts(parsed);
+    }
+
+    const index = accounts.findIndex(
+      (account) => account.email === profile.email
+    );
+
+    const updatedAccounts = [...accounts];
+
+    if (index >= 0) {
+      updatedAccounts[index] = profile;
+    } else {
+      updatedAccounts.push(profile);
+    }
+
+    localStorage.setItem(
+      LOCAL_ACCOUNTS_STORAGE_KEY,
+      JSON.stringify(updatedAccounts)
+    );
+
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
  * Tìm tài khoản demo cục bộ theo email.
  */
-export function findLocalDemoAccount(email: string): UserProfile | undefined {
-  const normEmail = email.trim().toLowerCase();
-  if (normEmail === DEMO_USER.email.toLowerCase() || normEmail === "annhien") {
-    return DEMO_USER;
-  }
-  const accounts = getLocalDemoAccounts();
-  return accounts.find((a) => a.email.toLowerCase() === normEmail);
+export function findLocalDemoAccount(
+  email: string
+): UserProfile | undefined {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const targetEmail =
+    normalizedEmail === "annhien"
+      ? DEMO_USER.email
+      : normalizedEmail;
+
+  const storedAccount = getLocalDemoAccounts().find(
+    (account) => account.email === targetEmail
+  );
+
+  if (storedAccount) return storedAccount;
+
+  return targetEmail === DEMO_USER.email
+    ? { ...DEMO_USER }
+    : undefined;
 }
 
 /**
@@ -99,9 +240,6 @@ export function loginAccount(
     };
   }
 
-  if (cleanEmail === DEMO_USER.email.toLowerCase() || cleanEmail === "annhien") {
-    return { success: true, user: DEMO_USER };
-  }
 
   // Tìm trong danh sách tài khoản demo đã lưu
   const existing = findLocalDemoAccount(cleanEmail);
@@ -116,7 +254,16 @@ export function loginAccount(
     name: formattedName,
     email: cleanEmail,
   };
-  saveLocalDemoAccount(newUser);
+  const saved = saveLocalDemoAccount(newUser);
+
+  if (!saved) {
+    return {
+      success: false,
+      user: DEMO_USER,
+      error:
+        "Chưa lưu được hồ sơ trên trình duyệt này. Bạn hãy thử lại.",
+    };
+  }
 
   return {
     success: true,
@@ -158,7 +305,17 @@ export function registerAccount(
     email: cleanEmail,
   };
 
-  saveLocalDemoAccount(newUser);
+  const saved = saveLocalDemoAccount(newUser);
+
+  if (!saved) {
+    return {
+      success: false,
+      user: DEMO_USER,
+      error:
+        "Chưa lưu được hồ sơ trên trình duyệt này. Bạn hãy thử lại.",
+    };
+  }
+
   return {
     success: true,
     user: newUser,

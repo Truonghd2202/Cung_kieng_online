@@ -566,15 +566,23 @@ export const loadCalendarPersonalNotes = (email?: string | null): CalendarEventI
 };
 
 /**
- * Lưu ghi chú lịch cá nhân vào đúng namespace của tài khoản
+ * Trả về true khi ghi chú đã được lưu thành công.
  */
 export const saveCalendarPersonalNotes = (
   email: string | null | undefined,
   notes: CalendarEventItem[]
-): void => {
+): boolean => {
   try {
     const key = getCalendarNotesStorageKey(email);
-    localStorage.setItem(key, JSON.stringify(notes));
-  } catch {}
+
+    localStorage.setItem(
+      key,
+      JSON.stringify(notes)
+    );
+
+    return true;
+  } catch {
+    return false;
+  }
 };
 

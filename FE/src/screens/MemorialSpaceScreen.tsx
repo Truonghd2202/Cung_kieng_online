@@ -52,25 +52,57 @@ export const MemorialSpaceScreen: React.FC<MemorialSpaceScreenProps> = ({ memori
         ) : (
           <>
             <Card className="p-6 sm:p-9 border-line mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5">
-                <div className="flex gap-4">
-                  <div className="w-14 h-14 rounded-full bg-surface-soft border border-line flex items-center justify-center text-accent shrink-0"><UserRound className="w-6 h-6" /></div>
-                  <div>
-                    <Badge variant="terracotta" className="mb-2">Góc riêng của bạn</Badge>
-                    <h2 className="font-display text-2xl sm:text-3xl font-bold">{memorial.name}</h2>
-                    <p className="text-sm text-muted mt-1">
-                      {memorial.relation} · Ngày ghi nhớ:{" "}
-                      {formatMemorialDate(memorial.date)} (dương lịch)
+              <div className="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex min-w-0 flex-1 items-start gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-line bg-surface-soft text-accent">
+                    <UserRound
+                      className="h-6 w-6"
+                      aria-hidden="true"
+                    />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <Badge
+                      variant="terracotta"
+                      className="mb-2"
+                    >
+                      Góc riêng của bạn
+                    </Badge>
+
+                    <h2 className="font-display text-2xl font-bold [overflow-wrap:anywhere] sm:text-3xl">
+                      {memorial.name}
+                    </h2>
+
+                    <p className="mt-1 text-sm leading-relaxed text-muted [overflow-wrap:anywhere]">
+                      {memorial.relation}
+                    </p>
+
+                    <p className="mt-2 text-sm leading-relaxed text-muted">
+                      Ngày ghi nhớ:{" "}
+                      {formatMemorialDate(memorial.date)}
+                      {" "}(dương lịch)
                     </p>
                   </div>
                 </div>
-                <Button variant="outline" onClick={onEdit} className="gap-2"><Edit2 className="w-4 h-4" /> Chỉnh sửa</Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onEdit}
+                  className="w-full shrink-0 gap-2 sm:w-auto"
+                >
+                  <Edit2
+                    className="h-4 w-4"
+                    aria-hidden="true"
+                  />
+                  Chỉnh sửa
+                </Button>
               </div>
 
               <div className="mt-8 pt-6 border-t border-line grid sm:grid-cols-2 gap-5">
                 <div>
                   <span className="text-xs text-muted uppercase tracking-wider">Lời tri ân</span>
-                  <p className="font-display text-lg italic mt-2 text-ink whitespace-pre-wrap break-words">
+                  <p className="mt-2 whitespace-pre-wrap font-display text-lg italic text-ink [overflow-wrap:anywhere]">
                     {memorial.note || "Bạn chưa viết lời tri ân nào."}
                   </p>
                 </div>

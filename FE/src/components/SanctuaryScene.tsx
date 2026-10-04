@@ -57,6 +57,7 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
       return;
     }
 
+    let contextLost = false;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = true;
@@ -1235,20 +1236,107 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
       }
     });
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 1.75, 0);
+    // Đo các vật thể của bàn thờ, bỏ sàn và tường nền.
+    scene.updateMatrixWorld(true);
+
+    const altarBounds = new THREE.Box3();
+
+    scene.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+
+      const materials = Array.isArray(object.material)
+        ? object.material
+        : [object.material];
+
+      const isRoomSurface = materials.some(
+        (material) =>
+          material === floorMaterial ||
+          material === wallMaterial
+      );
+
+      if (isRoomSurface) return;
+
+      object.geometry.computeBoundingBox();
+
+      const localBounds = object.geometry.boundingBox;
+      if (!localBounds) return;
+
+      const worldBounds = localBounds
+        .clone()
+        .applyMatrix4(object.matrixWorld);
+
+      altarBounds.union(worldBounds);
+    });
+
+    const altarSphere = altarBounds.getBoundingSphere(
+      new THREE.Sphere()
+    );
+
+    const defaultViewDirection = new THREE.Vector3(
+      0.12,
+      0.14,
+      1
+    ).normalize();
+
+    const controls = new OrbitControls(
+      camera,
+      renderer.domElement
+    );
+
     controls.enablePan = false;
     controls.enableDamping = false;
-    controls.minDistance = 3.6;
-    controls.maxDistance = 7.5;
+
     controls.minAzimuthAngle = -Math.PI / 4.5;
     controls.maxAzimuthAngle = Math.PI / 4.5;
     controls.minPolarAngle = Math.PI / 3;
     controls.maxPolarAngle = Math.PI / 2;
-    controls.update();
-    controls.saveState();
 
-    const render = () => renderer.render(scene, camera);
+    const fitCameraToAltar = (resetDirection = false) => {
+      const direction = resetDirection
+        ? defaultViewDirection.clone()
+        : camera.position.clone().sub(controls.target).normalize();
+
+      if (direction.lengthSq() === 0) {
+        direction.copy(defaultViewDirection);
+      }
+
+      const verticalHalfFov = THREE.MathUtils.degToRad(
+        camera.fov / 2
+      );
+
+      const horizontalHalfFov = Math.atan(
+        Math.tan(verticalHalfFov) * camera.aspect
+      );
+
+      const limitingHalfFov = Math.min(
+        verticalHalfFov,
+        horizontalHalfFov
+      );
+
+      // Chừa khoảng thở quanh toàn bộ mô hình.
+      const distance =
+        (altarSphere.radius / Math.sin(limitingHalfFov)) * 1.12;
+
+      controls.target.copy(altarSphere.center);
+
+      controls.minDistance = distance * 0.55;
+      controls.maxDistance = distance * 2;
+
+      camera.position
+        .copy(altarSphere.center)
+        .addScaledVector(direction, distance);
+
+      camera.near = Math.max(0.01, distance / 100);
+      camera.far = Math.max(50, distance * 4);
+      camera.updateProjectionMatrix();
+
+      controls.update();
+    };
+
+    const render = () => {
+      if (contextLost) return;
+      renderer.render(scene, camera);
+    };
 
     // Create a soft smoke texture locally.
     const smokeCanvas = document.createElement("canvas");
@@ -1342,7 +1430,12 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
     const animateSmoke = (time: number) => {
       animationFrame = null;
 
-      if (!isLit || reducedMotion.matches || document.hidden) {
+      if (
+        contextLost ||
+        !isLit ||
+        reducedMotion.matches ||
+        document.hidden
+      ) {
         lastTime = null;
         return;
       }
@@ -1361,6 +1454,7 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
 
     const syncSmokeAnimation = () => {
       stopSmokeAnimation();
+      if (contextLost) return;
       updateSmoke();
       render();
 
@@ -1368,6 +1462,25 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
         animationFrame = requestAnimationFrame(animateSmoke);
       }
     };
+
+    const handleContextLost = () => {
+      contextLost = true;
+      stopSmokeAnimation();
+
+      controls.enabled = false;
+      resetRef.current = null;
+      viewRef.current = null;
+      incenseRef.current = null;
+
+      setError(
+        "Cảnh 3D đã tạm ngừng do mất kết nối đồ họa. Bạn hãy đóng cảnh rồi mở lại, hoặc tiếp tục ở những mục bên dưới."
+      );
+    };
+
+    renderer.domElement.addEventListener(
+      "webglcontextlost",
+      handleContextLost
+    );
 
     reducedMotion.addEventListener("change", syncSmokeAnimation);
     document.addEventListener("visibilitychange", syncSmokeAnimation);
@@ -1387,13 +1500,20 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
       },
     };
 
+    let hasInitialView = false;
+
     const resize = () => {
-      const width = Math.max(host.clientWidth, 1);
-      const height = Math.max(host.clientHeight, 1);
+      const width = host.clientWidth;
+      const height = host.clientHeight;
+
+      if (width <= 0 || height <= 0) return;
 
       renderer.setSize(width, height);
       camera.aspect = width / height;
-      camera.updateProjectionMatrix();
+
+      fitCameraToAltar(!hasInitialView);
+      hasInitialView = true;
+
       render();
     };
 
@@ -1401,7 +1521,7 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
     controls.addEventListener("change", render);
 
     resetRef.current = () => {
-      controls.reset();
+      fitCameraToAltar(true);
       render();
     };
 
@@ -1443,6 +1563,10 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
 
     return () => {
       stopSmokeAnimation();
+      renderer.domElement.removeEventListener(
+        "webglcontextlost",
+        handleContextLost
+      );
 
       reducedMotion.removeEventListener("change", syncSmokeAnimation);
       document.removeEventListener("visibilitychange", syncSmokeAnimation);
@@ -1520,7 +1644,10 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
           {error}
         </p>
       ) : (
-        <div ref={hostRef} className="h-72 w-full sm:h-96" />
+        <div
+          ref={hostRef}
+          className="h-[340px] w-full sm:h-[420px] lg:h-[480px]"
+        />
       )}
 
       <div className="border-t border-line bg-surface-soft p-4 sm:p-5">

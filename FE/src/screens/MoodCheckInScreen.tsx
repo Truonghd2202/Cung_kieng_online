@@ -202,6 +202,7 @@ export const MoodCheckInScreen: React.FC<
                 onChangeJournal(event.target.value)
               }
               rows={4}
+              maxLength={2000}
               placeholder="Một chuyện vừa xảy ra, một điều đang nghĩ đến..."
               aria-describedby="mood-journal-note"
               className="resize-y"
@@ -211,8 +212,13 @@ export const MoodCheckInScreen: React.FC<
               id="mood-journal-note"
               className="mt-3 text-sm text-muted leading-relaxed"
             >
-              Ghi chép này chưa được lưu. Bạn có thể chọn lưu cùng
-              lời chiêm nghiệm ở bước sau.
+              Đây là ghi chép của bạn, chưa được lưu. Bản demo chọn lời
+              chiêm nghiệm theo tâm trạng bạn chọn, chưa phân tích đoạn
+              ghi chép này. Bạn có thể lưu cả hai ở bước sau.
+            </p>
+
+            <p className="mt-2 text-xs text-muted text-right">
+              {journalText.length}/2000 ký tự
             </p>
           </div>
         </details>

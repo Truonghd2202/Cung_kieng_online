@@ -464,6 +464,46 @@ const ELEMENT_ATTRIBUTES: Record<
   },
 };
 
+export function validateBirthDate(
+  day: number,
+  month: number,
+  year: number
+): string | null {
+  if (
+    !Number.isInteger(day) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(year) ||
+    year < 1 ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31
+  ) {
+    return "Ngày sinh chưa hợp lệ.";
+  }
+
+  const birthDate = new Date(0);
+  birthDate.setHours(0, 0, 0, 0);
+  birthDate.setFullYear(year, month - 1, day);
+
+  if (
+    birthDate.getFullYear() !== year ||
+    birthDate.getMonth() !== month - 1 ||
+    birthDate.getDate() !== day
+  ) {
+    return "Ngày này không tồn tại. Bạn hãy kiểm tra lại ngày, tháng và năm sinh.";
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (birthDate.getTime() > today.getTime()) {
+    return "Ngày sinh không thể nằm trong tương lai.";
+  }
+
+  return null;
+}
+
 /**
  * Tính toán kết quả chiêm nghiệm văn hóa nhất quán dựa trên đầu vào
  */
@@ -482,8 +522,19 @@ export function calculateHoroscope({
   noHour: boolean;
   region: string;
 }): HoroscopeCalculationResult {
+  const dateError = validateBirthDate(day, month, year);
+
+  if (dateError) {
+    throw new Error(dateError);
+  }
+
   // 1. Chuyển đổi sang Âm lịch và Can Chi
-  const [lunarDay, lunarMonth, lunarYear] = convertSolar2Lunar(day, month, year);
+  const [
+    lunarDay,
+    lunarMonth,
+    lunarYear,
+    isLeapMonth,
+  ] = convertSolar2Lunar(day, month, year);
   const canChiYear = getCanChiYear(lunarYear);
 
   // 2. Tra Nạp Âm Ngũ Hành theo Can Chi
@@ -504,7 +555,7 @@ export function calculateHoroscope({
   } else if (lunarMonth >= 7 && lunarMonth <= 9) {
     seasonName = "Mùa Thu";
     seasonDetail = "Khí Kim thanh lương, thu liễm tĩnh tại, mùa gặt và đúc kết chiêm nghiệm.";
-  } else if (lunarMonth >= 10 || lunarMonth <= 12) {
+  } else if (lunarMonth >= 10 && lunarMonth <= 12) {
     seasonName = "Mùa Đông";
     seasonDetail = "Khí Thủy sâu lắng, tĩnh mịch dưỡng nguyên, tích tụ nội lực chờ xuân.";
   }
@@ -528,7 +579,11 @@ export function calculateHoroscope({
 
   return {
     solarDate: `${day}/${month}/${year}`,
-    lunarDate: `${lunarDay}/${lunarMonth}/${lunarYear} (Âm lịch)`,
+    lunarDate:
+      `${lunarDay}/${lunarMonth}/${lunarYear} ` +
+      (isLeapMonth
+        ? "(Âm lịch — tháng nhuận)"
+        : "(Âm lịch)"),
     lunarDay,
     lunarMonth,
     lunarYear,

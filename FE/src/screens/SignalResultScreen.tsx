@@ -12,8 +12,10 @@ import {
 
 import type { MoodKey, SignalData } from "../data/demoSignals";
 import { Button } from "@/src/components/ui/button";
+import { ContentProvenance } from "../components/ContentProvenance";
 
 interface SignalResultScreenProps {
+  journalText?: string;
   mood?: MoodKey;
   signal: SignalData;
   isActionDone: boolean;
@@ -28,6 +30,7 @@ interface SignalResultScreenProps {
 export const SignalResultScreen: React.FC<
   SignalResultScreenProps
 > = ({
+  journalText = "",
   signal,
   isActionDone,
   onToggleAction,
@@ -63,6 +66,12 @@ export const SignalResultScreen: React.FC<
     }
   };
 
+  const quotationLabel = signal.metadata.quotationVerified
+    ? "Câu trích đã đối chiếu nguồn"
+    : signal.metadata.contentKind === "demo"
+      ? "Lời biên soạn minh họa"
+      : "Câu trích đang chờ đối chiếu";
+
   return (
     <div className="screen-shell">
       <main className="page-container max-w-5xl">
@@ -85,6 +94,36 @@ export const SignalResultScreen: React.FC<
           </p>
         </header>
 
+        {journalText.trim() && (
+          <details className="group mb-6 rounded-card border border-line bg-surface">
+            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-control p-4 text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
+              <span>Đọc lại ghi chép của bạn trong lượt này</span>
+
+              <ChevronDown
+                aria-hidden="true"
+                className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-180 motion-reduce:transition-none"
+              />
+            </summary>
+
+            <div className="px-4 pb-5">
+              <p className="whitespace-pre-wrap text-sm sm:text-base text-ink leading-relaxed [overflow-wrap:anywhere]">
+                {journalText}
+              </p>
+
+              <p className="mt-4 text-sm text-muted leading-relaxed">
+                Khi đọc lời chiêm nghiệm bên dưới, bạn có thể tự hỏi:
+                điều nào phù hợp với chuyện mình vừa ghi lại?
+              </p>
+
+              <p className="mt-3 text-xs text-muted leading-relaxed">
+                Lời chiêm nghiệm được chọn theo tâm trạng, chưa được
+                tạo từ nội dung ghi chép. Ghi chép không được đưa vào
+                liên kết chia sẻ.
+              </p>
+            </div>
+          </details>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <section
             aria-labelledby="reflection-poem-title"
@@ -102,9 +141,15 @@ export const SignalResultScreen: React.FC<
               <p>{signal.poem.line2}</p>
             </blockquote>
 
-            <p className="text-sm text-muted mt-4">
-              {signal.poem.subtext}
-            </p>
+            <div className="mt-4 space-y-2">
+              <p className="text-sm text-muted">
+                {signal.poem.subtext}
+              </p>
+
+              <span className="inline-flex rounded-full border border-line bg-canvas px-3 py-1 text-xs font-medium text-muted">
+                {quotationLabel}
+              </span>
+            </div>
 
             <div className="mt-6 pt-5 border-t border-line">
               <p className="text-base text-ink leading-relaxed">
@@ -266,9 +311,16 @@ export const SignalResultScreen: React.FC<
             </summary>
 
             <div className="px-4 pb-5 sm:px-5">
-              <p className="text-base text-ink leading-relaxed">
-                {signal.reflection.content}
-              </p>
+              <div className="space-y-3">
+                <p className="text-sm text-muted leading-relaxed">
+                  Lời gợi mở do sản phẩm biên soạn. Bạn có thể giữ lại
+                  điều phù hợp với trải nghiệm của mình.
+                </p>
+
+                <p className="text-base text-ink leading-relaxed">
+                  {signal.reflection.content}
+                </p>
+              </div>
 
               <figure className="mt-5">
                 <img
@@ -296,17 +348,13 @@ export const SignalResultScreen: React.FC<
               />
             </summary>
 
-            <div className="px-4 pb-5 sm:px-5 space-y-2 text-sm leading-relaxed">
-              <p className="text-ink">
-                <strong>Nguồn: </strong>
-                {signal.research.source}
-              </p>
-              <p className="text-muted">
-                {signal.research.region}
-              </p>
-              <p className="text-muted">
-                {signal.research.note}
-              </p>
+            <div className="px-4 pb-5 sm:px-5">
+              <ContentProvenance metadata={signal.metadata} />
+
+              <div className="mt-4 space-y-2 border-t border-line pt-4 text-sm leading-relaxed text-muted">
+                <p>{signal.research.region}</p>
+                <p>{signal.research.note}</p>
+              </div>
             </div>
           </details>
         </div>

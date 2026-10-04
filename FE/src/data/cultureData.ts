@@ -98,7 +98,7 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
       },
     ],
     editorialNote:
-      "Nội dung được tổng hợp và đối chiếu từ các công trình khảo cứu dân tộc học và phong tục học Việt Nam uy tín. Toàn bộ tư liệu được chuẩn hóa phục vụ mục đích tìm hiểu văn hóa và trải nghiệm chiêm nghiệm dân gian đương đại.",
+      "Bài viết đang được biên soạn cho bản thử nghiệm. Danh sách tài liệu là đầu mối tham khảo, chưa hoàn tất đối chiếu từng nhận định với bản xuất bản và vị trí trích dẫn cụ thể.",
     sources: [
       {
         title: "Việt Nam Phong Tục",
@@ -171,7 +171,7 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
       },
     ],
     editorialNote:
-      "Tư liệu điển tích được biên soạn dựa trên các văn bản văn học dân gian và chính sử thời kỳ Hùng Vương, nhấn mạnh giá trị nhân văn và đạo hiếu truyền đời.",
+      "Bài viết đang được biên soạn cho bản thử nghiệm. Danh sách tài liệu là đầu mối tham khảo, chưa hoàn tất đối chiếu từng nhận định với bản xuất bản và vị trí trích dẫn cụ thể.",
     sources: [
       {
         title: "Lĩnh Nam Chích Quái (Truyện Dạ Trạch Vương)",
@@ -226,7 +226,7 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
       },
     ],
     editorialNote:
-      "Tư liệu được trích lục từ văn bản di sản thế giới UNESCO và chính sử quốc gia, thể hiện sự tiếp nối thiêng liêng của đạo lý Uống nước nhớ nguồn.",
+      "Bài viết đang được biên soạn cho bản thử nghiệm. Danh sách tài liệu là đầu mối tham khảo, chưa hoàn tất đối chiếu từng nhận định với bản xuất bản và vị trí trích dẫn cụ thể.",
     sources: [
       {
         title: "Hồ sơ đệ trình UNESCO: Tín ngưỡng Thờ cúng Hùng Vương tại Phú Thọ",
@@ -279,7 +279,7 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
       },
     ],
     editorialNote:
-      "Tư liệu được biên soạn dựa trên khảo sát điền dã và các công trình nghiên cứu văn hóa dân gian Huế của các học giả chuyên ngành.",
+      "Bài viết đang được biên soạn cho bản thử nghiệm. Danh sách tài liệu là đầu mối tham khảo, chưa hoàn tất đối chiếu từng nhận định với bản xuất bản và vị trí trích dẫn cụ thể.",
     sources: [
       {
         title: "Nghi lễ & Hội hè Xứ Huế",
@@ -332,7 +332,7 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
       },
     ],
     editorialNote:
-      "Nội dung chuẩn hóa từ hồ sơ di sản văn hóa phi vật thể quốc gia về lễ hội cầu ngư và tập quán tín ngưỡng vạn chài ven biển.",
+      "Bài viết đang được biên soạn cho bản thử nghiệm. Danh sách tài liệu là đầu mối tham khảo, chưa hoàn tất đối chiếu từng nhận định với bản xuất bản và vị trí trích dẫn cụ thể.",
     sources: [
       {
         title: "Tục thờ Cá Ông của Cư dân Ven biển Miền Trung",
@@ -385,7 +385,7 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
       },
     ],
     editorialNote:
-      "Tư liệu được biên soạn dựa trên các thư tịch địa chí Nam Bộ thời Nguyễn và các công trình khảo cứu văn hóa dân gian đồng bằng sông Cửu Long.",
+      "Bài viết đang được biên soạn cho bản thử nghiệm. Danh sách tài liệu là đầu mối tham khảo, chưa hoàn tất đối chiếu từng nhận định với bản xuất bản và vị trí trích dẫn cụ thể.",
     sources: [
       {
         title: "Gia Định Thành Thông Chí (Sơn Xuyên Chí)",
@@ -409,9 +409,10 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
   },
 ];
 
-export const getCultureArticleById = (id: string): CultureArticle => {
-  const found = CULTURE_ARTICLES.find((a) => a.id === id);
-  return found || CULTURE_ARTICLES[0];
+export const getCultureArticleById = (
+  id: string
+): CultureArticle | undefined => {
+  return CULTURE_ARTICLES.find((article) => article.id === id);
 };
 
 export const getRelatedArticles = (currentId: string, limit = 3): CultureArticle[] => {

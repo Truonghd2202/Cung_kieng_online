@@ -1,9 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
-import { BookOpen, X, Flower2, Feather } from "lucide-react";
+import React, { useEffect, useRef } from "react";
+import { X } from "lucide-react";
 import { MoodKey, SIGNALS_DATA } from "../data/demoSignals";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
-import { Progress } from "@/src/components/ui/progress";
 import { Button } from "@/src/components/ui/button";
 
 interface SignalLoadingScreenProps {
@@ -18,42 +17,29 @@ export const SignalLoadingScreen: React.FC<SignalLoadingScreenProps> = ({
   onCancel,
 }) => {
   const signal = SIGNALS_DATA[mood] || SIGNALS_DATA["Chênh vênh"];
-  const [progress, setProgress] = useState(25);
 
   // Giữ callback ổn định qua ref để tránh re-render kích hoạt lại hiệu ứng
   const onFinishRef = useRef(onFinishLoading);
   onFinishRef.current = onFinishLoading;
 
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    let isCancelled = false;
+    let cancelled = false;
 
-    const intervalId = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(intervalId);
-          if (!isCancelled) {
-            timeoutId = setTimeout(() => {
-              if (!isCancelled) {
-                onFinishRef.current();
-              }
-            }, 600);
-          }
-          return 100;
-        }
-        return prev + 15;
-      });
-    }, 700);
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
 
-    // Dọn dẹp triệt để cả interval và timeout khi rời màn hoặc bấm Hủy
+    const timer = setTimeout(() => {
+      if (cancelled) return;
+
+      onFinishRef.current();
+    }, reducedMotion ? 200 : 700);
+
     return () => {
-      isCancelled = true;
-      clearInterval(intervalId);
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
+      cancelled = true;
+      clearTimeout(timer);
     };
-  }, []);
+  }, [mood]);
 
   return (
     <div className="screen-shell">
@@ -61,8 +47,8 @@ export const SignalLoadingScreen: React.FC<SignalLoadingScreenProps> = ({
         {/* Step indicator badge */}
         <div className="text-center mb-6">
           <Badge variant="terracotta" className="gap-2 px-3.5 py-1 text-xs font-semibold tracking-wider uppercase">
-            <span className="w-2 h-2 rounded-full bg-action animate-pulse"></span>
-            <span>Bước 3 • Lắng đọng & Gieo nhịp</span>
+            <span className="w-2 h-2 rounded-full bg-action animate-pulse motion-reduce:animate-none"></span>
+            <span>Mở lời chiêm nghiệm</span>
           </Badge>
         </div>
 
@@ -79,7 +65,7 @@ export const SignalLoadingScreen: React.FC<SignalLoadingScreenProps> = ({
           {/* Compass / Mandala / Breathing Element */}
           <div className="relative w-48 h-48 sm:w-56 sm:h-56 mx-auto mb-6 flex items-center justify-center">
             {/* Outer soft glowing rings */}
-            <div className="absolute inset-0 rounded-full bg-surface-soft animate-pulse" />
+            <div className="absolute inset-0 rounded-full bg-surface-soft animate-pulse motion-reduce:animate-none" />
             <div className="absolute inset-4 rounded-full border border-line" />
             <div className="absolute inset-8 rounded-full border border-line" />
 
@@ -137,66 +123,15 @@ export const SignalLoadingScreen: React.FC<SignalLoadingScreenProps> = ({
 
           {/* Heading */}
           <h1 className="page-title max-w-xl mx-auto mb-3">
-            Thở nhẹ ba nhịp, lắng tâm đón nhận
+            Một lời gợi mở theo tâm trạng bạn chọn
           </h1>
-          <p className="text-sm text-muted max-w-md mx-auto leading-relaxed mb-8">
-            Hệ thống đang kết nối tâm trạng của bạn với kho tàng văn hóa dân gian
-            Việt, chắt lọc một điềm lành tương hợp.
+          <p
+            role="status"
+            className="text-sm text-muted max-w-md mx-auto leading-relaxed mb-6"
+          >
+            Đang mở lời chiêm nghiệm từ bộ nội dung mẫu.
+            Bạn có thể giữ lại điều phù hợp với mình.
           </p>
-
-          {/* Progress bar and stages */}
-          <div className="max-w-md mx-auto mb-8">
-            <div className="flex items-center justify-between text-xs text-muted font-medium mb-2">
-              <span className="flex items-center gap-1.5 text-accent">
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>{signal.loadingFacts.stepText}</span>
-              </span>
-              <span className="font-bold text-accent">{progress}%</span>
-            </div>
-
-            {/* Shadcn Progress component */}
-            <Progress value={progress} />
-
-            {/* Stages */}
-            <div className="flex items-center justify-between text-xs text-muted mt-2 px-1">
-              <span>Khởi nguồn tâm thức</span>
-              <span>Hòa quyện tích cổ</span>
-              <span>Khai mở chỉ dẫn</span>
-            </div>
-          </div>
-
-          {/* 2 Info Cards below */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto text-left mb-8">
-            {/* Card 1 */}
-            <div className="p-4 rounded-panel bg-surface border border-line flex items-start gap-3">
-              <div className="w-8 h-8 rounded-xl bg-surface flex items-center justify-center text-accent flex-shrink-0">
-                <Flower2 className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-bold uppercase tracking-wider text-accent mb-0.5">
-                  {signal.loadingFacts.thoughtTitle}
-                </div>
-                <div className="text-xs text-ink leading-relaxed">
-                  {signal.loadingFacts.thoughtContent}
-                </div>
-              </div>
-            </div>
-
-            {/* Card 2 */}
-            <div className="p-4 rounded-panel bg-surface border border-line flex items-start gap-3">
-              <div className="w-8 h-8 rounded-xl bg-surface flex items-center justify-center text-accent flex-shrink-0">
-                <Feather className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-bold uppercase tracking-wider text-accent mb-0.5">
-                  {signal.loadingFacts.originTitle}
-                </div>
-                <div className="text-xs text-ink leading-relaxed">
-                  {signal.loadingFacts.originContent}
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Cancel button */}
           <Button

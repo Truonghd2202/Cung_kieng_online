@@ -72,8 +72,43 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [isIncenseLit, setIsIncenseLit] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
 
+  const [reducedMotion, setReducedMotion] = useState(() =>
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    );
+
+    const syncPreference = () => {
+      setReducedMotion(mediaQuery.matches);
+    };
+
+    syncPreference();
+    mediaQuery.addEventListener("change", syncPreference);
+
+    return () => {
+      mediaQuery.removeEventListener("change", syncPreference);
+    };
+  }, []);
+
   const isSubmitting = authState === "submitting";
   const isSuccess = authState === "success";
+
+  const [canLightIncense, setCanLightIncense] = useState(false);
+
+  useEffect(() => {
+    setCanLightIncense(false);
+
+    if (!isSuccess) return;
+
+    const timer = window.setTimeout(() => {
+      setCanLightIncense(true);
+    }, 5000);
+
+    return () => window.clearTimeout(timer);
+  }, [isSuccess]);
 
   // Quản lý timers & cleanup
   const timeoutRefs = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -89,11 +124,31 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const audioCtxRef = useRef<AudioContext | null>(null);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
 
+  useEffect(() => {
+    return () => {
+      const audio = audioElementRef.current;
+      audioElementRef.current = null;
+
+      if (audio) {
+        audio.pause();
+      }
+
+      const audioContext = audioCtxRef.current;
+      audioCtxRef.current = null;
+
+      if (audioContext && audioContext.state !== "closed") {
+        audioContext.close().catch(() => {});
+      }
+    };
+  }, []);
+
   // Parallax 2.5D tương tác theo góc nhìn chuột
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const parallaxRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
 
   const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    if (reducedMotion || document.hidden) return;
+
     const rect = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
@@ -107,6 +162,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     parallaxRef.current.targetY = 0;
     setParallax({ x: 0, y: 0 });
   };
+
+  useEffect(() => {
+    if (!reducedMotion) return;
+
+    parallaxRef.current = {
+      x: 0,
+      y: 0,
+      targetX: 0,
+      targetY: 0,
+    };
+
+    setParallax({ x: 0, y: 0 });
+  }, [reducedMotion]);
 
   // Khôi phục email nhớ
   useEffect(() => {
@@ -261,7 +329,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
   // HÀNH ĐỘNG THẮP NHANG: BÙNG NỔ TIA LỬA + CHUÔNG THIỀN + BẮT ĐẦU TỎA KHÓI
   const handleLightIncense = useCallback(() => {
-    if (isIncenseLit) return;
+    if (!isSuccess || !canLightIncense || isIncenseLit) return;
     setIsIncenseLit(true);
     playZenBellSound();
 
@@ -293,18 +361,22 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       }
       sparksRef.current = burstSparks;
     }
-  }, [isIncenseLit, isMuted]);
+  }, [isSuccess, canLightIncense, isIncenseLit, isMuted]);
 
   // Sau khi người dùng đã tự tay thắp nhang, cho 5.5s chiêm nghiệm rồi tự chuyển trang
   useEffect(() => {
     if (!isSuccess || !isIncenseLit) return;
 
-    const redirectTimer = setTimeout(() => {
+    const redirectTimer = window.setTimeout(() => {
       handleCompleteLogin();
     }, 5500);
 
-    return () => clearTimeout(redirectTimer);
-  }, [isSuccess, isIncenseLit, handleCompleteLogin]);
+    return () => window.clearTimeout(redirectTimer);
+  }, [
+    isSuccess,
+    isIncenseLit,
+    handleCompleteLogin,
+  ]);
 
   // CANVAS VẼ BÀN THỜ 2.5D: ĐÈN DẦU LUNG LINH, BỤI VÀNG LINH THIÊNG, 3 NÉN NHANG & KHÓI TRẦM
   useEffect(() => {
@@ -315,7 +387,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
 
-    let animId: number;
+    let animId: number | null = null;
+    let disposed = false;
     let width = (canvas.width = section.clientWidth);
     let height = (canvas.height = section.clientHeight);
 
@@ -337,6 +410,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     const particles: SmokeParticle[] = [];
 
     const render = (now: number) => {
+      animId = null;
+
+      if (disposed || document.hidden) return;
+
       if (
         section &&
         (canvas.width !== section.clientWidth || canvas.height !== section.clientHeight)
@@ -755,22 +832,55 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         }
       }
 
-      animId = requestAnimationFrame(render);
+      if (!reducedMotion) {
+        animId = requestAnimationFrame(render);
+      }
     };
 
-    animId = requestAnimationFrame(render);
+    const stopAnimation = () => {
+      if (animId !== null) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      }
+    };
+
+    const startAnimation = () => {
+      if (disposed || document.hidden || animId !== null) return;
+
+      if (reducedMotion) {
+        render(0);
+      } else {
+        animId = requestAnimationFrame(render);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopAnimation();
+      } else {
+        startAnimation();
+      }
+    };
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+
+    startAnimation();
 
     return () => {
-      cancelAnimationFrame(animId);
-      if (audioElementRef.current) {
-        audioElementRef.current.pause();
-        audioElementRef.current = null;
-      }
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => {});
-      }
+      disposed = true;
+      stopAnimation();
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     };
-  }, [isSuccess, isIncenseLit]);
+  }, [isSuccess, isIncenseLit, reducedMotion]);
 
   // Xử lý submit email
   const handleSubmit = (e: React.FormEvent) => {
@@ -815,10 +925,20 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
     const timer = setTimeout(() => {
       const googleUser: UserProfile = {
-        name: "Phật Tử Thiện Tâm",
-        email: "thientam.google@gmail.com",
+        name: "Người trải nghiệm",
+        email: "nguoi.trai.nghiem@example.com",
       };
-      saveLocalDemoAccount(googleUser);
+      const saved = saveLocalDemoAccount(googleUser);
+
+      if (!saved) {
+        setAuthState("error");
+        setErrorMessage(
+          "Chưa lưu được hồ sơ demo trên trình duyệt này. Bạn hãy thử lại."
+        );
+        onImmersiveChange?.(false);
+        return;
+      }
+
       setAuthenticatedUser(googleUser);
       setAuthState("success");
       onImmersiveChange?.(true); // Ẩn Header
@@ -829,7 +949,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
   return (
     <div
-      className={`relative w-full flex flex-col lg:flex-row bg-[#f6f2ea] dark:bg-[#151214] text-ink transition-all duration-700 overflow-hidden ${
+      className={`relative w-full flex flex-col lg:flex-row bg-[#f6f2ea] dark:bg-[#151214] text-ink transition-all duration-700 motion-reduce:transition-none overflow-hidden ${
         isSuccess
           ? "min-h-screen fixed inset-0 z-50 bg-stone-950"
           : "min-h-[calc(100vh-73px)] lg:h-[calc(100dvh-73px)] lg:max-h-[calc(100dvh-73px)]"
@@ -842,7 +962,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={isSuccess ? handleLightIncense : undefined}
-        className={`relative flex flex-col justify-end select-none bg-stone-950 transition-all duration-1000 ease-out overflow-hidden ${
+        className={`relative flex flex-col justify-end select-none bg-stone-950 transition-all duration-1000 ease-out motion-reduce:transition-none overflow-hidden ${
           isSuccess
             ? "w-full h-full min-h-screen z-30 cursor-pointer"
             : "w-full lg:w-[58%] xl:w-[62%] h-48 sm:h-64 lg:h-full shrink-0 min-h-[200px] lg:min-h-0"
@@ -856,17 +976,33 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               e.stopPropagation();
               setIsMuted(!isMuted);
             }}
-            className="p-2.5 rounded-full bg-stone-900/60 hover:bg-stone-900/90 text-stone-200 border border-amber-500/25 backdrop-blur-md shadow-lg transition-all cursor-pointer"
+            className="p-2.5 rounded-full bg-stone-900/60 hover:bg-stone-900/90 text-stone-200 border border-amber-500/25 backdrop-blur-md shadow-lg transition-all motion-reduce:transition-none cursor-pointer"
             title={isMuted ? "Bật chuông thiền" : "Tắt chuông thiền"}
             aria-label={isMuted ? "Bật chuông thiền" : "Tắt chuông thiền"}
           >
             {isMuted ? (
               <VolumeX className="w-4 h-4 text-stone-400" />
             ) : (
-              <Volume2 className="w-4 h-4 text-amber-400 animate-pulse" />
+              <Volume2 className="w-4 h-4 text-amber-400 animate-pulse motion-reduce:animate-none" />
             )}
           </button>
         </div>
+
+        {isSuccess && !isIncenseLit && (
+          <div className="absolute bottom-6 left-6 z-40">
+            <button
+              type="button"
+              disabled={!canLightIncense}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleLightIncense();
+              }}
+              className="min-h-11 rounded-full border border-amber-500/30 bg-stone-900/80 px-5 py-3 text-sm font-medium text-amber-100 backdrop-blur-md disabled:cursor-wait disabled:opacity-60"
+            >
+              {canLightIncense ? "Đốt nhang" : "Chờ một chút…"}
+            </button>
+          </div>
+        )}
 
         {/* NÚT VÀO NGAY GÓC PHẢI DƯỚI (SIÊU NHỎ GỌN, KHÔNG CHỮ RƯỜM RÀ, KHÔNG CHE LƯ HƯƠNG) */}
         {isSuccess && (
@@ -877,7 +1013,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 e.stopPropagation();
                 handleCompleteLogin();
               }}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-stone-900/60 hover:bg-stone-900/95 text-stone-300 hover:text-amber-200 border border-amber-500/20 backdrop-blur-md text-xs font-sans shadow-lg transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-stone-900/60 hover:bg-stone-900/95 text-stone-300 hover:text-amber-200 border border-amber-500/20 backdrop-blur-md text-xs font-sans shadow-lg transition-all motion-reduce:transition-none cursor-pointer"
               title="Vào ngay"
               aria-label="Vào ngay"
             >
@@ -893,8 +1029,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           src="/images/login-altar-scene-v3.png"
           alt="Bàn thờ gia tiên trang nghiêm"
           style={{
-            transform: `scale(1.06) translate3d(${parallax.x * -16}px, ${parallax.y * -12}px, 0)`,
-            transition: "transform 0.18s cubic-bezier(0.2, 0.8, 0.3, 1), filter 1s ease",
+            transform: reducedMotion
+              ? "scale(1.06)"
+              : `scale(1.06) translate3d(${parallax.x * -16}px, ${parallax.y * -12}px, 0)`,
+            transition: reducedMotion
+              ? "none"
+              : "transform 0.18s cubic-bezier(0.2, 0.8, 0.3, 1), filter 1s ease",
           }}
           className={`absolute inset-0 w-full h-full object-cover object-center pointer-events-none will-change-transform ${
             isSuccess ? "filter brightness(1.05)" : ""
@@ -903,19 +1043,20 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
         {/* Lớp phủ ánh đèn dầu lung linh */}
         <div
-          className={`absolute inset-0 bg-radial from-amber-500/10 via-transparent to-black/35 pointer-events-none transition-opacity duration-1000 ${
+          className={`absolute inset-0 bg-radial from-amber-500/10 via-transparent to-black/35 pointer-events-none transition-opacity duration-1000 motion-reduce:transition-none ${
             isSuccess ? "opacity-100" : "opacity-75"
           }`}
         />
 
         {/* Vầng hào quang nhẹ quanh lư hương khi đã thắp nhang */}
         {isSuccess && isIncenseLit && (
-          <div className="absolute left-1/2 top-[69.5%] -translate-x-1/2 -translate-y-1/2 w-[420px] sm:w-[500px] h-[420px] sm:h-[500px] rounded-full bg-gradient-to-t from-amber-500/25 via-orange-400/10 to-transparent blur-3xl animate-pulse duration-1000 pointer-events-none" />
+          <div className="absolute left-1/2 top-[69.5%] -translate-x-1/2 -translate-y-1/2 w-[420px] sm:w-[500px] h-[420px] sm:h-[500px] rounded-full bg-gradient-to-t from-amber-500/25 via-orange-400/10 to-transparent blur-3xl animate-pulse duration-1000 motion-reduce:animate-none pointer-events-none" />
         )}
 
         {/* Canvas vẽ 3 nén nhang và khói trầm — TUYỆT ĐỐI KHÔNG CÓ BẤT KỲ CHỮ NÀO ĐÈ LÊN */}
         <canvas
           ref={canvasRef}
+          aria-hidden="true"
           className="absolute inset-0 w-full h-full pointer-events-none z-20"
         />
 
@@ -934,7 +1075,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       {/* CỘT PHẢI: FORM ĐĂNG NHẬP GÓC AN YÊN — CÂN ĐỐI 10/10, SANG TRỌNG, THOÁNG MẮT */}
       <section
         aria-label="Biểu mẫu đăng nhập"
-        className={`relative transition-all duration-700 ease-in-out ${
+        className={`relative transition-all duration-700 ease-in-out motion-reduce:transition-none ${
           isSuccess
             ? "opacity-0 translate-x-12 pointer-events-none w-0 h-0 p-0 overflow-hidden flex-none"
             : "w-full lg:w-[42%] xl:w-[38%] shrink-0 flex flex-col justify-center items-center px-6 py-6 sm:px-10 lg:px-8 xl:px-12 opacity-100 translate-x-0 lg:h-full lg:max-h-full overflow-y-auto bg-[radial-gradient(ellipse_at_top_left,_rgba(217,119,6,0.05),_transparent_65%),_linear-gradient(to_bottom,_#fbf8f2,_#f5efe6)] dark:bg-[radial-gradient(ellipse_at_top_left,_rgba(180,83,9,0.06),_transparent_65%),_linear-gradient(to_bottom,_#1c1719,_#151214)]"
@@ -1032,7 +1173,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="tenban@domain.com"
-                  className="w-full h-11 pl-10 pr-3.5 rounded-xl border border-line bg-surface text-base sm:text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600/70 dark:focus:border-amber-500 transition-all shadow-xs disabled:opacity-60"
+                  className="w-full h-11 pl-10 pr-3.5 rounded-xl border border-line bg-surface text-base sm:text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600/70 dark:focus:border-amber-500 transition-all motion-reduce:transition-none shadow-xs disabled:opacity-60"
                 />
               </div>
             </div>
@@ -1068,7 +1209,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full h-11 pl-10 pr-11 rounded-xl border border-line bg-surface text-base sm:text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600/70 dark:focus:border-amber-500 transition-all shadow-xs disabled:opacity-60"
+                  className="w-full h-11 pl-10 pr-11 rounded-xl border border-line bg-surface text-base sm:text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600/70 dark:focus:border-amber-500 transition-all motion-reduce:transition-none shadow-xs disabled:opacity-60"
                 />
                 <button
                   type="button"
@@ -1104,7 +1245,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="group relative w-full h-11 rounded-xl bg-gradient-to-r from-[#8b1e28] via-[#9e222d] to-[#781820] hover:from-[#781820] hover:via-[#8b1e28] hover:to-[#63131b] border border-amber-400/35 text-[#fff8ed] font-medium text-sm flex items-center justify-center gap-2 transition-all shadow-[0_4px_18px_rgba(139,30,40,0.28)] hover:shadow-[0_6px_26px_rgba(139,30,40,0.42)] overflow-hidden cursor-pointer disabled:opacity-60 active:scale-[0.99]"
+              className="group relative w-full h-11 rounded-xl bg-gradient-to-r from-[#8b1e28] via-[#9e222d] to-[#781820] hover:from-[#781820] hover:via-[#8b1e28] hover:to-[#63131b] border border-amber-400/35 text-[#fff8ed] font-medium text-sm flex items-center justify-center gap-2 transition-all motion-reduce:transition-none shadow-[0_4px_18px_rgba(139,30,40,0.28)] hover:shadow-[0_6px_26px_rgba(139,30,40,0.42)] overflow-hidden cursor-pointer disabled:opacity-60 active:scale-[0.99]"
             >
               {/* Ánh kim lướt nhẹ */}
               <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
@@ -1137,7 +1278,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               type="button"
               onClick={handleGoogleLogin}
               disabled={isSubmitting}
-              className="w-full h-11 rounded-xl border border-line bg-surface hover:bg-surface-soft text-ink font-medium text-sm flex items-center justify-center gap-2.5 transition-all shadow-xs hover:border-[#8b1e28]/40 cursor-pointer disabled:opacity-50"
+              className="w-full h-11 rounded-xl border border-line bg-surface hover:bg-surface-soft text-ink font-medium text-sm flex items-center justify-center gap-2.5 transition-all motion-reduce:transition-none shadow-xs hover:border-[#8b1e28]/40 cursor-pointer disabled:opacity-50"
             >
               <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                 <path

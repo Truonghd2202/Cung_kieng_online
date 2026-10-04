@@ -14,87 +14,162 @@ import {
   Flower2,
   Info,
   Flame,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { RITUAL_GUIDES, getRitualById } from "../data/ritualData";
+import { DetailNotFound } from "../components/DetailNotFound";
 
 interface RitualDetailScreenProps {
   ritualId?: string;
+  currentUserEmail?: string;
   onBackToRitualList: () => void;
   onSelectRelatedRitual: (id: string) => void;
 }
 
-export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
+const RitualDetailContent: React.FC<
+  RitualDetailScreenProps
+> = ({
   ritualId = "chuan-bi-ngay-ram",
+  currentUserEmail,
   onBackToRitualList,
   onSelectRelatedRitual,
 }) => {
-  const ritual = getRitualById(ritualId) || RITUAL_GUIDES[0];
-  const detail = ritual.detail || RITUAL_GUIDES[0].detail!;
+  const ritual = getRitualById(ritualId)!;
+  const detail = ritual.detail!;
+
+  const accountId =
+    currentUserEmail?.trim().toLowerCase() ||
+    "guest";
+
+  const checklistStorageKey =
+    `tltl-ritual-checklist-${accountId}-${ritual.id}`;
+
+  const bookmarkStorageKey =
+    `tltl-ritual-bookmark-${accountId}-${ritual.id}`;
 
   const validChecklistIds = new Set(
     detail.checklists.map((item) => item.id)
   );
 
-  // Interactive checklist state isolated per ritual ID
-  const [checkedIds, setCheckedIds] = useState<string[]>(() => {
+  const readChecklist = (key: string): string[] => {
     try {
-      const stored = localStorage.getItem(`tltl-ritual-checklist-${ritual.id}`);
-      return stored ? JSON.parse(stored) : [];
+      const raw = localStorage.getItem(key);
+
+      if (!raw) return [];
+
+      const parsed: unknown = JSON.parse(raw);
+
+      if (!Array.isArray(parsed)) return [];
+
+      return parsed.filter(
+        (value): value is string =>
+          typeof value === "string"
+      );
     } catch {
       return [];
     }
-  });
+  };
 
-  const [isBookmarked, setIsBookmarked] = useState<boolean>(() => {
+  const readBookmark = (key: string): boolean => {
     try {
-      const stored = localStorage.getItem(`tltl-ritual-bookmark-${ritual.id}`);
-      return stored === "true";
+      return localStorage.getItem(key) === "true";
     } catch {
       return false;
     }
-  });
+  };
 
-  const [showShareNotification, setShowShareNotification] = useState(false);
+  const [checkedIds, setCheckedIds] =
+    useState<string[]>(() =>
+      readChecklist(checklistStorageKey)
+    );
 
-  const completedChecklistCount = checkedIds.filter(
-    (id) => validChecklistIds.has(id)
-  ).length;
+  const [isBookmarked, setIsBookmarked] =
+    useState<boolean>(() =>
+      readBookmark(bookmarkStorageKey)
+    );
 
-  // Sync state whenever ritual.id changes (prevents carrying old state to new article)
+  const [
+    showShareNotification,
+    setShowShareNotification,
+  ] = useState(false);
+
+  const [ritualSaveError, setRitualSaveError] =
+    useState("");
+
+  const completedChecklistCount =
+    checkedIds.filter(
+      (id) => validChecklistIds.has(id)
+    ).length;
+
+  // Nạp lại dữ liệu khi đổi nghi lễ hoặc hồ sơ.
   useEffect(() => {
+    setCheckedIds(
+      readChecklist(checklistStorageKey)
+    );
+
+    setIsBookmarked(
+      readBookmark(bookmarkStorageKey)
+    );
+
     setShowShareNotification(false);
-    try {
-      const storedChecklist = localStorage.getItem(`tltl-ritual-checklist-${ritual.id}`);
-      setCheckedIds(storedChecklist ? JSON.parse(storedChecklist) : []);
-      const storedBookmark = localStorage.getItem(`tltl-ritual-bookmark-${ritual.id}`);
-      setIsBookmarked(storedBookmark === "true");
-    } catch {
-      setCheckedIds([]);
-      setIsBookmarked(false);
-    }
-  }, [ritual.id]);
+    setRitualSaveError("");
+  }, [
+    checklistStorageKey,
+    bookmarkStorageKey,
+  ]);
 
   const toggleCheck = (id: string) => {
-    setCheckedIds((prev) => {
-      const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
-      try {
-        localStorage.setItem(`tltl-ritual-checklist-${ritual.id}`, JSON.stringify(next));
-      } catch {}
-      return next;
-    });
+    if (!validChecklistIds.has(id)) return;
+
+    setRitualSaveError("");
+
+    const currentValidIds = checkedIds.filter(
+      (checkedId) =>
+        validChecklistIds.has(checkedId)
+    );
+
+    const updatedIds = currentValidIds.includes(id)
+      ? currentValidIds.filter(
+          (checkedId) => checkedId !== id
+        )
+      : [...currentValidIds, id];
+
+    try {
+      localStorage.setItem(
+        checklistStorageKey,
+        JSON.stringify(updatedIds)
+      );
+    } catch {
+      setRitualSaveError(
+        "Chưa lưu được checklist. Các đánh dấu trước đó vẫn được giữ nguyên; hãy thử lại."
+      );
+      return;
+    }
+
+    setCheckedIds(updatedIds);
   };
 
   const handleToggleBookmark = () => {
-    setIsBookmarked((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem(`tltl-ritual-bookmark-${ritual.id}`, String(next));
-      } catch {}
-      return next;
-    });
+    setRitualSaveError("");
+
+    const nextValue = !isBookmarked;
+
+    try {
+      localStorage.setItem(
+        bookmarkStorageKey,
+        String(nextValue)
+      );
+    } catch {
+      setRitualSaveError(
+        "Chưa cập nhật được dấu lưu bài. Bạn hãy thử lại."
+      );
+      return;
+    }
+
+    setIsBookmarked(nextValue);
   };
 
   const handleShare = async () => {
@@ -122,22 +197,32 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
   return (
     <div className="screen-shell">
       <main className="page-container max-w-6xl">
+        {ritualSaveError && (
+          <p
+            role="alert"
+            className="mb-5 rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm leading-relaxed text-danger"
+          >
+            {ritualSaveError}
+          </p>
+        )}
         {/* Top Breadcrumb & Tag */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-muted">
           <div className="flex items-center gap-2 flex-wrap">
-            <span
+            <button
+              type="button"
               onClick={onBackToRitualList}
-              className="hover:text-accent cursor-pointer transition-colors"
+              className="min-h-11 text-left hover:text-accent cursor-pointer transition-colors"
             >
               Khám phá
-            </span>
+            </button>
             <span>/</span>
-            <span
+            <button
+              type="button"
               onClick={onBackToRitualList}
-              className="hover:text-accent cursor-pointer transition-colors"
+              className="min-h-11 text-left hover:text-accent cursor-pointer transition-colors"
             >
               Cẩm nang nghi lễ
-            </span>
+            </button>
             <span>/</span>
             <span className="text-accent font-semibold">{ritual.title}</span>
           </div>
@@ -165,6 +250,33 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
             {detail.subtitle}
           </p>
 
+          <div className="flex flex-wrap gap-2 mb-5">
+            <Button
+              type="button"
+              variant={isBookmarked ? "default" : "outline"}
+              aria-pressed={isBookmarked}
+              onClick={handleToggleBookmark}
+              className="min-h-11 gap-2 text-sm"
+            >
+              <Bookmark
+                aria-hidden="true"
+                className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`}
+              />
+
+              {isBookmarked ? "Đã đánh dấu" : "Đánh dấu hướng dẫn"}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onBackToRitualList}
+              className="min-h-11 gap-2 text-sm"
+            >
+              <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+              Về danh sách
+            </Button>
+          </div>
+
           {/* 4 Metadata Pills */}
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="px-3 py-1.5 rounded-full bg-surface border border-line text-ink font-medium flex items-center gap-1.5">
@@ -187,7 +299,7 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
         </div>
 
         {/* Hero Artwork Banner */}
-        <div className="mb-10 rounded-card overflow-hidden border border-line bg-surface shadow-2xs">
+        <div className="mb-6 sm:mb-8 rounded-card overflow-hidden border border-line bg-surface shadow-2xs">
           <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden bg-surface">
             <img
               src={detail.heroImage}
@@ -204,27 +316,28 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
         {/* Two Columns Layout: Left Content, Right Sticky Sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
           {/* Main Left Content (8 cols) */}
-          <div className="order-2 lg:order-1 lg:col-span-8 space-y-12">
-            {/* Section 1: Ý nghĩa của việc dành thời gian tưởng nhớ */}
-            <section>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-1.5 h-4 rounded-full bg-action"></span>
-                <h2 className="section-title text-xl sm:text-2xl">
-                  {detail.meaningTitle}
-                </h2>
-              </div>
+          <div className="order-2 lg:order-1 lg:col-span-8 space-y-6 sm:space-y-8">
+            {/* Ý nghĩa — phần đọc thêm */}
+            <details className="group rounded-card border border-line bg-surface p-4 sm:p-5">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-control text-base sm:text-lg font-display font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
+                <span>{detail.meaningTitle}</span>
 
-              <div className="space-y-4 text-sm sm:text-base text-ink leading-relaxed mb-5">
-                {detail.meaningParagraphs.map((p, idx) => (
-                  <p key={idx}>{p}</p>
+                <ChevronDown
+                  aria-hidden="true"
+                  className="h-5 w-5 shrink-0 text-muted transition-transform group-open:rotate-180 motion-reduce:transition-none"
+                />
+              </summary>
+
+              <div className="mt-4 space-y-4 text-sm sm:text-base text-ink leading-relaxed">
+                {detail.meaningParagraphs.map((paragraph, index) => (
+                  <p key={index}>{paragraph}</p>
                 ))}
-              </div>
 
-              {/* Callout Quote */}
-              <div className="p-5 rounded-panel bg-surface/60 border-l-4 border-accent text-accent font-display italic text-sm sm:text-base leading-relaxed">
-                {detail.meaningQuote}
+                <blockquote className="border-l-2 border-accent pl-4 font-display italic text-accent">
+                  {detail.meaningQuote}
+                </blockquote>
               </div>
-            </section>
+            </details>
 
             {/* Section 2: Danh sách vật phẩm tinh gọn */}
             <section>
@@ -315,24 +428,38 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
               <div className="flex items-center gap-2 mb-2">
                 <span className="w-1.5 h-4 rounded-full bg-action"></span>
                 <h2 className="section-title text-xl sm:text-2xl">
-                  Khác biệt phong tục vùng miền & Ưu tiên an toàn khói lửa
+                  Nếp nhà, vùng miền & lưu ý an toàn
                 </h2>
               </div>
 
-              {/* 3 Regional Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {detail.regionalDetails.map((rd) => (
-                  <Card key={rd.region} className="p-4 rounded-panel bg-surface border-line">
-                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-2">
-                      <span className="w-2 h-2 rounded-full bg-action"></span>
-                      <span>{rd.region}</span>
+              {/* Khác biệt vùng miền — phần đọc thêm */}
+              <details className="group rounded-card border border-line bg-surface p-4 sm:p-5">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-control text-base font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
+                  <span>Tham khảo khác biệt giữa các vùng miền</span>
+
+                  <ChevronDown
+                    aria-hidden="true"
+                    className="h-5 w-5 shrink-0 text-muted transition-transform group-open:rotate-180 motion-reduce:transition-none"
+                  />
+                </summary>
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {detail.regionalDetails.map((item) => (
+                    <div
+                      key={item.region}
+                      className="rounded-panel border border-line p-4"
+                    >
+                      <h3 className="mb-2 text-sm font-semibold text-accent">
+                        {item.region}
+                      </h3>
+
+                      <p className="text-sm text-ink leading-relaxed">
+                        {item.desc}
+                      </p>
                     </div>
-                    <p className="text-sm text-ink leading-relaxed">
-                      {rd.desc}
-                    </p>
-                  </Card>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </details>
 
               {/* PCCC Fire Safety Box */}
               <div className="p-5 rounded-panel bg-surface border border-line space-y-3">
@@ -543,5 +670,34 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
         </div>
       </main>
     </div>
+  );
+};
+
+export const RitualDetailScreen: React.FC<
+  RitualDetailScreenProps
+> = (props) => {
+  const ritualId = props.ritualId ?? "chuan-bi-ngay-ram";
+  const ritual = getRitualById(ritualId);
+
+  if (!ritual || !ritual.detail) {
+    return (
+      <DetailNotFound
+        title={
+          ritual
+            ? "Hướng dẫn này chưa có nội dung chi tiết"
+            : "Không tìm thấy hướng dẫn nghi lễ"
+        }
+        backLabel="Về Cẩm nang nghi lễ"
+        onBack={props.onBackToRitualList}
+      />
+    );
+  }
+
+  return (
+    <RitualDetailContent
+      {...props}
+      ritualId={ritualId}
+      key={ritualId}
+    />
   );
 };

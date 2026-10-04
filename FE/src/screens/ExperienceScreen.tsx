@@ -132,10 +132,10 @@ export const ExperienceScreen: React.FC<
         },
         {
           id: "astrology",
-          title: "Tử vi và biểu tượng thời gian",
+          title: "Biểu tượng ngày sinh",
           description:
-            "Tìm hiểu cách diễn giải ngày sinh, can chi và ngũ hành trong bản thử nghiệm.",
-          label: "Khám phá tử vi",
+            "Đối chiếu ngày sinh với lịch âm, can chi và ngũ hành để đọc một lời chiêm nghiệm.",
+          label: "Khám phá ngày sinh",
           icon: Sparkles,
           onClick: onGoToAstrology,
         },

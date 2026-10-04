@@ -27,7 +27,19 @@ const parseSavedDate = (value: string): number => {
   const month = Number(match[2]);
   const year = Number(match[3]);
 
-  const date = new Date(year, month - 1, day);
+  if (
+    year < 1 ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31
+  ) {
+    return Number.NaN;
+  }
+
+  const date = new Date(0);
+  date.setHours(0, 0, 0, 0);
+  date.setFullYear(year, month - 1, day);
 
   if (
     date.getFullYear() !== year ||
@@ -64,22 +76,36 @@ export const MoodJourneyScreen: React.FC<
   );
 
   const entries = savedSignals
-    .map((item, index) => ({
-      item,
-      index,
-      timestamp: parseSavedDate(item.date),
-    }))
+    .map((item, index) => {
+      const timestamp = parseSavedDate(item.date);
+
+      const hasCreatedAt =
+        typeof item.createdAt === "number" &&
+        Number.isFinite(item.createdAt) &&
+        item.createdAt > 0 &&
+        Number.isFinite(new Date(item.createdAt).getTime());
+
+      return {
+        item,
+        index,
+        timestamp,
+        sortTimestamp: hasCreatedAt
+          ? item.createdAt!
+          : timestamp,
+      };
+    })
     .sort((a, b) => {
-      const dateA = Number.isFinite(a.timestamp)
-        ? a.timestamp
-        : -Infinity;
+      const firstValid = Number.isFinite(a.sortTimestamp);
+      const secondValid = Number.isFinite(b.sortTimestamp);
 
-      const dateB = Number.isFinite(b.timestamp)
-        ? b.timestamp
-        : -Infinity;
+      if (!firstValid && !secondValid) return a.index - b.index;
+      if (!firstValid) return 1;
+      if (!secondValid) return -1;
 
-      if (dateA === dateB) return a.index - b.index;
-      return dateB - dateA;
+      return (
+        b.sortTimestamp - a.sortTimestamp ||
+        a.index - b.index
+      );
     });
 
   const recentCount = entries.filter(
@@ -94,10 +120,21 @@ export const MoodJourneyScreen: React.FC<
       timestamp < tomorrow.getTime()
   ).length;
 
+  const recentSavedDaysCount = new Set(
+    entries
+      .filter(
+        ({ timestamp }) =>
+          timestamp >= sevenDaysAgo.getTime() &&
+          timestamp < tomorrow.getTime()
+      )
+      .map(({ timestamp }) => timestamp)
+  ).size;
+
   const statistics = [
-    ["Tổng đã lưu", savedSignals.length],
-    ["Trong 7 ngày gần đây", recentCount],
-    ["Trong tháng này đến hôm nay", monthCount],
+    ["Tổng bản ghi đã lưu", savedSignals.length],
+    ["Bản ghi trong 7 ngày", recentCount],
+    ["Ngày có bản ghi trong 7 ngày", recentSavedDaysCount],
+    ["Bản ghi tháng này đến hôm nay", monthCount],
   ] as const;
 
   return (
@@ -150,7 +187,7 @@ export const MoodJourneyScreen: React.FC<
           </section>
         ) : (
           <>
-            <dl className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
               {statistics.map(([label, count]) => (
                 <div
                   key={label}
@@ -194,20 +231,21 @@ export const MoodJourneyScreen: React.FC<
                       </span>
                     </div>
 
-                    <blockquote className="font-display text-lg sm:text-xl text-ink leading-relaxed">
+                    <blockquote className="font-display text-lg sm:text-xl text-ink leading-relaxed [overflow-wrap:anywhere]">
                       <p>{item.poemLine1}</p>
                       <p>{item.poemLine2}</p>
                     </blockquote>
 
                     {item.journal?.trim() && (
-                      <div className="mt-4 pt-4 border-t border-line">
-                        <h3 className="text-sm font-semibold text-ink mb-2">
-                          Ghi chép của bạn
-                        </h3>
-                        <p className="text-base text-muted leading-relaxed whitespace-pre-wrap break-words">
+                      <details className="mt-4 border-t border-line pt-3">
+                        <summary className="min-h-11 cursor-pointer rounded-control py-3 text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                          Đọc ghi chép của bạn
+                        </summary>
+
+                        <p className="mt-2 whitespace-pre-wrap text-base text-muted leading-relaxed [overflow-wrap:anywhere]">
                           {item.journal}
                         </p>
-                      </div>
+                      </details>
                     )}
 
                     <Button

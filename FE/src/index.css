@@ -422,12 +422,14 @@ button {
   color: var(--ui-ink);
 }
 
-.nav-link[aria-current="page"] {
+.nav-link[aria-current="page"],
+.nav-link[aria-current="location"] {
   background: var(--ui-accent-soft);
   color: var(--ui-accent);
 }
 
-.nav-link[aria-current="page"]::after {
+.nav-link[aria-current="page"]::after,
+.nav-link[aria-current="location"]::after {
   position: absolute;
   right: 0.8rem;
   bottom: 0.25rem;

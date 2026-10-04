@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   User,
   Mail,
@@ -7,8 +7,6 @@ import {
   EyeOff,
   ArrowLeft,
   ArrowRight,
-  Volume2,
-  VolumeX,
   Loader2,
   Sparkles,
   CheckCircle2,
@@ -39,58 +37,122 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+
+  const registerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
+  useEffect(() => {
+    return () => {
+      if (registerTimerRef.current !== null) {
+        clearTimeout(registerTimerRef.current);
+        registerTimerRef.current = null;
+      }
+
+      if (redirectTimerRef.current !== null) {
+        clearTimeout(redirectTimerRef.current);
+        redirectTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage("");
-    setSuccessMessage("");
 
-    if (!name.trim()) {
-      setErrorMessage("Vui lòng nhập họ và tên hoặc pháp danh của bạn.");
+    // Chặn gửi lại trong lúc đăng ký hoặc chờ chuyển trang.
+    if (
+      registerTimerRef.current !== null ||
+      redirectTimerRef.current !== null
+    ) {
       return;
     }
 
-    if (!email.trim()) {
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
+    const submittedPassword = password;
+
+    if (!cleanName) {
+      setErrorMessage("Vui lòng nhập tên hiển thị của bạn.");
+      return;
+    }
+
+    if (cleanName.length > 80) {
+      setErrorMessage("Tên hiển thị không được vượt quá 80 ký tự.");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
       setErrorMessage("Vui lòng nhập địa chỉ email hợp lệ.");
       return;
     }
 
-    if (password.length < 6) {
-      setErrorMessage("Mật khẩu nên có tối thiểu 6 ký tự để bảo mật.");
+    if (submittedPassword.length < 6) {
+      setErrorMessage("Mật khẩu cần có tối thiểu 6 ký tự.");
       return;
     }
 
-    if (password !== confirmPassword) {
-      setErrorMessage("Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại.");
+    if (submittedPassword !== confirmPassword) {
+      setErrorMessage(
+        "Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại."
+      );
       return;
     }
 
     if (!agreed) {
-      setErrorMessage("Vui lòng đồng ý với quy ước gìn giữ không gian an trú.");
+      setErrorMessage(
+        "Vui lòng đồng ý với quy ước gìn giữ không gian an trú."
+      );
       return;
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      const result = registerAccount(name.trim(), email.trim(), password);
-      setIsSubmitting(false);
 
-      if (!result.success) {
-        setErrorMessage(result.error || "Không thể tạo tài khoản. Vui lòng thử lại.");
+    registerTimerRef.current = setTimeout(() => {
+      registerTimerRef.current = null;
+
+      let result: ReturnType<typeof registerAccount>;
+
+      try {
+        result = registerAccount(
+          cleanName,
+          cleanEmail,
+          submittedPassword
+        );
+      } catch {
+        setIsSubmitting(false);
+        setErrorMessage(
+          "Không thể tạo tài khoản. Vui lòng thử lại."
+        );
         return;
       }
 
-      // Lưu email vừa tạo để sang Login tự động điền sẵn
-      try {
-        localStorage.setItem(
-          "tltl_remembered_email",
-          email.trim().toLowerCase()
+      if (!result.success) {
+        setIsSubmitting(false);
+        setErrorMessage(
+          result.error || "Không thể tạo tài khoản. Vui lòng thử lại."
         );
-      } catch {}
+        return;
+      }
 
-      setSuccessMessage("Khởi tạo hồ sơ thành công! Đang chuyển qua trang Đăng nhập...");
-      setTimeout(() => {
+      try {
+        localStorage.setItem("tltl_remembered_email", cleanEmail);
+      } catch {
+        // Việc ghi nhớ email không quyết định kết quả đăng ký.
+      }
+
+      setSuccessMessage(
+        "Khởi tạo hồ sơ thành công! Đang chuyển qua trang Đăng nhập..."
+      );
+
+      redirectTimerRef.current = setTimeout(() => {
+        redirectTimerRef.current = null;
         onSuccess(result.user.name, result.user.email);
       }, 1000);
     }, 400);
@@ -101,8 +163,6 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
       {/* CỘT TRÁI: KHÔNG GIAN BÀN THỜ GIA TIÊN SỐNG ĐỘNG (LỬA ĐÈN DẦU, BỤI VÀNG, PARALLAX 2.5D) */}
       <AltarVisualSection
         quoteText='"Khởi tâm an lạc • Kết duyên thiện lành"'
-        isMuted={isMuted}
-        onToggleMute={() => setIsMuted(!isMuted)}
         className="w-full lg:w-[56%] xl:w-[60%] h-44 sm:h-56 lg:h-full shrink-0 min-h-[180px] lg:min-h-0"
       />
 
@@ -194,13 +254,13 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
 
           {/* FORM NHẬP LIỆU */}
           <form onSubmit={handleSubmit} className="space-y-2.5 sm:space-y-3">
-            {/* Họ tên / Pháp danh */}
+            {/* Tên hiển thị */}
             <div>
               <label
                 htmlFor="register-name"
                 className="block text-xs font-semibold text-ink mb-1 tracking-wide"
               >
-                Họ và tên hoặc Pháp danh
+                Tên hiển thị
               </label>
               <div className="relative group">
                 <User className="w-4 h-4 text-subtle group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -208,10 +268,12 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                   id="register-name"
                   type="text"
                   required
+                  maxLength={80}
+                  autoComplete="nickname"
                   disabled={isSubmitting}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Ví dụ: Tuệ An, Minh Tâm..."
+                  placeholder="Bạn muốn được gọi là gì?"
                   className="w-full h-10.5 pl-10 pr-3.5 rounded-xl border border-line bg-surface text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600/70 dark:focus:border-amber-500 transition-all shadow-xs disabled:opacity-60"
                 />
               </div>

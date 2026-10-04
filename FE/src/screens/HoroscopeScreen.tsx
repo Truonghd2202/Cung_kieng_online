@@ -19,6 +19,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import {
   calculateHoroscope,
+  validateBirthDate,
   HoroscopeCalculationResult,
 } from "@/src/data/horoscopeEngine";
 
@@ -45,27 +46,30 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
   const [showResult, setShowResult] = useState(false);
   const [calculationResult, setCalculationResult] =
     useState<HoroscopeCalculationResult | null>(null);
+  const [birthDateError, setBirthDateError] = useState("");
 
-  const handleGenerate = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGenerate = (
+    event: React.FormEvent
+  ) => {
+    event.preventDefault();
+
     if (!agreedDisclaimer) return;
 
-    const res = calculateHoroscope({
+    const dateError = validateBirthDate(
       day,
       month,
-      year,
-      hourCanh,
-      noHour,
-      region,
-    });
-    setCalculationResult(res);
-    setShowResult(true);
-  };
+      year
+    );
 
-  // Tự động cập nhật kết quả đối chiếu ngay khi người dùng điều chỉnh thông tin nếu đã xem
-  useEffect(() => {
-    if (showResult && agreedDisclaimer) {
-      const res = calculateHoroscope({
+    if (dateError) {
+      setBirthDateError(dateError);
+      setCalculationResult(null);
+      setShowResult(false);
+      return;
+    }
+
+    try {
+      const result = calculateHoroscope({
         day,
         month,
         year,
@@ -73,13 +77,79 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
         noHour,
         region,
       });
-      setCalculationResult(res);
+
+      setBirthDateError("");
+      setCalculationResult(result);
+      setShowResult(true);
+    } catch (error) {
+      setBirthDateError(
+        error instanceof Error
+          ? error.message
+          : "Chưa tạo được bản chiêm nghiệm. Bạn hãy thử lại."
+      );
+
+      setCalculationResult(null);
+      setShowResult(false);
     }
-  }, [day, month, year, hourCanh, noHour, region, showResult, agreedDisclaimer]);
+  };
+
+  useEffect(() => {
+    const dateError = validateBirthDate(
+      day,
+      month,
+      year
+    );
+
+    // Xóa lỗi ngày khi người dùng đã sửa hợp lệ.
+    if (!dateError) {
+      setBirthDateError("");
+    }
+
+    if (!showResult || !agreedDisclaimer) return;
+
+    if (dateError) {
+      setBirthDateError(dateError);
+      setCalculationResult(null);
+      setShowResult(false);
+      return;
+    }
+
+    try {
+      const result = calculateHoroscope({
+        day,
+        month,
+        year,
+        hourCanh,
+        noHour,
+        region,
+      });
+
+      setCalculationResult(result);
+    } catch (error) {
+      setBirthDateError(
+        error instanceof Error
+          ? error.message
+          : "Chưa cập nhật được bản chiêm nghiệm."
+      );
+
+      setCalculationResult(null);
+      setShowResult(false);
+    }
+  }, [
+    day,
+    month,
+    year,
+    hourCanh,
+    noHour,
+    region,
+    showResult,
+    agreedDisclaimer,
+  ]);
 
   const handleReset = () => {
     setShowResult(false);
     setCalculationResult(null);
+    setBirthDateError("");
   };
 
   return (
@@ -102,7 +172,7 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
               Trải nghiệm
             </button>
             <span>/</span>
-            <span className="text-accent font-semibold">Lá số chiêm nghiệm</span>
+            <span className="text-accent font-semibold">Biểu tượng ngày sinh</span>
           </div>
 
           <button
@@ -132,7 +202,7 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
               ĐỐI THOẠI NỘI TÂM
             </span>
             <h1 className="page-title mb-3">
-              Khám phá cách người xưa nhìn thời gian và con người
+              Một góc nhìn từ ngày sinh của bạn
             </h1>
             <p className="text-sm sm:text-base text-ink leading-relaxed mb-4">
               Người xưa mượn sự vận hành của tinh tú và tiết khí để soi tỏ phẩm hạnh, quán chiếu tâm tính
@@ -142,7 +212,7 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
             <div className="flex items-center gap-3 text-xs text-muted flex-wrap">
               <span>• Không áp đặt định kiến</span>
               <span>• Không suy đoán tai ương</span>
-              <span>• Bảo mật tuyệt đối trên máy</span>
+              <span>• Tính toán ngay trên trình duyệt</span>
             </div>
           </div>
 
@@ -313,6 +383,14 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
                 </div>
 
                 {/* Submit Action */}
+                {birthDateError && (
+                  <p
+                    role="alert"
+                    className="mb-4 rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm leading-relaxed text-danger"
+                  >
+                    {birthDateError}
+                  </p>
+                )}
                 <div className="flex gap-2">
                   <Button
                     type="submit"

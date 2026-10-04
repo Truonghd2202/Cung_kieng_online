@@ -1,7 +1,13 @@
+import {
+  createDemoMetadata,
+  type ContentMetadata,
+} from "./contentMetadata";
+
 export type RegionType = "Bắc Bộ" | "Trung Bộ" | "Nam Bộ";
 export type TopicType = "Học tập" | "Công việc" | "Gia đình" | "Bình an";
 
 export interface XinXamResult {
+  metadata: ContentMetadata;
   stickNumber: string;
   region: RegionType;
   regionSub: string;
@@ -39,6 +45,7 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
   // BẮC BỘ (4 Chủ đề)
   // ==========================================
   "Bắc Bộ-Bình an": {
+    metadata: createDemoMetadata(),
     stickNumber: "01",
     region: "Bắc Bộ",
     regionSub: "Trầm mặc Xứ Bắc",
@@ -80,6 +87,7 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
   },
 
   "Bắc Bộ-Gia đình": {
+    metadata: createDemoMetadata(),
     stickNumber: "02",
     region: "Bắc Bộ",
     regionSub: "Nếp nhà Xứ Bắc",
@@ -121,6 +129,7 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
   },
 
   "Bắc Bộ-Học tập": {
+    metadata: createDemoMetadata(),
     stickNumber: "05",
     region: "Bắc Bộ",
     regionSub: "Văn hiến Thăng Long",
@@ -162,6 +171,7 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
   },
 
   "Bắc Bộ-Công việc": {
+    metadata: createDemoMetadata(),
     stickNumber: "03",
     region: "Bắc Bộ",
     regionSub: "Trầm mặc Xứ Bắc",
@@ -206,6 +216,7 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
   // TRUNG BỘ (4 Chủ đề)
   // ==========================================
   "Trung Bộ-Bình an": {
+    metadata: createDemoMetadata(),
     stickNumber: "23",
     region: "Trung Bộ",
     regionSub: "Trầm mặc Cố Đô",
@@ -237,7 +248,7 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
     ],
     culturalAspect:
       "Điện Hòn Chén và các danh lam cổ tự xứ Huế gìn giữ nếp sống trầm mặc, coi trọng sự tu dưỡng thân tâm giữa cảnh sắc sông núi hữu tình.",
-    relatedArticleId: "le-hoi-dien-hon-chen",
+    relatedArticleId: "dien-hon-chen",
     relatedArticleTitle: "Lễ hội Điện Hòn Chén & Nét linh thiêng Xứ Huế",
     microAction: {
       title: "Thưởng trà trong tĩnh lặng",
@@ -247,6 +258,7 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
   },
 
   "Trung Bộ-Gia đình": {
+    metadata: createDemoMetadata(),
     stickNumber: "21",
     region: "Trung Bộ",
     regionSub: "Mộc mạc miền Trung",
@@ -278,7 +290,7 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
     ],
     culturalAspect:
       "Tục thờ cúng tổ tiên và cúng xóm ở miền Trung luôn chứa chan đạo lý gia đình bền chặt, coi trọng lòng thảo thơm hơn mâm cao cỗ đầy.",
-    relatedArticleId: "le-hoi-dien-hon-chen",
+    relatedArticleId: "dien-hon-chen",
     relatedArticleTitle: "Nếp nhà và đạo hiếu nghĩa xứ Quảng - Huế",
     microAction: {
       title: "Nấu một bữa cơm ấm cúng",
@@ -288,6 +300,7 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
   },
 
   "Trung Bộ-Học tập": {
+    metadata: createDemoMetadata(),
     stickNumber: "25",
     region: "Trung Bộ",
     regionSub: "Đất học miền Trung",
@@ -319,7 +332,7 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
     ],
     culturalAspect:
       "Trường Quốc Học Huế và các văn từ xứ Quảng là chứng nhân lịch sử cho tinh thần học tập quật cường, trọng khí tiết và lòng yêu nước của trí thức miền Trung.",
-    relatedArticleId: "le-hoi-dien-hon-chen",
+    relatedArticleId: "dien-hon-chen",
     relatedArticleTitle: "Tinh hoa đất học miền Trung & Quốc Học Huế",
     microAction: {
       title: "Đọc 10 trang sách hữu ích",
@@ -329,6 +342,7 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
   },
 
   "Trung Bộ-Công việc": {
+    metadata: createDemoMetadata(),
     stickNumber: "27",
     region: "Trung Bộ",
     regionSub: "Biển cả miền Trung",
@@ -373,6 +387,7 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
   // NAM BỘ (4 Chủ đề)
   // ==========================================
   "Nam Bộ-Bình an": {
+    metadata: createDemoMetadata(),
     stickNumber: "07",
     region: "Nam Bộ",
     regionSub: "Khoáng đạt Phương Nam",
@@ -414,6 +429,7 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
   },
 
   "Nam Bộ-Gia đình": {
+    metadata: createDemoMetadata(),
     stickNumber: "08",
     region: "Nam Bộ",
     regionSub: "Mộc mạc Phương Nam",
@@ -455,6 +471,7 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
   },
 
   "Nam Bộ-Học tập": {
+    metadata: createDemoMetadata(),
     stickNumber: "09",
     region: "Nam Bộ",
     regionSub: "Khai phóng Phương Nam",
@@ -496,6 +513,7 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
   },
 
   "Nam Bộ-Công việc": {
+    metadata: createDemoMetadata(),
     stickNumber: "12",
     region: "Nam Bộ",
     regionSub: "Năng động Phương Nam",

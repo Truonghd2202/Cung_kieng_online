@@ -32,7 +32,9 @@ interface SettingsScreenProps {
   selectedTopics: string[];
   onChangeTopics: (topics: string[]) => boolean;
   user?: { name: string; email: string } | null;
-  onUpdateProfile?: (updated: { name: string; email?: string }) => void;
+  onUpdateProfile?: (
+    updated: { name: string; email?: string }
+  ) => boolean;
   onLogout?: () => void;
   onClearAllLocalData?: () => boolean;
 }
@@ -56,6 +58,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [displayName, setDisplayName] = useState(user?.name || "An Nhiên");
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(displayName);
+  const [nameSaveError, setNameSaveError] = useState("");
 
   // Đồng bộ displayName khi user prop từ App thay đổi
   useEffect(() => {
@@ -82,22 +85,37 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
 
   const handleSaveName = () => {
+    setNameSaveError("");
+
     const cleanName = tempName.trim();
-    if (cleanName) {
-      setDisplayName(cleanName);
-      if (onUpdateProfile) {
-        onUpdateProfile({ name: cleanName, email: user?.email });
-      } else {
-        try {
-          const stored = localStorage.getItem("tltl-current-user");
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            parsed.name = cleanName;
-            localStorage.setItem("tltl-current-user", JSON.stringify(parsed));
-          }
-        } catch {}
-      }
+
+    if (!cleanName) {
+      setNameSaveError("Vui lòng nhập tên hiển thị.");
+      return;
     }
+
+    if (cleanName.length > 80) {
+      setNameSaveError("Tên hiển thị tối đa 80 ký tự.");
+      return;
+    }
+
+    let saved = false;
+
+    try {
+      saved = onUpdateProfile?.({ name: cleanName }) === true;
+    } catch {
+      saved = false;
+    }
+
+    if (!saved) {
+      setNameSaveError(
+        "Chưa hoàn tất lưu tên. Nội dung bạn nhập vẫn được giữ; hãy thử lại. Nếu lỗi tiếp tục, hãy tải lại trang để kiểm tra hồ sơ."
+      );
+      return;
+    }
+
+    setDisplayName(cleanName);
+    setTempName(cleanName);
     setIsEditingName(false);
   };
 
@@ -115,16 +133,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       success = false;
     }
 
-    setShowClearConfirm(false);
-
     if (!success) {
       setClearDataError(
-        "Chưa hoàn tất việc xóa dữ liệu. Bạn hãy tải lại trang để kiểm tra các mục còn lưu trước khi thử lại."
+        "Chưa hoàn tất việc xóa dữ liệu. Bạn có thể thử lại hoặc đóng hộp này và tải lại trang để kiểm tra các mục còn lưu."
       );
 
+      // Giữ hộp xác nhận mở để người dùng thấy lỗi.
       return;
     }
 
+    setShowClearConfirm(false);
     setDataClearedNotice(true);
   };
 
@@ -341,8 +359,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                       <input
                         id="settings-display-name"
                         type="text"
+                        maxLength={80}
+                        autoFocus
+                        aria-invalid={Boolean(nameSaveError)}
+                        aria-describedby={
+                          nameSaveError ? "settings-name-error" : undefined
+                        }
                         value={tempName}
-                        onChange={(e) => setTempName(e.target.value)}
+                        onChange={(e) => {
+                          setTempName(e.target.value);
+                          setNameSaveError("");
+                        }}
                         className="min-w-0 flex-1 px-3 py-2 rounded-control border border-accent bg-surface text-base text-ink font-medium outline-none"
                       />
                       <Button size="sm" onClick={handleSaveName} className="text-xs bg-action text-white">
@@ -351,18 +378,30 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                     </div>
                   ) : (
                     <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-line bg-surface text-xs font-medium">
-                      <span>{displayName}</span>
+                      <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                        {displayName}
+                      </span>
                       <button
                         onClick={() => {
                           setTempName(displayName);
+                          setNameSaveError("");
                           setIsEditingName(true);
                         }}
-                        className="text-accent hover:underline flex items-center gap-1 cursor-pointer"
+                        className="text-accent hover:underline flex items-center gap-1 cursor-pointer shrink-0"
                       >
                         <Edit2 className="w-3 h-3" />
                         <span>Sửa</span>
                       </button>
                     </div>
+                  )}
+                  {nameSaveError && (
+                    <p
+                      id="settings-name-error"
+                      role="alert"
+                      className="mt-2 text-sm text-danger leading-relaxed"
+                    >
+                      {nameSaveError}
+                    </p>
                   )}
                 </div>
 
@@ -585,7 +624,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 (Local Storage) của trình duyệt. Không tải về máy chủ trung tâm.
               </p>
 
-              {clearDataError && (
+              {clearDataError && !showClearConfirm && (
                 <p
                   role="alert"
                   className="mb-4 rounded-panel border border-danger/25 bg-danger-soft p-3.5 text-sm text-danger"
@@ -619,7 +658,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => setShowClearConfirm(true)}
+                  onClick={() => {
+                    setClearDataError("");
+                    setDataClearedNotice(false);
+                    setShowClearConfirm(true);
+                  }}
                   className="w-full sm:w-auto text-xs rounded-xl border-danger/25 text-danger hover:bg-danger-soft gap-1.5"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -683,6 +726,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               Góc tưởng niệm, tùy chọn giao diện và dữ liệu
               của tài khoản khác được giữ lại.
             </p>
+
+            {clearDataError && (
+              <p
+                role="alert"
+                className="mb-5 rounded-panel border border-danger/25 bg-danger-soft p-3.5 text-left text-sm leading-relaxed text-danger"
+              >
+                {clearDataError}
+              </p>
+            )}
 
             <div className="flex items-center gap-3">
               <Button

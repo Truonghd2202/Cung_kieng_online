@@ -1,3 +1,8 @@
+import {
+  createDemoMetadata,
+  type ContentMetadata,
+} from "./contentMetadata";
+
 export type MoodKey =
   | "An yên"
   | "Chênh vênh"
@@ -8,6 +13,7 @@ export type MoodKey =
 
 export interface SignalData {
   id: string;
+  metadata: ContentMetadata;
   mood: MoodKey;
   moodDesc: string;
   badge: string;
@@ -103,6 +109,7 @@ export const ALL_SIGNALS: SignalData[] = [
   // 1. CHÊNH VÊNH - Signal 1
   {
     id: "chenh-venh-1",
+    metadata: createDemoMetadata(),
     mood: "Chênh vênh",
     moodDesc: "Cảm giác mất thăng bằng, cần một neo đậu an lành",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
@@ -121,7 +128,7 @@ export const ALL_SIGNALS: SignalData[] = [
       title: "VÙNG 3 • Góc Nhìn Soi Tỏ Tâm Thức",
       highlightWord: "chênh vênh",
       content:
-        "Khi bạn cảm thấy chênh vênh, đó không phải là dấu hiệu bạn đang thụt lùi, mà là tâm thức đang đòi hỏi một khoảng lặng tự nhiên. Nước có lắng thì hoa mới nở thơm, tâm có tĩnh thì mọi xáo động đời sống mới trở về trật tự vốn có. Hãy cho phép mình chưa cần phải có câu trả lời ngay ngày hôm nay.",
+        "Cảm giác chênh vênh có thể xuất hiện khi nhiều điều chưa rõ ràng. Bạn không cần tìm đủ mọi câu trả lời ngay hôm nay. Nếu thấy phù hợp, hãy dành một khoảng nghỉ ngắn, rồi chọn một việc nhỏ trong khả năng của mình để bắt đầu.",
       advice: "Gợi ý tiếp nhận: Đọc thong thả 2 lần trước khi chuyển động",
       signalNumber: "Chiêm nghiệm số #2409",
     },
@@ -155,6 +162,7 @@ export const ALL_SIGNALS: SignalData[] = [
   // 1. CHÊNH VÊNH - Signal 2
   {
     id: "chenh-venh-2",
+    metadata: createDemoMetadata(),
     mood: "Chênh vênh",
     moodDesc: "Cảm giác mất thăng bằng, cần một neo đậu an lành",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
@@ -208,6 +216,7 @@ export const ALL_SIGNALS: SignalData[] = [
   // 2. AN YÊN - Signal 1
   {
     id: "an-yen-1",
+    metadata: createDemoMetadata(),
     mood: "An yên",
     moodDesc: "Trái tim bình lặng, sẵn sàng đón nhận điều lành",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
@@ -226,7 +235,7 @@ export const ALL_SIGNALS: SignalData[] = [
       title: "VÙNG 3 • Góc Nhìn Soi Tỏ Tâm Thức",
       highlightWord: "an yên",
       content:
-        "Trạng thái an yên hôm nay là đóa hoa kết tinh từ những nhịp buông xả nhẹ nhàng. Khi tâm đã tĩnh như mặt hồ không gợn sóng, bạn có thể nhìn thấu vạn vật mà không khởi sinh âu lo. Hãy ghi nhớ cảm giác này như một chốn neo đậu an bình mỗi khi giông bão cuộc đời ùa tới.",
+        "Nếu hôm nay bạn cảm thấy an yên, hãy thử nhận ra điều gì đang góp phần tạo nên cảm giác ấy: một khoảng nghỉ, một cuộc trò chuyện hay một việc đã hoàn thành. Bạn có thể ghi lại điều đó để hiểu thêm những gì giúp mình cảm thấy dễ chịu.",
       advice: "Gợi ý tiếp nhận: Giữ nụ cười mỉm trên môi trong 30 giây",
       signalNumber: "Chiêm nghiệm số #1080",
     },
@@ -260,6 +269,7 @@ export const ALL_SIGNALS: SignalData[] = [
   // 2. AN YÊN - Signal 2
   {
     id: "an-yen-2",
+    metadata: createDemoMetadata(),
     mood: "An yên",
     moodDesc: "Trái tim bình lặng, sẵn sàng đón nhận điều lành",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
@@ -313,6 +323,7 @@ export const ALL_SIGNALS: SignalData[] = [
   // 3. BĂN KHOĂN - Signal 1
   {
     id: "ban-khoan-1",
+    metadata: createDemoMetadata(),
     mood: "Băn khoăn",
     moodDesc: "Đứng trước ngã rẽ, cần góc nhìn sáng suốt và thấu đạt",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
@@ -365,6 +376,7 @@ export const ALL_SIGNALS: SignalData[] = [
   // 3. BĂN KHOĂN - Signal 2
   {
     id: "ban-khoan-2",
+    metadata: createDemoMetadata(),
     mood: "Băn khoăn",
     moodDesc: "Đứng trước ngã rẽ, cần góc nhìn sáng suốt và thấu đạt",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
@@ -418,6 +430,7 @@ export const ALL_SIGNALS: SignalData[] = [
   // 4. NÔN NÓNG - Signal 1
   {
     id: "non-nong-1",
+    metadata: createDemoMetadata(),
     mood: "Nôn nóng",
     moodDesc: "Tâm trí hối hả, cần hạ nhịp thở và chậm lại từng giây",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
@@ -470,6 +483,7 @@ export const ALL_SIGNALS: SignalData[] = [
   // 4. NÔN NÓNG - Signal 2
   {
     id: "non-nong-2",
+    metadata: createDemoMetadata(),
     mood: "Nôn nóng",
     moodDesc: "Tâm trí hối hả, cần hạ nhịp thở và chậm lại từng giây",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
@@ -523,26 +537,45 @@ export const ALL_SIGNALS: SignalData[] = [
   // 5. BIẾT ƠN - Signal 1
   {
     id: "biet-on-1",
+    metadata: {
+      contentKind: "editorial",
+      editorialStatus: "draft",
+      quotationVerified: true,
+      sources: [
+        {
+          id: "cadaome-an-qua-nho-ke-trong-cay",
+          title: "Ăn quả nhớ kẻ trồng cây",
+          authorOrOrganization: "Ca dao Mẹ — trang đăng tải",
+          url: "https://cadao.me/an-qua-nho-ke-trong-cay/",
+          locator: "Mục Dị bản",
+          accessedOn: "2026-10-04",
+        },
+      ],
+      editorialNote:
+        "Hai dòng ca dao đã được đối chiếu với mục Dị bản trên trang nguồn. Lời chiêm nghiệm do sản phẩm biên soạn, chưa hoàn tất duyệt biên tập. Chưa xác định xuất xứ lịch sử hoặc vùng miền.",
+    },
     mood: "Biết ơn",
     moodDesc: "Tràn đầy cảm kích với những duyên lành nhỏ bé quanh mình",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
     poem: {
       line1: "Ăn quả nhớ kẻ trồng cây",
-      line2: "Uống nước nhớ nguồn nghĩa dày tình sâu.",
-      subtext: "Nội dung biên soạn minh họa",
+      line2: "Ăn khoai nhớ kẻ cho dây mà trồng",
+      subtext: "Ca dao • Dị bản đăng trên Ca dao Mẹ",
     },
     research: {
-      title: "VÙNG 2 • TƯ LIỆU THAM KHẢO & KHẢO CỨU",
-      source: "Nội dung biên soạn minh họa",
-      region: "Không gian văn hóa truyền thống Việt Nam",
-      note: "(Nội dung biên soạn minh họa cho sản phẩm thử nghiệm, chưa qua đối chiếu nguồn chính thức).",
+      title: "Nguồn và ghi chú nội dung",
+      source: "Ca dao Mẹ — mục Dị bản",
+      region: "Chưa xác định vùng miền từ nguồn đang sử dụng.",
+      note:
+        "Nguồn dùng để đối chiếu câu chữ. Phần chiêm nghiệm bên dưới là lời biên soạn của sản phẩm.",
     },
     reflection: {
       title: "VÙNG 3 • Góc Nhìn Soi Tỏ Tâm Thức",
       highlightWord: "biết ơn",
       content:
-        "Lòng biết ơn là suối nguồn nuôi dưỡng phúc lành bền vững nhất. Khi trái tim bạn ngập tràn sự tri ân đối với những điều bình dị — chén cơm dẻo thơm, ngụm nước ngọt mát hay một ánh nhìn ấm áp — bạn đã mở toang cánh cửa đón nhận thêm nhiều phúc lộc của vũ trụ.",
-      advice: "Gợi ý tiếp nhận: Nhắn một lời cảm ơn tới người bất kỳ",
+        "Cặp câu này gợi một cách nhìn về lòng biết ơn: khi nhận được điều tốt đẹp, ta có thể nhớ đến những người đã góp phần tạo nên điều ấy. Bạn thử nghĩ về một sự giúp đỡ nhỏ gần đây và người đã dành điều đó cho mình.",
+      advice:
+        "Gợi ý tiếp nhận: Nếu thấy phù hợp, gửi một lời cảm ơn cụ thể tới người đã giúp bạn.",
       signalNumber: "Chiêm nghiệm số #7789",
     },
     action: {
@@ -575,6 +608,7 @@ export const ALL_SIGNALS: SignalData[] = [
   // 5. BIẾT ƠN - Signal 2
   {
     id: "biet-on-2",
+    metadata: createDemoMetadata(),
     mood: "Biết ơn",
     moodDesc: "Tràn đầy cảm kích với những duyên lành nhỏ bé quanh mình",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
@@ -593,7 +627,7 @@ export const ALL_SIGNALS: SignalData[] = [
       title: "VÙNG 3 • Góc Nhìn Soi Tỏ Tâm Thức",
       highlightWord: "biết ơn",
       content:
-        "Người xưa tin rằng: đất cho ta mùa màng, trời cho ta mưa thuận gió hòa, lòng biết ơn biến một bữa cơm đạm bạc thành đại tiệc của sự sum vầy. Giữ được sự biết ơn là giữ được gia tài bình an lớn nhất đời người.",
+        "Một bữa cơm, một lời hỏi thăm hay sự giúp đỡ đúng lúc có thể trở thành điều đáng trân trọng. Bạn thử chọn một điều nhỏ hôm nay khiến mình biết ơn. Không cần ép bản thân phải cảm thấy tích cực nếu bạn đang có một ngày khó khăn.",
       advice: "Gợi ý tiếp nhận: Đặt tay lên trái tim thầm cảm ơn bản thân",
       signalNumber: "Chiêm nghiệm số #7790",
     },
@@ -628,6 +662,7 @@ export const ALL_SIGNALS: SignalData[] = [
   // 6. CẦN ĐIỂM TỰA - Signal 1
   {
     id: "can-diem-tua-1",
+    metadata: createDemoMetadata(),
     mood: "Cần điểm tựa",
     moodDesc: "Mệt mỏi sau ngày dài, muốn được vỗ về trong khoảng lặng",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
@@ -680,6 +715,7 @@ export const ALL_SIGNALS: SignalData[] = [
   // 6. CẦN ĐIỂM TỰA - Signal 2
   {
     id: "can-diem-tua-2",
+    metadata: createDemoMetadata(),
     mood: "Cần điểm tựa",
     moodDesc: "Mệt mỏi sau ngày dài, muốn được vỗ về trong khoảng lặng",
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",

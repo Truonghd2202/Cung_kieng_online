@@ -19,10 +19,15 @@ import {
   Waves,
   Sun,
   Flame,
+  ChevronDown,
 } from "lucide-react";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Card } from "@/src/components/ui/card";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Card } from "../components/ui/card";
+import { AppDialog } from "../components/AppDialog";
+import { ContentProvenance } from "../components/ContentProvenance";
+import { TraditionalXamPreview } from "../components/TraditionalXamPreview";
+import { CULTURE_ARTICLES } from "../data/cultureData";
 import {
   RegionType,
   TopicType,
@@ -31,15 +36,21 @@ import {
   XIN_XAM_RESULTS,
 } from "../data/xinXamData";
 
+export type XinXamDrawResult = XinXamResult & {
+  drawId: string;
+};
+
 interface XinXamScreenProps {
   onBackToExperienceHome?: () => void;
   onGoToArticle?: (articleId: string) => void;
-  onSaveToAccount?: (result: XinXamResult) => boolean | void;
+  onSaveToAccount?: (result: XinXamDrawResult) => boolean;
   onGoToLogin?: () => void;
   onGoToExplore?: () => void;
   onGoToWish?: () => void;
   isLoggedIn?: boolean;
-  savedXamList?: { stickNumber: string; category?: string; region?: string }[];
+  savedXamList?: {
+    drawId?: string;
+  }[];
 }
 
 export const XinXamScreen: React.FC<XinXamScreenProps> = ({
@@ -64,7 +75,9 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
 
   // Step 3 State
   const [isActionDone, setIsActionDone] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+  const [currentDrawId, setCurrentDrawId] =
+    useState<string | null>(null);
+  const [saveError, setSaveError] = useState("");
   const [drawNotice, setDrawNotice] = useState("");
 
   const drawTimerRef = useRef<
@@ -86,8 +99,9 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
     );
     setDrawPhase("idle");
     setIsShaking(false);
-    setIsSaved(false);
+    setCurrentDrawId(null);
     setIsActionDone(false);
+    setSaveError("");
     setDrawNotice("");
   }, [selectedRegion, selectedTopic]);
 
@@ -150,8 +164,9 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
         : ""
     );
 
+    setCurrentDrawId(null);
+    setSaveError("");
     setIsShaking(true);
-    setIsSaved(false);
     setIsActionDone(false);
     setDrawPhase("shaking");
 
@@ -169,7 +184,10 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
 
     drawTimerRef.current = setTimeout(() => {
       drawTimerRef.current = null;
+
       setCurrentResult(chosen);
+      setCurrentDrawId(crypto.randomUUID());
+
       setIsShaking(false);
       setDrawPhase("dropped");
     }, reducedMotion ? 200 : 1800);
@@ -177,39 +195,65 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
 
   const isCardSaved =
     isLoggedIn &&
-    (
-      isSaved ||
-      (savedXamList ?? []).some(
-        (item) =>
-          item.stickNumber === currentResult.stickNumber &&
-          item.region === currentResult.region &&
-          (
-            item.category === currentResult.category ||
-            item.category === currentResult.topic
-          )
-      )
+    currentDrawId !== null &&
+    (savedXamList ?? []).some(
+      (item) => item.drawId === currentDrawId
     );
 
   const handleSaveResult = () => {
     if (isCardSaved) return;
 
-    if (!onSaveToAccount) {
-      setDrawNotice(
-        "Chức năng lưu chưa sẵn sàng trong phiên này."
+    setSaveError("");
+
+    if (!currentDrawId) {
+      setSaveError(
+        "Bạn hãy hoàn tất một lượt rút trước khi lưu."
       );
       return;
     }
 
-    const success = onSaveToAccount(currentResult);
+    if (!onSaveToAccount) {
+      setSaveError("Chức năng lưu chưa sẵn sàng trong phiên này.");
+      return;
+    }
 
-    if (success === true) {
-      setIsSaved(true);
+    let saved = false;
+
+    try {
+      saved = onSaveToAccount({
+        ...currentResult,
+        drawId: currentDrawId,
+      }) === true;
+    } catch {
+      setSaveError("Chưa lưu được thẻ. Bạn hãy thử lại.");
+      return;
+    }
+
+    if (saved) return;
+
+    // Với khách, callback của App chuyển sang đăng nhập.
+    if (isLoggedIn) {
+      setSaveError(
+        "Chưa lưu được thẻ trên trình duyệt này. Bạn hãy thử lại."
+      );
     }
   };
+
+  const relatedArticle = CULTURE_ARTICLES.find(
+    (article) => article.id === currentResult.relatedArticleId
+  );
 
   return (
     <div className="screen-shell">
       <main className="page-container max-w-5xl">
+        {saveError && (
+          <p
+            role="alert"
+            className="mb-5 rounded-panel border border-danger/25 bg-danger-soft px-4 py-3 text-sm text-danger leading-relaxed"
+          >
+            {saveError}
+          </p>
+        )}
         {drawNotice && (
           <p
             role="status"
@@ -254,370 +298,120 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
             </div>
 
             {/* Heading & Subtitle */}
-            <div className="mb-10 text-left">
+            <div className="mb-6 text-left">
               <h1 className="page-title mb-3">
                 Chọn một điều bạn muốn chiêm nghiệm
               </h1>
-              <p className="text-sm sm:text-base text-ink leading-relaxed max-w-3xl">
-                Đây là trải nghiệm tìm hiểu văn hóa và suy ngẫm, gợi mở góc nhìn bình an
-                cho tâm trí – hoàn toàn mang tinh thần lắng đọng nội tâm, không mang tính
-                tiên tri hay dự đoán chắc chắn tương lai.
+              <p className="text-sm sm:text-base text-muted leading-relaxed max-w-2xl">
+                Chọn vùng miền và một chủ đề để khám phá thẻ chiêm nghiệm
+                trong bản demo. Nội dung không phải dự báo tương lai.
               </p>
             </div>
 
             {/* Section 1: Chọn không gian văn hóa gợi mở */}
-            <section className="mb-10">
-              <div className="flex items-center gap-2.5 mb-2">
-                <span className="w-6 h-6 rounded-full bg-action text-white text-xs font-bold flex items-center justify-center">
-                  1
-                </span>
-                <h3 className="font-display font-bold text-xl sm:text-2xl text-ink">
-                  Chọn không gian văn hóa gợi mở
-                </h3>
+            <fieldset className="min-w-0 mb-6">
+              <legend className="mb-3 font-display text-xl font-semibold text-ink">
+                1. Chọn vùng miền
+              </legend>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {(
+                  [
+                    {
+                      value: "Bắc Bộ",
+                      image: "/images/temple_bac_bo.jpg",
+                      description: "Không gian đình, đền miền Bắc",
+                    },
+                    {
+                      value: "Trung Bộ",
+                      image: "/images/hue_trung_bo.jpg",
+                      description: "Sắc thái Huế và miền Trung",
+                    },
+                    {
+                      value: "Nam Bộ",
+                      image: "/images/mekong_nam_bo.jpg",
+                      description: "Không gian sông nước phương Nam",
+                    },
+                  ] satisfies {
+                    value: RegionType;
+                    image: string;
+                    description: string;
+                  }[]
+                ).map((region) => (
+                  <label
+                    key={region.value}
+                    className={`flex cursor-pointer items-center gap-3 rounded-card border p-3 focus-within:ring-2 focus-within:ring-accent ${
+                      selectedRegion === region.value
+                        ? "border-accent bg-accent-soft"
+                        : "border-line bg-surface"
+                    }`}
+                  >
+                    <img
+                      src={region.image}
+                      alt=""
+                      className="h-16 w-20 shrink-0 rounded-panel object-cover"
+                    />
+
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-base font-semibold text-ink">
+                        {region.value}
+                      </span>
+
+                      <span className="mt-1 block text-sm text-muted leading-relaxed">
+                        {region.description}
+                      </span>
+                    </span>
+
+                    <input
+                      type="radio"
+                      name="xam-region"
+                      value={region.value}
+                      checked={selectedRegion === region.value}
+                      onChange={() => setSelectedRegion(region.value)}
+                      className="h-5 w-5 shrink-0 accent-action"
+                    />
+                  </label>
+                ))}
               </div>
-              <p className="text-sm text-muted mb-6 pl-8">
-                Khám phá phong thổ và chiều sâu tâm thức ba miền. Mỗi vùng đất mang một
-                sắc thái riêng thuần hậu, không áp đặt một khuôn mẫu duy nhất:
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Bắc Bộ */}
-                <Card
-                  onClick={() => setSelectedRegion("Bắc Bộ")}
-                  className={`p-5 rounded-card cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
-                    selectedRegion === "Bắc Bộ"
-                      ? "bg-accent-soft border-accent ring-1 ring-accent/20"
-                      : "bg-surface border-line hover:border-line"
-                  }`}
-                >
-                  <div>
-                    <div className="relative h-44 rounded-panel overflow-hidden mb-4 bg-surface">
-                      <img
-                        src="/images/temple_bac_bo.jpg"
-                        alt="Không gian Trầm mặc Xứ Bắc"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/60 text-xs font-semibold text-white">
-                        BẮC BỘ
-                      </div>
-                      <div
-                        className={`absolute top-2.5 right-2.5 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                          selectedRegion === "Bắc Bộ"
-                            ? "bg-action text-white"
-                            : "border-2 border-white/80 bg-black/30 text-transparent"
-                        }`}
-                      >
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                    </div>
-
-                    <h4 className="font-display font-bold text-lg text-ink mb-1.5">
-                      Không gian Trầm mặc Xứ Bắc
-                    </h4>
-                    <p className="text-sm text-ink leading-relaxed">
-                      Gợi nhắc nét tôn nghiêm nơi sân đình, mái ngói rêu phong và ước vọng
-                      thái bình ngàn đời của làng xã châu thổ sông Hồng.
-                    </p>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-line flex items-center justify-between text-xs text-muted">
-                    <span className="flex items-center gap-1.5 font-medium">
-                      <span
-                        className={`w-2 h-2 rounded-full ${
-                          selectedRegion === "Bắc Bộ" ? "bg-action" : "bg-surface-soft"
-                        }`}
-                      />
-                      <span>
-                        {selectedRegion === "Bắc Bộ"
-                          ? "Đang chọn không gian này"
-                          : "Chọn không gian này"}
-                      </span>
-                    </span>
-                    <Flower2 className="w-4 h-4 text-accent" />
-                  </div>
-                </Card>
-
-                {/* Trung Bộ */}
-                <Card
-                  onClick={() => setSelectedRegion("Trung Bộ")}
-                  className={`p-5 rounded-card cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
-                    selectedRegion === "Trung Bộ"
-                      ? "bg-accent-soft border-accent ring-1 ring-accent/20"
-                      : "bg-surface border-line hover:border-line"
-                  }`}
-                >
-                  <div>
-                    <div className="relative h-44 rounded-panel overflow-hidden mb-4 bg-surface">
-                      <img
-                        src="/images/hue_trung_bo.jpg"
-                        alt="Nét Giao thoa Xứ Huế & Miền Trung"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/60 text-xs font-semibold text-white">
-                        TRUNG BỘ
-                      </div>
-                      <div
-                        className={`absolute top-2.5 right-2.5 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                          selectedRegion === "Trung Bộ"
-                            ? "bg-action text-white"
-                            : "border-2 border-white/80 bg-black/30 text-transparent"
-                        }`}
-                      >
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                    </div>
-
-                    <h4 className="font-display font-bold text-lg text-ink mb-1.5">
-                      Nét Giao thoa Xứ Huế & Miền Trung
-                    </h4>
-                    <p className="text-sm text-ink leading-relaxed">
-                      Hòa quyện giữa chất trầm tư kinh kỳ, sông nước Hương giang u tịch và
-                      tín ngưỡng Mẫu thuần hậu chở che qua bao thăng trầm.
-                    </p>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-line flex items-center justify-between text-xs text-muted">
-                    <span className="flex items-center gap-1.5 font-medium">
-                      <span
-                        className={`w-2 h-2 rounded-full ${
-                          selectedRegion === "Trung Bộ" ? "bg-action" : "bg-surface-soft"
-                        }`}
-                      />
-                      <span>
-                        {selectedRegion === "Trung Bộ"
-                          ? "Đang chọn không gian này"
-                          : "Chọn không gian này"}
-                      </span>
-                    </span>
-                    <Waves className="w-4 h-4 text-accent" />
-                  </div>
-                </Card>
-
-                {/* Nam Bộ */}
-                <Card
-                  onClick={() => setSelectedRegion("Nam Bộ")}
-                  className={`p-5 rounded-card cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
-                    selectedRegion === "Nam Bộ"
-                      ? "bg-accent-soft border-accent ring-1 ring-accent/20"
-                      : "bg-surface border-line hover:border-line"
-                  }`}
-                >
-                  <div>
-                    <div className="relative h-44 rounded-panel overflow-hidden mb-4 bg-surface">
-                      <img
-                        src="/images/mekong_nam_bo.jpg"
-                        alt="Hồn Phù sa Khoáng đạt Phương Nam"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/60 text-xs font-semibold text-white">
-                        NAM BỘ
-                      </div>
-                      <div
-                        className={`absolute top-2.5 right-2.5 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                          selectedRegion === "Nam Bộ"
-                            ? "bg-action text-white"
-                            : "border-2 border-white/80 bg-black/30 text-transparent"
-                        }`}
-                      >
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                    </div>
-
-                    <h4 className="font-display font-bold text-lg text-ink mb-1.5">
-                      Hồn Phù sa Khoáng đạt Phương Nam
-                    </h4>
-                    <p className="text-sm text-ink leading-relaxed">
-                      Không gian ấm áp ven dòng Cửu Long, gửi gắm tinh thần bao dung, hào
-                      sảng, mộc mạc và chân thành của cư dân châu thổ.
-                    </p>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-line flex items-center justify-between text-xs text-muted">
-                    <span className="flex items-center gap-1.5 font-medium">
-                      <span
-                        className={`w-2 h-2 rounded-full ${
-                          selectedRegion === "Nam Bộ" ? "bg-action" : "bg-surface-soft"
-                        }`}
-                      />
-                      <span>
-                        {selectedRegion === "Nam Bộ"
-                          ? "Đang chọn không gian này"
-                          : "Chọn không gian này"}
-                      </span>
-                    </span>
-                    <Sun className="w-4 h-4 text-accent" />
-                  </div>
-                </Card>
-              </div>
-            </section>
+            </fieldset>
 
             {/* Section 2: Chọn chủ đề bạn đang lắng đọng */}
-            <section className="mb-10">
-              <div className="flex items-center gap-2.5 mb-2">
-                <span className="w-6 h-6 rounded-full bg-action text-white text-xs font-bold flex items-center justify-center">
-                  2
-                </span>
-                <h3 className="font-display font-bold text-xl sm:text-2xl text-ink">
-                  Chọn chủ đề bạn đang lắng đọng
-                </h3>
+            <fieldset className="min-w-0 mb-6">
+              <legend className="mb-3 font-display text-xl font-semibold text-ink">
+                2. Chọn điều bạn muốn chiêm nghiệm
+              </legend>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {(
+                  ["Học tập", "Công việc", "Gia đình", "Bình an"] satisfies TopicType[]
+                ).map((topic) => (
+                  <label
+                    key={topic}
+                    className={`flex min-h-14 cursor-pointer items-center gap-2 rounded-control border px-3 py-3 focus-within:ring-2 focus-within:ring-accent ${
+                      selectedTopic === topic
+                        ? "border-accent bg-accent-soft"
+                        : "border-line bg-surface"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="xam-topic"
+                      value={topic}
+                      checked={selectedTopic === topic}
+                      onChange={() => setSelectedTopic(topic)}
+                      className="h-5 w-5 shrink-0 accent-action"
+                    />
+
+                    <span className="text-sm font-semibold text-ink">
+                      {topic}
+                    </span>
+                  </label>
+                ))}
               </div>
-              <p className="text-sm text-muted mb-6 pl-8">
-                Chọn đúng một khía cạnh bạn muốn đón nhận lời gửi gắm hôm nay:
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {/* 1. Học tập */}
-                <Card
-                  onClick={() => setSelectedTopic("Học tập")}
-                  className={`p-5 rounded-card cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
-                    selectedTopic === "Học tập"
-                      ? "bg-accent-soft border-accent ring-1 ring-accent/20"
-                      : "bg-surface border-line hover:border-line"
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-accent">
-                        <BookOpen className="w-4 h-4" />
-                      </div>
-                      <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                          selectedTopic === "Học tập"
-                            ? "bg-action text-white"
-                            : "border-2 border-line bg-surface text-transparent"
-                        }`}
-                      >
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </div>
-                    </div>
-                    <h4 className="font-display font-bold text-lg text-ink mb-1.5">
-                      Học tập
-                    </h4>
-                    <p className="text-sm text-ink leading-relaxed mb-4">
-                      Định tâm, mở mang trí tuệ & thông tuệ trước trang sách đời.
-                    </p>
-                  </div>
-                  <div className="text-xs font-semibold text-accent flex items-center gap-1">
-                    <span>Khởi sáng tri thức</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </div>
-                </Card>
-
-                {/* 2. Công việc */}
-                <Card
-                  onClick={() => setSelectedTopic("Công việc")}
-                  className={`p-5 rounded-card cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
-                    selectedTopic === "Công việc"
-                      ? "bg-accent-soft border-accent ring-1 ring-accent/20"
-                      : "bg-surface border-line hover:border-line"
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-accent">
-                        <Compass className="w-4 h-4" />
-                      </div>
-                      <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                          selectedTopic === "Công việc"
-                            ? "bg-action text-white"
-                            : "border-2 border-line bg-surface text-transparent"
-                        }`}
-                      >
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </div>
-                    </div>
-                    <h4 className="font-display font-bold text-lg text-ink mb-1.5">
-                      Công việc
-                    </h4>
-                    <p className="text-sm text-ink leading-relaxed mb-4">
-                      Kiên định, hanh thông trước mọi dự định và thử thách mới.
-                    </p>
-                  </div>
-                  <div className="text-xs font-semibold text-accent flex items-center gap-1">
-                    <span>Thuận buồm xuôi gió</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </div>
-                </Card>
-
-                {/* 3. Gia đình */}
-                <Card
-                  onClick={() => setSelectedTopic("Gia đình")}
-                  className={`p-5 rounded-card cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
-                    selectedTopic === "Gia đình"
-                      ? "bg-accent-soft border-accent ring-1 ring-accent/20"
-                      : "bg-surface border-line hover:border-line"
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-accent">
-                        <Home className="w-4 h-4" />
-                      </div>
-                      <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                          selectedTopic === "Gia đình"
-                            ? "bg-action text-white"
-                            : "border-2 border-line bg-surface text-transparent"
-                        }`}
-                      >
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </div>
-                    </div>
-                    <h4 className="font-display font-bold text-lg text-ink mb-1.5">
-                      Gia đình
-                    </h4>
-                    <p className="text-sm text-ink leading-relaxed mb-4">
-                      Gắn kết, thấu hiểu & giữ cho nếp nhà luôn ấm êm thuận hòa.
-                    </p>
-                  </div>
-                  <div className="text-xs font-semibold text-accent flex items-center gap-1">
-                    <span>Mái ấm an hòa</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </div>
-                </Card>
-
-                {/* 4. Bình an */}
-                <Card
-                  onClick={() => setSelectedTopic("Bình an")}
-                  className={`p-5 rounded-card cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
-                    selectedTopic === "Bình an"
-                      ? "bg-accent-soft border-accent ring-1 ring-accent/20"
-                      : "bg-surface border-line hover:border-line"
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-accent">
-                        <Flower2 className="w-4 h-4" />
-                      </div>
-                      <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                          selectedTopic === "Bình an"
-                            ? "bg-action text-white"
-                            : "border-2 border-line bg-surface text-transparent"
-                        }`}
-                      >
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </div>
-                    </div>
-                    <h4 className="font-display font-bold text-lg text-ink mb-1.5">
-                      Bình an
-                    </h4>
-                    <p className="text-sm text-ink leading-relaxed mb-4">
-                      Thanh lọc âu lo, nuôi dưỡng sự tĩnh tại và an yên trong lòng.
-                    </p>
-                  </div>
-                  <div className="text-xs font-semibold text-accent flex items-center gap-1">
-                    <span>Tâm sáng an nhiên</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </div>
-                </Card>
-              </div>
-            </section>
+            </fieldset>
 
             {/* Selection Summary Callout Box */}
-            <Card className="p-6 rounded-card bg-surface/80 border border-line flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10 shadow-2xs">
+            <Card className="p-4 sm:p-5 rounded-card bg-surface border border-line flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div>
                 <div className="text-xs font-bold uppercase tracking-wider text-accent mb-1">
                   ◎ TÓM TẮT LỰA CHỌN CỦA BẠN
@@ -652,7 +446,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                   size="default"
                   onClick={() => {
                     setStep(2);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
+                    window.scrollTo({ top: 0, behavior: "auto" });
                   }}
                   className="w-full sm:w-auto font-semibold shadow-xs gap-2"
                 >
@@ -662,6 +456,18 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
               </div>
             </Card>
 
+            {import.meta.env.DEV && (
+              <details className="mb-6 rounded-card border border-line bg-surface p-4">
+                <summary className="min-h-11 cursor-pointer rounded-control py-3 text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                  Đọc thử thẻ Quan Thánh — kiểm tra nội dung
+                </summary>
+
+                <div className="mt-4 border-t border-line pt-5">
+                  <TraditionalXamPreview />
+                </div>
+              </details>
+            )}
+
             {/* Editorial Principle Disclaimer */}
             <div className="p-5 rounded-panel bg-surface border border-line flex items-start gap-3.5 text-xs text-muted leading-relaxed mb-12">
               <Info className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
@@ -670,10 +476,11 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                   GHI CHÚ VĂN HÓA & NGUYÊN TẮC TRẢI NGHIỆM
                 </div>
                 <p>
-                  Tin Lắm Tâm Linh tiếp cận tập tục xin xăm dưới lăng kính nhân học và mỹ
-                  học dân gian, như một khoảnh khắc dừng lại lắng nghe nội tâm giữa nhịp
-                  sống hiện đại. Toàn bộ hình ảnh, câu chữ và tri thức văn hóa ba miền đều
-                  đang được đối chiếu thận trọng cùng các nhà nghiên cứu di sản.
+                  Bộ thẻ hiện là nội dung mẫu phục vụ trải nghiệm giao diện,
+                  chưa phải bộ xăm truyền thống đã được đối chiếu nguồn.
+                  Mỗi vùng và chủ đề hiện có một thẻ nên rút lại sẽ nhận
+                  cùng nội dung. Kết quả được chọn theo vùng và chủ đề,
+                  chưa dùng AI hoặc nội dung tâm sự để diễn giải.
                 </p>
               </div>
             </div>
@@ -1098,7 +905,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
             </div>
 
             {/* Two Column Layout: Sacred Bamboo Slip & Literary Essay */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mb-16 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 mb-8 items-start">
               {/* Left Column (5 columns): The Sacred Parchment Bamboo Slip */}
               <div className="lg:col-span-5 space-y-4">
                 <div className="rounded-2xl p-6 sm:p-8 bg-surface border border-line shadow-sm relative overflow-hidden text-center flex flex-col justify-between min-h-[480px]">
@@ -1178,7 +985,11 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                   >
                     <Bookmark className="w-4 h-4" aria-hidden="true" />
                     <span>
-                      {isCardSaved ? "Đã lưu thẻ" : "Lưu vào Góc của tôi"}
+                      {isCardSaved
+                        ? "Đã lưu thẻ"
+                        : isLoggedIn
+                          ? "Lưu vào Góc của tôi"
+                          : "Đăng nhập để lưu"}
                     </span>
                   </button>
                 </div>
@@ -1186,47 +997,63 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
 
               {/* Right Column (7 columns): Seamless Literary Essay (No 4 box cards) */}
               <div className="lg:col-span-7 space-y-8 text-ink">
-                {/* Essay Section 1: Lời chiêm nghiệm & Luận giải */}
-                <div className="space-y-4">
-                  <div className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-action"></span>
-                    <span>Tự soi chiếu nội tâm</span>
-                  </div>
-                  <h3 className="font-display font-semibold text-2xl text-ink">
-                    Lắng nghe lẽ biến chuyển
-                  </h3>
+                {/* Lời gợi mở chính */}
+                <section aria-labelledby="xam-reflection-title" className="space-y-4">
+                  <h2
+                    id="xam-reflection-title"
+                    className="font-display text-xl sm:text-2xl font-semibold text-ink"
+                  >
+                    Một điều để ngẫm
+                  </h2>
 
-                  <div className="space-y-4 text-sm sm:text-base text-ink/90 leading-relaxed font-normal">
-                    {currentResult.reflectionParagraphs.map((para, pIdx) => (
-                      <p key={pIdx} className="leading-relaxed">
-                        {pIdx === 0 && (
-                          <span className="float-left text-3xl sm:text-4xl font-serif font-bold text-accent mr-2.5 leading-none mt-0.5">
-                            {para.charAt(0)}
-                          </span>
-                        )}
-                        {pIdx === 0 ? para.slice(1) : para}
-                      </p>
-                    ))}
-                  </div>
+                  {currentResult.reflectionParagraphs[0] && (
+                    <p className="text-base text-ink leading-relaxed">
+                      {currentResult.reflectionParagraphs[0]}
+                    </p>
+                  )}
 
-                  {/* 2 Gentle Takeaways */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                    {currentResult.tips.map((tip, tIdx) => (
-                      <div
-                        key={tIdx}
-                        className="p-4 rounded-xl bg-surface/70 border border-line"
-                      >
-                        <h5 className="font-semibold text-xs text-accent mb-1 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-action"></span>
-                          <span>{tip.title}</span>
-                        </h5>
-                        <p className="text-xs sm:text-sm text-muted leading-relaxed">
-                          {tip.desc}
-                        </p>
+                  {(currentResult.reflectionParagraphs.length > 1 ||
+                    currentResult.tips.length > 0) && (
+                    <details className="group rounded-card border border-line bg-surface p-4">
+                      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-control text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
+                        <span>Đọc thêm lời chiêm nghiệm</span>
+
+                        <ChevronDown
+                          aria-hidden="true"
+                          className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-180 motion-reduce:transition-none"
+                        />
+                      </summary>
+
+                      <div className="mt-4 space-y-4">
+                        {currentResult.reflectionParagraphs
+                          .slice(1)
+                          .map((paragraph, index) => (
+                            <p
+                              key={index}
+                              className="text-sm sm:text-base text-ink leading-relaxed"
+                            >
+                              {paragraph}
+                            </p>
+                          ))}
+
+                        {currentResult.tips.map((tip, index) => (
+                          <div
+                            key={index}
+                            className="border-t border-line pt-4"
+                          >
+                            <h3 className="mb-2 text-sm font-semibold text-accent">
+                              {tip.title}
+                            </h3>
+
+                            <p className="text-sm text-muted leading-relaxed">
+                              {tip.desc}
+                            </p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </details>
+                  )}
+                </section>
 
                 <div className="w-full h-px bg-line/60" />
 
@@ -1253,8 +1080,10 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                     </div>
 
                     <button
-                      onClick={() => setIsActionDone(!isActionDone)}
-                      className={`px-4 py-2.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
+                      type="button"
+                      aria-pressed={isActionDone}
+                      onClick={() => setIsActionDone((value) => !value)}
+                      className={`min-h-11 px-4 py-2.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
                         isActionDone
                           ? "bg-success-soft text-success shadow-2xs"
                           : "bg-surface border border-line text-accent hover:bg-surface-soft"
@@ -1270,30 +1099,62 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
 
                 <div className="w-full h-px bg-line/60" />
 
-                {/* Essay Section 3: Góc nhìn văn hóa & Tri thức di sản */}
-                <div className="space-y-3">
-                  <div className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
-                    <BookOpen className="w-3.5 h-3.5" />
-                    <span>Góc nhìn văn hóa & Không gian di sản</span>
-                  </div>
+                <details className="group rounded-card border border-line bg-surface p-4">
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-control text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
+                    <span>Nguồn và trạng thái bộ thẻ</span>
 
-                  <p className="text-sm sm:text-base text-muted leading-relaxed">
+                    <ChevronDown
+                      aria-hidden="true"
+                      className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-180 motion-reduce:transition-none"
+                    />
+                  </summary>
+
+                  <div className="mt-4">
+                    <ContentProvenance metadata={currentResult.metadata} />
+                  </div>
+                </details>
+
+                {/* Góc nhìn văn hóa */}
+                <details className="group rounded-card border border-line bg-surface p-4">
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-control text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
+                    <span className="inline-flex items-center gap-2">
+                      <BookOpen aria-hidden="true" className="h-4 w-4 text-accent" />
+                      Góc nhìn văn hóa
+                    </span>
+
+                    <ChevronDown
+                      aria-hidden="true"
+                      className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-180 motion-reduce:transition-none"
+                    />
+                  </summary>
+
+                  <p className="mt-4 text-xs text-muted leading-relaxed">
+                    Phần giới thiệu văn hóa đang được biên soạn và chờ
+                    đối chiếu tài liệu. Vùng được chọn là nhóm trải nghiệm
+                    trong bản mẫu, chưa xác nhận xuất xứ của câu thẻ.
+                  </p>
+
+                  <p className="mt-4 text-sm sm:text-base text-muted leading-relaxed">
                     {currentResult.culturalAspect}
                   </p>
 
-                  {/* Cultural link */}
-                  <div className="pt-2">
+                  {onGoToArticle && relatedArticle && (
                     <button
-                      onClick={() =>
-                        onGoToArticle && onGoToArticle(currentResult.relatedArticleId)
-                      }
-                      className="text-xs font-semibold text-accent hover:text-action flex items-center gap-1.5 cursor-pointer transition-colors"
+                      type="button"
+                      onClick={() => onGoToArticle(relatedArticle.id)}
+                      className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-control text-left text-sm font-semibold text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     >
-                      <span>Tìm hiểu không gian: {currentResult.relatedArticleTitle}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <span>
+                        Đọc bài liên quan: {relatedArticle.title}
+                      </span>
+
+                      <ArrowRight
+                        aria-hidden="true"
+                        className="h-4 w-4 shrink-0"
+                      />
                     </button>
-                  </div>
-                </div>
+                  )}
+                </details>
 
                 {/* Final Primary Action Buttons (Clear, decisive focal point) */}
                 <div className="pt-6 border-t border-line flex flex-col sm:flex-row items-center gap-3">
@@ -1307,8 +1168,10 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                     <Bookmark className="w-4 h-4" />
                     <span>
                       {isCardSaved
-                        ? "Đã lưu vào Góc của tôi"
-                        : "Lưu vào Góc của tôi"}
+                        ? "Đã lưu thẻ"
+                        : isLoggedIn
+                          ? "Lưu vào Góc của tôi"
+                          : "Đăng nhập để lưu"}
                     </span>
                   </Button>
 
@@ -1342,7 +1205,9 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
             <div className="p-4 rounded-xl bg-surface/60 border border-line flex items-center gap-3 text-xs text-muted leading-relaxed mb-12">
               <ShieldCheck className="w-4 h-4 text-accent flex-shrink-0" />
               <span>
-                Nội dung chiêm nghiệm văn hóa và liệu pháp tinh thần tích cực, không mang tính mê tín hay dự báo định mệnh. Mọi quyết định và an vui cuộc sống đều khởi phát từ tâm bạn.
+                Đây là nội dung chiêm nghiệm trong bản demo, không phải
+                dự báo tương lai. Bạn có thể chọn điều phù hợp với hoàn
+                cảnh của mình.
               </span>
             </div>
           </div>
@@ -1352,46 +1217,60 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
             MODAL HƯỚNG DẪN CHIÊM NGHIỆM (Step 2)
            ========================================================================= */}
         {showGuideModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-            <Card className="max-w-md w-full bg-surface border border-line rounded-card p-6 shadow-xl relative animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-line">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent">
-                  <Sparkles className="w-4 h-4" />
-                  <span>Hướng dẫn chiêm nghiệm</span>
-                </div>
-                <button
-                  onClick={() => setShowGuideModal(false)}
-                  className="text-xs text-muted hover:text-accent cursor-pointer"
-                >
-                  ✕ Đóng
-                </button>
-              </div>
-
-              <div className="space-y-3 text-xs sm:text-sm text-ink leading-relaxed mb-6">
-                <p>
-                  <strong>1. Khởi tâm an hòa:</strong> Hãy giữ cho lồng ngực thả lỏng, hít
-                  vào một hơi sâu và thở ra chậm rãi.
-                </p>
-                <p>
-                  <strong>2. Chạm vào ống xăm:</strong> Bấm vào nút "Rút một thẻ xăm" để ống
-                  xăm tre chuyển động và trao gửi thông điệp hữu duyên.
-                </p>
-                <p>
-                  <strong>3. Đón nhận câu chữ:</strong> Đọc 4 câu thơ và lời luận giải bằng
-                  tâm thế cởi mở, xem như một lời nhắc nhở nhẹ nhàng cho tâm hồn.
-                </p>
-              </div>
-
-              <Button
-                variant="default"
-                size="default"
-                onClick={() => setShowGuideModal(false)}
-                className="w-full font-semibold"
+          <AppDialog
+            labelledBy="xin-xam-guide-dialog-title"
+            onClose={() => setShowGuideModal(false)}
+          >
+            <div className="mb-5 flex items-start justify-between gap-3 border-b border-line pb-4">
+              <h2
+                id="xin-xam-guide-dialog-title"
+                className="font-display text-xl font-semibold text-ink"
               >
-                Tôi đã hiểu, tiếp tục rút thẻ
-              </Button>
-            </Card>
-          </div>
+                Hướng dẫn rút thẻ
+              </h2>
+
+              <button
+                type="button"
+                autoFocus
+                aria-label="Đóng hướng dẫn rút thẻ"
+                onClick={() => setShowGuideModal(false)}
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-surface-soft hover:text-ink"
+              >
+                <span aria-hidden="true">✕</span>
+              </button>
+            </div>
+
+            <ol className="list-decimal space-y-4 pl-5 text-sm leading-relaxed text-ink">
+              <li>
+                <strong>Dừng lại một chút.</strong>{" "}
+                Thả lỏng và nghĩ về điều bạn muốn chiêm nghiệm.
+              </li>
+
+              <li>
+                <strong>Rút một thẻ.</strong>{" "}
+                Bấm “Thành tâm lắc ống xăm” để bắt đầu tương tác.
+              </li>
+
+              <li>
+                <strong>Đọc và chọn điều phù hợp.</strong>{" "}
+                Xem lời gợi mở, rồi thử một hành động nhỏ nếu bạn muốn.
+                Nội dung không dự đoán tương lai hay quyết định thay bạn.
+              </li>
+            </ol>
+
+            <p className="mt-5 rounded-xl bg-surface-soft p-4 text-sm leading-relaxed text-muted">
+              Bản thử nghiệm hiện có một thẻ cho mỗi vùng và chủ đề.
+              Rút lại có thể nhận cùng nội dung.
+            </p>
+
+            <Button
+              type="button"
+              onClick={() => setShowGuideModal(false)}
+              className="mt-6 w-full"
+            >
+              Tôi đã hiểu
+            </Button>
+          </AppDialog>
         )}
 
       </main>

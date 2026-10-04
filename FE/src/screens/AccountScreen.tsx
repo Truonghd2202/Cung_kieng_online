@@ -20,9 +20,9 @@ import {
   Settings,
   Bell,
 } from "lucide-react";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Card } from "@/src/components/ui/card";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Card } from "../components/ui/card";
 import { MoodKey } from "../data/demoSignals";
 import { SavedItemActions } from "../components/SavedItemActions";
 import { AppDialog } from "../components/AppDialog";
@@ -32,6 +32,7 @@ export interface SavedSignalItem {
   signalId: string;
   mood: MoodKey;
   date: string;
+  createdAt?: number;
   journal?: string;
   poemLine1: string;
   poemLine2: string;
@@ -41,12 +42,14 @@ export interface SavedSignalItem {
 
 export interface SavedXinXamItem {
   id: string;
+  drawId?: string;
   stickNumber: string;
   fortuneType: string;
   category: string;
   region: string;
   quote: string;
   date: string;
+  createdAt?: number;
   starred?: boolean;
 }
 
@@ -55,6 +58,7 @@ export interface SavedWishItem {
   category: string;
   content: string;
   date: string;
+  createdAt?: number;
   sealed: boolean;
   starred?: boolean;
 }
@@ -64,9 +68,9 @@ interface AccountScreenProps {
   savedSignals: SavedSignalItem[];
   savedXamList: SavedXinXamItem[];
   savedWishList: SavedWishItem[];
-  onDeleteSignal: (id: string) => void;
-  onDeleteXam: (id: string) => void;
-  onDeleteWish: (id: string) => void;
+  onDeleteSignal: (id: string) => boolean;
+  onDeleteXam: (id: string) => boolean;
+  onDeleteWish: (id: string) => boolean;
   onToggleStarSignal?: (id: string) => void;
   onToggleStarXam: (id: string) => void;
   onToggleStarWish: (id: string) => void;
@@ -79,6 +83,29 @@ interface AccountScreenProps {
   onGoToHome: () => void;
   onGoToSettings?: () => void;
 }
+
+const normalizeSearchText = (value: string): string =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[đĐ]/g, "d")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+
+const matchesSearch = (
+  query: string,
+  values: string[]
+): boolean => {
+  const normalizedQuery = normalizeSearchText(query);
+
+  return (
+    !normalizedQuery ||
+    values.some((value) =>
+      normalizeSearchText(value).includes(normalizedQuery)
+    )
+  );
+};
 
 export const AccountScreen: React.FC<AccountScreenProps> = ({
   currentUser,
@@ -124,22 +151,46 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
     id: string;
     title?: string;
   } | null>(null);
+  const [deleteError, setDeleteError] = useState("");
 
   const [openedWish, setOpenedWish] = useState<SavedWishItem | null>(null);
   const [openedXam, setOpenedXam] = useState<SavedXinXamItem | null>(null);
 
   // Helper date parsing (DD/MM/YYYY)
-  const parseVnDate = (str: string): number => {
-    try {
-      const parts = str.split("/");
-      if (parts.length === 3) {
-        const day = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1;
-        const year = parseInt(parts[2], 10);
-        return new Date(year, month, day).getTime();
-      }
-    } catch {}
-    return 0;
+  const parseVnDate = (value: string): number => {
+    const match = value.trim().match(
+      /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/
+    );
+
+    if (!match) return Number.NaN;
+
+    const day = Number(match[1]);
+    const month = Number(match[2]);
+    const year = Number(match[3]);
+
+    if (
+      year < 1 ||
+      month < 1 ||
+      month > 12 ||
+      day < 1 ||
+      day > 31
+    ) {
+      return Number.NaN;
+    }
+
+    const date = new Date(0);
+    date.setHours(0, 0, 0, 0);
+    date.setFullYear(year, month - 1, day);
+
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== month - 1 ||
+      date.getDate() !== day
+    ) {
+      return Number.NaN;
+    }
+
+    return date.getTime();
   };
 
   const isWithinDays = (
@@ -148,7 +199,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
   ): boolean => {
     const timestamp = parseVnDate(dateStr);
 
-    if (!timestamp || !Number.isFinite(timestamp)) {
+    if (!Number.isFinite(timestamp)) {
       return false;
     }
 
@@ -168,26 +219,90 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
   };
 
   const isCurrentMonth = (dateStr: string): boolean => {
-    const ts = parseVnDate(dateStr);
-    if (!ts || !Number.isFinite(ts)) return false;
-    const itemDate = new Date(ts);
-    const now = new Date();
+    const timestamp = parseVnDate(dateStr);
+
+    if (!Number.isFinite(timestamp)) return false;
+
+    const itemDate = new Date(timestamp);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     return (
-      itemDate.getMonth() === now.getMonth() &&
-      itemDate.getFullYear() === now.getFullYear()
+      timestamp <= today.getTime() &&
+      itemDate.getMonth() === today.getMonth() &&
+      itemDate.getFullYear() === today.getFullYear()
     );
+  };
+
+  const getSavedTimestamp = (item: {
+    date: string;
+    createdAt?: number;
+  }): number => {
+    if (
+      typeof item.createdAt === "number" &&
+      Number.isFinite(item.createdAt) &&
+      item.createdAt > 0 &&
+      Number.isFinite(new Date(item.createdAt).getTime())
+    ) {
+      return item.createdAt;
+    }
+
+    return parseVnDate(item.date);
+  };
+
+  const compareSavedDates = (
+    firstItem: { date: string; createdAt?: number },
+    secondItem: { date: string; createdAt?: number }
+  ): number => {
+    const first = getSavedTimestamp(firstItem);
+    const second = getSavedTimestamp(secondItem);
+
+    const firstValid = Number.isFinite(first);
+    const secondValid = Number.isFinite(second);
+
+    if (!firstValid && !secondValid) return 0;
+    if (!firstValid) return 1;
+    if (!secondValid) return -1;
+
+    return sortOrder === "newest"
+      ? second - first
+      : first - second;
   };
 
   // Perform deletion
   const handleConfirmDelete = () => {
     if (!itemToDelete) return;
 
-    if (itemToDelete.type === "signal") {
-      onDeleteSignal(itemToDelete.id);
-    } else if (itemToDelete.type === "xinxam") {
-      onDeleteXam(itemToDelete.id);
-    } else if (itemToDelete.type === "wish") {
-      onDeleteWish(itemToDelete.id);
+    setDeleteError("");
+
+    let deleted = false;
+
+    try {
+      if (itemToDelete.type === "signal") {
+        deleted = onDeleteSignal(itemToDelete.id);
+      } else if (itemToDelete.type === "xinxam") {
+        deleted = onDeleteXam(itemToDelete.id);
+      } else {
+        deleted = onDeleteWish(itemToDelete.id);
+      }
+    } catch {
+      deleted = false;
+    }
+
+    if (!deleted) {
+      setDeleteError(
+        "Chưa xóa được bản ghi trên trình duyệt này. Nội dung vẫn được giữ; bạn hãy thử lại."
+      );
+      return;
+    }
+
+    // Đóng phần xem chi tiết nếu đang mở đúng mục vừa xóa.
+    if (openedWish?.id === itemToDelete.id) {
+      setOpenedWish(null);
+    }
+
+    if (openedXam?.id === itemToDelete.id) {
+      setOpenedXam(null);
     }
 
     setItemToDelete(null);
@@ -196,14 +311,16 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
   // Filtered Xam
   const filteredXam = useMemo(() => {
     const list = savedXamList.filter((item) => {
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchTitle = item.category.toLowerCase().includes(q);
-        const matchQuote = item.quote.toLowerCase().includes(q);
-        const matchRegion = item.region.toLowerCase().includes(q);
-        const matchNum = item.stickNumber.includes(q);
-        const matchFortune = item.fortuneType.toLowerCase().includes(q);
-        if (!matchTitle && !matchQuote && !matchRegion && !matchNum && !matchFortune) return false;
+      if (
+        !matchesSearch(searchQuery, [
+          item.category,
+          item.quote,
+          item.region,
+          item.stickNumber,
+          item.fortuneType,
+        ])
+      ) {
+        return false;
       }
       if (activeFilter === "starred" && !item.starred) return false;
       if (activeFilter === "thisWeek" && !isWithinDays(item.date, 7)) return false;
@@ -211,21 +328,19 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
       return true;
     });
 
-    return list.sort((a, b) => {
-      const timeA = parseVnDate(a.date);
-      const timeB = parseVnDate(b.date);
-      return sortOrder === "newest" ? timeB - timeA : timeA - timeB;
-    });
+    return list.sort(compareSavedDates);
   }, [savedXamList, searchQuery, activeFilter, sortOrder]);
 
   // Filtered Wishes
   const filteredWishes = useMemo(() => {
     const list = savedWishList.filter((item) => {
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchCategory = item.category.toLowerCase().includes(q);
-        const matchContent = item.content.toLowerCase().includes(q);
-        if (!matchCategory && !matchContent) return false;
+      if (
+        !matchesSearch(searchQuery, [
+          item.category,
+          item.content,
+        ])
+      ) {
+        return false;
       }
       if (activeFilter === "starred" && !item.starred) return false;
       if (activeFilter === "thisWeek" && !isWithinDays(item.date, 7)) return false;
@@ -233,23 +348,21 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
       return true;
     });
 
-    return list.sort((a, b) => {
-      const timeA = parseVnDate(a.date);
-      const timeB = parseVnDate(b.date);
-      return sortOrder === "newest" ? timeB - timeA : timeA - timeB;
-    });
+    return list.sort(compareSavedDates);
   }, [savedWishList, searchQuery, activeFilter, sortOrder]);
 
   // Filtered Signals
   const filteredSignals = useMemo(() => {
     const list = savedSignals.filter((item) => {
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchMood = item.mood.toLowerCase().includes(q);
-        const matchPoem = (item.poemLine1 + " " + item.poemLine2).toLowerCase().includes(q);
-        const matchJournal = (item.journal || "").toLowerCase().includes(q);
-        const matchAction = (item.actionTitle || "").toLowerCase().includes(q);
-        if (!matchMood && !matchPoem && !matchJournal && !matchAction) return false;
+      if (
+        !matchesSearch(searchQuery, [
+          item.mood,
+          `${item.poemLine1} ${item.poemLine2}`,
+          item.journal || "",
+          item.actionTitle || "",
+        ])
+      ) {
+        return false;
       }
       if (activeFilter === "starred" && !item.starred) return false;
       if (activeFilter === "thisWeek" && !isWithinDays(item.date, 7)) return false;
@@ -257,12 +370,38 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
       return true;
     });
 
-    return list.sort((a, b) => {
-      const timeA = parseVnDate(a.date);
-      const timeB = parseVnDate(b.date);
-      return sortOrder === "newest" ? timeB - timeA : timeA - timeB;
-    });
+    return list.sort(compareSavedDates);
   }, [savedSignals, searchQuery, activeFilter, sortOrder]);
+
+  const searchEmptyState = (
+    <div className="mb-10 rounded-card border border-line bg-surface p-6 sm:p-10 text-center">
+      <Search
+        aria-hidden="true"
+        className="mx-auto mb-4 h-8 w-8 text-muted"
+      />
+
+      <h3 className="font-display text-xl font-semibold text-ink">
+        Không tìm thấy nội dung phù hợp
+      </h3>
+
+      <p className="mx-auto mt-3 max-w-md text-sm text-muted leading-relaxed">
+        Nội dung đã lưu vẫn còn. Bạn hãy thử từ khóa khác
+        hoặc bỏ bộ lọc đang chọn.
+      </p>
+
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => {
+          setSearchQuery("");
+          setActiveFilter("all");
+        }}
+        className="mt-5 min-h-11"
+      >
+        Xóa tìm kiếm và bộ lọc
+      </Button>
+    </div>
+  );
 
   // Total count
   const totalCount = savedSignals.length + savedXamList.length + savedWishList.length;
@@ -461,19 +600,22 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
           <div className="relative flex-1 max-w-md">
             <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
             <input
-              type="text"
+              type="search"
+              aria-label="Tìm trong nội dung đã lưu của tab đang chọn"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm trong nội dung đã lưu (tiêu đề, thẻ, chữ...)"
-              className="w-full pl-9 pr-3 py-2 rounded-xl bg-surface border border-line text-xs text-ink placeholder:text-subtle focus:outline-none focus:ring-1 focus:ring-accent"
+              placeholder="Tìm trong tab đang chọn…"
+              className="w-full min-h-11 pl-9 pr-3 py-2 rounded-control bg-surface border border-line text-base text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
 
           {/* Filter Chips */}
           <div className="flex flex-wrap items-center gap-1.5">
             <button
+              type="button"
+              aria-pressed={activeFilter === "all"}
               onClick={() => setActiveFilter("all")}
-              className={`px-3 py-1 rounded-full font-medium transition-all cursor-pointer ${
+              className={`min-h-11 px-3 py-1 rounded-full font-medium transition-all cursor-pointer inline-flex items-center ${
                 activeFilter === "all"
                   ? "bg-action text-on-action shadow-2xs font-semibold"
                   : "bg-surface border border-line text-ink"
@@ -482,8 +624,10 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
               Tất cả
             </button>
             <button
+              type="button"
+              aria-pressed={activeFilter === "thisWeek"}
               onClick={() => setActiveFilter("thisWeek")}
-              className={`px-3 py-1 rounded-full font-medium transition-all cursor-pointer ${
+              className={`min-h-11 px-3 py-1 rounded-full font-medium transition-all cursor-pointer inline-flex items-center ${
                 activeFilter === "thisWeek"
                   ? "bg-action text-on-action shadow-2xs font-semibold"
                   : "bg-surface border border-line text-ink"
@@ -492,8 +636,10 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
               7 ngày gần đây
             </button>
             <button
+              type="button"
+              aria-pressed={activeFilter === "thisMonth"}
               onClick={() => setActiveFilter("thisMonth")}
-              className={`px-3 py-1 rounded-full font-medium transition-all cursor-pointer ${
+              className={`min-h-11 px-3 py-1 rounded-full font-medium transition-all cursor-pointer inline-flex items-center ${
                 activeFilter === "thisMonth"
                   ? "bg-action text-on-action shadow-2xs font-semibold"
                   : "bg-surface border border-line text-ink"
@@ -502,8 +648,10 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
               Tháng này
             </button>
             <button
+              type="button"
+              aria-pressed={activeFilter === "starred"}
               onClick={() => setActiveFilter("starred")}
-              className={`px-3 py-1 rounded-full font-medium transition-all cursor-pointer ${
+              className={`min-h-11 px-3 py-1 rounded-full font-medium transition-all cursor-pointer inline-flex items-center ${
                 activeFilter === "starred"
                   ? "bg-action text-on-action shadow-2xs font-semibold"
                   : "bg-surface border border-line text-ink"
@@ -610,6 +758,8 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                   </Card>
                 ))}
               </div>
+            ) : savedXamList.length > 0 ? (
+              searchEmptyState
             ) : (
               /* EMPTY STATE MATCHING IMAGE 3 */
               <div className="p-10 sm:p-14 text-center rounded-card bg-surface border border-line mb-16 shadow-2xs">
@@ -738,6 +888,8 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                   </Card>
                 ))}
               </div>
+            ) : savedWishList.length > 0 ? (
+              searchEmptyState
             ) : (
               <div className="p-10 sm:p-14 text-center rounded-card bg-surface border border-line mb-16 shadow-2xs">
                 <div className="w-16 h-16 rounded-full bg-surface border border-line mx-auto mb-4 flex items-center justify-center text-accent">
@@ -849,6 +1001,8 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                   </Card>
                 ))}
               </div>
+            ) : savedSignals.length > 0 ? (
+              searchEmptyState
             ) : (
               <div className="p-10 sm:p-14 text-center rounded-card bg-surface border border-line mb-16 shadow-2xs">
                 <div className="w-16 h-16 rounded-full bg-surface border border-line mx-auto mb-4 flex items-center justify-center text-accent">
@@ -890,7 +1044,10 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
       {itemToDelete && (
         <AppDialog
           labelledBy="delete-saved-item-title"
-          onClose={() => setItemToDelete(null)}
+          onClose={() => {
+            setDeleteError("");
+            setItemToDelete(null);
+          }}
           className="max-w-md text-center"
         >
           {/* Red alert square icon */}
@@ -910,13 +1067,25 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
             không thể hoàn tác sau khi xác nhận.
           </p>
 
+          {deleteError && (
+            <p
+              role="alert"
+              className="mb-4 text-sm text-danger leading-relaxed"
+            >
+              {deleteError}
+            </p>
+          )}
+
           <div className="flex items-center justify-center gap-3">
             <Button
               type="button"
               autoFocus
               variant="outline"
               size="lg"
-              onClick={() => setItemToDelete(null)}
+              onClick={() => {
+                setDeleteError("");
+                setItemToDelete(null);
+              }}
               className="w-1/2 rounded-panel text-xs font-semibold"
             >
               Hủy bỏ

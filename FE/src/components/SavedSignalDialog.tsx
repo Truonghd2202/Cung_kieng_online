@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { X } from "lucide-react";
 
+import { AppDialog } from "./AppDialog";
 import { Button } from "./ui/button";
 import type { SavedSignalItem } from "../screens/AccountScreen";
 
@@ -12,96 +13,97 @@ interface SavedSignalDialogProps {
 export const SavedSignalDialog: React.FC<
   SavedSignalDialogProps
 > = ({ entry, onClose }) => {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-
-    if (entry && dialog && !dialog.open) {
-      dialog.showModal();
-    }
-  }, [entry]);
-
   if (!entry) return null;
 
+  const createdDate =
+    typeof entry.createdAt === "number" &&
+    Number.isFinite(entry.createdAt)
+      ? new Date(entry.createdAt)
+      : null;
+
+  const savedTimeLabel =
+    createdDate && Number.isFinite(createdDate.getTime())
+      ? createdDate.toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : null;
+
   return (
-    <dialog
-      ref={dialogRef}
-      aria-labelledby="saved-signal-dialog-title"
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose();
-      }}
+    <AppDialog
+      labelledBy="saved-signal-dialog-title"
       onClose={onClose}
-      className="m-auto w-[calc(100%-2rem)] max-w-2xl max-h-[85dvh] overflow-y-auto rounded-2xl border border-line bg-surface p-0 text-ink shadow-xl backdrop:bg-black/50"
     >
-      <div className="p-5 sm:p-7">
-        <header className="flex items-start justify-between gap-4 mb-5">
-          <div>
-            <h2
-              id="saved-signal-dialog-title"
-              className="font-display text-2xl font-semibold"
-            >
-              Lời chiêm nghiệm đã lưu
-            </h2>
-
-            <p className="mt-2 text-sm text-muted">
-              {entry.date} · {entry.mood}
-            </p>
-          </div>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            aria-label="Đóng nội dung đã lưu"
-            autoFocus
+      <header className="mb-5 flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h2
+            id="saved-signal-dialog-title"
+            className="font-display text-xl sm:text-2xl font-semibold text-ink"
           >
-            <X className="w-5 h-5" aria-hidden="true" />
-          </Button>
-        </header>
+            Lời chiêm nghiệm đã lưu
+          </h2>
 
-        <blockquote className="font-display text-xl sm:text-2xl leading-relaxed">
-          <p>{entry.poemLine1}</p>
-          <p>{entry.poemLine2}</p>
-        </blockquote>
-
-        <section className="mt-6 pt-5 border-t border-line">
-          <h3 className="text-sm font-semibold mb-2">
-            Hành động gợi ý trong lượt này
-          </h3>
-
-          <p className="text-base text-muted leading-relaxed">
-            {entry.actionTitle}
+          <p className="mt-2 text-sm text-muted">
+            {entry.date}
+            {savedTimeLabel ? ` · ${savedTimeLabel}` : ""}
+            {" · "}
+            {entry.mood}
           </p>
-        </section>
-
-        <section className="mt-5">
-          <h3 className="text-sm font-semibold mb-2">
-            Ghi chép của bạn
-          </h3>
-
-          <p className="text-base text-muted leading-relaxed whitespace-pre-wrap break-words">
-            {entry.journal?.trim() ||
-              "Bạn không lưu ghi chép trong lượt này."}
-          </p>
-        </section>
-
-        <p className="mt-6 text-sm text-muted leading-relaxed">
-          Đây là nội dung bạn đã lưu. Xem lại không thay đổi
-          tâm trạng hoặc hành động hôm nay.
-        </p>
+        </div>
 
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           onClick={onClose}
-          className="mt-5 w-full sm:w-auto"
+          aria-label="Đóng nội dung đã lưu"
+          autoFocus
+          className="h-11 w-11 shrink-0 p-0"
         >
-          Đóng
+          <X aria-hidden="true" className="h-5 w-5" />
         </Button>
-      </div>
-    </dialog>
+      </header>
+
+      <blockquote className="font-display text-xl sm:text-2xl text-ink leading-relaxed [overflow-wrap:anywhere]">
+        <p>{entry.poemLine1}</p>
+        <p>{entry.poemLine2}</p>
+      </blockquote>
+
+      {entry.actionTitle?.trim() && (
+        <section className="mt-6 border-t border-line pt-5">
+          <h3 className="mb-2 text-sm font-semibold text-ink">
+            Hành động gợi ý trong lượt này
+          </h3>
+
+          <p className="text-base text-muted leading-relaxed [overflow-wrap:anywhere]">
+            {entry.actionTitle}
+          </p>
+        </section>
+      )}
+
+      <section className="mt-5">
+        <h3 className="mb-2 text-sm font-semibold text-ink">
+          Ghi chép của bạn
+        </h3>
+
+        <p className="whitespace-pre-wrap text-base text-muted leading-relaxed [overflow-wrap:anywhere]">
+          {entry.journal?.trim() ||
+            "Bạn không lưu ghi chép trong lượt này."}
+        </p>
+      </section>
+
+      <p className="mt-6 text-sm text-muted leading-relaxed">
+        Đây là nội dung bạn đã lưu. Xem lại không thay đổi
+        tâm trạng hoặc hành động hôm nay.
+      </p>
+
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onClose}
+        className="mt-5 min-h-11 w-full sm:w-auto"
+      >
+        Đóng
+      </Button>
+    </AppDialog>
   );
 };

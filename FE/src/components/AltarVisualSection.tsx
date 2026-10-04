@@ -17,11 +17,36 @@ export const AltarVisualSection: React.FC<AltarVisualSectionProps> = ({
   const sectionRef = useRef<HTMLElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
+  const [reducedMotion, setReducedMotion] = useState(() => {
+    return window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+  });
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    );
+
+    const syncPreference = () => {
+      setReducedMotion(mediaQuery.matches);
+    };
+
+    syncPreference();
+    mediaQuery.addEventListener("change", syncPreference);
+
+    return () => {
+      mediaQuery.removeEventListener("change", syncPreference);
+    };
+  }, []);
+
   // Parallax 2.5D theo chuột
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const parallaxRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
 
   const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    if (reducedMotion || document.hidden) return;
+
     const rect = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
@@ -36,6 +61,19 @@ export const AltarVisualSection: React.FC<AltarVisualSectionProps> = ({
     setParallax({ x: 0, y: 0 });
   };
 
+  useEffect(() => {
+    if (!reducedMotion) return;
+
+    parallaxRef.current = {
+      x: 0,
+      y: 0,
+      targetX: 0,
+      targetY: 0,
+    };
+
+    setParallax({ x: 0, y: 0 });
+  }, [reducedMotion]);
+
   // Canvas vẽ 2 ngọn đèn dầu lung linh & bụi vàng linh thiêng bay bổng
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -45,7 +83,13 @@ export const AltarVisualSection: React.FC<AltarVisualSectionProps> = ({
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
 
-    let animId: number;
+    if (reducedMotion) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      return;
+    }
+
+    let animId: number | null = null;
+    let disposed = false;
     let width = (canvas.width = section.clientWidth);
     let height = (canvas.height = section.clientHeight);
 
@@ -64,6 +108,9 @@ export const AltarVisualSection: React.FC<AltarVisualSectionProps> = ({
     const lampSparks: { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; size: number }[] = [];
 
     const render = (now: number) => {
+      animId = null;
+
+      if (disposed || document.hidden) return;
       if (
         section &&
         (canvas.width !== section.clientWidth || canvas.height !== section.clientHeight)
@@ -262,12 +309,46 @@ export const AltarVisualSection: React.FC<AltarVisualSectionProps> = ({
       animId = requestAnimationFrame(render);
     };
 
-    animId = requestAnimationFrame(render);
+    const stopAnimation = () => {
+      if (animId !== null) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      }
+    };
+
+    const startAnimation = () => {
+      if (disposed || document.hidden || animId !== null) return;
+
+      animId = requestAnimationFrame(render);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopAnimation();
+      } else {
+        startAnimation();
+      }
+    };
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+
+    startAnimation();
 
     return () => {
-      cancelAnimationFrame(animId);
+      disposed = true;
+      stopAnimation();
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     };
-  }, []);
+  }, [reducedMotion]);
 
   return (
     <section
@@ -275,7 +356,7 @@ export const AltarVisualSection: React.FC<AltarVisualSectionProps> = ({
       aria-label="Không gian thanh tịnh bàn thờ và lư hương"
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className={`relative flex flex-col justify-end select-none bg-stone-950 transition-all duration-1000 ease-out overflow-hidden ${className}`}
+      className={`relative flex flex-col justify-end select-none bg-stone-950 transition-all duration-1000 ease-out motion-reduce:transition-none overflow-hidden ${className}`}
     >
       {/* Nút bật/tắt âm thanh */}
       {onToggleMute && (
@@ -301,8 +382,12 @@ export const AltarVisualSection: React.FC<AltarVisualSectionProps> = ({
         src="/images/login-altar-scene-v3.png"
         alt="Bàn thờ gia tiên trang nghiêm"
         style={{
-          transform: `scale(1.06) translate3d(${parallax.x * -16}px, ${parallax.y * -12}px, 0)`,
-          transition: "transform 0.18s cubic-bezier(0.2, 0.8, 0.3, 1), filter 1s ease",
+          transform: reducedMotion
+            ? "scale(1.06)"
+            : `scale(1.06) translate3d(${parallax.x * -16}px, ${parallax.y * -12}px, 0)`,
+          transition: reducedMotion
+            ? "none"
+            : "transform 0.18s cubic-bezier(0.2, 0.8, 0.3, 1), filter 1s ease",
         }}
         className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none will-change-transform"
       />
@@ -313,6 +398,7 @@ export const AltarVisualSection: React.FC<AltarVisualSectionProps> = ({
       {/* Canvas vẽ 2 ngọn đèn dầu & bụi vàng linh thiêng */}
       <canvas
         ref={canvasRef}
+        aria-hidden="true"
         className="absolute inset-0 w-full h-full pointer-events-none z-20"
       />
 

@@ -15,7 +15,6 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
 }) => {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -40,8 +39,6 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
       {/* CỘT TRÁI: BÀN THỜ GIA TIÊN SỐNG ĐỘNG (LỬA ĐÈN DẦU, BỤI VÀNG, PARALLAX 2.5D) */}
       <AltarVisualSection
         quoteText='"Vạn dặm khởi hành • Giữ tâm sáng trong"'
-        isMuted={isMuted}
-        onToggleMute={() => setIsMuted(!isMuted)}
         className="w-full lg:w-[58%] xl:w-[62%] h-48 sm:h-60 lg:h-full shrink-0 min-h-[200px] lg:min-h-0"
       />
 

@@ -28,6 +28,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
   onGoToExperience,
 }) => {
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [interestError, setInterestError] = useState("");
   const [savedEmail, setSavedEmail] = useState<string | null>(() => {
     try {
       return localStorage.getItem("tltl-membership-interest-email");
@@ -38,21 +39,48 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
 
   const handleRegisterNewsletter = (e: React.FormEvent) => {
     e.preventDefault();
+    setInterestError("");
+
     const cleanEmail = registeredEmail.trim().toLowerCase();
-    if (!cleanEmail) return;
+
+    if (
+      cleanEmail.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)
+    ) {
+      setInterestError("Vui lòng nhập địa chỉ email hợp lệ.");
+      return;
+    }
 
     try {
-      localStorage.setItem("tltl-membership-interest-email", cleanEmail);
-      setSavedEmail(cleanEmail);
-      setRegisteredEmail("");
-    } catch {}
+      localStorage.setItem(
+        "tltl-membership-interest-email",
+        cleanEmail
+      );
+    } catch {
+      setInterestError(
+        "Chưa lưu được email trên trình duyệt. Bạn hãy thử lại."
+      );
+      return;
+    }
+
+    setSavedEmail(cleanEmail);
+    setRegisteredEmail("");
   };
 
   const handleClearInterest = () => {
+    setInterestError("");
+
     try {
       localStorage.removeItem("tltl-membership-interest-email");
-      setSavedEmail(null);
-    } catch {}
+    } catch {
+      setInterestError(
+        "Chưa xóa được email đã lưu. Bạn hãy thử lại."
+      );
+      return;
+    }
+
+    setSavedEmail(null);
+    setRegisteredEmail("");
   };
 
   const featureMatrix = [
@@ -67,7 +95,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
     {
       name: "Chiêm nghiệm xin xăm & Gieo keo",
       desc: "Giải tỏa những sự đắn đo, tìm thấu hiểu tinh thần",
-      currentDemo: "✓ Không giới hạn lượt trải nghiệm trong bản demo",
+      currentDemo: "Trải nghiệm bộ thẻ mẫu và gieo keo trong bản demo",
       futureVision: "Dự kiến lưu lịch sử xăm đồng bộ khi có tài khoản máy chủ",
       status: "Đang mở trên máy",
       statusColor: "bg-success-soft text-success border-success/25",
@@ -75,7 +103,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
     {
       name: "Cẩm nang nghi lễ & Lịch văn hóa",
       desc: "Thông tin ngày sóc vọng, phong tục dân gian và nghi thức tại gia",
-      currentDemo: "✓ Tra cứu dữ liệu đã đối chiếu và kiểm chứng",
+      currentDemo: "Nội dung tham khảo trong bản demo; nguồn tư liệu đang được hoàn thiện",
       futureVision: "Dự kiến mở rộng thêm tập quán chi tiết các vùng miền địa phương",
       status: "Đang mở trên máy",
       statusColor: "bg-success-soft text-success border-success/25",
@@ -221,7 +249,8 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
                   <span>
-                    <strong>Rút thẻ quẻ chữ & gieo keo:</strong> Trải nghiệm tự do không giới hạn số lượt trên bản demo.
+                    <strong>Rút thẻ chiêm nghiệm & gieo keo:</strong>{" "}
+                    Khám phá bộ thẻ mẫu theo vùng miền và chủ đề.
                   </span>
                 </div>
 
@@ -235,14 +264,16 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
                   <span>
-                    <strong>Cẩm nang nghi lễ & Lịch văn hóa:</strong> Tra cứu ý nghĩa ngày sóc vọng và lưu ngày lành cá nhân.
+                    <strong>Cẩm nang nghi lễ & Lịch văn hóa:</strong>{" "}
+                    Xem nội dung tham khảo, ngày âm lịch và lưu kế hoạch cá nhân.
                   </span>
                 </div>
 
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
                   <span>
-                    <strong>Chuông tĩnh tâm & Lá số chiêm nghiệm:</strong> Khám phá biểu tượng nạp âm ngũ hành dân gian.
+                    <strong>Chuông tĩnh tâm & Biểu tượng ngày sinh:</strong>{" "}
+                    Khám phá lịch âm, can chi và biểu tượng ngũ hành.
                   </span>
                 </div>
               </div>
@@ -315,52 +346,107 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
               </div>
             </div>
 
-            {/* Email Interest Form for Updates */}
-            <div className="pt-2 border-t border-line">
+            {/* Email interest demo */}
+            <div className="pt-4 border-t border-line">
+              {interestError && (
+                <p
+                  id="membership-interest-error"
+                  role="alert"
+                  className="mb-3 text-sm text-danger"
+                >
+                  {interestError}
+                </p>
+              )}
+
               {savedEmail ? (
-                <div className="p-3.5 rounded-panel bg-success-soft border border-success/25 text-xs text-success space-y-1">
-                  <div className="font-semibold flex items-center gap-1.5 text-success">
-                    <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-                    <span>Đã ghi nhận ý kiến quan tâm: {savedEmail}</span>
+                <div
+                  role="status"
+                  className="p-4 rounded-panel bg-success-soft border border-success/25 space-y-3"
+                >
+                  <div className="flex items-start gap-2 text-success">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">
+                        Đã lưu email trên trình duyệt này
+                      </p>
+
+                      <p className="mt-1 text-sm [overflow-wrap:anywhere]">
+                        {savedEmail}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm text-success leading-relaxed">
-                    (Lưu cục bộ trên trình duyệt bản demo. Khi hệ thống Backend và tính năng gửi tin chính thức vận hành, bạn sẽ nhận được thông báo mới nhất.)
+
+                  <p className="text-sm text-ink leading-relaxed">
+                    Email chưa được gửi đến nhóm dự án và chưa đăng ký
+                    nhận thông báo. Đây là thao tác lưu thử trong bản demo.
                   </p>
+
                   <button
                     type="button"
                     onClick={handleClearInterest}
-                    className="inline-flex items-center gap-1 text-xs text-success underline hover:text-success mt-1 cursor-pointer"
+                    className="inline-flex min-h-11 items-center gap-2 text-sm text-success underline underline-offset-4 cursor-pointer"
                   >
-                    <RotateCcw className="w-3 h-3" />
-                    <span>Thay đổi hoặc hủy email ghi nhận</span>
+                    <RotateCcw className="w-4 h-4 shrink-0" />
+                    Xóa email đã lưu
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleRegisterNewsletter} className="space-y-2">
-                  <div className="flex gap-2">
+                <form
+                  onSubmit={handleRegisterNewsletter}
+                  className="space-y-3"
+                >
+                  <label
+                    htmlFor="membership-interest-email"
+                    className="block text-sm font-semibold text-ink"
+                  >
+                    Email quan tâm — lưu thử trên trình duyệt
+                  </label>
+
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <input
-                      aria-label="Email đăng ký quan tâm gói hội viên"
+                      id="membership-interest-email"
+                      name="email"
                       type="email"
+                      autoComplete="email"
+                      maxLength={254}
                       required
                       value={registeredEmail}
-                      onChange={(e) => setRegisteredEmail(e.target.value)}
-                      placeholder="Nhập email nếu bạn muốn đóng góp ý kiến..."
-                      className="min-w-0 flex-1 px-3.5 py-2.5 rounded-control border border-line text-base text-ink outline-none bg-surface focus:border-accent"
+                      onChange={(e) => {
+                        setRegisteredEmail(e.target.value);
+                        setInterestError("");
+                      }}
+                      aria-invalid={Boolean(interestError)}
+                      aria-describedby={
+                        interestError
+                          ? "membership-interest-help membership-interest-error"
+                          : "membership-interest-help"
+                      }
+                      placeholder="ban@example.com"
+                      className="min-w-0 flex-1 min-h-11 px-3.5 py-2.5 rounded-control border border-line text-base text-ink outline-none bg-surface focus:border-accent"
                     />
+
                     <Button
                       type="submit"
-                      className="py-2.5 px-4 rounded-xl bg-action hover:bg-action text-white text-xs font-semibold shrink-0 cursor-pointer"
+                      className="min-h-11 w-full sm:w-auto px-4 rounded-control bg-action text-white text-sm font-semibold shrink-0 cursor-pointer"
                     >
-                      Ghi nhận quan tâm
+                      Lưu email trên máy
                     </Button>
                   </div>
-                  <p className="text-sm text-muted italic leading-tight text-center">
-                    * Form phục vụ khảo sát nhu cầu trong bản demo, chưa kết nối hệ thống gửi email tự động.
+
+                  <p
+                    id="membership-interest-help"
+                    className="text-sm text-muted leading-relaxed"
+                  >
+                    Email chỉ được lưu trên trình duyệt này. Nhóm dự án
+                    chưa nhận được thông tin và chưa gửi email thông báo.
                   </p>
                 </form>
               )}
-              <p className="text-sm text-muted text-center mt-2 font-medium">
-                Hệ thống chưa mở cổng thanh toán • Toàn bộ bản demo hoàn toàn miễn phí
+
+              <p className="text-sm text-muted mt-4">
+                Gói Tâm An chưa mở đăng ký hoặc thanh toán.
+                Bản demo hiện tại miễn phí.
               </p>
             </div>
           </Card>
@@ -436,8 +522,9 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
               <div className="font-bold text-ink mb-1 flex items-center gap-1.5 text-gold">
                 <span>📖 Tự nguyện & Minh bạch nguồn cội</span>
               </div>
-              Chưa thu bất kỳ đồng phí nào khi chưa hoàn thiện hệ thống giá trị thực tế và luôn có sự kiểm duyệt
-              từ các nhà nghiên cứu Hán Nôm và văn hóa dân gian.
+              Bản demo hiện tại miễn phí. Nguồn tham khảo và phạm vi áp dụng
+              của từng nội dung cần được công khai; việc hợp tác thẩm định
+              với chuyên gia là định hướng phát triển.
             </div>
 
             <div className="p-4 rounded-panel bg-surface border border-line">
@@ -484,9 +571,10 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
                 ③ Tin Lắm Tâm Linh có bảo mật nội dung tôi viết trong 'Góc của tôi' không?
               </div>
               <p className="leading-relaxed">
-                Trong bản thử nghiệm hiện tại, toàn bộ dữ liệu chỉ lưu trực tiếp trên bộ nhớ trình duyệt máy tính cá nhân của bạn
-                (Local Storage). Hệ thống không truyền tải thông tin này về máy chủ trung tâm. Bạn hoàn toàn làm chủ những suy ngẫm
-                riêng của mình.
+                Các nội dung bạn chọn lưu trong Góc của tôi hiện được lưu
+                trên trình duyệt này, chưa đồng bộ lên máy chủ. Người dùng
+                chung trình duyệt có thể tiếp cận dữ liệu; xóa dữ liệu
+                trình duyệt có thể làm mất nội dung đã lưu.
               </p>
             </div>
           </div>

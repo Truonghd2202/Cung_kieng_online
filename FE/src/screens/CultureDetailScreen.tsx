@@ -20,6 +20,7 @@ import {
   getRelatedArticles,
   CultureArticle,
 } from "../data/cultureData";
+import { DetailNotFound } from "../components/DetailNotFound";
 
 interface CultureDetailScreenProps {
   articleId?: string;
@@ -29,14 +30,14 @@ interface CultureDetailScreenProps {
   onGoToMood: () => void;
 }
 
-export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
+const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
   articleId = "dinh-lang-bac-bo",
   onBackToCulture,
   onSelectRelatedArticle,
   onGoToExperience,
   onGoToMood,
 }) => {
-  const article: CultureArticle = getCultureArticleById(articleId);
+  const article: CultureArticle = getCultureArticleById(articleId)!;
   const relatedArticles = getRelatedArticles(article.id, 3);
 
   useEffect(() => {
@@ -283,7 +284,8 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
                             </span>
                           </div>
                           <p className="text-sm text-ink leading-relaxed">
-                            {src.annotation}
+                            Thông tin mô tả tài liệu trong bản mẫu; chưa đối chiếu
+                            bản xuất bản hoặc vị trí trích dẫn cụ thể.
                           </p>
                         </div>
                         <Badge
@@ -448,5 +450,30 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
 
       </main>
     </div>
+  );
+};
+
+export const CultureDetailScreen: React.FC<
+  CultureDetailScreenProps
+> = (props) => {
+  const articleId = props.articleId ?? "dinh-lang-bac-bo";
+  const article = getCultureArticleById(articleId);
+
+  if (!article) {
+    return (
+      <DetailNotFound
+        title="Không tìm thấy bài viết"
+        backLabel="Về Khám phá văn hóa"
+        onBack={props.onBackToCulture}
+      />
+    );
+  }
+
+  return (
+    <CultureDetailContent
+      {...props}
+      articleId={articleId}
+      key={articleId}
+    />
   );
 };
