@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  ChevronDown,
   Clock,
   Sparkles,
   BookOpen,
@@ -39,14 +40,26 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
   const relatedArticles = getRelatedArticles(article.id, 3);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({
+      top: 0,
+      behavior: "auto",
+    });
   }, [articleId]);
 
   const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    const element = document.getElementById(id);
+    if (!element) return;
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    element.focus({ preventScroll: true });
+
+    element.scrollIntoView({
+      behavior: reducedMotion ? "auto" : "smooth",
+      block: "start",
+    });
   };
 
   return (
@@ -102,7 +115,7 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
 
         {/* Hero Artwork Image with Frame */}
         <div className="rounded-card overflow-hidden bg-surface border border-line shadow-sm mb-10">
-          <div className="relative h-72 sm:h-96 md:h-[420px] overflow-hidden bg-surface">
+          <div className="relative h-48 sm:h-80 md:h-[360px] overflow-hidden bg-surface">
             <img
               src={article.image}
               alt={article.title}
@@ -114,19 +127,69 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
           <div className="p-4 sm:p-5 bg-surface flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-muted border-t border-line">
             <span className="italic">{article.caption}</span>
             <div className="flex items-center gap-3 text-xs font-medium text-muted flex-shrink-0">
-              <span>Tư liệu Tin Lắm Tâm Linh</span>
+              <span>Hình ảnh minh họa</span>
               <span>•</span>
-              <span className="text-muted/80">Khảo cứu văn hóa dân gian</span>
+              <span className="text-muted/80">Nguồn ảnh cần bổ sung</span>
             </div>
           </div>
         </div>
+
+        {/* Mobile Table of Contents */}
+        <details
+          key={`mobile-toc-${article.id}`}
+          className="group lg:hidden mb-6 rounded-xl border border-line bg-surface"
+        >
+          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 p-4 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
+            <span className="text-sm font-semibold text-ink">
+              Mục lục bài viết
+            </span>
+            <ChevronDown
+              className="w-4 h-4 text-muted transition-transform group-open:rotate-180"
+              aria-hidden="true"
+            />
+          </summary>
+
+          <nav
+            aria-label="Mục lục bài viết trên điện thoại"
+            className="px-3 pb-3 space-y-1"
+          >
+            {article.sections.map((section, index) => (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => scrollToSection(section.id)}
+                className="flex min-h-11 w-full items-start gap-2 rounded-lg px-3 py-3 text-left text-sm text-ink hover:bg-accent-soft hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                <span className="text-accent shrink-0">
+                  {index + 1}.
+                </span>
+                <span>
+                  {section.title.replace(/^\d+\.\s*/, "")}
+                </span>
+              </button>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => scrollToSection("article-sources")}
+              className="min-h-11 w-full rounded-lg px-3 py-3 text-left text-sm text-accent hover:bg-accent-soft"
+            >
+              Tài liệu tham khảo
+            </button>
+          </nav>
+        </details>
 
         {/* Two Column Layout: Main Body & Sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
           {/* Main Article Content (8 columns) */}
           <div className="lg:col-span-8 space-y-10">
             {article.sections.map((section, idx) => (
-              <section key={section.id} id={section.id} className="scroll-mt-24 space-y-4">
+              <section
+                key={section.id}
+                id={section.id}
+                tabIndex={-1}
+                className="scroll-mt-24 space-y-4"
+              >
                 <h2 className="section-title text-2xl sm:text-[26px] leading-snug pb-2 border-b border-line">
                   {section.title}
                 </h2>
@@ -160,9 +223,9 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
                       >
                         <div className="flex items-center gap-2 mb-1.5">
                           <span className="w-2 h-2 rounded-full bg-action" />
-                          <h4 className="font-display font-bold text-base text-ink">
+                          <h3 className="font-display font-bold text-base text-ink">
                             {card.title}
-                          </h4>
+                          </h3>
                         </div>
                         <p className="text-sm text-ink leading-relaxed pl-4">
                           {card.desc}
@@ -175,17 +238,23 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
             ))}
 
             {/* Editorial Principle & Verified Scholarly Citations Section */}
-            <div className="p-6 rounded-card bg-surface border border-line shadow-2xs space-y-4">
+            <div
+              id="article-sources"
+              tabIndex={-1}
+              className="scroll-mt-24 p-6 rounded-card bg-surface border border-line shadow-2xs space-y-4"
+            >
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-full bg-surface text-accent flex items-center justify-center shrink-0 mt-0.5">
                   <BookOpen className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="font-display font-bold text-base text-ink">
-                    Nguồn tư liệu & Căn cứ khảo cứu
+                    Tài liệu tham khảo
                   </h3>
                   <p className="text-sm text-muted leading-relaxed mt-0.5">
-                    {article.editorialNote}
+                    Danh sách dưới đây là thông tin tham khảo trong bản thử nghiệm.
+                    Cần bổ sung thông tin xuất bản, đường dẫn hoặc trang trích dẫn
+                    để đối chiếu trước khi phát hành chính thức.
                   </p>
                 </div>
               </div>
@@ -195,7 +264,7 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
                 <div className="space-y-3 pt-3 border-t border-line">
                   <div className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Tài liệu tham khảo & trích dẫn chính thức</span>
+                    <span>Danh sách tài liệu trong bản thử nghiệm</span>
                   </div>
 
                   <div className="grid grid-cols-1 gap-2.5">
@@ -248,7 +317,7 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
                 onClick={onGoToExperience}
                 className="w-full sm:w-auto gap-2 text-sm shadow-xs"
               >
-                <span>Trải nghiệm với các chủ đề</span>
+                <span>Xem các trải nghiệm</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
@@ -258,18 +327,19 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
           <div className="lg:col-span-4 space-y-6">
             <div className="sticky top-28 space-y-6">
               {/* Table of Contents Card */}
-              <Card className="p-6 rounded-card bg-surface border border-line shadow-xs">
+              <Card className="hidden lg:block p-6 rounded-card bg-surface border border-line shadow-xs">
                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-4">
                   <BookOpen className="w-4 h-4" />
                   <span>Mục lục bài viết</span>
                 </div>
 
-                <nav className="space-y-2.5">
+                <nav aria-label="Mục lục bài viết" className="space-y-2.5">
                   {article.sections.map((section, idx) => (
                     <button
                       key={section.id}
+                      type="button"
                       onClick={() => scrollToSection(section.id)}
-                      className="w-full text-left text-sm text-ink hover:text-accent py-1.5 px-2.5 rounded-xl hover:bg-surface transition-colors flex items-start gap-2 cursor-pointer font-medium"
+                      className="w-full text-left text-sm text-ink hover:text-accent min-h-11 py-2.5 px-2.5 rounded-xl hover:bg-surface transition-colors flex items-start gap-2 cursor-pointer font-medium"
                     >
                       <span className="text-accent font-sans tabular-nums text-xs mt-0.5">
                         {idx + 1}.
@@ -284,12 +354,12 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
               <Card className="p-6 rounded-card bg-surface-soft border border-line shadow-xs">
                 <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-accent mb-2">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>GỢI Ý TÍN HIỆU DÀNH CHO BẠN</span>
+                  <span>Dành một khoảng nghỉ</span>
                 </div>
 
                 <p className="text-sm text-ink leading-relaxed mb-4">
-                  Chiêm nghiệm quẻ phù trợ cho tâm trạng hôm nay của bạn, xem lại lời dặn của
-                  cổ nhân để tìm thấy an định.
+                  Nếu muốn, bạn có thể chọn tâm trạng hôm nay và nhận
+                  một lời chiêm nghiệm cùng hành động nhỏ.
                 </p>
 
                 <Button
@@ -298,7 +368,7 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
                   onClick={onGoToMood}
                   className="w-full text-xs font-semibold shadow-2xs"
                 >
-                  Nhận tín hiệu chiêm nghiệm
+                  Chọn tâm trạng hôm nay
                 </Button>
               </Card>
             </div>
@@ -313,7 +383,7 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
                 TẬP TUYỂN THƯ TỊCH DÂN GIAN
               </div>
               <h3 className="font-display font-bold text-2xl text-ink">
-                Khám phá tiếp các nét thiêng dân gian
+                Đọc thêm
               </h3>
             </div>
 
@@ -321,7 +391,7 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
               onClick={onBackToCulture}
               className="text-xs font-semibold text-accent hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
             >
-              <span>Xem tất cả chuyên đề</span>
+              <span>Xem tất cả bài viết</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -330,6 +400,7 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
             {relatedArticles.map((rel) => (
               <Card
                 key={rel.id}
+                aria-label={`Đọc bài: ${rel.title}`}
                 onClick={() => onSelectRelatedArticle(rel.id)}
                 className="rounded-card overflow-hidden bg-surface border border-line hover:border-line hover:shadow-card transition-all duration-300 flex flex-col justify-between group cursor-pointer"
               >
@@ -338,6 +409,8 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = ({
                     <img
                       src={rel.image}
                       alt={rel.title}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />

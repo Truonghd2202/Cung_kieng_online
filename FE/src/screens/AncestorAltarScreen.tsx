@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ArrowLeft, CalendarDays, Check, Flower2, Flame, Heart, Wind } from "lucide-react";
+import { ArrowLeft, CalendarDays, Check, Flame, Heart, Wind } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
@@ -8,22 +8,43 @@ import { Textarea } from "@/src/components/ui/textarea";
 interface AncestorAltarScreenProps {
   onBack: () => void;
   onGoToMemorial: () => void;
+  isLoggedIn: boolean;
+  onSaveTribute: (content: string) => boolean;
 }
 
-export const AncestorAltarScreen: React.FC<AncestorAltarScreenProps> = ({ onBack, onGoToMemorial }) => {
+export const AncestorAltarScreen: React.FC<
+  AncestorAltarScreenProps
+> = ({
+  onBack,
+  onGoToMemorial,
+  isLoggedIn,
+  onSaveTribute,
+}) => {
   const [incenseLit, setIncenseLit] = useState(false);
   const [tribute, setTribute] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   const lightIncense = () => {
     setIncenseLit(true);
-    setSubmitted(false);
   };
 
   const sendTribute = () => {
-    if (!tribute.trim()) return;
-    setSubmitted(true);
-    setTribute("");
+    const cleanContent = tribute.trim();
+
+    if (!cleanContent || submitted) return;
+
+    setSaveError("");
+
+    const saved = onSaveTribute(cleanContent);
+
+    if (saved) {
+      setSubmitted(true);
+    } else if (isLoggedIn) {
+      setSaveError(
+        "Chưa lưu được lời tri ân. Bạn hãy thử lại."
+      );
+    }
   };
 
   return (
@@ -80,7 +101,7 @@ export const AncestorAltarScreen: React.FC<AncestorAltarScreenProps> = ({ onBack
               {incenseLit ? "Đã thắp một nén nhang lòng" : "Thắp một nén nhang"}
             </Button>
             <Button variant="outline" onClick={onGoToMemorial} className="w-full gap-2">
-              <Heart className="w-4 h-4" /> Gửi lời tri ân riêng
+              <Heart className="w-4 h-4" /> Mở góc tưởng niệm
             </Button>
 
             {incenseLit && (
@@ -92,28 +113,72 @@ export const AncestorAltarScreen: React.FC<AncestorAltarScreenProps> = ({ onBack
           </Card>
         </section>
 
-        <section className="mb-12">
-          <div className="flex items-center gap-2 mb-5"><Flower2 className="w-5 h-5 text-accent" /><h2 className="section-title">Ngày tưởng niệm sắp tới</h2></div>
-          <div className="grid sm:grid-cols-3 gap-4">
-            {["Ngày giỗ trong gia đình", "Rằm tháng sau", "Một ngày bạn muốn nhớ"].map((label, index) => (
-              <Card key={label} className="p-5 bg-surface border-line">
-                <span className="text-xs text-muted">{index === 0 ? "15/10" : index === 1 ? "15/11" : "Chưa đặt ngày"}</span>
-                <h3 className="font-display font-bold mt-2 mb-1">{label}</h3>
-                <p className="text-xs text-muted">Ghi chú riêng tư trên thiết bị</p>
-              </Card>
-            ))}
-          </div>
+        <section className="mb-8 rounded-xl border border-line bg-surface p-5 sm:p-6">
+          <h2 className="font-display text-xl font-semibold text-ink mb-2">
+            Giữ lại một người bạn muốn nhớ
+          </h2>
+
+          <p className="text-sm text-muted leading-relaxed mb-4">
+            Tạo góc tưởng niệm để ghi tên, ngày và lời tri ân.
+            Bản thử nghiệm chưa tính ngày giỗ hằng năm hoặc gửi
+            lời nhắc tự động.
+          </p>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onGoToMemorial}
+          >
+            Mở góc tưởng niệm
+          </Button>
         </section>
 
         <Card className="p-6 sm:p-8 border-line mb-12">
           <h2 className="font-display text-xl font-bold mb-2">Gửi một lời nếu bạn muốn</h2>
-          <p className="text-sm text-muted mb-4">Lời bình an, biết ơn hoặc tưởng nhớ sẽ chỉ được lưu khi bạn chọn gửi.</p>
-          <Textarea value={tribute} onChange={(event) => setTribute(event.target.value)} placeholder="Gửi một lời bình an, biết ơn hoặc tưởng nhớ…" className="min-h-28 mb-4" />
+          <p className="text-sm text-muted mb-4">
+            Bạn có thể viết và chọn lưu vào Góc của tôi.
+            <br className="hidden sm:inline" /> Chỉ thắp nhang không tạo bản ghi lời tri ân.
+          </p>
+          <Textarea
+            value={tribute}
+            onChange={(event) => {
+              setTribute(event.target.value);
+              setSubmitted(false);
+              setSaveError("");
+            }}
+            aria-label="Lời tri ân"
+            placeholder="Một lời biết ơn hoặc tưởng nhớ bạn muốn giữ lại..."
+            className="min-h-28 mb-4"
+          />
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs text-muted">Không bắt buộc</span>
-            <Button onClick={sendTribute} disabled={!tribute.trim()} className="gap-2"><Heart className="w-4 h-4" /> Gửi lời</Button>
+            <Button
+              type="button"
+              onClick={sendTribute}
+              disabled={!tribute.trim() || submitted}
+              className="gap-2"
+            >
+              <Heart className="w-4 h-4" aria-hidden="true" />
+              <span>
+                {submitted
+                  ? "Đã lưu lời tri ân"
+                  : isLoggedIn
+                    ? "Lưu vào Góc của tôi"
+                    : "Đăng nhập để lưu"}
+              </span>
+            </Button>
           </div>
-          {submitted && <p className="mt-4 text-sm text-success flex items-center gap-2"><Check className="w-4 h-4" /> Lời của bạn đã được giữ lại trong khoảnh khắc này.</p>}
+          {submitted && (
+            <p role="status" className="mt-4 text-sm text-success">
+              Đã lưu lời tri ân vào Góc của tôi trên trình duyệt này.
+            </p>
+          )}
+
+          {saveError && (
+            <p role="alert" className="mt-4 text-sm text-danger">
+              {saveError}
+            </p>
+          )}
         </Card>
       </main>
     </div>

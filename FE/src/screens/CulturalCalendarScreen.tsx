@@ -60,6 +60,9 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   const [selectedMonth, setSelectedMonth] = useState<number>(todayRealMonth);
   const [selectedDay, setSelectedDay] = useState<number>(todayRealDay);
 
+  const isSampleMonth =
+    selectedYear === 2024 && selectedMonth === 10;
+
   const [activeFilter, setActiveFilter] = useState<"all" | "custom" | "festival" | "personal">("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState("");
@@ -80,9 +83,25 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
     return [...SAMPLE_CALENDAR_EVENTS, ...personalNotes];
   }, [personalNotes]);
 
-  const customCount = allEvents.filter((e) => e.type === "custom").length;
-  const festivalCount = allEvents.filter((e) => e.type === "festival").length;
-  const personalCount = personalNotes.length;
+  const eventsInSelectedMonth = allEvents.filter(
+    (event) =>
+      event.year === selectedYear &&
+      event.month === selectedMonth
+  );
+
+  const customCount = eventsInSelectedMonth.filter(
+    (event) => event.type === "custom"
+  ).length;
+
+  const festivalCount = eventsInSelectedMonth.filter(
+    (event) => event.type === "festival"
+  ).length;
+
+  const personalCount = personalNotes.filter(
+    (event) =>
+      event.year === selectedYear &&
+      event.month === selectedMonth
+  ).length;
 
   const handlePrevMonth = () => {
     if (selectedMonth === 1) {
@@ -315,7 +334,7 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
 
           <div className="flex items-center gap-1.5 uppercase font-semibold text-xs text-muted">
             <span className="text-accent">✤</span>
-            <span>CHIÊM NGHIỆM THỜI GIAN • ĐỐI CHIẾU ÂM DƯƠNG ĐÃ KIỂM CHỨNG</span>
+            <span>LỊCH ÂM DƯƠNG · DẤU MỐC CÁ NHÂN</span>
           </div>
         </div>
 
@@ -340,29 +359,29 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                   className="border-line text-accent hover:bg-surface text-xs font-semibold gap-1.5 self-start sm:self-auto cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-accent" />
-                  <span>Tra cứu ngày lành</span>
+                  <span>Ngày lành — bản thử nghiệm</span>
                 </Button>
               )}
 
               {/* Nút xem nhanh bộ dữ liệu mẫu đã kiểm chứng tháng 10/2024 */}
-              {!(selectedYear === 2024 && selectedMonth === 10) && (
+              {!isSampleMonth && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleViewVerifiedOct2024}
                   className="border-line bg-surface text-accent hover:bg-surface text-xs font-medium gap-1.5 cursor-pointer"
-                  title="Xem tư liệu lễ hội & phong tục đã khảo cứu đối chiếu chi tiết tháng 10/2024"
+                  title="Mở bộ sự kiện mẫu tháng 10/2024"
                 >
                   <Bookmark className="w-3.5 h-3.5 text-accent" />
-                  <span>Xem tư liệu mẫu (10/2024)</span>
+                  <span>Xem sự kiện mẫu 10/2024</span>
                 </Button>
               )}
             </div>
           </div>
 
           <p className="text-sm sm:text-base text-ink max-w-3xl leading-relaxed">
-            Theo dõi nhịp điệu của đất trời, tiết khí thiên nhiên và những mỹ tục truyền thống được
-            kiểm chứng theo lịch âm dương thuần Việt.
+            Xem ngày âm/dương, khám phá sự kiện văn hóa mẫu
+            và ghi lại những ngày bạn muốn nhớ.
           </p>
 
           <div className="flex items-center justify-center my-6">
@@ -370,6 +389,14 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
             <div className="mx-3 text-accent text-sm">❦</div>
             <div className="h-px w-16 bg-surface-soft"></div>
           </div>
+        </div>
+
+        <div className="mb-6 rounded-xl border border-line bg-surface p-4">
+          <p className="text-sm text-muted leading-relaxed">
+            {isSampleMonth
+              ? "Bạn đang xem bộ sự kiện mẫu tháng 10/2024. Các ngày này không phải lịch sự kiện của năm hiện tại."
+              : "Lịch hiển thị ngày âm/dương và ghi chú cá nhân. Kho sự kiện văn hóa hiện mới có dữ liệu mẫu tháng 10/2024."}
+          </p>
         </div>
 
         {/* Main 2-Column Layout */}
@@ -709,10 +736,11 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                     ) : (
                       <>
                         <p className="font-semibold text-ink mb-1">
-                          Chưa có sự kiện văn hóa kiểm chứng vào ngày này
+                          Chưa có dữ liệu sự kiện cho ngày này
                         </p>
                         <p className="text-sm text-muted mb-4 leading-relaxed">
-                          Hệ thống tuân thủ nguyên tắc chỉ hiển thị phong tục và sự kiện có nguồn tư liệu khảo cứu đáng tin cậy. Bạn có thể lưu dấu mốc cá nhân hoặc tham quan tháng có tư liệu mẫu.
+                          Kho dữ liệu hiện chưa bao phủ ngày đang chọn.
+                          Bạn có thể thêm ghi chú cá nhân hoặc xem bộ sự kiện mẫu.
                         </p>
                         <div className="flex flex-wrap items-center justify-center gap-2">
                           <Button
@@ -722,14 +750,14 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                           >
                             + Thêm ghi chú ngày này
                           </Button>
-                          {!(selectedYear === 2024 && selectedMonth === 10) && (
+                          {!isSampleMonth && (
                             <Button
                               onClick={handleViewVerifiedOct2024}
                               size="sm"
                               variant="outline"
                               className="rounded-xl text-xs border-line text-accent"
                             >
-                              Xem mẫu khảo cứu (10/2024)
+                              Xem sự kiện mẫu 10/2024
                             </Button>
                           )}
                         </div>

@@ -8,7 +8,7 @@ import type { MemorialRecord } from "./MemorialSpaceScreen";
 interface MemorialFormScreenProps {
   initialValue?: MemorialRecord | null;
   onBack: () => void;
-  onSave: (memorial: MemorialRecord) => void;
+  onSave: (memorial: MemorialRecord) => boolean;
 }
 
 export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialValue, onBack, onSave }) => {
@@ -19,11 +19,48 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
   const [error, setError] = useState("");
 
   const handleSave = () => {
+    setError("");
+
     if (!name.trim() || !relation.trim() || !date) {
-      setError("Bạn hãy điền tên, mối quan hệ và ngày tưởng niệm.");
+      setError(
+        "Bạn hãy điền tên, mối quan hệ và ngày muốn ghi nhớ."
+      );
       return;
     }
-    onSave({ name: name.trim(), relation: relation.trim(), date, note: note.trim() || undefined });
+
+    const match = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+    if (!match) {
+      setError("Ngày chưa hợp lệ.");
+      return;
+    }
+
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const parsedDate = new Date(year, month - 1, day);
+
+    if (
+      parsedDate.getFullYear() !== year ||
+      parsedDate.getMonth() !== month - 1 ||
+      parsedDate.getDate() !== day
+    ) {
+      setError("Ngày chưa hợp lệ.");
+      return;
+    }
+
+    const saved = onSave({
+      name: name.trim(),
+      relation: relation.trim(),
+      date,
+      note: note.trim() || undefined,
+    });
+
+    if (!saved) {
+      setError(
+        "Chưa lưu được góc tưởng niệm. Bạn hãy thử lại."
+      );
+    }
   };
 
   return (
@@ -34,9 +71,19 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
 
         <Card className="p-6 sm:p-8 border-line mb-10">
           <div className="space-y-5">
-            <label className="block"><span className="block text-sm font-semibold text-ink mb-2">Tên người được tưởng nhớ</span><input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ví dụ: Bà Ngoại" className="w-full min-h-11 rounded-control border border-line bg-surface px-4 text-sm text-ink outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/20" /></label>
-            <label className="block"><span className="block text-sm font-semibold text-ink mb-2">Mối quan hệ</span><input value={relation} onChange={(event) => setRelation(event.target.value)} placeholder="Ví dụ: Người thân trong gia đình" className="w-full min-h-11 rounded-control border border-line bg-surface px-4 text-sm text-ink outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/20" /></label>
-            <label className="block"><span className="block text-sm font-semibold text-ink mb-2">Ngày tưởng niệm</span><span className="relative block"><CalendarDays className="absolute left-3 top-3.5 w-4 h-4 text-muted pointer-events-none" /><input type="date" value={date} onChange={(event) => setDate(event.target.value)} className="w-full min-h-11 rounded-control border border-line bg-surface pl-10 pr-4 text-sm text-ink outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/20" /></span></label>
+            <label className="block"><span className="block text-sm font-semibold text-ink mb-2">Tên người được tưởng nhớ</span><input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ví dụ: Bà Ngoại" className="w-full min-h-11 rounded-control border border-line bg-surface px-4 text-base text-ink outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/20" /></label>
+            <label className="block"><span className="block text-sm font-semibold text-ink mb-2">Mối quan hệ</span><input value={relation} onChange={(event) => setRelation(event.target.value)} placeholder="Ví dụ: Người thân trong gia đình" className="w-full min-h-11 rounded-control border border-line bg-surface px-4 text-base text-ink outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/20" /></label>
+            <label className="block">
+              <span className="block text-sm font-semibold text-ink mb-2">Ngày muốn ghi nhớ — dương lịch</span>
+              <span className="relative block">
+                <CalendarDays className="absolute left-3 top-3.5 w-4 h-4 text-muted pointer-events-none" />
+                <input type="date" value={date} onChange={(event) => setDate(event.target.value)} className="w-full min-h-11 rounded-control border border-line bg-surface pl-10 pr-4 text-base text-ink outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/20" />
+              </span>
+              <p className="mt-2 text-sm text-muted leading-relaxed">
+                Đây là một ngày cụ thể, chưa phải lịch giỗ âm lịch
+                hoặc lời nhắc lặp lại hằng năm.
+              </p>
+            </label>
             <label className="block"><span className="block text-sm font-semibold text-ink mb-2">Lời tri ân <span className="font-normal text-muted">(tùy chọn)</span></span><Textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Một câu bạn muốn giữ lại…" className="min-h-28" /></label>
           </div>
           {error && <p className="mt-4 text-sm text-danger flex items-center gap-2" role="alert"><Heart className="w-4 h-4" /> {error}</p>}

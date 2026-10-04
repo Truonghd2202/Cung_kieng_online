@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { AppHeader, NavScreen } from "./components/AppHeader";
 import { AppFooter } from "./components/AppFooter";
+import { SavedSignalDialog } from "./components/SavedSignalDialog";
+import { useTheme } from "./hooks/useTheme";
 import type { MemorialRecord } from "./screens/MemorialSpaceScreen";
 import type { CultureRegionSlug } from "./screens/CulturalMapScreen";
 import type { RegionalExperienceKind } from "./screens/RegionalExperienceScreen";
@@ -19,9 +21,11 @@ import { Trash2, Calendar, BookOpen, ArrowRight, Flower2, Sparkles } from "lucid
 import { saveLocalDemoAccount } from "./data/authService";
 import {
   getCalendarNotesStorageKey,
+  getReliableLunarDate,
   loadCalendarPersonalNotes,
   saveCalendarPersonalNotes,
 } from "./data/calendarData";
+import { sanitizeCulturalTopics } from "./data/culturalTopics";
 
 const MoodCheckInScreen = lazy(() => import("./screens/MoodCheckInScreen").then((module) => ({ default: module.MoodCheckInScreen })));
 const SignalLoadingScreen = lazy(() => import("./screens/SignalLoadingScreen").then((module) => ({ default: module.SignalLoadingScreen })));
@@ -164,11 +168,20 @@ export const loadUserCornerData = (user: UserProfile | null): UserCornerData => 
   return { signals: [], xam: [], wishes: [] };
 };
 
-export const saveUserCornerData = (email: string, data: UserCornerData) => {
-  const key = getUserCornerStorageKey(email);
+export const saveUserCornerData = (
+  email: string,
+  data: UserCornerData
+): boolean => {
   try {
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch {}
+    localStorage.setItem(
+      getUserCornerStorageKey(email),
+      JSON.stringify(data)
+    );
+
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 export const getAccountScopedKey = (base: string, email?: string | null) => {
@@ -176,12 +189,49 @@ export const getAccountScopedKey = (base: string, email?: string | null) => {
   return `${base}_${accountId}`;
 };
 
+const readActionDone = (
+  signalId: string,
+  date: string,
+  email?: string | null
+): boolean => {
+  try {
+    const raw = localStorage.getItem(
+      getAccountScopedKey(
+        "tltl-action-done-date",
+        email
+      )
+    );
+
+    if (!raw) return false;
+
+    const value: unknown = JSON.parse(raw);
+
+    if (
+      typeof value !== "object" ||
+      value === null
+    ) {
+      return false;
+    }
+
+    const record = value as {
+      date?: unknown;
+      signalId?: unknown;
+    };
+
+    return (
+      record.date === date &&
+      record.signalId === signalId
+    );
+  } catch {
+    return false;
+  }
+};
+
 export const loadUserSessionState = (user: UserProfile | null, todayStr: string) => {
   const email = user?.email;
   const checkInKey = getAccountScopedKey("tltl-last-checkin-date", email);
   const moodKey = getAccountScopedKey("tltl-today-mood", email);
   const topicsKey = getAccountScopedKey("tltl-selected-topics", email);
-  const actionKey = getAccountScopedKey("tltl-action-done-date", email);
   const signalKey = getAccountScopedKey("tltl-current-signal-id", email);
 
   let checkedIn = false;
@@ -201,18 +251,20 @@ export const loadUserSessionState = (user: UserProfile | null, todayStr: string)
   } catch {}
 
   let topics: string[] = ["cadao", "xinxam", "bamien"];
+
   try {
     const stored = localStorage.getItem(topicsKey);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) topics = parsed;
-    }
-  } catch {}
 
-  let actionDone = false;
-  try {
-    actionDone = localStorage.getItem(actionKey) === todayStr;
-  } catch {}
+    if (stored !== null) {
+      const parsed: unknown = JSON.parse(stored);
+
+      if (Array.isArray(parsed)) {
+        topics = sanitizeCulturalTopics(parsed);
+      }
+    }
+  } catch {
+    // Giữ lựa chọn mặc định nếu dữ liệu không đọc được.
+  }
 
   let signalId = getDefaultSignalForMood(mood).id;
   try {
@@ -222,6 +274,12 @@ export const loadUserSessionState = (user: UserProfile | null, todayStr: string)
     }
   } catch {}
 
+  const actionDone = readActionDone(
+    signalId,
+    todayStr,
+    email
+  );
+
   return { checkedIn, mood, topics, actionDone, signalId };
 };
 
@@ -229,6 +287,29 @@ export type PendingSave =
   | { type: "signal"; item: SavedSignalItem }
   | { type: "xam"; item: SavedXinXamItem }
   | { type: "wish"; item: SavedWishItem };
+
+const getCultureRegionFromLocation = (): CultureRegionSlug => {
+  const path = window.location.pathname.replace(/^\/+/, "");
+
+  // Các trải nghiệm riêng luôn thuộc vùng tương ứng.
+  if (path === "chau-van") return "north";
+  if (path === "sea-prayer") return "central";
+  if (path === "southern-culture") return "south";
+
+  const region = new URLSearchParams(
+    window.location.search
+  ).get("region");
+
+  if (
+    region === "north" ||
+    region === "central" ||
+    region === "south"
+  ) {
+    return region;
+  }
+
+  return "north";
+};
 
 export default function App() {
   const todayDateString = new Date().toDateString();
@@ -325,11 +406,19 @@ export default function App() {
 
   const [screen, setScreen] = useState<NavScreen>(getInitialScreen);
   const [selectedArticleId, setSelectedArticleId] = useState<string>(initialUrlArticleId);
-  const [selectedCultureRegion, setSelectedCultureRegion] = useState<CultureRegionSlug>("north");
+  const [selectedCultureRegion, setSelectedCultureRegion] =
+    useState<CultureRegionSlug>(
+      getCultureRegionFromLocation
+    );
   const [selectedRitualId, setSelectedRitualId] = useState<string>(initialUrlRitualId);
   const [selectedCalendarEventId, setSelectedCalendarEventId] = useState<string>(initialUrlCalendarEventId);
   const [journalText, setJournalText] = useState("");
-  const [dark, setDark] = useState(() => localStorage.getItem("tltl-theme") === "dark");
+  const {
+    dark,
+    themePreference,
+    setThemePreference,
+    toggleTheme,
+  } = useTheme();
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(initialUser);
   const [pendingSave, setPendingSave] = useState<PendingSave | null>(null);
@@ -364,12 +453,55 @@ export default function App() {
   });
 
   // Trạng thái hành động hoàn thành theo từng tài khoản
-  const [isActionDone, setIsActionDone] = useState<boolean>(initialSession.actionDone);
+  const [isActionDone, setIsActionDone] =
+    useState<boolean>(() =>
+      readActionDone(
+        initialUrlSignal?.id || initialSession.signalId,
+        todayDateString,
+        initialUser?.email
+      )
+    );
+
+  useEffect(() => {
+    setIsActionDone(
+      readActionDone(
+        currentSignalId,
+        todayDateString,
+        currentUser?.email
+      )
+    );
+  }, [
+    currentSignalId,
+    currentUser?.email,
+    todayDateString,
+  ]);
 
   // Tách biệt dữ liệu Góc của tôi (tín hiệu, thẻ xăm, điều ước) theo từng tài khoản
   const [userCornerData, setUserCornerData] = useState<UserCornerData>(() => {
     return loadUserCornerData(initialUser);
   });
+
+  const [openedSavedSignal, setOpenedSavedSignal] =
+    useState<SavedSignalItem | null>(null);
+
+  const handleOpenSavedSignal = (entryId: string) => {
+    const entry = userCornerData.signals.find(
+      (item) => item.id === entryId
+    );
+
+    if (!entry) {
+      window.alert(
+        "Nội dung này không còn trong danh sách đã lưu."
+      );
+      return;
+    }
+
+    setOpenedSavedSignal(entry);
+  };
+
+  useEffect(() => {
+    setOpenedSavedSignal(null);
+  }, [currentUser?.email]);
 
   const [memorial, setMemorial] = useState<MemorialRecord | null>(() => {
     try {
@@ -383,15 +515,6 @@ export default function App() {
 
   // Active signal computed from currentSignalId
   const activeSignal = getSignalById(currentSignalId) || getDefaultSignalForMood(selectedMood);
-
-  useEffect(() => {
-    localStorage.setItem("tltl-theme", dark ? "dark" : "light");
-    if (dark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [dark]);
 
   useEffect(() => {
     try {
@@ -442,6 +565,18 @@ export default function App() {
     const handlePopState = (event: PopStateEvent) => {
       const path = window.location.pathname.replace(/^\//, "");
       const params = new URLSearchParams(window.location.search);
+
+      if (
+        path === "region-culture" ||
+        path === "chau-van" ||
+        path === "sea-prayer" ||
+        path === "southern-culture"
+      ) {
+        setSelectedCultureRegion(
+          getCultureRegionFromLocation()
+        );
+      }
+
       const state = event.state as {
         screen?: NavScreen;
         signalId?: string;
@@ -544,12 +679,20 @@ export default function App() {
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [currentUser, isCheckedIn, activeSignal.id, currentSignalId, selectedMood]);
+  }, [
+    currentUser,
+    isCheckedIn,
+    activeSignal.id,
+    currentSignalId,
+    selectedMood,
+    selectedCultureRegion,
+  ]);
 
   const navigateTo = (
     newScreen: NavScreen,
     signalIdParam?: string,
-    authenticatedUser?: UserProfile | null
+    authenticatedUser?: UserProfile | null,
+    cultureRegionParam?: CultureRegionSlug
   ) => {
     let targetScreen = newScreen;
     const effectiveUser =
@@ -590,6 +733,30 @@ export default function App() {
       url = `/calendar-detail?eventId=${resolvedEventId}`;
     }
 
+    if (targetScreen === "region-culture") {
+      const region =
+        cultureRegionParam || selectedCultureRegion;
+
+      setSelectedCultureRegion(region);
+      url = `/region-culture?region=${region}`;
+    }
+
+    if (
+      targetScreen === "chau-van" ||
+      targetScreen === "sea-prayer" ||
+      targetScreen === "southern-culture"
+    ) {
+      const region: CultureRegionSlug =
+        targetScreen === "chau-van"
+          ? "north"
+          : targetScreen === "sea-prayer"
+            ? "central"
+            : "south";
+
+      setSelectedCultureRegion(region);
+      url = `/${targetScreen}?region=${region}`;
+    }
+
     const historyPayload = {
       screen: targetScreen,
       signalId: resolvedSignalId,
@@ -603,26 +770,50 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleToggleAction = (completed: boolean) => {
-    setIsActionDone(completed);
+  const handleToggleAction = (
+    completed: boolean
+  ): boolean => {
+    const key = getAccountScopedKey(
+      "tltl-action-done-date",
+      currentUser?.email
+    );
+
     try {
-      const key = getAccountScopedKey("tltl-action-done-date", currentUser?.email);
       if (completed) {
-        localStorage.setItem(key, todayDateString);
+        localStorage.setItem(
+          key,
+          JSON.stringify({
+            date: todayDateString,
+            signalId: activeSignal.id,
+          })
+        );
       } else {
         localStorage.removeItem(key);
       }
-    } catch {}
-  };
+    } catch {
+      window.alert(
+        "Chưa lưu được trạng thái hành động. Bạn hãy thử lại."
+      );
 
-  const handleStartSignalFromGuest = (mood: MoodKey) => {
-    setSelectedMood(mood);
-    const defaultSig = getDefaultSignalForMood(mood);
-    setCurrentSignalId(defaultSig.id);
-    navigateTo("mood");
+      return false;
+    }
+
+    setIsActionDone(completed);
+    return true;
   };
 
   const handleSubmitMood = () => {
+    // Mỗi lần gửi cảm xúc là một lượt mới,
+    // kể cả khi chọn lại cùng cảm xúc.
+    const resetSucceeded = handleToggleAction(false);
+
+    if (!resetSucceeded) return;
+
+    const nextSignal = getDefaultSignalForMood(
+      selectedMood
+    );
+
+    setCurrentSignalId(nextSignal.id);
     navigateTo("loading");
   };
 
@@ -637,30 +828,80 @@ export default function App() {
     navigateTo("result", activeSignal.id);
   };
 
-  // Đổi tín hiệu: GIỮ NGUYÊN TÂM TRẠNG, chỉ đổi quẻ tín hiệu khác cùng tâm trạng
   const handleRefreshSignal = () => {
-    const nextSignal = getNextSignalForMood(activeSignal.id, selectedMood);
-    setCurrentSignalId(nextSignal.id);
-    try {
-      localStorage.setItem(
-        getAccountScopedKey("tltl-current-signal-id", currentUser?.email),
-        nextSignal.id
-      );
-    } catch {}
-    // Đồng bộ URL ngay lập tức
-    window.history.replaceState(null, "", `/result?signalId=${nextSignal.id}`);
-  };
+    const nextSignal = getNextSignalForMood(
+      activeSignal.id,
+      activeSignal.mood
+    );
 
-  // Lưu chủ đề được chọn từ Trải nghiệm
-  const handleSaveTopics = (topics: string[]) => {
-    setSelectedTopics(topics);
+    const signalKey = getAccountScopedKey(
+      "tltl-current-signal-id",
+      currentUser?.email
+    );
+
+    const actionKey = getAccountScopedKey(
+      "tltl-action-done-date",
+      currentUser?.email
+    );
+
+    let previousSignal: string | null;
+    let previousAction: string | null;
+
     try {
-      localStorage.setItem(
-        getAccountScopedKey("tltl-selected-topics", currentUser?.email),
-        JSON.stringify(topics)
+      previousSignal = localStorage.getItem(signalKey);
+      previousAction = localStorage.getItem(actionKey);
+    } catch {
+      window.alert(
+        "Chưa đọc được dữ liệu trên trình duyệt. Bạn hãy thử lại."
       );
-    } catch {}
-    navigateTo("today");
+      return;
+    }
+
+    try {
+      localStorage.setItem(signalKey, nextSignal.id);
+      localStorage.removeItem(actionKey);
+    } catch {
+      try {
+        if (previousSignal === null) {
+          localStorage.removeItem(signalKey);
+        } else {
+          localStorage.setItem(
+            signalKey,
+            previousSignal
+          );
+        }
+
+        if (previousAction === null) {
+          localStorage.removeItem(actionKey);
+        } else {
+          localStorage.setItem(
+            actionKey,
+            previousAction
+          );
+        }
+      } catch {
+        // Việc khôi phục cũng có thể bị trình duyệt chặn.
+      }
+
+      window.alert(
+        "Chưa hoàn tất việc đổi lời chiêm nghiệm. Bạn hãy tải lại trang để kiểm tra trước khi thử lại."
+      );
+      return;
+    }
+
+    setIsActionDone(false);
+    setSelectedMood(nextSignal.mood);
+    setCurrentSignalId(nextSignal.id);
+
+    window.history.replaceState(
+      {
+        screen: "result",
+        signalId: nextSignal.id,
+        mood: nextSignal.mood,
+      },
+      "",
+      `/result?signalId=${encodeURIComponent(nextSignal.id)}`
+    );
   };
 
   const handleSaveResult = () => {
@@ -685,57 +926,211 @@ export default function App() {
     };
 
     if (!currentUser) {
-      // Lưu tín hiệu khi chưa đăng nhập
-      setPendingSave({ type: "signal", item: newEntry });
-      navigateTo("login");
-    } else {
-      // Đã đăng nhập: Lưu trực tiếp theo tài khoản
-      setUserCornerData((prev) => {
-        const exists = prev.signals.some((e) => e.signalId === activeSignal.id);
-        if (exists) return prev;
-        const updated = {
-          ...prev,
-          signals: [newEntry, ...prev.signals],
-        };
-        saveUserCornerData(currentUser.email, updated);
-        return updated;
+      setPendingSave({
+        type: "signal",
+        item: newEntry,
       });
-    }
-  };
 
-  const handleSimulatedLogin = (name?: string, email?: string) => {
-    const user: UserProfile = {
-      name: name || "An Nhiên",
-      email: email ? email.trim().toLowerCase() : "annhien@tinlamtamlinh.vn",
+      navigateTo("login");
+      return;
+    }
+
+    const exists = userCornerData.signals.some(
+      (entry) =>
+        entry.signalId === newEntry.signalId &&
+        entry.date === newEntry.date
+    );
+
+    if (exists) return;
+
+    const updated: UserCornerData = {
+      ...userCornerData,
+      signals: [
+        newEntry,
+        ...userCornerData.signals,
+      ],
     };
 
-    const loadedData = loadUserCornerData(user);
+    const saved = saveUserCornerData(
+      currentUser.email,
+      updated
+    );
 
-    if (pendingSave?.type === "signal") {
-      loadedData.signals = [pendingSave.item, ...loadedData.signals];
-    }
-    if (pendingSave?.type === "xam") {
-      loadedData.xam = [pendingSave.item, ...loadedData.xam];
-    }
-    if (pendingSave?.type === "wish") {
-      loadedData.wishes = [pendingSave.item, ...loadedData.wishes];
+    if (!saved) {
+      window.alert(
+        "Chưa lưu được lời chiêm nghiệm. Trình duyệt có thể hết dung lượng hoặc đang chặn lưu dữ liệu. Bạn hãy thử lại."
+      );
+
+      return;
     }
 
-    if (pendingSave) saveUserCornerData(user.email, loadedData);
+    setUserCornerData(updated);
+  };
+
+  const handleSimulatedLogin = (
+    name?: string,
+    email?: string
+  ) => {
+    const user: UserProfile = {
+      name: name?.trim() || "An Nhiên",
+      email: email?.trim().toLowerCase() ||
+        "annhien@tinlamtamlinh.vn",
+    };
+
+    // Giữ nội dung đang chờ trước khi cập nhật state.
+    const pending = pendingSave;
+
+    const existingData = loadUserCornerData(user);
+
+    const nextData: UserCornerData = {
+      signals: [...existingData.signals],
+      xam: [...existingData.xam],
+      wishes: [...existingData.wishes],
+    };
+
+    if (pending?.type === "signal") {
+      const item = pending.item;
+
+      const exists = nextData.signals.some(
+        (entry) =>
+          entry.signalId === item.signalId &&
+          entry.date === item.date
+      );
+
+      if (!exists) {
+        nextData.signals.unshift(item);
+      }
+    }
+
+    if (pending?.type === "xam") {
+      const item = pending.item;
+
+      const exists = nextData.xam.some(
+        (entry) =>
+          entry.stickNumber === item.stickNumber &&
+          entry.category === item.category &&
+          entry.region === item.region
+      );
+
+      if (!exists) {
+        nextData.xam.unshift(item);
+      }
+    }
+
+    if (pending?.type === "wish") {
+      const item = pending.item;
+
+      const exists = nextData.wishes.some(
+        (entry) => entry.id === item.id
+      );
+
+      if (!exists) {
+        nextData.wishes.unshift(item);
+      }
+    }
+
+    // Ghi trực tiếp để lỗi lưu không bị hàm helper bỏ qua.
+    try {
+      if (pending) {
+        localStorage.setItem(
+          getUserCornerStorageKey(user.email),
+          JSON.stringify(nextData)
+        );
+      }
+
+      localStorage.setItem(
+        "tltl-current-user",
+        JSON.stringify(user)
+      );
+    } catch {
+      window.alert(
+        "Trình duyệt chưa lưu được dữ liệu. Nội dung đang chờ vẫn được giữ trong phiên này. Bạn hãy thử lại."
+      );
+      return;
+    }
+
+    const userSession = loadUserSessionState(
+      user,
+      todayDateString
+    );
 
     setCurrentUser(user);
-    localStorage.setItem("tltl-current-user", JSON.stringify(user));
-    setUserCornerData(loadedData);
-    setPendingSave(null);
+    setUserCornerData(nextData);
+    setSelectedTopics(userSession.topics);
 
-    // Đồng bộ trạng thái session (check-in, mood, topics, action, signal) theo tài khoản vừa đăng nhập
-    const userSession = loadUserSessionState(user, todayDateString);
+    if (pending?.type === "signal") {
+      const savedSignal =
+        getSignalById(pending.item.signalId) ||
+        getDefaultSignalForMood(
+          pending.item.mood as MoodKey
+        );
+
+      // Giữ đúng lượt chiêm nghiệm trước khi đăng nhập.
+      setIsCheckedIn(true);
+      setSelectedMood(savedSignal.mood);
+      setCurrentSignalId(savedSignal.id);
+      setJournalText(pending.item.journal || "");
+
+      try {
+        localStorage.setItem(
+          getAccountScopedKey(
+            "tltl-last-checkin-date",
+            user.email
+          ),
+          todayDateString
+        );
+
+        localStorage.setItem(
+          getAccountScopedKey(
+            "tltl-today-mood",
+            user.email
+          ),
+          savedSignal.mood
+        );
+
+        localStorage.setItem(
+          getAccountScopedKey(
+            "tltl-current-signal-id",
+            user.email
+          ),
+          savedSignal.id
+        );
+
+        const actionKey = getAccountScopedKey(
+          "tltl-action-done-date",
+          user.email
+        );
+
+        if (isActionDone) {
+          localStorage.setItem(
+            actionKey,
+            JSON.stringify({
+              date: todayDateString,
+              signalId: savedSignal.id,
+            })
+          );
+        } else {
+          localStorage.removeItem(actionKey);
+        }
+      } catch {
+        // Nội dung đã lưu; trạng thái ngày có thể không
+        // được khôi phục đầy đủ khi tải lại.
+      }
+
+      setPendingSave(null);
+
+      navigateTo("result", savedSignal.id, user);
+      return;
+    }
+
+    // Đăng nhập thông thường hoặc lưu xăm/lời nguyện:
+    // khôi phục trạng thái riêng của tài khoản.
     setIsCheckedIn(userSession.checkedIn);
     setSelectedMood(userSession.mood);
-    setSelectedTopics(userSession.topics);
     setIsActionDone(userSession.actionDone);
     setCurrentSignalId(userSession.signalId);
     setJournalText("");
+    setPendingSave(null);
 
     navigateTo("account", undefined, user);
   };
@@ -778,111 +1173,222 @@ export default function App() {
     saveLocalDemoAccount(updatedUser);
   };
 
+  const handleSaveTopics = (topics: string[]): boolean => {
+    const nextTopics = sanitizeCulturalTopics(topics);
+
+    try {
+      localStorage.setItem(
+        getAccountScopedKey(
+          "tltl-selected-topics",
+          currentUser?.email
+        ),
+        JSON.stringify(nextTopics)
+      );
+    } catch {
+      return false;
+    }
+
+    setSelectedTopics(nextTopics);
+    return true;
+  };
+
+  const commitCornerData = (
+    updated: UserCornerData
+  ): boolean => {
+    if (!currentUser) return false;
+
+    const saved = saveUserCornerData(
+      currentUser.email,
+      updated
+    );
+
+    if (!saved) {
+      window.alert(
+        "Chưa lưu được thay đổi. Nội dung trên màn hình vẫn được giữ nguyên. Bạn hãy thử lại."
+      );
+
+      return false;
+    }
+
+    setUserCornerData(updated);
+    return true;
+  };
+
   const handleDeleteSignal = (id: string) => {
-    if (!currentUser) return;
-    setUserCornerData((prev) => {
-      const updated = {
-        ...prev,
-        signals: prev.signals.filter((s) => s.id !== id),
-      };
-      saveUserCornerData(currentUser.email, updated);
-      return updated;
+    const saved = commitCornerData({
+      ...userCornerData,
+      signals: userCornerData.signals.filter(
+        (item) => item.id !== id
+      ),
     });
+
+    if (saved && openedSavedSignal?.id === id) {
+      setOpenedSavedSignal(null);
+    }
   };
 
   const handleDeleteXam = (id: string) => {
-    if (!currentUser) return;
-    setUserCornerData((prev) => {
-      const updated = {
-        ...prev,
-        xam: prev.xam.filter((x) => x.id !== id),
-      };
-      saveUserCornerData(currentUser.email, updated);
-      return updated;
+    commitCornerData({
+      ...userCornerData,
+      xam: userCornerData.xam.filter(
+        (item) => item.id !== id
+      ),
     });
   };
 
   const handleDeleteWish = (id: string) => {
-    if (!currentUser) return;
-    setUserCornerData((prev) => {
-      const updated = {
-        ...prev,
-        wishes: prev.wishes.filter((w) => w.id !== id),
-      };
-      saveUserCornerData(currentUser.email, updated);
-      return updated;
+    commitCornerData({
+      ...userCornerData,
+      wishes: userCornerData.wishes.filter(
+        (item) => item.id !== id
+      ),
     });
   };
 
   const handleToggleStarSignal = (id: string) => {
-    if (!currentUser) return;
-    setUserCornerData((prev) => {
-      const updated = {
-        ...prev,
-        signals: prev.signals.map((s) => (s.id === id ? { ...s, starred: !s.starred } : s)),
-      };
-      saveUserCornerData(currentUser.email, updated);
-      return updated;
+    commitCornerData({
+      ...userCornerData,
+      signals: userCornerData.signals.map(
+        (item) =>
+          item.id === id
+            ? { ...item, starred: !item.starred }
+            : item
+      ),
     });
   };
 
   const handleToggleStarXam = (id: string) => {
-    if (!currentUser) return;
-    setUserCornerData((prev) => {
-      const updated = {
-        ...prev,
-        xam: prev.xam.map((x) => (x.id === id ? { ...x, starred: !x.starred } : x)),
-      };
-      saveUserCornerData(currentUser.email, updated);
-      return updated;
+    commitCornerData({
+      ...userCornerData,
+      xam: userCornerData.xam.map(
+        (item) =>
+          item.id === id
+            ? { ...item, starred: !item.starred }
+            : item
+      ),
     });
   };
 
   const handleToggleStarWish = (id: string) => {
-    if (!currentUser) return;
-    setUserCornerData((prev) => {
-      const updated = {
-        ...prev,
-        wishes: prev.wishes.map((w) => (w.id === id ? { ...w, starred: !w.starred } : w)),
-      };
-      saveUserCornerData(currentUser.email, updated);
-      return updated;
+    commitCornerData({
+      ...userCornerData,
+      wishes: userCornerData.wishes.map(
+        (item) =>
+          item.id === id
+            ? { ...item, starred: !item.starred }
+            : item
+      ),
     });
   };
 
-  // Mở lại đúng bản ghi tín hiệu đã lưu
-  const handleOpenSavedSignal = (entry: SavedSignalItem) => {
-    setSelectedMood(entry.mood);
-    setCurrentSignalId(entry.signalId);
-    navigateTo("result", entry.signalId);
+  const handleSavePrivateWish = (
+    content: string,
+    category: string
+  ): boolean => {
+    const cleanContent = content.trim();
+    if (!cleanContent) return false;
+
+    const newWish: SavedWishItem = {
+      id: crypto.randomUUID(),
+      category,
+      content: cleanContent,
+      date: new Date().toLocaleDateString("vi-VN"),
+      sealed: true,
+      starred: false,
+    };
+
+    if (!currentUser) {
+      setPendingSave({
+        type: "wish",
+        item: newWish,
+      });
+
+      navigateTo("login");
+      return false;
+    }
+
+    const nextData: UserCornerData = {
+      ...userCornerData,
+      wishes: [newWish, ...userCornerData.wishes],
+    };
+
+    try {
+      localStorage.setItem(
+        getUserCornerStorageKey(currentUser.email),
+        JSON.stringify(nextData)
+      );
+    } catch {
+      return false;
+    }
+
+    setUserCornerData(nextData);
+    return true;
   };
 
-  const handleSaveDayToCalendar = (dayData: { title: string; day: number; month: number; year?: number }) => {
+
+  const handleSaveDayToCalendar = (dayData: {
+    title: string;
+    day: number;
+    month: number;
+    year: number;
+  }): boolean => {
     try {
-      const currentYear = dayData.year || new Date().getFullYear();
-      const currentList = loadCalendarPersonalNotes(currentUser?.email);
+      const currentList = loadCalendarPersonalNotes(
+        currentUser?.email
+      );
+
+      const exists = currentList.some(
+        (note) =>
+          note.title === dayData.title &&
+          note.day === dayData.day &&
+          note.month === dayData.month &&
+          note.year === dayData.year
+      );
+
+      if (exists) return true;
+
+      const lunarInfo = getReliableLunarDate(
+        dayData.day,
+        dayData.month,
+        dayData.year
+      );
+
       const newNote = {
-        id: `good-day-${Date.now()}`,
+        id: crypto.randomUUID(),
         title: dayData.title,
-        typeLabel: "Ngày lành đã lưu",
+        typeLabel: "Ghi chú cá nhân",
         region: "Cá nhân",
-        shortDesc: `Ghi chú lưu từ phân hệ Tra cứu ngày lành: ${dayData.title}`,
-        lunarDate: "Theo tiết khí cát lành",
-        solarDate: `${dayData.day}/${dayData.month}/${currentYear}`,
+        shortDesc: "Ngày dự định do bạn chọn.",
+        lunarDate: lunarInfo
+          ? `Ngày ${lunarInfo.lunarDay}/${lunarInfo.lunarMonth} âm lịch (${lunarInfo.canChiYear})`
+          : "Chưa có thông tin âm lịch",
         day: dayData.day,
         month: dayData.month,
-        year: currentYear,
+        year: dayData.year,
         type: "personal" as const,
-        description: `Ghi chú lưu từ phân hệ Tra cứu ngày lành: ${dayData.title}`,
-        isImportant: true,
       };
-      saveCalendarPersonalNotes(currentUser?.email, [newNote, ...currentList]);
-    } catch {}
+
+      localStorage.setItem(
+        getCalendarNotesStorageKey(currentUser?.email),
+        JSON.stringify([newNote, ...currentList])
+      );
+
+      return true;
+    } catch {
+      return false;
+    }
   };
 
-  const isCurrentSignalSaved = currentUser
-    ? userCornerData.signals.some((e) => e.signalId === activeSignal.id)
-    : false;
+  const currentDateLabel = new Date().toLocaleDateString("vi-VN");
+
+  const isCurrentSignalSaved = Boolean(
+    currentUser &&
+      userCornerData.signals.some(
+        (entry) =>
+          entry.signalId === activeSignal.id &&
+          entry.date === currentDateLabel
+      )
+  );
 
   return (
     <div className={`app-shell ${dark ? "dark" : ""} ${["login", "register", "forgot"].includes(screen) ? "lg:h-screen lg:max-h-screen lg:overflow-hidden" : ""}`}>
@@ -892,7 +1398,7 @@ export default function App() {
           currentScreen={screen}
           onNavigate={navigateTo}
           dark={dark}
-          onToggleDark={() => setDark(!dark)}
+          onToggleDark={toggleTheme}
           onLoginClick={() => navigateTo("login")}
           user={currentUser}
           onLogout={handleLogout}
@@ -904,34 +1410,39 @@ export default function App() {
         <Suspense fallback={<div className="page-container max-w-7xl text-sm text-muted" role="status">Đang mở nội dung…</div>}>
         {screen === "guest" && (
           <GuestScreen
-            onStartSignal={handleStartSignalFromGuest}
-            onGoToToday={() => navigateTo("today")}
-            onGoToAccount={() => navigateTo("account")}
+            onSelectMood={() => navigateTo("mood")}
+            onGoToCulture={() => navigateTo("culture")}
+            onGoToExperience={() => navigateTo("experience")}
           />
         )}
 
         {screen === "today" && (
           <TodayScreen
+            signal={activeSignal}
             isCheckedIn={isCheckedIn}
             mood={selectedMood}
             isActionDone={isActionDone}
             onSelectMoodClick={() => navigateTo("mood")}
-            onViewSignalDetails={() => navigateTo("result", activeSignal.id)}
+            onViewSignalDetails={() =>
+              navigateTo("result", activeSignal.id)
+            }
             selectedTopics={selectedTopics}
+            onGoToCulture={() => navigateTo("culture")}
+            onGoToExperience={() => navigateTo("experience")}
+            onGoToZen={() => navigateTo("zen")}
           />
         )}
 
         {screen === "mood" && (
           <MoodCheckInScreen
             selectedMood={selectedMood}
-            onSelectMood={(mood) => {
-              setSelectedMood(mood);
-              const defaultSig = getDefaultSignalForMood(mood);
-              setCurrentSignalId(defaultSig.id);
-            }}
+            onSelectMood={setSelectedMood}
             journalText={journalText}
             onChangeJournal={setJournalText}
-            onBackToToday={() => navigateTo("today")}
+            onBackToToday={() => {
+              setSelectedMood(activeSignal.mood);
+              navigateTo("today");
+            }}
             onSubmit={handleSubmitMood}
           />
         )}
@@ -960,22 +1471,20 @@ export default function App() {
 
         {screen === "experience" && (
           <ExperienceScreen
-            initialTopics={selectedTopics}
-            onComplete={handleSaveTopics}
-            onSkip={() => navigateTo("guest")}
             onGoToXinXam={() => navigateTo("xinxam")}
             onGoToWish={() => navigateTo("wish")}
             onGoToZen={() => navigateTo("zen")}
             onGoToGratitude={() => navigateTo("gratitude")}
             onGoToXinKeo={() => navigateTo("xinkeo")}
-            onGoToHoroscope={() => navigateTo("horoscope")}
             onGoToAstrology={() => navigateTo("astrology")}
             onGoToSanctuary={() => navigateTo("sanctuary")}
+            onGoToCulture={() => navigateTo("culture")}
           />
         )}
 
         {screen === "sanctuary" && (
           <VirtualSanctuaryScreen
+            memorial={memorial}
             onBackToExperience={() => navigateTo("experience")}
             onGoToAltar={() => navigateTo("ancestor-altar")}
             onGoToMemorial={() => navigateTo("memorial")}
@@ -987,6 +1496,10 @@ export default function App() {
           <AncestorAltarScreen
             onBack={() => navigateTo("sanctuary")}
             onGoToMemorial={() => navigateTo("memorial")}
+            isLoggedIn={Boolean(currentUser)}
+            onSaveTribute={(text) =>
+              handleSavePrivateWish(text, "Tri ân gia tiên")
+            }
           />
         )}
 
@@ -1005,12 +1518,21 @@ export default function App() {
             initialValue={memorial}
             onBack={() => navigateTo("memorial")}
             onSave={(nextMemorial) => {
-              const email = currentUser?.email?.trim().toLowerCase() || "guest";
-              setMemorial(nextMemorial);
+              const accountId =
+                currentUser?.email?.trim().toLowerCase() || "guest";
+
               try {
-                localStorage.setItem(`tltl-memorial-${email}`, JSON.stringify(nextMemorial));
-              } catch {}
+                localStorage.setItem(
+                  `tltl-memorial-${accountId}`,
+                  JSON.stringify(nextMemorial)
+                );
+              } catch {
+                return false;
+              }
+
+              setMemorial(nextMemorial);
               navigateTo("memorial");
+              return true;
             }}
           />
         )}
@@ -1033,8 +1555,12 @@ export default function App() {
           <CulturalMapScreen
             onBackToCulture={() => navigateTo("culture")}
             onSelectRegion={(region) => {
-              setSelectedCultureRegion(region);
-              navigateTo("region-culture");
+              navigateTo(
+                "region-culture",
+                undefined,
+                undefined,
+                region
+              );
             }}
           />
         )}
@@ -1055,7 +1581,21 @@ export default function App() {
         {(screen === "chau-van" || screen === "sea-prayer" || screen === "southern-culture") && (
           <RegionalExperienceScreen
             kind={screen as RegionalExperienceKind}
-            onBack={() => navigateTo("region-culture")}
+            onBack={() => {
+              const region: CultureRegionSlug =
+                screen === "chau-van"
+                  ? "north"
+                  : screen === "sea-prayer"
+                    ? "central"
+                    : "south";
+
+              navigateTo(
+                "region-culture",
+                undefined,
+                undefined,
+                region
+              );
+            }}
             onGoToWish={() => navigateTo("wish")}
             onGoToMemorial={() => navigateTo("memorial")}
           />
@@ -1069,7 +1609,7 @@ export default function App() {
               setSelectedArticleId(id);
               navigateTo("culture-detail", id);
             }}
-            onGoToExperience={() => navigateTo("xinxam")}
+            onGoToExperience={() => navigateTo("experience")}
             onGoToMood={() => navigateTo("mood")}
           />
         )}
@@ -1083,35 +1623,61 @@ export default function App() {
             }}
             onSaveToAccount={(result) => {
               const newXam: SavedXinXamItem = {
-                id: Date.now().toString(),
+                id: crypto.randomUUID(),
                 stickNumber: result.stickNumber,
-                fortuneType: result.fortuneType || result.sealText || "Thượng Cát",
+                fortuneType:
+                  result.fortuneType ||
+                  result.sealText ||
+                  "Thượng Cát",
                 category: result.category || result.topic,
                 region: result.region,
                 quote: result.quote,
                 date: new Date().toLocaleDateString("vi-VN"),
                 starred: false,
               };
+
               if (!currentUser) {
-                // Lưu xăm khi chưa đăng nhập -> chuyển sang login, trả về false vì chưa lưu thật vào tài khoản
-                setPendingSave({ type: "xam", item: newXam });
+                setPendingSave({
+                  type: "xam",
+                  item: newXam,
+                });
+
                 navigateTo("login");
                 return false;
-              } else {
-                setUserCornerData((prev) => {
-                  const exists = prev.xam.some(
-                    (x) => x.stickNumber === newXam.stickNumber && x.category === newXam.category
-                  );
-                  if (exists) return prev;
-                  const updated = {
-                    ...prev,
-                    xam: [newXam, ...prev.xam],
-                  };
-                  saveUserCornerData(currentUser.email, updated);
-                  return updated;
-                });
-                return true;
               }
+
+              const exists = userCornerData.xam.some(
+                (item) =>
+                  item.stickNumber === newXam.stickNumber &&
+                  item.category === newXam.category &&
+                  item.region === newXam.region
+              );
+
+              if (exists) return true;
+
+              const updated: UserCornerData = {
+                ...userCornerData,
+                xam: [
+                  newXam,
+                  ...userCornerData.xam,
+                ],
+              };
+
+              const saved = saveUserCornerData(
+                currentUser.email,
+                updated
+              );
+
+              if (!saved) {
+                window.alert(
+                  "Chưa lưu được thẻ xăm. Trình duyệt có thể hết dung lượng hoặc đang chặn lưu dữ liệu. Bạn hãy thử lại."
+                );
+
+                return false;
+              }
+
+              setUserCornerData(updated);
+              return true;
             }}
             onGoToLogin={() => navigateTo("login")}
             onGoToExplore={() => navigateTo("culture")}
@@ -1123,36 +1689,13 @@ export default function App() {
 
         {screen === "wish" && (
           <WishScreen
-            onBackToExperience={() => navigateTo("xinxam")}
+            onBackToExperience={() => navigateTo("experience")}
             onGoToDiary={() => navigateTo("account")}
             onGoToHome={() => navigateTo("today")}
             onGoToExplore={() => navigateTo("culture")}
-            onSaveJournal={(text, topic) => {
-              const newWish: SavedWishItem = {
-                id: Date.now().toString(),
-                category: topic,
-                content: text,
-                date: new Date().toLocaleDateString("vi-VN"),
-                sealed: true,
-                starred: false,
-              };
-              if (!currentUser) {
-                // Lưu điều ước khi chưa đăng nhập -> chuyển sang login, trả về false vì chưa lưu thật vào tài khoản
-                setPendingSave({ type: "wish", item: newWish });
-                navigateTo("login");
-                return false;
-              } else {
-                setUserCornerData((prev) => {
-                  const updated = {
-                    ...prev,
-                    wishes: [newWish, ...prev.wishes],
-                  };
-                  saveUserCornerData(currentUser.email, updated);
-                  return updated;
-                });
-                return true;
-              }
-            }}
+            onSaveJournal={(text, topic) =>
+              handleSavePrivateWish(text, topic)
+            }
             isLoggedIn={!!currentUser}
           />
         )}
@@ -1164,6 +1707,9 @@ export default function App() {
               navigateTo("ritual-detail", id);
             }}
             onGoToCulture={() => navigateTo("culture")}
+            onGoToCalendar={() => navigateTo("calendar")}
+            onGoToPlan={() => navigateTo("good-days")}
+            onGoToMap={() => navigateTo("culture-map")}
           />
         )}
 
@@ -1214,50 +1760,15 @@ export default function App() {
             onBackToHome={() => navigateTo("today")}
             onGoToCulture={() => navigateTo("culture")}
             user={currentUser}
-            onSaveGratitude={(text) => {
-              const newWish: SavedWishItem = {
-                id: Date.now().toString(),
-                category: "Tri ân & Tưởng niệm",
-                content: text,
-                date: new Date().toLocaleDateString("vi-VN"),
-                sealed: true,
-                starred: true,
-              };
-              if (!currentUser) {
-                setPendingSave({ type: "wish", item: newWish });
-                navigateTo("login");
-                return false;
-              } else {
-                setUserCornerData((prev) => {
-                  const updated = {
-                    ...prev,
-                    wishes: [newWish, ...prev.wishes],
-                  };
-                  saveUserCornerData(currentUser.email, updated);
-                  return updated;
-                });
-                return true;
-              }
-            }}
-            onRequireLogin={(text) => {
-              const newWish: SavedWishItem = {
-                id: Date.now().toString(),
-                category: "Tri ân & Tưởng niệm",
-                content: text,
-                date: new Date().toLocaleDateString("vi-VN"),
-                sealed: true,
-                starred: true,
-              };
-              setPendingSave({ type: "wish", item: newWish });
-              navigateTo("login");
-            }}
+            onSaveGratitude={(text) =>
+              handleSavePrivateWish(text, "Tri ân & Tưởng niệm")
+            }
           />
         )}
 
         {screen === "forgot" && (
           <ForgotPasswordScreen
             onBackToLogin={() => navigateTo("login")}
-            onSuccessSubmit={() => {}}
           />
         )}
 
@@ -1312,27 +1823,16 @@ export default function App() {
 
         {screen === "saved" && (
           <CompletionScreen
-            mood={selectedMood}
             signal={activeSignal}
-            isLoggedIn={!!currentUser}
-            userName={currentUser?.name}
+            isActionDone={isActionDone}
+            isLoggedIn={Boolean(currentUser)}
+            isSaved={isCurrentSignalSaved}
             onGoToHome={() => navigateTo("today")}
             onGoToAccount={() => navigateTo("account")}
-            onGoToAuth={() => {
-              const newEntry: SavedSignalItem = {
-                id: Date.now().toString(),
-                signalId: activeSignal.id,
-                mood: activeSignal.mood,
-                date: new Date().toLocaleDateString("vi-VN"),
-                journal: journalText.trim() || undefined,
-                poemLine1: activeSignal.poem.line1,
-                poemLine2: activeSignal.poem.line2,
-                actionTitle: activeSignal.action.title,
-                starred: false,
-              };
-              setPendingSave({ type: "signal", item: newEntry });
-              navigateTo("login");
-            }}
+            onViewSignal={() =>
+              navigateTo("result", activeSignal.id)
+            }
+            onSaveToAccount={handleSaveResult}
           />
         )}
 
@@ -1348,10 +1848,7 @@ export default function App() {
             onToggleStarSignal={handleToggleStarSignal}
             onToggleStarXam={handleToggleStarXam}
             onToggleStarWish={handleToggleStarWish}
-            onGoToSignalResult={(signalId) => {
-              setCurrentSignalId(signalId);
-              navigateTo("result", signalId);
-            }}
+            onGoToSignalResult={handleOpenSavedSignal}
             onGoToXinXam={() => navigateTo("xinxam")}
             onGoToWish={() => navigateTo("wish")}
             onGoToMood={() => navigateTo("mood")}
@@ -1367,15 +1864,15 @@ export default function App() {
             savedSignals={userCornerData.signals}
             onBack={() => navigateTo("account")}
             onGoToMood={() => navigateTo("mood")}
-            onGoToSignalResult={(signalId) => {
-              setCurrentSignalId(signalId);
-              navigateTo("result", signalId);
-            }}
+            onGoToSignalResult={handleOpenSavedSignal}
           />
         )}
 
         {screen === "notifications" && (
-          <NotificationScreen onBack={() => navigateTo("account")} />
+          <NotificationScreen
+            onBack={() => navigateTo("account")}
+            onGoToCalendar={() => navigateTo("calendar")}
+          />
         )}
 
         {screen === "xinkeo" && (
@@ -1422,33 +1919,83 @@ export default function App() {
           <SettingsScreen
             onBackToAccount={() => navigateTo("account")}
             onGoToHome={() => navigateTo("today")}
-            dark={dark}
-            onToggleDark={() => {
-              const newDark = !dark;
-              setDark(newDark);
-              try {
-                localStorage.setItem("tltl-theme", newDark ? "dark" : "light");
-                if (newDark) {
-                  document.documentElement.classList.add("dark");
-                } else {
-                  document.documentElement.classList.remove("dark");
-                }
-              } catch {}
-            }}
+            themePreference={themePreference}
+            onChangeTheme={setThemePreference}
+            selectedTopics={selectedTopics}
+            onChangeTopics={handleSaveTopics}
             user={currentUser}
             onUpdateProfile={handleUpdateProfile}
             onLogout={handleLogout}
             onClearAllLocalData={() => {
+              if (!currentUser) return false;
+
+              const cornerKey = getUserCornerStorageKey(
+                currentUser.email
+              );
+
+              const calendarKey = getCalendarNotesStorageKey(
+                currentUser.email
+              );
+
+              const emptyData: UserCornerData = {
+                signals: [],
+                xam: [],
+                wishes: [],
+              };
+
+              let previousCorner: string | null;
+              let previousCalendar: string | null;
+
               try {
-                const calKey = getCalendarNotesStorageKey(currentUser?.email);
-                localStorage.removeItem(calKey);
-                localStorage.removeItem("tltl-calendar-personal-notes");
-                localStorage.removeItem("tltl-calendar-personal-notes_guest");
-                if (currentUser) {
-                  saveUserCornerData(currentUser.email, { signals: [], xam: [], wishes: [] });
-                  setUserCornerData({ signals: [], xam: [], wishes: [] });
+                previousCorner = localStorage.getItem(
+                  cornerKey
+                );
+
+                previousCalendar = localStorage.getItem(
+                  calendarKey
+                );
+              } catch {
+                return false;
+              }
+
+              try {
+                localStorage.setItem(
+                  cornerKey,
+                  JSON.stringify(emptyData)
+                );
+
+                localStorage.removeItem(calendarKey);
+              } catch {
+                // Cố khôi phục nếu chỉ một thao tác thành công.
+                try {
+                  if (previousCorner === null) {
+                    localStorage.removeItem(cornerKey);
+                  } else {
+                    localStorage.setItem(
+                      cornerKey,
+                      previousCorner
+                    );
+                  }
+
+                  if (previousCalendar === null) {
+                    localStorage.removeItem(calendarKey);
+                  } else {
+                    localStorage.setItem(
+                      calendarKey,
+                      previousCalendar
+                    );
+                  }
+                } catch {
+                  // Bộ nhớ vẫn có thể đang chặn thao tác.
                 }
-              } catch {}
+
+                return false;
+              }
+
+              setUserCornerData(emptyData);
+              setOpenedSavedSignal(null);
+
+              return true;
             }}
           />
         )}
@@ -1457,6 +2004,11 @@ export default function App() {
 
       {/* Universal Footer - Ẩn trên các màn Auth (login, register, forgot) */}
       {!["login", "register", "forgot"].includes(screen) && <AppFooter onNavigate={navigateTo} />}
+
+      <SavedSignalDialog
+        entry={openedSavedSignal}
+        onClose={() => setOpenedSavedSignal(null)}
+      />
     </div>
   );
 }

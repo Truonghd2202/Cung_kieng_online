@@ -1,269 +1,213 @@
 import React from "react";
 import {
-  Check,
-  Calendar,
-  Coffee,
-  Bookmark,
-  LogIn,
   ArrowLeft,
+  ArrowRight,
+  Bookmark,
+  Check,
   CheckCircle2,
   Flower2,
 } from "lucide-react";
-import { MoodKey, SIGNALS_DATA, SignalData } from "../data/demoSignals";
+
+import type { SignalData } from "../data/demoSignals";
 import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Card } from "@/src/components/ui/card";
 
 interface CompletionScreenProps {
-  mood: MoodKey;
-  signal?: SignalData;
-  isLoggedIn?: boolean;
-  userName?: string;
+  signal: SignalData;
+  isActionDone: boolean;
+  isLoggedIn: boolean;
+  isSaved: boolean;
   onGoToHome: () => void;
   onGoToAccount: () => void;
-  onGoToAuth?: () => void;
+  onViewSignal: () => void;
+  onSaveToAccount: () => void;
 }
 
-export const CompletionScreen: React.FC<CompletionScreenProps> = ({
-  mood,
-  signal: propSignal,
-  isLoggedIn = false,
-  userName,
+export const CompletionScreen: React.FC<
+  CompletionScreenProps
+> = ({
+  signal,
+  isActionDone,
+  isLoggedIn,
+  isSaved,
   onGoToHome,
   onGoToAccount,
-  onGoToAuth,
+  onViewSignal,
+  onSaveToAccount,
 }) => {
-  const signal = propSignal || SIGNALS_DATA[mood] || SIGNALS_DATA["Chênh vênh"];
-
   return (
     <div className="screen-shell">
-      <main className="page-container max-w-4xl">
-        {/* Step indicator */}
-        <div className="text-center mb-6">
-          <Badge
-            variant="terracotta"
-            className="gap-2 px-3.5 py-1 text-xs font-semibold tracking-wider uppercase"
+      <main className="page-container max-w-3xl">
+        <header className="mb-7 sm:mb-9">
+          <div
+            aria-hidden="true"
+            className="w-14 h-14 rounded-full bg-accent-soft text-accent flex items-center justify-center mb-5"
           >
-            <span className="w-2 h-2 rounded-full bg-action"></span>
-            <span>Bước 5 / 5 • Gieo mầm bình an</span>
-          </Badge>
-        </div>
+            {isActionDone ? (
+              <Check className="w-7 h-7" />
+            ) : (
+              <Flower2 className="w-7 h-7" />
+            )}
+          </div>
 
-        {/* Big circular medallion */}
-        <div className="relative w-36 h-36 mx-auto mb-6 flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full bg-surface-soft animate-pulse" />
-          <div className="absolute inset-2 rounded-full border border-line" />
-          <div className="relative w-24 h-24 rounded-full bg-action text-white flex flex-col items-center justify-center shadow-md">
-            <Check className="w-7 h-7 stroke-[2.5]" />
-            <span className="text-xs font-bold tracking-widest uppercase mt-0.5">
-              Viên mãn
+          <h1 className="page-title mb-3">
+            {isActionDone
+              ? "Bạn đã dành một chút thời gian cho mình"
+              : "Lời chiêm nghiệm của bạn"}
+          </h1>
+
+          <p className="text-base text-muted leading-relaxed">
+            {isActionDone
+              ? "Hành động nhỏ hôm nay đã được đánh dấu hoàn thành. Bạn có thể giữ lại lời chiêm nghiệm hoặc tiếp tục ngày của mình."
+              : "Bạn có thể đọc lại lời chiêm nghiệm, thử hành động nhỏ hoặc lưu nội dung để xem sau."}
+          </p>
+        </header>
+
+        <section
+          aria-labelledby="completion-summary-title"
+          className="rounded-2xl border border-line bg-surface p-6 sm:p-8"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <h2
+              id="completion-summary-title"
+              className="text-sm font-semibold text-accent"
+            >
+              Lời chiêm nghiệm trong lượt này
+            </h2>
+
+            <span className="text-sm text-muted">
+              {signal.mood}
             </span>
           </div>
-          {/* Mood tag attached to bottom of medallion */}
-          <div className="absolute -bottom-2 px-3 py-0.5 rounded-full bg-surface border border-line text-accent text-xs font-semibold flex items-center gap-1 shadow-2xs">
-            <Flower2 className="w-3 h-3" />
-            <span>{signal.mood}</span>
-          </div>
-        </div>
 
-        {/* Heading */}
-        <div className="text-center max-w-xl mx-auto mb-10">
-          <h1 className="page-title mb-3">
-            Bạn vừa hoàn thành một nhịp thở lành
-          </h1>
-          <p className="text-sm text-muted leading-relaxed">
-            Tâm trí đã chậm lại đôi chút. Khoảnh khắc nhỏ này chính là một hạt
-            giống bình an được gieo vào đời sống thường nhật.
+          <blockquote className="font-display text-xl sm:text-2xl font-semibold text-ink leading-relaxed">
+            <p>{signal.poem.line1}</p>
+            <p>{signal.poem.line2}</p>
+          </blockquote>
+
+          <p className="mt-3 text-sm text-muted">
+            {signal.poem.subtext}
           </p>
-        </div>
 
-        {/* Two-column Content Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 items-stretch">
-          {/* Left Card: Tín hiệu vừa ghi nhận */}
-          <Card className="p-6 rounded-card shadow-xs flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between text-xs text-muted mb-4">
-                <span className="font-semibold uppercase tracking-wider text-xs">
-                  Tín hiệu vừa ghi nhận
-                </span>
-                <span className="flex items-center gap-1 text-accent font-medium text-xs">
-                  <span className="w-1.5 h-1.5 rounded-full bg-action"></span>
-                  Vừa xong
-                </span>
-              </div>
+          <div className="mt-6 pt-5 border-t border-line">
+            <div className="flex items-start gap-3">
+              {isActionDone ? (
+                <CheckCircle2
+                  className="w-5 h-5 text-success shrink-0 mt-0.5"
+                  aria-hidden="true"
+                />
+              ) : (
+                <Flower2
+                  className="w-5 h-5 text-accent shrink-0 mt-0.5"
+                  aria-hidden="true"
+                />
+              )}
 
-              <div className="flex items-start gap-3.5 mb-4">
-                <div className="w-11 h-11 rounded-panel bg-surface text-accent flex items-center justify-center flex-shrink-0">
-                  <Coffee className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-display font-bold text-base text-ink">
-                    {signal.action.title.length > 25
-                      ? `${signal.action.title.slice(0, 25)}...`
-                      : signal.action.title}
-                  </h3>
-                  <p className="text-sm text-muted mt-0.5">
-                    {signal.action.duration} quán chiếu • Thuộc chuỗi Gột Rửa Thân
-                    Tâm
-                  </p>
-                </div>
-              </div>
-
-              {/* Quote box */}
-              <div className="p-4 rounded-panel bg-surface border border-line text-xs text-ink italic font-display leading-relaxed mb-4">
-                “Một ngụm nước ấm trôi qua cổ họng, rũ sạch bụi trần, lòng an tĩnh
-                như mặt hồ không gợn sóng.”
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-line flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs text-muted">
-                <Calendar className="w-4 h-4 text-accent" />
-                <span>Nhịp tỉnh thức hôm nay</span>
-              </div>
-              <div className="font-display font-bold text-lg text-accent">
-                01 / 01
-              </div>
-            </div>
-          </Card>
-
-          {/* Right Card: Lưu giữ hành trình của bạn */}
-          {isLoggedIn ? (
-            <Card className="p-6 rounded-card bg-surface border-line shadow-xs flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2 font-display font-bold text-base text-success">
-                    <CheckCircle2 className="w-5 h-5 text-success" />
-                    <span>Đã lưu vào Góc của bạn</span>
-                  </div>
-                  <Badge
-                    variant="secondary"
-                    className="text-xs bg-surface text-success border-line"
-                  >
-                    {userName || "Thành viên"} (Demo)
-                  </Badge>
-                </div>
-
-                <p className="text-sm text-success leading-relaxed mb-4">
-                  Quẻ tín hiệu <strong className="text-success">“{signal.mood}”</strong> cùng lời chiêm nghiệm hôm nay đã được lưu an toàn vào tài khoản của bạn.
+                <p className="text-sm text-muted mb-1">
+                  {isActionDone
+                    ? "Hành động đã thực hiện"
+                    : "Hành động gợi ý"}
                 </p>
 
-                {/* Demo notice pill */}
-                <div className="p-3.5 rounded-panel bg-surface/95 border border-line text-xs text-success mb-6 leading-relaxed shadow-2xs">
-                  ✦ <strong>Dữ liệu Demo (chưa kết nối Backend):</strong> Tín hiệu đang được lưu giữ trực tiếp trong bộ nhớ trình duyệt (LocalStorage).
-                </div>
+                <h3 className="text-base font-semibold text-ink">
+                  {signal.action.title}
+                </h3>
 
-                {/* 2 Feature checks */}
-                <div className="grid grid-cols-2 gap-2.5 text-xs text-success mb-6">
-                  <div className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-success flex-shrink-0" />
-                    <span>Ghi chép sẵn sàng</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-success flex-shrink-0" />
-                    <span>Mở lại bất kỳ lúc nào</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col xl:flex-row items-center gap-3">
-                <Button
-                  variant="default"
-                  size="default"
-                  onClick={onGoToAccount}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold gap-2 shadow-xs bg-action hover:bg-action-hover text-on-action"
-                >
-                  <Bookmark className="w-4 h-4" />
-                  <span>Xem trong Góc của tôi</span>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="default"
-                  onClick={onGoToHome}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold gap-2 border-line text-xs text-success"
-                >
-                  <span>Trở về màn Hôm nay</span>
-                </Button>
-              </div>
-            </Card>
-          ) : (
-            <Card className="p-6 rounded-card bg-surface border-line shadow-xs flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2 font-display font-bold text-base text-ink">
-                    <Bookmark className="w-4 h-4 text-accent" />
-                    <span>Lưu giữ hành trình của bạn</span>
-                  </div>
-                  <Badge variant="terracotta" className="text-xs">
-                    Khách vãng lai
-                  </Badge>
-                </div>
-
-                <p className="text-sm text-ink leading-relaxed mb-4">
-                  Bạn đang trải nghiệm với tư cách Khách. Để lưu lại tín hiệu này
-                  vào <strong className="text-accent">“Góc của tôi”</strong> và
-                  theo dõi chuỗi ngày chiêm nghiệm an lành, hãy đăng nhập hoặc tạo
-                  tài khoản mới.
+                <p className="mt-2 text-sm text-muted leading-relaxed">
+                  {signal.action.description}
                 </p>
-
-                {/* 4 Feature checks */}
-                <div className="grid grid-cols-2 gap-2.5 text-xs text-ink mb-6">
-                  <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-accent flex-shrink-0" />
-                    <span>Lưu lại quẻ chữ & nhật ký</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-accent flex-shrink-0" />
-                    <span>Đo nhịp bình an theo tháng</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-accent flex-shrink-0" />
-                    <span>Nhận gợi ý hành động mỗi sáng</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-accent flex-shrink-0" />
-                    <span>Đồng bộ trên mọi thiết bị</span>
-                  </div>
-                </div>
               </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-3">
-                <Button
-                  variant="default"
-                  size="default"
-                  onClick={onGoToAuth || onGoToAccount}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold gap-2 shadow-xs"
-                >
-                  <LogIn className="w-4 h-4" />
-                  <span>Đăng nhập / Đăng ký để lưu</span>
-                </Button>
-
-                <button
-                  onClick={onGoToHome}
-                  className="text-xs text-ink hover:text-accent transition-colors cursor-pointer text-center"
-                >
-                  Tiếp tục khám phá mà không cần lưu
-                </button>
-              </div>
-            </Card>
-          )}
-        </div>
-
-        {/* Bottom Back Button */}
-        <div className="text-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onGoToHome}
-            className="text-xs text-muted hover:text-accent gap-1.5 mb-1"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Trở về màn Hôm nay</span>
-          </Button>
-          <div className="text-xs text-muted">
-            Giữ nhịp thở tự nhiên • Thân an tâm lạc
+            </div>
           </div>
+
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onViewSignal}
+            className="mt-4"
+          >
+            <ArrowLeft
+              className="w-4 h-4"
+              aria-hidden="true"
+            />
+            <span>Xem lại nội dung và hành động</span>
+          </Button>
+        </section>
+
+        <section
+          aria-labelledby="completion-save-title"
+          className="mt-5 rounded-2xl border border-line bg-surface p-6 sm:p-8"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            {isSaved ? (
+              <CheckCircle2
+                className="w-5 h-5 text-success"
+                aria-hidden="true"
+              />
+            ) : (
+              <Bookmark
+                className="w-5 h-5 text-accent"
+                aria-hidden="true"
+              />
+            )}
+
+            <h2
+              id="completion-save-title"
+              className="font-display text-xl font-semibold text-ink"
+            >
+              {isSaved
+                ? "Đã lưu vào Góc của tôi"
+                : "Bạn muốn giữ lại nội dung này?"}
+            </h2>
+          </div>
+
+          <p className="text-base text-muted leading-relaxed">
+            {isSaved
+              ? "Bạn có thể mở lại lời chiêm nghiệm và ghi chép đã lưu trong Góc của tôi."
+              : isLoggedIn
+                ? "Lưu lời chiêm nghiệm cùng ghi chép trong lượt này để xem lại khi cần."
+                : "Đăng nhập để lưu lời chiêm nghiệm và ghi chép. Bạn cũng có thể tiếp tục mà không cần lưu."}
+          </p>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={
+              isSaved ? onGoToAccount : onSaveToAccount
+            }
+            className="mt-5 w-full sm:w-auto"
+          >
+            <Bookmark
+              className="w-4 h-4"
+              aria-hidden="true"
+            />
+            <span>
+              {isSaved
+                ? "Xem trong Góc của tôi"
+                : isLoggedIn
+                  ? "Lưu vào Góc của tôi"
+                  : "Đăng nhập để lưu"}
+            </span>
+          </Button>
+
+          <p className="mt-3 text-sm text-muted leading-relaxed">
+            Bản thử nghiệm lưu dữ liệu trên trình duyệt này.
+            Dữ liệu chưa được đồng bộ sang thiết bị khác.
+          </p>
+        </section>
+
+        <div className="mt-7">
+          <Button
+            type="button"
+            onClick={onGoToHome}
+            className="w-full sm:w-auto"
+          >
+            <span>Trở về Hôm nay</span>
+            <ArrowRight
+              className="w-4 h-4"
+              aria-hidden="true"
+            />
+          </Button>
         </div>
       </main>
     </div>

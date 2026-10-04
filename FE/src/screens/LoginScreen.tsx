@@ -1005,6 +1005,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             </div>
           )}
 
+          <p className="mb-3 rounded-xl border border-line bg-accent-soft px-3 py-2 text-xs leading-relaxed text-ink">
+            <strong>Bản thử nghiệm giao diện.</strong>{" "}
+            Hồ sơ được lưu trên trình duyệt này.
+            Mật khẩu chưa được xác thực; hãy dùng thông tin mẫu.
+          </p>
+
           {/* FORM NHẬP LIỆU GỌN GÀNG, ĐẸP MẮT */}
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-3.5">
             <div>
@@ -1037,7 +1043,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   htmlFor="login-password"
                   className="text-xs font-semibold text-ink tracking-wide"
                 >
-                  Mật khẩu
+                  Mật khẩu mẫu
                 </label>
                 {onGoToForgotPassword && (
                   <button
@@ -1151,7 +1157,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                 />
               </svg>
-              <span>Tiếp tục với Google</span>
+              <span>Thử hồ sơ Google mẫu</span>
             </button>
           </form>
 

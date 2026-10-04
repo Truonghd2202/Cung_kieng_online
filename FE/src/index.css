@@ -1666,3 +1666,16 @@ button {
     animation-duration: 0.01ms;
   }
 }
+
+@media (max-width: 639px) {
+  .culture-masthead {
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-block: 0 1rem;
+  }
+
+  .culture-masthead .discovery-masthead__image {
+    height: 8rem;
+  }
+}
+

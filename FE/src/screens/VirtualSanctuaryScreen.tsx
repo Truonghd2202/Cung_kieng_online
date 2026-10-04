@@ -1,4 +1,4 @@
-import React from "react";
+import React, { lazy, Suspense, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -11,19 +11,33 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 
+import type { MemorialRecord } from "./MemorialSpaceScreen";
+
+const SanctuaryScene = lazy(() =>
+  import("../components/SanctuaryScene").then((module) => ({
+    default: module.SanctuaryScene,
+  }))
+);
+
 interface VirtualSanctuaryScreenProps {
+  memorial: MemorialRecord | null;
   onBackToExperience: () => void;
   onGoToAltar: () => void;
   onGoToMemorial: () => void;
   onGoToZen: () => void;
 }
 
-export const VirtualSanctuaryScreen: React.FC<VirtualSanctuaryScreenProps> = ({
+export const VirtualSanctuaryScreen: React.FC<
+  VirtualSanctuaryScreenProps
+> = ({
+  memorial,
   onBackToExperience,
   onGoToAltar,
   onGoToMemorial,
   onGoToZen,
 }) => {
+  const [show3D, setShow3D] = useState(false);
+
   return (
     <div className="screen-shell">
       <main className="page-container max-w-6xl">
@@ -74,6 +88,44 @@ export const VirtualSanctuaryScreen: React.FC<VirtualSanctuaryScreenProps> = ({
           </div>
         </section>
 
+        <section aria-labelledby="sanctuary-3d-title" className="mb-10">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2
+              id="sanctuary-3d-title"
+              className="font-display text-xl font-semibold text-ink"
+            >
+              Khám phá góc tri ân
+            </h2>
+
+            <Button
+              type="button"
+              variant="outline"
+              aria-expanded={show3D}
+              aria-controls="sanctuary-3d-panel"
+              onClick={() => setShow3D((value) => !value)}
+            >
+              {show3D ? "Đóng cảnh 3D" : "Mở cảnh 3D"}
+            </Button>
+          </div>
+
+          <div id="sanctuary-3d-panel">
+            {show3D && (
+              <Suspense
+                fallback={
+                  <p role="status" className="p-4 text-sm text-muted">
+                    Đang mở không gian…
+                  </p>
+                }
+              >
+                <SanctuaryScene
+                  memorial={memorial}
+                  onOpenMemorial={onGoToMemorial}
+                />
+              </Suspense>
+            )}
+          </div>
+        </section>
+
         <section aria-labelledby="sanctuary-spaces" className="mb-12">
           <div className="flex items-end justify-between gap-4 mb-6">
             <div>
@@ -121,7 +173,7 @@ export const VirtualSanctuaryScreen: React.FC<VirtualSanctuaryScreenProps> = ({
               </div>
               <div>
                 <h2 className="font-display font-bold text-lg mb-1">Không gian này thuộc về bạn</h2>
-                <p className="text-sm text-muted leading-relaxed max-w-2xl">Các ghi chú chỉ được lưu trên thiết bị theo cách project hiện tại đang sử dụng local storage.</p>
+                <p className="text-sm text-muted leading-relaxed max-w-2xl">Các ghi chú được lưu trong trình duyệt trên thiết bị này, chưa đồng bộ sang thiết bị khác.</p>
               </div>
             </div>
             <span className="text-xs text-muted whitespace-nowrap">Riêng tư · Nhẹ nhàng · Tự nguyện</span>

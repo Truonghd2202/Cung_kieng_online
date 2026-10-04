@@ -1,22 +1,236 @@
 import React from "react";
-import { ArrowLeft, ArrowRight, BarChart3, CalendarDays, CheckCircle2, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bookmark,
+  Flower2,
+} from "lucide-react";
+
 import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Card } from "@/src/components/ui/card";
 import type { SavedSignalItem } from "./AccountScreen";
 
-interface MoodJourneyScreenProps { savedSignals: SavedSignalItem[]; onBack: () => void; onGoToMood: () => void; onGoToSignalResult: (signalId: string) => void; }
+interface MoodJourneyScreenProps {
+  savedSignals: SavedSignalItem[];
+  onBack: () => void;
+  onGoToMood: () => void;
+  onGoToSignalResult: (entryId: string) => void;
+}
 
-export const MoodJourneyScreen: React.FC<MoodJourneyScreenProps> = ({ savedSignals, onBack, onGoToMood, onGoToSignalResult }) => {
-  const points = [36, 58, 44, 72, 54, 68, 82];
-  return <div className="screen-shell"><main className="page-container max-w-6xl">
-    <div className="flex items-center justify-between gap-3 mb-6 text-xs text-muted"><button onClick={onBack} className="inline-flex items-center gap-1.5 hover:text-accent transition-colors"><ArrowLeft className="w-3.5 h-3.5" /> Góc của tôi</button><Badge variant="outline">Tự phản chiếu · Không chẩn đoán</Badge></div>
-    <header className="max-w-3xl mb-8"><span className="text-xs font-semibold uppercase tracking-widest text-accent">Nhìn lại thật nhẹ</span><h1 className="page-title mt-2 mb-3">Hành trình cảm xúc</h1><p className="text-sm sm:text-base text-muted leading-relaxed">Một cách nhìn lại những nhịp cảm xúc bạn đã ghi nhận, không phải thang điểm hay kết luận về sức khỏe.</p></header>
-    {!savedSignals.length ? <Card className="p-8 sm:p-14 text-center border-line mb-10"><div className="w-16 h-16 rounded-full bg-surface-soft border border-line mx-auto mb-5 flex items-center justify-center text-accent"><Sparkles className="w-7 h-7" /></div><h2 className="font-display text-2xl font-bold mb-3">Bạn chưa có đủ dữ liệu</h2><p className="text-sm text-muted max-w-lg mx-auto leading-relaxed mb-7">Hãy bắt đầu bằng một lần check-in. Sau vài ngày, bạn có thể nhìn lại những điều đã đi qua.</p><Button onClick={onGoToMood} className="gap-2">Check-in hôm nay <ArrowRight className="w-4 h-4" /></Button></Card> : <>
-      <div className="grid sm:grid-cols-3 gap-4 mb-6">{[["Tuần này", `${Math.min(savedSignals.length, 7)} lần ghi nhận`], ["Tháng này", `${savedSignals.length} tín hiệu đã lưu`], ["Điều thường trở lại", savedSignals[0]?.mood || "Đang lắng nghe"]].map(([label, value]) => <Card key={label} className="p-5 border-line"><span className="text-xs text-muted">{label}</span><p className="font-display font-bold text-xl mt-2">{value}</p></Card>)}</div>
-      <Card className="p-6 sm:p-8 border-line mb-6"><div className="flex items-center gap-2 mb-6"><BarChart3 className="w-5 h-5 text-accent" /><h2 className="section-title">Nhịp ghi nhận gần đây</h2></div><div className="h-44 flex items-end gap-2 sm:gap-4 border-b border-line px-2">{points.map((height, index) => <div key={index} className="flex-1 flex flex-col items-center gap-2"><div className="w-full max-w-10 rounded-t-panel bg-accent-soft border border-accent/20 transition-all" style={{ height: `${height}%` }} title={`Ngày ${index + 1}`} /><span className="text-[10px] text-muted">{index + 1}</span></div>)}</div><p className="text-xs text-muted mt-4">Biểu đồ minh họa nhịp tự ghi nhận, không phải điểm số tâm lý.</p></Card>
-      <section className="mb-12"><div className="flex items-center gap-2 mb-5"><CalendarDays className="w-5 h-5 text-accent" /><h2 className="section-title">Dòng thời gian</h2></div><div className="space-y-3">{savedSignals.map((signal) => <Card key={signal.id} onClick={() => onGoToSignalResult(signal.signalId)} className="group p-5 border-line cursor-pointer hover:bg-surface-soft"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div><div className="flex items-center gap-2 mb-1"><Badge variant="terracotta">{signal.mood}</Badge><span className="text-xs text-muted">{signal.date}</span></div><p className="font-display italic text-sm text-ink">{signal.poemLine1}</p></div><span className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent">Mở tín hiệu <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" /></span></div></Card>)}</div></section>
-    </>}
-    <div className="flex items-center justify-center gap-2 text-xs text-muted pb-8"><CheckCircle2 className="w-3.5 h-3.5 text-success" /> Mỗi lần ghi nhận là một lời nhắc để trở về với chính mình.</div>
-  </main></div>;
+const parseSavedDate = (value: string): number => {
+  const match = value.trim().match(
+    /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/
+  );
+
+  if (!match) return Number.NaN;
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+
+  const date = new Date(year, month - 1, day);
+
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return Number.NaN;
+  }
+
+  return date.getTime();
+};
+
+export const MoodJourneyScreen: React.FC<
+  MoodJourneyScreenProps
+> = ({
+  savedSignals,
+  onBack,
+  onGoToMood,
+  onGoToSignalResult,
+}) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const sevenDaysAgo = new Date(today);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
+  const monthStart = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    1
+  );
+
+  const entries = savedSignals
+    .map((item, index) => ({
+      item,
+      index,
+      timestamp: parseSavedDate(item.date),
+    }))
+    .sort((a, b) => {
+      const dateA = Number.isFinite(a.timestamp)
+        ? a.timestamp
+        : -Infinity;
+
+      const dateB = Number.isFinite(b.timestamp)
+        ? b.timestamp
+        : -Infinity;
+
+      if (dateA === dateB) return a.index - b.index;
+      return dateB - dateA;
+    });
+
+  const recentCount = entries.filter(
+    ({ timestamp }) =>
+      timestamp >= sevenDaysAgo.getTime() &&
+      timestamp < tomorrow.getTime()
+  ).length;
+
+  const monthCount = entries.filter(
+    ({ timestamp }) =>
+      timestamp >= monthStart.getTime() &&
+      timestamp < tomorrow.getTime()
+  ).length;
+
+  const statistics = [
+    ["Tổng đã lưu", savedSignals.length],
+    ["Trong 7 ngày gần đây", recentCount],
+    ["Trong tháng này đến hôm nay", monthCount],
+  ] as const;
+
+  return (
+    <div className="screen-shell">
+      <main className="page-container max-w-4xl">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onBack}
+          className="mb-5"
+        >
+          <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+          <span>Góc của tôi</span>
+        </Button>
+
+        <header className="mb-7">
+          <h1 className="page-title mb-3">
+            Nhìn lại lời chiêm nghiệm
+          </h1>
+
+          <p className="text-base text-muted leading-relaxed">
+            Những lời chiêm nghiệm và ghi chép bạn đã chọn lưu.
+            Danh sách này không bao gồm mọi lần check-in.
+          </p>
+        </header>
+
+        {entries.length === 0 ? (
+          <section className="rounded-2xl border border-line bg-surface p-6 sm:p-10">
+            <Bookmark
+              className="w-7 h-7 text-accent mb-4"
+              aria-hidden="true"
+            />
+
+            <h2 className="font-display text-2xl font-semibold text-ink mb-3">
+              Chưa có lời chiêm nghiệm đã lưu
+            </h2>
+
+            <p className="text-base text-muted leading-relaxed mb-6">
+              Bắt đầu từ tâm trạng hôm nay. Nếu có lời chiêm
+              nghiệm muốn giữ lại, bạn có thể chọn lưu ở màn kết quả.
+            </p>
+
+            <Button type="button" onClick={onGoToMood}>
+              <span>Chọn tâm trạng hôm nay</span>
+              <ArrowRight
+                className="w-4 h-4"
+                aria-hidden="true"
+              />
+            </Button>
+          </section>
+        ) : (
+          <>
+            <dl className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+              {statistics.map(([label, count]) => (
+                <div
+                  key={label}
+                  className="rounded-xl border border-line bg-surface p-5"
+                >
+                  <dt className="text-sm text-muted">
+                    {label}
+                  </dt>
+                  <dd className="font-display text-3xl font-semibold text-ink mt-2">
+                    {count}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+
+            <section aria-labelledby="saved-timeline-title">
+              <h2
+                id="saved-timeline-title"
+                className="font-display text-xl font-semibold text-ink mb-4"
+              >
+                Nội dung đã lưu
+              </h2>
+
+              <div className="space-y-4">
+                {entries.map(({ item }) => (
+                  <article
+                    key={item.id}
+                    className="rounded-xl border border-line bg-surface p-5 sm:p-6"
+                  >
+                    <div className="flex flex-wrap items-center gap-3 text-sm mb-4">
+                      <span className="inline-flex items-center gap-1.5 text-accent">
+                        <Flower2
+                          className="w-4 h-4"
+                          aria-hidden="true"
+                        />
+                        {item.mood}
+                      </span>
+
+                      <span className="text-muted">
+                        {item.date}
+                      </span>
+                    </div>
+
+                    <blockquote className="font-display text-lg sm:text-xl text-ink leading-relaxed">
+                      <p>{item.poemLine1}</p>
+                      <p>{item.poemLine2}</p>
+                    </blockquote>
+
+                    {item.journal?.trim() && (
+                      <div className="mt-4 pt-4 border-t border-line">
+                        <h3 className="text-sm font-semibold text-ink mb-2">
+                          Ghi chép của bạn
+                        </h3>
+                        <p className="text-base text-muted leading-relaxed whitespace-pre-wrap break-words">
+                          {item.journal}
+                        </p>
+                      </div>
+                    )}
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        onGoToSignalResult(item.id)
+                      }
+                      className="mt-5"
+                    >
+                      <span>Xem bản đã lưu</span>
+                      <ArrowRight
+                        className="w-4 h-4"
+                        aria-hidden="true"
+                      />
+                    </Button>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+      </main>
+    </div>
+  );
 };

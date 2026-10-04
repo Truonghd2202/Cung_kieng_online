@@ -1,29 +1,20 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   ArrowLeft,
   Calendar,
   MapPin,
-  Heart,
   Sparkles,
-  BookOpen,
   Bell,
-  Check,
-  CheckCircle2,
   Clock,
   Compass,
   Flower2,
-  Bookmark,
-  Share2,
-  Info,
   ShieldCheck,
   ArrowRight,
-  AlertCircle,
-  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
-import { CalendarEventItem, getCalendarEventById } from "../data/calendarData";
+import { getCalendarEventById } from "../data/calendarData";
 
 interface EventDetailScreenProps {
   eventId?: string;
@@ -32,8 +23,6 @@ interface EventDetailScreenProps {
   onGoToHome?: () => void;
   onGoToExplore?: () => void;
 }
-
-type NotificationStatus = "idle" | "requesting" | "granted" | "denied" | "unsupported";
 
 export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
   eventId = "le-soc-vong-ngay-ram",
@@ -45,112 +34,25 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
   // Lấy sự kiện chuẩn xác từ eventId được truyền từ màn 22
   const event = getCalendarEventById(eventId) || getCalendarEventById("le-soc-vong-ngay-ram")!;
 
-  // Reminder widget state với đầy đủ các trạng thái quyền thông báo
-  const [reminderEnabled, setReminderEnabled] = useState(true);
-  const [reminderOption, setReminderOption] = useState<"before1" | "exact" | "custom">(() => {
-    try {
-      const saved = localStorage.getItem(`tltl-reminder-opt-${event.id}`);
-      return (saved as "before1" | "exact" | "custom") || "before1";
-    } catch {
-      return "before1";
+  const eventDate = new Date(
+    event.year,
+    event.month - 1,
+    event.day
+  );
+
+  const eventDateLabel = eventDate.toLocaleDateString(
+    "vi-VN",
+    {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
     }
-  });
-  const [notificationStatus, setNotificationStatus] = useState<NotificationStatus>(() => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      if (Notification.permission === "granted") return "granted";
-      if (Notification.permission === "denied") return "denied";
-    }
-    return "idle";
-  });
-  const [testNotificationSent, setTestNotificationSent] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<string>("");
-  const [isFavorite, setIsFavorite] = useState(false);
+  );
 
-  // Xử lý bật nhắc nhở và xin cấp quyền thông báo thực tế
-  const handleToggleReminderSwitch = async () => {
-    if (reminderEnabled) {
-      setReminderEnabled(false);
-      try {
-        localStorage.setItem(`tltl-reminder-enabled-${event.id}`, "false");
-      } catch {}
-      setStatusMessage("");
-      return;
-    }
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
 
-    setReminderEnabled(true);
-    try {
-      localStorage.setItem(`tltl-reminder-enabled-${event.id}`, "true");
-    } catch {}
-    await handleRequestNotificationPermission();
-  };
-
-  const handleSelectReminderOption = (opt: "before1" | "exact" | "custom") => {
-    setReminderOption(opt);
-    try {
-      localStorage.setItem(`tltl-reminder-opt-${event.id}`, opt);
-    } catch {}
-  };
-
-  const handleSendTestNotification = () => {
-    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-      try {
-        new Notification("Thích Cúng Kiếng • Nhắc lịch văn hóa", {
-          body: `[Thông báo thử nghiệm] Bạn đã thiết lập lời nhắc cho: ${event.title}.`,
-          icon: "/logo.png",
-        });
-        setTestNotificationSent(true);
-        setTimeout(() => setTestNotificationSent(false), 4000);
-      } catch {
-        // Fallback alert if browser blocks programmatic notifications
-      }
-    }
-  };
-
-  const handleRequestNotificationPermission = async () => {
-    if (typeof window === "undefined" || !("Notification" in window)) {
-      setNotificationStatus("unsupported");
-      setStatusMessage(
-        "Trình duyệt hiện tại chưa hỗ trợ Web Notification hoặc bị hạn chế bởi chính sách bảo mật."
-      );
-      return;
-    }
-
-    if (Notification.permission === "granted") {
-      setNotificationStatus("granted");
-      setStatusMessage("Đã cấp quyền; chức năng nhắc tự động chưa hoạt động trong bản demo.");
-      return;
-    }
-
-    if (Notification.permission === "denied") {
-      setNotificationStatus("denied");
-      setStatusMessage(
-        "Quyền thông báo đang bị chặn. Vui lòng vào Cài đặt trình duyệt > Quyền trang web để bật quyền thông báo."
-      );
-      return;
-    }
-
-    try {
-      setNotificationStatus("requesting");
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
-        setNotificationStatus("granted");
-        setStatusMessage("Đã cấp quyền thành công; chức năng nhắc tự động chưa hoạt động trong bản demo.");
-      } else {
-        setNotificationStatus("denied");
-        setStatusMessage(
-          "Bạn chưa cấp quyền thông báo. Thiết bị sẽ không thể gửi lời nhắc tự động."
-        );
-      }
-    } catch {
-      setNotificationStatus("denied");
-      setStatusMessage("Không thể kích hoạt quyền thông báo trên trình duyệt này.");
-    }
-  };
-
-  // Tính toán nhãn ngày giờ hiển thị chính xác theo sự kiện
-  const isRam = event.id === "le-soc-vong-ngay-ram";
-  const beforeDayText = isRam ? "Trước 1 ngày (20:00 tối ngày 16/10)" : "Trước ngày diễn ra 1 ngày";
-  const exactDayText = isRam ? "Đúng ngày Rằm (07:00 sáng ngày 17/10)" : "Đúng sáng ngày diễn ra";
+  const isPastEvent = eventDate < startOfToday;
 
   return (
     <div className="screen-shell">
@@ -221,6 +123,17 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
           <h1 className="page-title mb-3">
             {event.title}
           </h1>
+
+          <p className="mb-3 text-base text-accent font-medium">
+            {eventDateLabel}
+          </p>
+
+          {isPastEvent && (
+            <p className="mb-5 rounded-xl border border-line bg-surface p-4 text-sm text-muted leading-relaxed">
+              Đây là thông tin của một ngày đã qua.
+              Nội dung được giữ để tham khảo văn hóa.
+            </p>
+          )}
 
           <p className="text-sm sm:text-base text-ink leading-relaxed max-w-4xl">
             {event.shortDesc}
@@ -470,156 +383,35 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
           {/* Right Column (4 cols): Sticky Sidebar Widgets */}
           <div className="lg:col-span-4 space-y-5 lg:sticky lg:top-24">
             {/* Widget 1: Nhắc tôi dịp này với đầy đủ trạng thái quyền */}
-            <Card className="p-6 rounded-card bg-surface border border-line shadow-xs">
-              <div className="flex items-center justify-between mb-3 pb-3 border-b border-line">
-                <div className="flex items-center gap-2">
-                  <Bell className="w-4 h-4 text-accent" />
-                  <h3 className="font-display font-bold text-base text-ink">
-                    Nhắc tôi dịp này
-                  </h3>
-                </div>
-
-                {/* Toggle switch */}
-                <button
-                  type="button"
-                  onClick={handleToggleReminderSwitch}
-                  className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
-                    reminderEnabled ? "bg-action" : "bg-surface-soft"
-                  }`}
-                  title={reminderEnabled ? "Đang bật nhắc lịch" : "Đang tắt nhắc lịch"}
-                >
-                  <span
-                    className={`block w-4 h-4 rounded-full bg-surface transition-transform ${
-                      reminderEnabled ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
+            <Card className="p-6 rounded-card bg-surface border-line">
+              <div className="flex items-center gap-2 mb-3">
+                <Bell
+                  className="w-5 h-5 text-accent"
+                  aria-hidden="true"
+                />
+                <h2 className="font-display font-semibold text-lg text-ink">
+                  Nhắc lịch tự động
+                </h2>
               </div>
 
-              <p className="text-sm text-muted leading-relaxed mb-4">
-                Nhận thông báo nhắc nhở nhẹ nhàng để chuẩn bị nếp nhà thảnh thơi.
+              <span className="inline-flex rounded-full bg-accent-soft px-3 py-1.5 text-sm text-accent mb-3">
+                Chưa có trong bản thử nghiệm
+              </span>
+
+              <p className="text-sm text-muted leading-relaxed">
+                Trang hiện chưa gửi lời nhắc tự động theo ngày.
+                Bạn có thể xem thông tin sự kiện và tự đặt lời nhắc
+                trong ứng dụng lịch đang sử dụng.
               </p>
 
-              {reminderEnabled && (
-                <>
-                  <div className="space-y-2.5 mb-4 text-xs text-ink">
-                    <label className="flex items-center gap-2 cursor-pointer p-2 rounded-xl bg-surface/60 border border-line">
-                      <input
-                        type="radio"
-                        name="reminder"
-                        checked={reminderOption === "before1"}
-                        onChange={() => handleSelectReminderOption("before1")}
-                        className="text-accent focus:ring-accent"
-                      />
-                      <span>{beforeDayText}</span>
-                    </label>
-
-                    <label className="flex items-center gap-2 cursor-pointer p-2 rounded-xl bg-surface/60 border border-line">
-                      <input
-                        type="radio"
-                        name="reminder"
-                        checked={reminderOption === "exact"}
-                        onChange={() => handleSelectReminderOption("exact")}
-                        className="text-accent focus:ring-accent"
-                      />
-                      <span>{exactDayText}</span>
-                    </label>
-
-                    <label className="flex items-center gap-2 cursor-pointer p-2 rounded-xl bg-surface/60 border border-line">
-                      <input
-                        type="radio"
-                        name="reminder"
-                        checked={reminderOption === "custom"}
-                        onChange={() => handleSelectReminderOption("custom")}
-                        className="text-accent focus:ring-accent"
-                      />
-                      <span>Tùy chỉnh giờ nhắc riêng</span>
-                    </label>
-                  </div>
-
-                  {/* Status Banner based on Notification Permission */}
-                  {notificationStatus === "denied" && (
-                    <div className="p-3 mb-4 rounded-xl bg-gold-soft border border-gold/40 text-gold text-xs flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 shrink-0 text-gold mt-0.5" />
-                      <div>
-                        <p className="font-bold">Chưa cấp quyền thông báo</p>
-                        <p className="text-sm text-gold mt-0.5 leading-relaxed">
-                          Trình duyệt đang chặn thông báo. Vui lòng cho phép quyền thông báo trong
-                          Cài đặt trình duyệt để nhận lời nhắc đúng hẹn.
-                        </p>
-                        <button
-                          onClick={handleRequestNotificationPermission}
-                          className="mt-1.5 text-xs font-semibold text-accent underline hover:text-accent cursor-pointer"
-                        >
-                          Thử xin quyền lại
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {notificationStatus === "unsupported" && (
-                    <div className="p-3 mb-4 rounded-xl bg-surface-soft border border-line text-muted text-xs flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 shrink-0 text-muted mt-0.5" />
-                      <div>
-                        <p className="font-semibold">Môi trường chưa hỗ trợ thông báo Web Notification</p>
-                        <p className="text-sm mt-0.5 leading-relaxed">
-                          Bạn có thể tự lưu ngày này vào ứng dụng Lịch trên điện thoại hoặc máy tính.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {notificationStatus === "granted" && (
-                    <div className="p-3.5 mb-4 rounded-panel bg-gold-soft/70 border border-gold/40 text-ink text-xs flex flex-col gap-2.5 shadow-2xs">
-                      <div className="flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 shrink-0 text-success mt-0.5" />
-                        <div>
-                          <p className="font-bold text-ink">Đã cấp quyền thông báo trình duyệt</p>
-                          <p className="text-sm text-ink mt-0.5 leading-relaxed">
-                            Quyền trình duyệt đã được thiết lập. <strong>Lưu ý:</strong> Chức năng gửi thông báo nhắc tự động nền theo lịch hẹn chưa hoạt động trong bản demo (tính năng máy chủ thông báo định kỳ: <strong>Sắp ra mắt khi kết nối Backend</strong>).
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="pt-2 border-t border-gold/40 flex items-center justify-between gap-2 flex-wrap">
-                        <span className="text-xs text-accent font-medium">Kiểm tra thông báo:</span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={handleSendTestNotification}
-                          className="text-xs font-semibold px-2.5 py-1 rounded-lg border-line bg-surface text-accent hover:bg-surface transition-colors cursor-pointer"
-                        >
-                          Gửi thông báo thử nghiệm
-                        </Button>
-                      </div>
-
-                      {testNotificationSent && (
-                        <div className="text-xs text-success font-semibold flex items-center gap-1">
-                          ✓ Đã kích hoạt 1 thông báo thử nghiệm trên màn hình của bạn.
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <Button
-                    variant="default"
-                    size="default"
-                    onClick={handleRequestNotificationPermission}
-                    disabled={notificationStatus === "requesting"}
-                    className="w-full font-semibold gap-2 shadow-xs text-xs py-2.5 bg-action hover:bg-action text-white cursor-pointer"
-                  >
-                    <Bell className="w-4 h-4" />
-                    <span>
-                      {notificationStatus === "granted"
-                        ? "Đã cấp quyền • Đang chờ kết nối Backend"
-                        : notificationStatus === "denied"
-                        ? "Kiểm tra lại quyền thông báo"
-                        : "Kích hoạt quyền thông báo trình duyệt"}
-                    </span>
-                  </Button>
-                </>
-              )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onBackToCalendar}
+                className="w-full mt-5"
+              >
+                Xem lịch văn hóa
+              </Button>
             </Card>
 
             {/* Widget 2: Cẩm nang nghi lễ Link */}
@@ -630,7 +422,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                 </div>
 
                 <h4 className="font-display font-bold text-base text-ink mb-2 leading-snug">
-                  Bạn muốn chuẩn bị nghi thức ngày Rằm tinh gọn, không rườm rà?
+                  Tìm hướng dẫn phù hợp với dịp bạn quan tâm
                 </h4>
 
                 <p className="text-sm text-ink leading-relaxed mb-4">
@@ -648,26 +440,6 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                 </Button>
               </Card>
             )}
-
-            {/* Widget 3: Lưu vào sự kiện yêu thích */}
-            <Card
-              onClick={() => setIsFavorite(!isFavorite)}
-              className="p-4 rounded-panel bg-surface border border-line hover:border-line transition-all cursor-pointer flex items-center justify-between shadow-2xs group"
-            >
-              <div className="flex items-center gap-2.5 text-xs text-ink">
-                <Bookmark
-                  className={`w-4 h-4 ${
-                    isFavorite ? "fill-accent text-accent" : "text-muted"
-                  }`}
-                />
-                <span className="font-semibold group-hover:text-accent transition-colors">
-                  {isFavorite ? "Đã lưu ngày này vào danh mục yêu thích" : "Lưu ngày này vào danh mục yêu thích"}
-                </span>
-              </div>
-              <span className="text-xs font-sans tabular-nums text-muted">
-                {isFavorite ? "✓ Đã lưu" : "Lưu"}
-              </span>
-            </Card>
 
             {/* Widget 4: Classical Quote */}
             <div className="text-center p-4 rounded-panel bg-surface border border-line text-xs text-muted italic leading-relaxed">

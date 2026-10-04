@@ -2,26 +2,18 @@ import React, { useState } from "react";
 import {
   Mail,
   ArrowLeft,
-  CheckCircle2,
-  Volume2,
-  VolumeX,
-  Loader2,
-  Sparkles,
   KeyRound,
 } from "lucide-react";
 import { AltarVisualSection } from "../components/AltarVisualSection";
 
 interface ForgotPasswordScreenProps {
   onBackToLogin: () => void;
-  onSuccessSubmit?: (email: string) => void;
 }
 
 export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
   onBackToLogin,
-  onSuccessSubmit,
 }) => {
   const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -30,19 +22,17 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
     e.preventDefault();
     setErrorMessage("");
 
-    if (!email.trim() || !email.includes("@")) {
-      setErrorMessage("Vui lòng nhập địa chỉ email hợp lệ.");
+    const cleanEmail = email.trim();
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setErrorMessage(
+        "Bạn hãy nhập địa chỉ email hợp lệ."
+      );
       return;
     }
 
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitted(true);
-      if (onSuccessSubmit) {
-        onSuccessSubmit(email.trim());
-      }
-    }, 450);
+    setEmail(cleanEmail);
+    setSubmitted(true);
   };
 
   return (
@@ -94,11 +84,12 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
                 </span>
               </div>
               <h1 className="font-serif text-2xl sm:text-[1.75rem] font-bold text-ink tracking-tight">
-                Tìm Lại Mật Mã
+                Khôi phục hồ sơ — bản mẫu
               </h1>
             </div>
-            <p className="text-xs sm:text-sm text-muted mt-1 leading-relaxed">
-              Nhập email đã đăng ký để thiết lập lại mật mã bảo mật của bạn.
+            <p className="mt-1 text-xs leading-relaxed text-muted sm:text-sm">
+              Màn này minh họa bước khôi phục.
+              Bản thử nghiệm chưa gửi email hoặc đặt lại mật khẩu.
             </p>
           </div>
 
@@ -116,23 +107,27 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
           {submitted ? (
             /* TRẠNG THÁI GỬI THÀNH CÔNG */
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-accent-soft/80 border border-line flex items-start gap-3 shadow-xs">
-                <CheckCircle2 className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                <div className="text-xs text-ink leading-relaxed space-y-1.5">
-                  <p className="font-semibold text-accent text-sm">
-                    Đã tạo mã khôi phục an lành
-                  </p>
-                  <p className="text-muted">
-                    Hệ thống đã chuẩn bị liên kết khôi phục cho hộp thư:
-                  </p>
-                  <p className="font-medium text-ink bg-surface px-2.5 py-1 rounded-lg border border-line inline-block break-all">
-                    {email}
-                  </p>
-                  <div className="mt-2 pt-2 border-t border-line/60 flex items-center gap-1.5 text-accent font-medium">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Mã xác nhận bảo mật demo: <strong>888888</strong></span>
-                  </div>
-                </div>
+              <div
+                role="status"
+                aria-live="polite"
+                className="rounded-xl border border-line bg-accent-soft p-4"
+              >
+                <p className="mb-2 text-sm font-semibold text-accent">
+                  Đã xem bước minh họa
+                </p>
+
+                <p className="text-sm leading-relaxed text-muted">
+                  Email bạn vừa nhập:
+                </p>
+
+                <p className="my-2 break-all text-sm font-medium text-ink">
+                  {email}
+                </p>
+
+                <p className="text-sm leading-relaxed text-muted">
+                  Chưa có email hoặc mã khôi phục được gửi.
+                  Bạn có thể quay lại để tiếp tục dùng hồ sơ mẫu.
+                </p>
               </div>
 
               <button
@@ -161,30 +156,20 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
                     type="email"
                     autoComplete="email"
                     required
-                    disabled={isSubmitting}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="tenban@domain.com"
-                    className="w-full h-11 pl-10 pr-3.5 rounded-xl border border-line bg-surface text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600/70 dark:focus:border-amber-500 transition-all shadow-xs disabled:opacity-60"
+                    className="w-full h-11 pl-10 pr-3.5 rounded-xl border border-line bg-surface text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600/70 dark:focus:border-amber-500 transition-all shadow-xs"
                   />
                 </div>
               </div>
 
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="group relative w-full h-11 rounded-xl bg-gradient-to-r from-[#8b1e28] via-[#9e222d] to-[#781820] hover:from-[#781820] hover:via-[#8b1e28] hover:to-[#63131b] border border-amber-400/35 text-[#fff8ed] font-medium text-sm flex items-center justify-center gap-2 transition-all shadow-[0_4px_18px_rgba(139,30,40,0.28)] hover:shadow-[0_6px_26px_rgba(139,30,40,0.42)] overflow-hidden cursor-pointer disabled:opacity-60 active:scale-[0.99]"
+                className="group relative w-full h-11 rounded-xl bg-gradient-to-r from-[#8b1e28] via-[#9e222d] to-[#781820] hover:from-[#781820] hover:via-[#8b1e28] hover:to-[#63131b] border border-amber-400/35 text-[#fff8ed] font-medium text-sm flex items-center justify-center gap-2 transition-all shadow-[0_4px_18px_rgba(139,30,40,0.28)] hover:shadow-[0_6px_26px_rgba(139,30,40,0.42)] overflow-hidden cursor-pointer active:scale-[0.99]"
               >
                 <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin text-amber-200" />
-                    <span>Đang xử lý...</span>
-                  </>
-                ) : (
-                  <span>Gửi mã khôi phục</span>
-                )}
+                <span>Xem bước minh họa</span>
               </button>
             </form>
           )}
@@ -195,7 +180,6 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
             <button
               type="button"
               onClick={onBackToLogin}
-              disabled={isSubmitting}
               className="text-accent font-medium hover:underline cursor-pointer ml-1"
             >
               Đăng nhập ngay →

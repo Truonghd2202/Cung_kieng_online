@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -12,8 +12,8 @@ import {
   Flower2,
   Info,
   Scale,
-  Download,
   Share2,
+  Bookmark,
   ExternalLink,
   ShieldCheck,
   Waves,
@@ -65,80 +65,159 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   // Step 3 State
   const [isActionDone, setIsActionDone] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [drawNotice, setDrawNotice] = useState("");
+
+  const drawTimerRef = useRef<
+    ReturnType<typeof setTimeout> | null
+  >(null);
 
   const [currentResult, setCurrentResult] = useState<XinXamResult>(() =>
     getXinXamResult(selectedRegion, selectedTopic)
   );
 
-  // Update current result when region or topic changes
   useEffect(() => {
-    setCurrentResult(getXinXamResult(selectedRegion, selectedTopic));
-    setDrawPhase("idle");
-    setIsSaved(false);
-  }, [selectedRegion, selectedTopic]);
-
-  const handleStartDraw = () => {
-    if (isShaking) return;
-    setIsShaking(true);
-    setIsSaved(false);
-    setDrawPhase("shaking");
-
-    // Rung phản hồi haptic trên mobile (nếu thiết bị hỗ trợ)
-    try {
-      if (typeof navigator !== "undefined" && navigator.vibrate) {
-        navigator.vibrate([60, 40, 60, 40, 80, 50, 120]);
-      }
-    } catch {
-      // ignore
+    if (drawTimerRef.current !== null) {
+      clearTimeout(drawTimerRef.current);
+      drawTimerRef.current = null;
     }
 
-    // Chọn ngẫu nhiên quẻ trong kho văn hóa
-    const allResults = Object.values(XIN_XAM_RESULTS);
-    const matching = allResults.filter(
-      (r) => r.region === selectedRegion || r.topic === selectedTopic
+    setCurrentResult(
+      getXinXamResult(selectedRegion, selectedTopic)
     );
-    const pool = matching.length > 0 ? matching : allResults;
-    const otherResults = pool.filter((r) => r.stickNumber !== currentResult.stickNumber);
-    const chosen =
-      otherResults.length > 0
-        ? otherResults[Math.floor(Math.random() * otherResults.length)]
-        : pool[Math.floor(Math.random() * pool.length)];
+    setDrawPhase("idle");
+    setIsShaking(false);
+    setIsSaved(false);
+    setIsActionDone(false);
+    setDrawNotice("");
+  }, [selectedRegion, selectedTopic]);
 
-    setTimeout(() => {
+  // Hủy lượt đang chạy khi rời bước rút thẻ.
+  useEffect(() => {
+    if (step !== 2) {
+      if (drawTimerRef.current !== null) {
+        clearTimeout(drawTimerRef.current);
+        drawTimerRef.current = null;
+      }
+
+      setIsShaking(false);
+      setDrawPhase("idle");
+    }
+  }, [step]);
+
+  // Không để timer tiếp tục khi đã rời màn xin xăm.
+  useEffect(() => {
+    return () => {
+      if (drawTimerRef.current !== null) {
+        clearTimeout(drawTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleStartDraw = () => {
+    if (drawTimerRef.current !== null) return;
+
+    const matchingResults = Object.values(
+      XIN_XAM_RESULTS
+    ).filter(
+      (result) =>
+        result.region === selectedRegion &&
+        result.topic === selectedTopic
+    );
+
+    if (matchingResults.length === 0) {
+      setDrawNotice(
+        "Chưa có thẻ cho lựa chọn này. Bạn hãy chọn vùng hoặc chủ đề khác."
+      );
+      return;
+    }
+
+    const alternatives = matchingResults.filter(
+      (result) =>
+        result.stickNumber !== currentResult.stickNumber
+    );
+
+    const pool =
+      alternatives.length > 0
+        ? alternatives
+        : matchingResults;
+
+    const chosen =
+      pool[Math.floor(Math.random() * pool.length)];
+
+    setDrawNotice(
+      matchingResults.length === 1
+        ? "Bản thử nghiệm hiện có một thẻ cho vùng và chủ đề này. Rút lại có thể nhận cùng nội dung."
+        : ""
+    );
+
+    setIsShaking(true);
+    setIsSaved(false);
+    setIsActionDone(false);
+    setDrawPhase("shaking");
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (!reducedMotion) {
+      try {
+        navigator.vibrate?.([60, 40, 60]);
+      } catch {
+        // Một số thiết bị không hỗ trợ rung.
+      }
+    }
+
+    drawTimerRef.current = setTimeout(() => {
+      drawTimerRef.current = null;
       setCurrentResult(chosen);
       setIsShaking(false);
       setDrawPhase("dropped");
-      try {
-        if (typeof navigator !== "undefined" && navigator.vibrate) {
-          navigator.vibrate([160]);
-        }
-      } catch {
-        // ignore
-      }
-    }, 1800);
-  };
-
-  const handleSaveResult = () => {
-    if (onSaveToAccount) {
-      const success = onSaveToAccount(currentResult);
-      if (success === true) {
-        setIsSaved(true);
-      }
-    }
+    }, reducedMotion ? 200 : 1800);
   };
 
   const isCardSaved =
-    isSaved ||
-    (Boolean(savedXamList) &&
-      savedXamList!.some(
-        (x) =>
-          x.stickNumber === currentResult.stickNumber &&
-          (x.category === currentResult.category || x.category === currentResult.topic)
-      ));
+    isLoggedIn &&
+    (
+      isSaved ||
+      (savedXamList ?? []).some(
+        (item) =>
+          item.stickNumber === currentResult.stickNumber &&
+          item.region === currentResult.region &&
+          (
+            item.category === currentResult.category ||
+            item.category === currentResult.topic
+          )
+      )
+    );
+
+  const handleSaveResult = () => {
+    if (isCardSaved) return;
+
+    if (!onSaveToAccount) {
+      setDrawNotice(
+        "Chức năng lưu chưa sẵn sàng trong phiên này."
+      );
+      return;
+    }
+
+    const success = onSaveToAccount(currentResult);
+
+    if (success === true) {
+      setIsSaved(true);
+    }
+  };
 
   return (
     <div className="screen-shell">
       <main className="page-container max-w-5xl">
+        {drawNotice && (
+          <p
+            role="status"
+            className="mb-5 rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted leading-relaxed"
+          >
+            {drawNotice}
+          </p>
+        )}
         {/* =========================================================================
             BƯỚC 1: KHỞI TÂM NGUYỆN (IMAGE 1)
            ========================================================================= */}
@@ -942,7 +1021,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
               <div className="space-y-1.5 text-xs text-muted flex-shrink-0">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
-                  <span>100% Miễn phí & Phi lợi nhuận</span>
+                  <span>Miễn phí trong bản thử nghiệm</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
@@ -1091,12 +1170,16 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                 <div className="flex items-center justify-between px-2 text-xs text-muted">
                   <span className="italic">Di sản xăm tre văn hóa dân gian</span>
                   <button
+                    type="button"
                     onClick={handleSaveResult}
-                    className="text-accent hover:text-action font-semibold flex items-center gap-1 cursor-pointer transition-colors"
-                    title="Lưu lại thẻ xăm"
+                    disabled={isCardSaved}
+                    className="min-h-11 text-accent hover:text-action font-semibold flex items-center gap-2 cursor-pointer transition-colors disabled:cursor-default disabled:opacity-70"
+                    title="Lưu thẻ vào Góc của tôi"
                   >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>{isSaved ? "Đã lưu thẻ" : "Lưu thẻ về máy"}</span>
+                    <Bookmark className="w-4 h-4" aria-hidden="true" />
+                    <span>
+                      {isCardSaved ? "Đã lưu thẻ" : "Lưu vào Góc của tôi"}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -1218,11 +1301,14 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                     variant="default"
                     size="lg"
                     onClick={handleSaveResult}
+                    disabled={isCardSaved}
                     className="w-full sm:w-auto px-7 py-3 font-semibold gap-2 shadow-sm cursor-pointer"
                   >
-                    <Download className="w-4 h-4" />
+                    <Bookmark className="w-4 h-4" />
                     <span>
-                      {isCardSaved ? "Đã lưu vào Góc của tôi" : "Lưu giữ vào Góc của tôi"}
+                      {isCardSaved
+                        ? "Đã lưu vào Góc của tôi"
+                        : "Lưu vào Góc của tôi"}
                     </span>
                   </Button>
 
@@ -1236,7 +1322,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                     className="w-full sm:w-auto px-6 py-3 gap-2 border-line text-ink cursor-pointer"
                   >
                     <RotateCcw className="w-4 h-4" />
-                    <span>Rút một thẻ khác</span>
+                    <span>Chọn lại vùng hoặc chủ đề</span>
                   </Button>
 
                   {onGoToExplore && (

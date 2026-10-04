@@ -83,7 +83,10 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
 
       // Lưu email vừa tạo để sang Login tự động điền sẵn
       try {
-        localStorage.setItem("tltl_remembered_login_email", email.trim());
+        localStorage.setItem(
+          "tltl_remembered_email",
+          email.trim().toLowerCase()
+        );
       } catch {}
 
       setSuccessMessage("Khởi tạo hồ sơ thành công! Đang chuyển qua trang Đăng nhập...");
@@ -183,6 +186,12 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
             </div>
           )}
 
+          <p className="mb-3 rounded-xl border border-line bg-accent-soft px-3 py-2 text-xs leading-relaxed text-ink">
+            <strong>Bản thử nghiệm giao diện.</strong>{" "}
+            Hồ sơ được lưu trên trình duyệt này.
+            Mật khẩu chưa được xác thực; hãy dùng thông tin mẫu.
+          </p>
+
           {/* FORM NHẬP LIỆU */}
           <form onSubmit={handleSubmit} className="space-y-2.5 sm:space-y-3">
             {/* Họ tên / Pháp danh */}
@@ -238,7 +247,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                 htmlFor="register-password"
                 className="block text-xs font-semibold text-ink mb-1 tracking-wide"
               >
-                Mật khẩu
+                Mật khẩu mẫu
               </label>
               <div className="relative group">
                 <Lock className="w-4 h-4 text-subtle group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -271,7 +280,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                 htmlFor="register-confirm-password"
                 className="block text-xs font-semibold text-ink mb-1 tracking-wide"
               >
-                Xác nhận mật khẩu
+                Nhập lại mật khẩu mẫu
               </label>
               <div className="relative group">
                 <Lock className="w-4 h-4 text-subtle group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />

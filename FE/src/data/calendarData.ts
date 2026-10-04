@@ -336,13 +336,30 @@ function getNewMoonDay(k: number, timeZone: number): number {
   C1 += 0.0104 * Math.sin(2 * dr * F) - 0.0051 * Math.sin((M + Mpr) * dr);
   C1 -= 0.0074 * Math.sin((M - Mpr) * dr) + 0.0004 * Math.sin((2 * F + M) * dr);
   C1 -= 0.0004 * Math.sin((2 * F - M) * dr) - 0.0006 * Math.sin((2 * F + Mpr) * dr);
-  C1 += 0.0010 * Math.sin((2 * F - Mpr) * dr) + 0.0005 * Math.sin((2 * Mpr + M) * dr);
-  const JdNew = Jd1 + C1;
-  return Math.floor(JdNew + 0.5 + timeZone / 24);
+  C1 +=
+    0.0010 * Math.sin((2 * F - Mpr) * dr) +
+    0.0005 * Math.sin((2 * Mpr + M) * dr);
+  const deltaT =
+    T < -11
+      ? 0.001 +
+        0.000839 * T +
+        0.0002261 * T2 -
+        0.00000845 * T3 -
+        0.000000081 * T * T3
+      : -0.000278 +
+        0.000265 * T +
+        0.000262 * T2;
+
+  const JdNew = Jd1 + C1 - deltaT;
+
+  return Math.floor(
+    JdNew + 0.5 + timeZone / 24
+  );
 }
 
 function getSunLongitude(jdn: number, timeZone: number): number {
-  const T = (jdn - 2451545.0 + 0.5 - timeZone / 24) / 36525;
+  const T =
+    (jdn - 2451545.0 - 0.5 - timeZone / 24) / 36525;
   const T2 = T * T;
   const dr = Math.PI / 180;
   const M = 357.5291 + 35999.0503 * T - 0.0001559 * T2 - 0.00000048 * T * T2;
@@ -386,40 +403,62 @@ export function convertSolar2Lunar(
   timeZone = 7
 ): [number, number, number, boolean] {
   const dayNumber = jdFromDate(dd, mm, yy);
-  const k = Math.floor((dayNumber - 2415021.076998695) / 29.530588853);
+
+  const k = Math.floor(
+    (dayNumber - 2415021.076998695) / 29.530588853
+  );
+
   let monthStart = getNewMoonDay(k + 1, timeZone);
+
   if (monthStart > dayNumber) {
     monthStart = getNewMoonDay(k, timeZone);
   }
+
   let a11 = getLunarMonth11(yy, timeZone);
   let b11 = a11;
-  let year = yy;
+  let lunarYear: number;
+
   if (a11 >= monthStart) {
-    year = yy - 1;
-    a11 = getLunarMonth11(year, timeZone);
+    lunarYear = yy;
+    a11 = getLunarMonth11(yy - 1, timeZone);
   } else {
-    const nextA11 = getLunarMonth11(yy + 1, timeZone);
-    if (monthStart >= nextA11) {
-      year = yy + 1;
-      a11 = nextA11;
-    }
+    lunarYear = yy + 1;
+    b11 = getLunarMonth11(yy + 1, timeZone);
   }
+
   const lunarDay = dayNumber - monthStart + 1;
   const diff = Math.floor((monthStart - a11) / 29);
+
   let lunarMonth = diff + 11;
-  let isLeap = false;
-  if (b11 >= monthStart) {
-    const leapOff = getLeapMonthOffset(a11, timeZone);
-    let leapMonth = leapOff - 2;
-    if (leapMonth < 0) leapMonth += 12;
-    if (diff >= leapOff) {
+  let isLeapMonth = false;
+
+  // Khoảng giữa hai tháng 11 có thể chứa tháng nhuận.
+  if (b11 - a11 > 365) {
+    const leapMonthOffset = getLeapMonthOffset(
+      a11,
+      timeZone
+    );
+
+    if (diff >= leapMonthOffset) {
       lunarMonth = diff + 10;
-      if (diff === leapOff) isLeap = true;
+      isLeapMonth = diff === leapMonthOffset;
     }
   }
-  if (lunarMonth > 12) lunarMonth = lunarMonth - 12;
-  if (lunarMonth >= 11 && diff < 4) year -= 1;
-  return [lunarDay, lunarMonth, year, isLeap];
+
+  if (lunarMonth > 12) {
+    lunarMonth -= 12;
+  }
+
+  if (lunarMonth >= 11 && diff < 4) {
+    lunarYear -= 1;
+  }
+
+  return [
+    lunarDay,
+    lunarMonth,
+    lunarYear,
+    isLeapMonth,
+  ];
 }
 
 export function getCanChiYear(lunarYear: number): string {

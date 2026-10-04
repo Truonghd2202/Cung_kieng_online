@@ -6,7 +6,6 @@ import {
   Moon,
   Monitor,
   Bell,
-  Volume2,
   Trash2,
   LogOut,
   ShieldCheck,
@@ -14,7 +13,6 @@ import {
   Sparkles,
   Camera,
   Edit2,
-  Info,
   Check,
   AlertTriangle,
   Lock,
@@ -22,23 +20,30 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
+import type { ThemePreference } from "../hooks/useTheme";
+import { CULTURAL_TOPICS } from "../data/culturalTopics";
+import { AppDialog } from "../components/AppDialog";
 
 interface SettingsScreenProps {
   onBackToAccount: () => void;
   onGoToHome: () => void;
-  dark: boolean;
-  onToggleDark: () => void;
+  themePreference: ThemePreference;
+  onChangeTheme: (theme: ThemePreference) => void;
+  selectedTopics: string[];
+  onChangeTopics: (topics: string[]) => boolean;
   user?: { name: string; email: string } | null;
   onUpdateProfile?: (updated: { name: string; email?: string }) => void;
   onLogout?: () => void;
-  onClearAllLocalData?: () => void;
+  onClearAllLocalData?: () => boolean;
 }
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onBackToAccount,
   onGoToHome,
-  dark,
-  onToggleDark,
+  themePreference,
+  onChangeTheme,
+  selectedTopics,
+  onChangeTopics,
   user,
   onUpdateProfile,
   onLogout,
@@ -60,91 +65,21 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     }
   }, [user?.name]);
 
-  // Experience Settings
-  const [displayMode, setDisplayMode] = useState<"light" | "dark" | "system">(() => {
-    return dark ? "dark" : "light";
-  });
-  const [smoothAnimations, setSmoothAnimations] = useState(true);
-  const [bellSound, setBellSound] = useState(true);
 
-  // Selected topics
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([
-    "giadao",
-    "tap-tuc",
-    "chua-keo",
-    "xinxam",
-  ]);
+  const [topicsSaveStatus, setTopicsSaveStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
 
-  // Notifications Checkboxes (lưu trữ và đồng bộ cục bộ trên trình duyệt)
-  const [notifyRam, setNotifyRam] = useState(() => {
-    try {
-      const stored = localStorage.getItem("tltl-settings-notify-ram");
-      return stored !== null ? stored === "true" : true;
-    } catch {
-      return true;
-    }
-  });
-  const [notifyMorning, setNotifyMorning] = useState(() => {
-    try {
-      const stored = localStorage.getItem("tltl-settings-notify-morning");
-      return stored !== null ? stored === "true" : true;
-    } catch {
-      return true;
-    }
-  });
-  const [notifyFestivals, setNotifyFestivals] = useState(() => {
-    try {
-      const stored = localStorage.getItem("tltl-settings-notify-festivals");
-      return stored !== null ? stored === "true" : true;
-    } catch {
-      return true;
-    }
-  });
-  const [notificationPermission, setNotificationPermission] = useState<string>(() => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      return Notification.permission;
-    }
-    return "default";
-  });
-  const [testNotificationSent, setTestNotificationSent] = useState(false);
+  useEffect(() => {
+    setTopicsSaveStatus("idle");
+  }, [user?.email]);
 
   // Modal confirm clear data
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [dataClearedNotice, setDataClearedNotice] = useState(false);
+  const [clearDataError, setClearDataError] = useState("");
 
-  const handleToggleNotifyRam = (val: boolean) => {
-    setNotifyRam(val);
-    try {
-      localStorage.setItem("tltl-settings-notify-ram", String(val));
-    } catch {}
-  };
 
-  const handleToggleNotifyMorning = (val: boolean) => {
-    setNotifyMorning(val);
-    try {
-      localStorage.setItem("tltl-settings-notify-morning", String(val));
-    } catch {}
-  };
-
-  const handleToggleNotifyFestivals = (val: boolean) => {
-    setNotifyFestivals(val);
-    try {
-      localStorage.setItem("tltl-settings-notify-festivals", String(val));
-    } catch {}
-  };
-
-  const handleSendTestNotification = () => {
-    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-      try {
-        new Notification("Thích Cúng Kiếng • Kiểm tra cài đặt", {
-          body: "Đã kích hoạt thử nghiệm thông báo từ mục Cài đặt trên máy của bạn.",
-          icon: "/logo.png",
-        });
-        setTestNotificationSent(true);
-        setTimeout(() => setTestNotificationSent(false), 4000);
-      } catch {}
-    }
-  };
 
   const handleSaveName = () => {
     const cleanName = tempName.trim();
@@ -166,29 +101,41 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     setIsEditingName(false);
   };
 
-  const handleRequestPermission = async () => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      try {
-        const perm = await Notification.requestPermission();
-        setNotificationPermission(perm);
-      } catch {}
-    }
-  };
+
 
   const handleConfirmClearData = () => {
-    if (onClearAllLocalData) {
-      onClearAllLocalData();
-    } else {
-      try {
-        localStorage.clear();
-      } catch {}
+    setClearDataError("");
+    setDataClearedNotice(false);
+
+    let success = false;
+
+    try {
+      success = onClearAllLocalData?.() === true;
+    } catch {
+      success = false;
     }
+
     setShowClearConfirm(false);
+
+    if (!success) {
+      setClearDataError(
+        "Chưa hoàn tất việc xóa dữ liệu. Bạn hãy tải lại trang để kiểm tra các mục còn lưu trước khi thử lại."
+      );
+
+      return;
+    }
+
     setDataClearedNotice(true);
-    setTimeout(() => {
-      setDataClearedNotice(false);
-      onGoToHome();
-    }, 2000);
+  };
+
+  const handleToggleTopic = (topicId: string) => {
+    const nextTopics = selectedTopics.includes(topicId)
+      ? selectedTopics.filter((id) => id !== topicId)
+      : [...selectedTopics, topicId];
+
+    const saved = onChangeTopics(nextTopics);
+
+    setTopicsSaveStatus(saved ? "success" : "error");
   };
 
   return (
@@ -305,9 +252,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   <Bell className="w-4 h-4" />
                   <span>Thông báo & Nhắc lịch</span>
                 </div>
-                {notificationPermission === "granted" && (
-                  <span className="w-2 h-2 rounded-full bg-success" />
-                )}
               </button>
 
               <button
@@ -341,8 +285,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </Card>
 
             <div className="p-4 rounded-panel bg-surface border border-line text-xs text-muted italic leading-relaxed">
-              Bản demo hoạt động cục bộ trên thiết bị của bạn. Mọi thay đổi đều được ghi nhớ trực tiếp
-              vào bộ nhớ trình duyệt.
+              Bản thử nghiệm lưu dữ liệu trên trình duyệt này.
+              Một số chức năng mở rộng chưa được triển khai.
             </div>
           </div>
 
@@ -446,268 +390,185 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 <span>TÙY BIẾN TRẢI NGHIỆM</span>
               </div>
               <h3 className="font-display font-bold text-xl text-ink mb-2">
-                Không gian hiển thị & Âm thanh an hòa
+                Giao diện
               </h3>
               <p className="text-sm text-muted mb-6">
-                Lựa chọn tông màu và âm sắc phù hợp với trạng thái tâm tư trong từng thời điểm trong ngày.
+                Chọn giao diện sáng, tối hoặc tự động theo thiết bị.
               </p>
 
               {/* Theme selector */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-                <div
-                  onClick={() => {
-                    setDisplayMode("light");
-                    if (dark && onToggleDark) onToggleDark();
-                  }}
-                  className={`p-4 rounded-panel border cursor-pointer transition-all ${
-                    displayMode === "light"
-                      ? "bg-surface border-accent text-accent shadow-xs"
-                      : "bg-surface border-line text-ink "
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <Sun className="w-4 h-4" />
-                    {displayMode === "light" && <Check className="w-3.5 h-3.5" />}
-                  </div>
-                  <div className="font-bold text-xs">Màu Be (Ban Ngày)</div>
-                  <div className="text-xs opacity-80 mt-1">Nền be ấm hoài cổ, thanh nhã di sản</div>
-                </div>
+              <fieldset className="mb-6">
+                <legend className="text-sm font-semibold text-ink mb-3">
+                  Giao diện
+                </legend>
 
-                <div
-                  onClick={() => {
-                    setDisplayMode("dark");
-                    if (!dark && onToggleDark) onToggleDark();
-                  }}
-                  className={`p-4 rounded-panel border cursor-pointer transition-all ${
-                    displayMode === "dark"
-                      ? "bg-surface border-accent text-accent shadow-xs"
-                      : "bg-surface border-line text-ink "
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <Moon className="w-4 h-4" />
-                    {displayMode === "dark" && <Check className="w-3.5 h-3.5" />}
-                  </div>
-                  <div className="font-bold text-xs">Màu Đỏ Sơn Mài (Ban Đêm)</div>
-                  <div className="text-xs opacity-80 mt-1">Nền đỏ huyết dụ sơn mài, quý phái trang trọng</div>
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[
+                    {
+                      value: "light" as const,
+                      title: "Sáng",
+                      description: "Nền be ấm, chữ tối.",
+                      icon: Sun,
+                    },
+                    {
+                      value: "dark" as const,
+                      title: "Tối",
+                      description: "Nền tối, chữ sáng.",
+                      icon: Moon,
+                    },
+                    {
+                      value: "system" as const,
+                      title: "Theo thiết bị",
+                      description: "Theo giao diện của hệ điều hành.",
+                      icon: Monitor,
+                    },
+                  ].map((option) => {
+                    const Icon = option.icon;
+                    const isSelected =
+                      themePreference === option.value;
 
-                <div
-                  onClick={() => setDisplayMode("system")}
-                  className={`p-4 rounded-panel border cursor-pointer transition-all ${
-                    displayMode === "system"
-                      ? "bg-surface border-accent text-accent shadow-xs"
-                      : "bg-surface border-line text-ink "
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <Monitor className="w-4 h-4" />
-                    {displayMode === "system" && <Check className="w-3.5 h-3.5" />}
-                  </div>
-                  <div className="font-bold text-xs">Theo thiết bị</div>
-                  <div className="text-xs opacity-80 mt-1">Tự thích ứng Be sáng hoặc Đỏ sơn mài</div>
-                </div>
-              </div>
+                    return (
+                      <label
+                        key={option.value}
+                        className={[
+                          "flex cursor-pointer items-start gap-3",
+                          "rounded-xl border p-4",
+                          isSelected
+                            ? "border-accent bg-accent-soft"
+                            : "border-line bg-surface",
+                        ].join(" ")}
+                      >
+                        <input
+                          type="radio"
+                          name="theme-preference"
+                          value={option.value}
+                          checked={isSelected}
+                          onChange={() => onChangeTheme(option.value)}
+                          className="mt-1 h-4 w-4 shrink-0"
+                        />
 
-              {/* Smooth animation toggle */}
-              <div className="flex items-center justify-between p-4 rounded-panel bg-surface border border-line mb-3">
-                <div>
-                  <div className="font-bold text-xs text-ink">Hiệu ứng chuyển động êm dịu</div>
-                  <div className="text-xs text-muted">
-                    Giúp việc lật thẻ xăm và xuất hiện quẻ chữ diễn ra mềm mại, uyển chuyển.
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSmoothAnimations(!smoothAnimations)}
-                  className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
-                    smoothAnimations ? "bg-action" : "bg-surface-soft"
-                  }`}
-                >
-                  <span
-                    className={`block w-4 h-4 rounded-full bg-surface transition-transform ${
-                      smoothAnimations ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-              </div>
+                        <span>
+                          <span className="flex items-center gap-2 text-sm font-semibold text-ink">
+                            <Icon
+                              className="w-4 h-4 text-accent"
+                              aria-hidden="true"
+                            />
+                            {option.title}
+                          </span>
 
-              {/* Sound toggle */}
-              <div className="flex items-center justify-between p-4 rounded-panel bg-surface border border-line mb-5">
-                <div>
-                  <div className="font-bold text-xs text-ink">Âm thanh chuông tĩnh tâm & tiếng gõ gỗ</div>
-                  <div className="text-xs text-muted">
-                    Tiếng chuông xoay và thanh âm mộc của nếp nhà truyền thống khi bắt đầu tĩnh tâm.
-                  </div>
+                          <span className="block mt-2 text-sm text-muted leading-relaxed">
+                            {option.description}
+                          </span>
+                        </span>
+                      </label>
+                    );
+                  })}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setBellSound(!bellSound)}
-                  className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
-                    bellSound ? "bg-action" : "bg-surface-soft"
-                  }`}
-                >
-                  <span
-                    className={`block w-4 h-4 rounded-full bg-surface transition-transform ${
-                      bellSound ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-              </div>
+              </fieldset>
+
+              <p className="mb-5 text-sm text-muted leading-relaxed">
+                Âm thanh được điều khiển trong từng trải nghiệm.
+                Một số hiệu ứng hỗ trợ tùy chọn giảm chuyển động của thiết bị.
+              </p>
 
               {/* Topics chips */}
-              <div>
-                <div className="text-xs font-semibold text-ink mb-2">
-                  Chủ đề văn hóa quan tâm:
-                </div>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {[
-                    { id: "giadao", label: "Gia đạo & Lễ tết gia tiên" },
-                    { id: "tap-tuc", label: "Tập tục lễ hội dân gian" },
-                    { id: "chua-keo", label: "Di tích & Kiến trúc cổ" },
-                    { id: "xinxam", label: "Chiêm nghiệm xin xăm & quẻ chữ" },
-                    { id: "cadao", label: "Ca dao & Tục ngữ phong thổ" },
-                  ].map((chip) => {
-                    const isSelected = selectedTopics.includes(chip.id);
+              <fieldset className="mt-6">
+                <legend className="text-base font-semibold text-ink mb-2">
+                  Chủ đề bạn quan tâm
+                </legend>
+
+                <p className="text-sm text-muted leading-relaxed mb-4">
+                  Bạn có thể chọn nhiều chủ đề hoặc bỏ chọn tất cả.
+                  Lựa chọn được ghi nhớ cho tài khoản trên trình duyệt này.
+                </p>
+
+                <div className="flex flex-wrap gap-2">
+                  {CULTURAL_TOPICS.map((topic) => {
+                    const isSelected = selectedTopics.includes(topic.id);
+
                     return (
                       <button
-                        key={chip.id}
+                        key={topic.id}
                         type="button"
-                        onClick={() =>
-                          setSelectedTopics((prev) =>
-                            isSelected ? prev.filter((x) => x !== chip.id) : [...prev, chip.id]
-                          )
-                        }
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer ${
+                        aria-pressed={isSelected}
+                        onClick={() => handleToggleTopic(topic.id)}
+                        className={[
+                          "inline-flex min-h-11 items-center gap-2",
+                          "rounded-full border px-4 py-2 text-sm",
+                          "font-medium transition-colors",
+                          "focus-visible:outline-none",
+                          "focus-visible:ring-2 focus-visible:ring-accent",
                           isSelected
-                            ? "bg-action border-accent text-white shadow-2xs"
-                            : "bg-surface border-line text-ink hover:border-line"
-                        }`}
+                            ? "bg-action border-action text-on-action"
+                            : "bg-surface border-line text-ink hover:border-accent",
+                        ].join(" ")}
                       >
-                        {chip.label}
+                        {isSelected && (
+                          <Check
+                            className="w-4 h-4"
+                            aria-hidden="true"
+                          />
+                        )}
+                        {topic.label}
                       </button>
                     );
                   })}
                 </div>
-                <p className="text-sm text-muted italic">
-                  Các chủ đề được chọn sẽ ưu tiên hiển thị nội dung trên màn Hôm nay và Khám phá.
+
+                <div
+                  aria-live="polite"
+                  aria-atomic="true"
+                  className="mt-3 text-sm"
+                >
+                  {topicsSaveStatus === "success" && (
+                    <p className="text-success">
+                      Đã ghi nhớ {selectedTopics.length} chủ đề.
+                    </p>
+                  )}
+
+                  {topicsSaveStatus === "error" && (
+                    <p className="text-danger">
+                      Chưa lưu được lựa chọn. Trình duyệt có thể đang
+                      hạn chế lưu dữ liệu; bạn hãy thử lại.
+                    </p>
+                  )}
+                </div>
+
+                <p className="mt-3 text-sm text-muted leading-relaxed">
+                  Bản thử nghiệm hiện ghi nhớ sở thích.
+                  Các lựa chọn chưa tự động thay đổi thông điệp
+                  hoặc thứ tự bài viết.
                 </p>
-              </div>
+              </fieldset>
             </Card>
 
             {/* Block 3: Nhắc lịch & Thông báo */}
-            <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-1">
-                <Bell className="w-3.5 h-3.5" />
-                <span>NHẮC LỊCH & THÔNG BÁO</span>
+            <Card className="p-6 sm:p-8 rounded-card bg-surface border-line">
+              <div className="flex items-center gap-2 mb-3">
+                <Bell
+                  className="w-5 h-5 text-accent"
+                  aria-hidden="true"
+                />
+                <h2 className="font-display text-xl font-semibold text-ink">
+                  Thông báo và nhắc lịch
+                </h2>
               </div>
-              <h3 className="font-display font-bold text-xl text-ink mb-2">
-                Thông báo nếp sống lành
-              </h3>
-              <p className="text-sm text-muted mb-5">
-                Lắng nghe nhịp cuốn thời gian và các mốc tiết khí qua từng sớm mai.
+
+              <span className="inline-flex rounded-full bg-accent-soft px-3 py-1.5 text-sm text-accent mb-4">
+                Chưa có trong bản thử nghiệm
+              </span>
+
+              <p className="text-base text-muted leading-relaxed">
+                Trang chưa gửi lời nhắc tự động cho ngày rằm,
+                mùng một, lễ hội hoặc giờ check-in. Các tùy chọn
+                sẽ xuất hiện khi chức năng hoạt động.
               </p>
 
-              {/* Permission Banner */}
-              <div className="p-4 rounded-panel bg-surface border border-line flex flex-col gap-3 mb-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-start gap-2.5">
-                    <Bell className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-bold text-xs text-ink">
-                        Quyền thông báo trình duyệt:{" "}
-                        <span className="text-accent">
-                          {notificationPermission === "granted"
-                            ? "Đã cấp quyền trên trình duyệt"
-                            : notificationPermission === "denied"
-                            ? "Bị chặn"
-                            : "Chưa kích hoạt"}
-                        </span>
-                      </div>
-                      <div className="text-xs text-muted mt-0.5">
-                        Cần cấp quyền để trình duyệt có thể hiển thị các lời nhắc ngày rằm và giờ tĩnh tâm sáng sớm.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    {notificationPermission !== "granted" ? (
-                      <Button
-                        size="sm"
-                        onClick={handleRequestPermission}
-                        className="text-xs bg-action hover:bg-action text-white shrink-0 cursor-pointer"
-                      >
-                        Kích hoạt quyền thông báo
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleSendTestNotification}
-                        className="text-xs border-line bg-surface text-accent hover:bg-surface shrink-0 cursor-pointer"
-                      >
-                        Gửi thử 1 thông báo
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                {testNotificationSent && (
-                  <div className="text-xs text-success font-semibold pt-1 border-t border-line">
-                    ✓ Đã kích hoạt 1 thông báo mẫu thử nghiệm trên màn hình của bạn.
-                  </div>
-                )}
-              </div>
-
-              {/* Disclaimer callout about background push in demo */}
-              <div className="p-3 mb-4 rounded-xl bg-surface border border-line text-xs text-muted leading-relaxed flex items-start gap-2">
-                <Info className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-ink">Lưu ý về cơ chế nhắc lịch:</strong> Các công tắc bên dưới được lưu trữ trên trình duyệt của bạn. Tính năng tự động gửi thông báo nền theo lịch hẹn định kỳ đang được hoàn thiện khi kết nối máy chủ Backend (Sắp ra mắt).
-                </div>
-              </div>
-
-              {/* Notification Toggles */}
-              <div className="space-y-3 text-xs text-ink">
-                <label className="flex items-center gap-3 p-3 rounded-panel bg-surface border border-line cursor-pointer hover:border-line transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={notifyRam}
-                    onChange={(e) => handleToggleNotifyRam(e.target.checked)}
-                    className="rounded text-accent focus:ring-accent"
-                  />
-                  <div>
-                    <div className="font-bold">Nhắc ngày Rằm và Mùng Một âm lịch (Sóc vọng hàng tháng)</div>
-                    <div className="text-xs text-muted">Gửi thông báo trước 1 ngày để bạn chuẩn bị không gian an tĩnh.</div>
-                  </div>
-                </label>
-
-                <label className="flex items-center gap-3 p-3 rounded-panel bg-surface border border-line cursor-pointer hover:border-line transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={notifyMorning}
-                    onChange={(e) => handleToggleNotifyMorning(e.target.checked)}
-                    className="rounded text-accent focus:ring-accent"
-                  />
-                  <div>
-                    <div className="font-bold">Nhắc nhịp tĩnh tâm và check-in cảm xúc buổi sáng (khoảng 08:00)</div>
-                    <div className="text-xs text-muted">Lời chúc an lành và câu ca dao mở đầu ngày làm việc.</div>
-                  </div>
-                </label>
-
-                <label className="flex items-center gap-3 p-3 rounded-panel bg-surface border border-line cursor-pointer hover:border-line transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={notifyFestivals}
-                    onChange={(e) => handleToggleNotifyFestivals(e.target.checked)}
-                    className="rounded text-accent focus:ring-accent"
-                  />
-                  <div>
-                    <div className="font-bold">Nhắc các dịp lễ tết truyền thống lớn</div>
-                    <div className="text-xs text-muted">Tết Thanh Minh, Tết Đoan Ngọ, Lễ Vu Lan báo hiếu, Tết Trung Thu...</div>
-                  </div>
-                </label>
-              </div>
+              <p className="mt-3 text-sm text-muted leading-relaxed">
+                Nếu trước đây bạn đã cấp quyền thông báo, quyền
+                đó vẫn do trình duyệt quản lý. Nó không đồng nghĩa
+                với việc đã đặt lịch nhắc.
+              </p>
             </Card>
 
             {/* Block 4: Dữ liệu bản demo & Lưu trữ thiết bị */}
@@ -724,11 +585,23 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 (Local Storage) của trình duyệt. Không tải về máy chủ trung tâm.
               </p>
 
+              {clearDataError && (
+                <p
+                  role="alert"
+                  className="mb-4 rounded-panel border border-danger/25 bg-danger-soft p-3.5 text-sm text-danger"
+                >
+                  {clearDataError}
+                </p>
+              )}
+
               {/* Data Cleared Toast */}
               {dataClearedNotice && (
                 <div className="p-3.5 rounded-panel bg-success-soft border border-success/25 text-success text-xs mb-4 flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-                  <span>Đã xóa sạch toàn bộ dữ liệu trên trình duyệt này thành công. Đang chuyển về Trang chủ...</span>
+                  <span>
+                    Đã xóa nội dung trong Góc của tôi và ghi chú lịch
+                    của tài khoản hiện tại trên trình duyệt này.
+                  </span>
                 </div>
               )}
 
@@ -750,7 +623,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   className="w-full sm:w-auto text-xs rounded-xl border-danger/25 text-danger hover:bg-danger-soft gap-1.5"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Xóa toàn bộ dữ liệu trên trình duyệt này</span>
+                  <span>Xóa nội dung đã lưu và ghi chú lịch</span>
                 </Button>
               </div>
             </Card>
@@ -783,42 +656,57 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
         {/* Modal: Xác nhận xóa dữ liệu */}
         {showClearConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-            <Card className="max-w-md w-full p-6 rounded-card bg-surface border border-line shadow-2xl animate-in fade-in zoom-in-95 duration-200 text-center">
-              <div className="w-12 h-12 rounded-panel bg-danger-soft border border-danger/25 mx-auto mb-4 flex items-center justify-center text-danger">
-                <AlertTriangle className="w-6 h-6" />
-              </div>
+          <AppDialog
+            labelledBy="clear-account-data-title"
+            onClose={() => setShowClearConfirm(false)}
+            className="max-w-md text-center"
+          >
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-panel border border-danger/25 bg-danger-soft text-danger">
+              <AlertTriangle
+                className="h-6 w-6"
+                aria-hidden="true"
+              />
+            </div>
 
-              <h3 className="font-display font-bold text-xl text-ink mb-2">
-                Xóa toàn bộ dữ liệu trên trình duyệt?
-              </h3>
+            <h3
+              id="clear-account-data-title"
+              className="mb-2 font-display text-xl font-bold text-ink"
+            >
+              Xóa nội dung đã lưu của tài khoản này?
+            </h3>
 
-              <p className="text-sm text-muted leading-relaxed mb-6">
-                Hành động này sẽ xóa sạch các thẻ xăm đã lưu, nhật ký điều ước và các dấu mốc cá nhân
-                trên máy này. Thao tác không thể hoàn tác.
-              </p>
+            <p className="mb-6 text-sm leading-relaxed text-muted">
+              Xóa lời chiêm nghiệm, thẻ xăm, lời gửi gắm
+              trong Góc của tôi và ghi chú lịch của tài
+              khoản hiện tại trên trình duyệt này.
+              Thao tác không thể hoàn tác.
+              Góc tưởng niệm, tùy chọn giao diện và dữ liệu
+              của tài khoản khác được giữ lại.
+            </p>
 
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => setShowClearConfirm(false)}
-                  className="w-1/2 rounded-panel text-xs font-semibold"
-                >
-                  Hủy bỏ
-                </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                autoFocus
+                variant="outline"
+                size="lg"
+                onClick={() => setShowClearConfirm(false)}
+                className="min-h-11 flex-1"
+              >
+                Hủy bỏ
+              </Button>
 
-                <Button
-                  variant="default"
-                  size="lg"
-                  onClick={handleConfirmClearData}
-                  className="w-1/2 rounded-panel text-xs font-semibold bg-danger-action hover:bg-danger-action-hover text-white"
-                >
-                  Xác nhận xóa
-                </Button>
-              </div>
-            </Card>
-          </div>
+              <Button
+                type="button"
+                variant="default"
+                size="lg"
+                onClick={handleConfirmClearData}
+                className="min-h-11 flex-1 bg-danger-action text-white hover:bg-danger-action-hover"
+              >
+                Xác nhận xóa
+              </Button>
+            </div>
+          </AppDialog>
         )}
 
       </main>

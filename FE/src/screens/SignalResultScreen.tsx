@@ -1,22 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Calendar,
-  Check,
-  Heart,
-  RotateCw,
+  ArrowRight,
   Bookmark,
-  Share2,
-  BookOpen,
+  Check,
+  ChevronDown,
+  Clock3,
   Flower2,
-  CheckCircle2,
-  Sparkles,
-  Coffee,
-  Lightbulb,
+  RotateCw,
+  Share2,
 } from "lucide-react";
-import { MoodKey, SignalData } from "../data/demoSignals";
+
+import type { MoodKey, SignalData } from "../data/demoSignals";
 import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Card } from "@/src/components/ui/card";
 
 interface SignalResultScreenProps {
   mood?: MoodKey;
@@ -30,7 +25,9 @@ interface SignalResultScreenProps {
   onGoToDiary: () => void;
 }
 
-export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
+export const SignalResultScreen: React.FC<
+  SignalResultScreenProps
+> = ({
   signal,
   isActionDone,
   onToggleAction,
@@ -40,286 +37,284 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
   onRefreshSignal,
   onGoToDiary,
 }) => {
-  const [liked, setLiked] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<
+    "idle" | "copying" | "success" | "error"
+  >("idle");
 
-  const handleSave = () => {
-    onSaveToAccount();
+  useEffect(() => {
+    setCopyState("idle");
+  }, [signal.id]);
+
+  const shareUrl = new URL("/result", window.location.origin);
+  shareUrl.searchParams.set("signalId", signal.id);
+
+  const handleCopyLink = async () => {
+    setCopyState("copying");
+
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard unavailable");
+      }
+
+      await navigator.clipboard.writeText(shareUrl.toString());
+      setCopyState("success");
+    } catch {
+      setCopyState("error");
+    }
   };
 
   return (
     <div className="screen-shell">
-      <main className="page-container max-w-6xl">
-        {/* Top Banner Row */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-6 border-b border-line mb-8 text-xs">
-          <div className="flex items-center gap-2 text-muted flex-wrap">
-            <span className="w-2 h-2 rounded-full bg-action"></span>
-            <span className="font-bold text-accent uppercase tracking-wide">
-              {signal.badge}
-            </span>
-            <span>•</span>
-            <span>
-              Tín hiệu ngày lành tương ứng với tâm trạng{" "}
-              <strong className="text-accent">[{signal.mood}]</strong>
-            </span>
+      <main className="page-container max-w-5xl">
+        <header className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 text-sm text-accent mb-3">
+            <Flower2 className="w-4 h-4" aria-hidden="true" />
+            <span>Lời chiêm nghiệm hôm nay</span>
           </div>
 
-          <div className="flex items-center gap-2 text-muted">
-            <Calendar className="w-3.5 h-3.5 text-accent" />
-            <span>
-              Chủ đề văn hóa: <strong>Ngày Hoàng Đạo</strong> • Tiết khí thanh tịnh
-            </span>
-          </div>
-        </div>
+          <h1 className="page-title mb-3">
+            Một lời gợi mở dành cho bạn
+          </h1>
 
-        {/* 2 Columns Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12">
-          {/* Left Column (Vùng 1, Vùng 2, Vùng 3) */}
-          <div className="lg:col-span-7 space-y-6">
-            {/* Card 1: Vùng 1 & Vùng 2 */}
-            <Card className="py-6 border-0 border-b border-line bg-transparent rounded-none">
-              {/* Header */}
-              <div className="flex items-center justify-between text-xs text-accent font-semibold uppercase tracking-wider mb-6">
-                <span>— Vùng 1 • Cội nguồn văn hóa dân gian</span>
-                <Flower2 className="w-4 h-4 text-accent" />
-              </div>
+          <p className="text-base text-muted leading-relaxed">
+            Bạn đang cảm thấy{" "}
+            <strong className="font-semibold text-ink">
+              {signal.mood.toLowerCase()}
+            </strong>
+            . Hãy đọc chậm và giữ lại điều phù hợp với mình.
+          </p>
+        </header>
 
-              {/* Classic Poem */}
-              <div className="relative pl-6 mb-6">
-                <span className="absolute -left-2 -top-6 text-5xl font-display text-subtle select-none">
-                  “
-                </span>
-                <blockquote className="font-display font-bold text-2xl sm:text-3xl text-accent leading-snug">
-                  {signal.poem.line1}
-                  <br />
-                  {signal.poem.line2}
-                </blockquote>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <section
+            aria-labelledby="reflection-poem-title"
+            className="lg:col-span-7 rounded-2xl border border-line bg-surface p-6 sm:p-8"
+          >
+            <h2
+              id="reflection-poem-title"
+              className="text-sm font-semibold text-accent mb-5"
+            >
+              Dừng lại một chút
+            </h2>
 
-              <div className="flex items-center gap-1.5 text-xs text-muted mb-6">
-                <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
-                <span>{signal.poem.subtext}</span>
-              </div>
+            <blockquote className="font-display text-2xl sm:text-3xl font-semibold text-ink leading-relaxed">
+              <p>{signal.poem.line1}</p>
+              <p>{signal.poem.line2}</p>
+            </blockquote>
 
-              {/* Subcard: Vùng 2 Khảo cứu */}
-              <div className="pt-5 border-t border-line">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-1.5">
-                  <BookOpen className="w-3.5 h-3.5" />
-                  <span>{signal.research.title}</span>
-                </div>
-                <p className="text-sm text-ink leading-relaxed">
-                  Nguồn khảo cứu: <strong>{signal.research.source}</strong> •{" "}
-                  {signal.research.region}{" "}
-                  <span className="italic text-muted">
-                    {signal.research.note}
-                  </span>
-                </p>
-              </div>
-            </Card>
+            <p className="text-sm text-muted mt-4">
+              {signal.poem.subtext}
+            </p>
 
-            {/* Card 2: Vùng 3 Góc nhìn soi tỏ tâm thức */}
-            <Card className="py-6 border-0 border-b border-line bg-transparent rounded-none">
-              <div className="flex items-center gap-2 text-xs font-bold text-ink uppercase tracking-wider mb-4">
-                <Sparkles className="w-3.5 h-3.5 text-accent" />
-                <span>{signal.reflection.title}</span>
-              </div>
-
-              <div className="text-base text-ink leading-loose">
-                {signal.mood === "Chênh vênh" ? (
-                  <p>
-                    Khi bạn cảm thấy{" "}
-                    <strong className="text-accent">chênh vênh</strong>, đó
-                    không phải là dấu hiệu bạn đang thụt lùi, mà là tâm thức đang
-                    đòi hỏi một{" "}
-                    <strong className="underline decoration-accent/40 underline-offset-4">
-                      khoảng lặng tự nhiên
-                    </strong>
-                    . Nước có lắng thì hoa mới nở thơm, tâm có tĩnh thì mọi xáo
-                    động đời sống mới trở về trật tự vốn có. Hãy cho phép mình
-                    chưa cần phải có câu trả lời ngay ngày hôm nay.
-                  </p>
-                ) : (
-                  <p>{signal.reflection.content}</p>
-                )}
-              </div>
-
-              <div className="mt-5 pt-4 border-t border-line flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-muted">
-                <span className="flex items-center gap-1.5">
-                  <span className="text-accent">☁</span>
-                  <span>{signal.reflection.advice}</span>
-                </span>
-                <span className="font-medium text-muted">
-                  {signal.reflection.signalNumber}
-                </span>
-              </div>
-            </Card>
-          </div>
-
-          {/* Right Column (Họa đồ, Vùng 4, Vùng 5) */}
-          <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
-            {/* Card 1: Họa đồ tĩnh lặng & Vùng 4 Hành động nuôi tâm */}
-            <Card className="rounded-card shadow-xs overflow-hidden">
-              <div className="p-4 sm:p-5 flex items-center justify-between border-b border-line">
-                <div className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
-                  <Flower2 className="w-3.5 h-3.5" />
-                  <span>Họa đồ tĩnh lặng</span>
-                </div>
-                <Badge variant="terracotta">{signal.artwork.tag}</Badge>
-              </div>
-
-              {/* Artwork Photo */}
-              <div className="relative h-56 sm:h-64 overflow-hidden">
-                <img
-                  src={signal.artwork.image}
-                  alt={signal.artwork.caption}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-4 text-white text-xs">
-                  {signal.artwork.caption}
-                </div>
-              </div>
-
-              {/* Subcard inside: Vùng 4 */}
-              <div className="p-5 sm:p-6 bg-surface">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent">
-                    <Coffee className="w-3.5 h-3.5" />
-                    <span>{signal.action.tag}</span>
-                  </div>
-                  <Badge variant="secondary" className="text-xs font-bold">
-                    {signal.action.duration}
-                  </Badge>
-                </div>
-
-                <h3 className="font-display font-bold text-lg text-ink mb-2">
-                  {signal.action.title}
-                </h3>
-                <p className="text-sm text-ink leading-relaxed mb-4">
-                  {signal.action.description}
-                </p>
-
-                <Button
-                  variant={isActionDone ? "secondary" : "default"}
-                  onClick={() => onToggleAction(!isActionDone)}
-                  className={`w-full py-3 px-4 text-xs sm:text-sm font-semibold gap-2 ${
-                    isActionDone
-                      ? "bg-success-soft text-success"
-                      : ""
-                  }`}
-                >
-                  <Check className="w-4 h-4" />
-                  <span>
-                    {isActionDone
-                      ? "Đã hoàn thành hành động này ✓"
-                      : signal.action.buttonLabel}
-                  </span>
-                </Button>
-
-                {/* Nút tiến vào trạng thái viên mãn khi đã làm xong hành động */}
-                {isActionDone && onGoToCompletion && (
-                  <Button
-                    variant="default"
-                    size="lg"
-                    onClick={onGoToCompletion}
-                    className="w-full mt-3 py-3 px-4 text-xs sm:text-sm font-semibold gap-2 shadow-xs bg-action hover:bg-action text-white"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    <span>Tiến vào trạng thái Viên mãn (Bước 5/5)</span>
-                  </Button>
-                )}
-              </div>
-            </Card>
-
-            {/* Card 2: Vùng 5 Phản hồi & Lưu trữ */}
-            <Card className="p-6 rounded-card shadow-xs">
-              <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-ink mb-2">
-                <span>Vùng 5 • Phản hồi & Lưu trữ</span>
-                <span className="w-2 h-2 rounded-full bg-surface-soft"></span>
-              </div>
-
-              <p className="text-sm text-muted mb-4">
-                Tín hiệu này có đồng điệu với năng lượng bên trong bạn lúc này?
+            <div className="mt-6 pt-5 border-t border-line">
+              <p className="text-base text-ink leading-relaxed">
+                {signal.reflection.advice}
               </p>
+            </div>
 
-              {/* Feedback 2 buttons */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <Button
-                  variant={liked ? "secondary" : "outline"}
-                  onClick={() => setLiked(!liked)}
-                  className="py-2.5 text-xs font-medium gap-1.5"
-                >
-                  <Heart
-                    className={`w-3.5 h-3.5 ${liked ? "fill-current" : ""}`}
-                  />
-                  <span>Tín hiệu chạm đến tôi</span>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={onRefreshSignal}
-                  className="py-2.5 text-xs font-medium gap-1.5"
-                  title="Nhận một tín hiệu khác cho cùng tâm trạng này"
-                >
-                  <RotateCw className="w-3.5 h-3.5 text-muted" />
-                  <span>Cần thông điệp khác</span>
-                </Button>
-              </div>
-
-              {/* Big Save Button */}
+            <div className="flex flex-wrap gap-2 mt-6">
               <Button
-                variant={isSaved ? "secondary" : "bronze"}
-                size="lg"
-                onClick={handleSave}
-                className="w-full text-xs sm:text-sm font-semibold gap-2 mb-4"
+                type="button"
+                variant="outline"
+                onClick={onRefreshSignal}
               >
-                <Bookmark className="w-4 h-4" />
+                <RotateCw className="w-4 h-4" aria-hidden="true" />
+                <span>Nhận lời khác</span>
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleCopyLink}
+                disabled={copyState === "copying"}
+              >
+                <Share2 className="w-4 h-4" aria-hidden="true" />
                 <span>
-                  {isSaved ? "Đã lưu vào Góc của tôi ✓" : "Lưu tín hiệu vào Góc của tôi"}
+                  {copyState === "copying"
+                    ? "Đang sao chép..."
+                    : "Sao chép liên kết"}
+                </span>
+              </Button>
+            </div>
+
+            <div aria-live="polite" aria-atomic="true">
+              {copyState === "success" && (
+                <p className="mt-3 text-sm text-success">
+                  Đã sao chép liên kết của lời chiêm nghiệm này.
+                </p>
+              )}
+
+              {copyState === "error" && (
+                <div className="mt-3">
+                  <label
+                    htmlFor="signal-share-link"
+                    className="block text-sm text-muted mb-2"
+                  >
+                    Chưa sao chép được. Bạn có thể chọn và sao chép
+                    liên kết bên dưới:
+                  </label>
+
+                  <input
+                    id="signal-share-link"
+                    type="text"
+                    readOnly
+                    value={shareUrl.toString()}
+                    onFocus={(event) => event.currentTarget.select()}
+                    className="w-full rounded-control border border-line bg-canvas px-3 py-2 text-base text-ink"
+                  />
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section
+            aria-labelledby="small-action-title"
+            className="lg:col-span-5 rounded-2xl border border-line bg-surface p-6 sm:p-8"
+          >
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <h2
+                id="small-action-title"
+                className="text-sm font-semibold text-accent"
+              >
+                Một việc nhỏ bạn có thể làm
+              </h2>
+
+              <span className="inline-flex items-center gap-1.5 text-sm text-muted shrink-0">
+                <Clock3 className="w-4 h-4" aria-hidden="true" />
+                {signal.action.duration}
+              </span>
+            </div>
+
+            <h3 className="font-display font-semibold text-xl text-ink mb-3">
+              {signal.action.title}
+            </h3>
+
+            <p className="text-base text-muted leading-relaxed mb-6">
+              {signal.action.description}
+            </p>
+
+            <Button
+              type="button"
+              variant={isActionDone ? "secondary" : "default"}
+              onClick={() => onToggleAction(!isActionDone)}
+              aria-pressed={isActionDone}
+              className="w-full"
+            >
+              <Check className="w-4 h-4" aria-hidden="true" />
+              <span>
+                {isActionDone ? "Đã thực hiện" : "Tôi đã thực hiện"}
+              </span>
+            </Button>
+
+            {isActionDone && onGoToCompletion && (
+              <Button
+                type="button"
+                onClick={onGoToCompletion}
+                className="w-full mt-3"
+              >
+                <span>Hoàn tất lượt chiêm nghiệm</span>
+                <ArrowRight
+                  className="w-4 h-4"
+                  aria-hidden="true"
+                />
+              </Button>
+            )}
+
+            {isActionDone && (
+              <p role="status" className="mt-3 text-sm text-muted">
+                Đã ghi nhận hành động của bạn. Bạn có thể bấm
+                “Đã thực hiện” lần nữa để bỏ đánh dấu.
+              </p>
+            )}
+
+            <div className="mt-6 pt-5 border-t border-line">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={isSaved ? onGoToDiary : onSaveToAccount}
+                className="w-full"
+              >
+                <Bookmark
+                  className="w-4 h-4"
+                  aria-hidden="true"
+                />
+                <span>
+                  {isSaved
+                    ? "Đã lưu — xem trong Góc của tôi"
+                    : "Lưu vào Góc của tôi"}
                 </span>
               </Button>
 
-              {/* Bottom links */}
-              <div className="pt-2 flex items-center justify-center gap-4 text-xs text-muted">
-                <button
-                  onClick={() => {
-                    const shareUrl = `${window.location.origin}/result?signalId=${signal.id}`;
-                    navigator.clipboard?.writeText(shareUrl);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 3000);
-                  }}
-                  className="hover:text-accent flex items-center gap-1 transition-colors cursor-pointer"
-                  title="Sao chép liên kết mở lại đúng tín hiệu này"
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span>{copied ? "Đã sao chép liên kết ✓" : "Chia sẻ chiêm nghiệm"}</span>
-                </button>
-                <span>•</span>
-                <button
-                  onClick={onGoToDiary}
-                  className="hover:text-accent flex items-center gap-1 transition-colors cursor-pointer"
-                >
-                  <BookOpen className="w-3.5 h-3.5" />
-                  <span>Xem nhật ký gieo duyên</span>
-                </button>
-              </div>
-            </Card>
-          </div>
+              <p className="mt-3 text-sm text-muted leading-relaxed">
+                Bạn có thể lưu lời chiêm nghiệm mà không cần
+                đánh dấu đã thực hiện.
+              </p>
+            </div>
+          </section>
         </div>
 
-        {/* Bottom Banner Ribbon */}
-        <div className="p-4 sm:p-5 rounded-panel bg-surface/80 border border-line flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted">
-          <div className="flex items-center gap-2 text-center sm:text-left">
-            <Lightbulb className="w-4 h-4 text-accent flex-shrink-0" />
-            <span>
-              Mỗi ngày một quẻ chữ, một tách trà tĩnh tâm. Giữ lại khoảnh khắc
-              lắng đọng giữa nhịp sống vội vã.
-            </span>
-          </div>
-          <div className="text-right flex-shrink-0">
-            <span>Đồng hành cùng: </span>
-            <strong className="text-ink">3.420 bạn hữu hôm nay</strong>
-          </div>
+        <div className="mt-6 space-y-3">
+          <details className="group rounded-xl border border-line bg-surface">
+            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 p-4 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
+              <span className="font-semibold text-sm text-ink">
+                Đọc thêm về lời chiêm nghiệm
+              </span>
+              <ChevronDown
+                className="w-4 h-4 text-muted shrink-0 transition-transform group-open:rotate-180"
+                aria-hidden="true"
+              />
+            </summary>
+
+            <div className="px-4 pb-5 sm:px-5">
+              <p className="text-base text-ink leading-relaxed">
+                {signal.reflection.content}
+              </p>
+
+              <figure className="mt-5">
+                <img
+                  src={signal.artwork.image}
+                  alt={signal.artwork.caption}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-48 sm:h-64 object-cover rounded-xl"
+                />
+                <figcaption className="mt-2 text-sm text-muted">
+                  {signal.artwork.caption}
+                </figcaption>
+              </figure>
+            </div>
+          </details>
+
+          <details className="group rounded-xl border border-line bg-surface">
+            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 p-4 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
+              <span className="font-semibold text-sm text-ink">
+                Nguồn và ghi chú nội dung
+              </span>
+              <ChevronDown
+                className="w-4 h-4 text-muted shrink-0 transition-transform group-open:rotate-180"
+                aria-hidden="true"
+              />
+            </summary>
+
+            <div className="px-4 pb-5 sm:px-5 space-y-2 text-sm leading-relaxed">
+              <p className="text-ink">
+                <strong>Nguồn: </strong>
+                {signal.research.source}
+              </p>
+              <p className="text-muted">
+                {signal.research.region}
+              </p>
+              <p className="text-muted">
+                {signal.research.note}
+              </p>
+            </div>
+          </details>
         </div>
+
+        <p className="mt-6 text-sm text-muted leading-relaxed">
+          Nội dung dành cho chiêm nghiệm và khám phá văn hóa,
+          không phải dự báo điều sẽ xảy ra với bạn.
+        </p>
       </main>
     </div>
   );

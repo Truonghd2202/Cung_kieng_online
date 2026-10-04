@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Heart,
   Sparkles,
@@ -40,42 +40,89 @@ export const GratitudeScreen: React.FC<GratitudeScreenProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [releaseStatus, setReleaseStatus] = useState<"idle" | "releasing" | "released">("idle");
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  const releaseTimerRef = useRef<
+    ReturnType<typeof setTimeout> | null
+  >(null);
+
+  const resetTimerRef = useRef<
+    ReturnType<typeof setTimeout> | null
+  >(null);
+
+  useEffect(() => {
+    return () => {
+      if (releaseTimerRef.current !== null) {
+        clearTimeout(releaseTimerRef.current);
+      }
+
+      if (resetTimerRef.current !== null) {
+        clearTimeout(resetTimerRef.current);
+      }
+    };
+  }, []);
 
   const maxChars = 500;
 
   const handleClear = () => {
     setContent("");
     setSaveSuccess(false);
+    setSaveError("");
+    setReleaseStatus("idle");
   };
 
   const handleSendOrSave = () => {
-    if (sendMode === "ephemeral") {
-      setIsSubmitting(true);
-      setReleaseStatus("releasing");
-      setTimeout(() => {
-        setIsSubmitting(false);
-        setReleaseStatus("released");
-        setContent("");
-        // Tự động thắp sáng ngọn đèn nếu chưa thắp khi gửi nén hương buông xuống
-        if (!isLampLit) setIsLampLit(true);
-        setTimeout(() => {
-          setReleaseStatus("idle");
-        }, 6000);
-      }, 1200);
-    } else {
-      // Chế độ lưu riêng: yêu cầu có nội dung
-      if (!content.trim()) return;
-
-      if (onSaveGratitude) {
-        const success = onSaveGratitude(content);
-        if (success) {
-          setSaveSuccess(true);
-          setTimeout(() => setSaveSuccess(false), 4000);
-        }
-      } else if (onRequireLogin && !user) {
-        onRequireLogin(content);
-      }
+    if (isSubmitting || releaseTimerRef.current !== null) {
+      return;
     }
+
+    setSaveError("");
+
+    if (sendMode === "save") {
+      if (saveSuccess) return;
+
+      const cleanContent = content.trim();
+      if (!cleanContent) return;
+
+      const saved =
+        onSaveGratitude?.(cleanContent) === true;
+
+      if (saved) {
+        setSaveSuccess(true);
+      } else if (user) {
+        setSaveError(
+          "Chưa lưu được lời tri ân. Bạn hãy thử lại."
+        );
+      }
+
+      return;
+    }
+
+    if (resetTimerRef.current !== null) {
+      clearTimeout(resetTimerRef.current);
+      resetTimerRef.current = null;
+    }
+
+    setSaveSuccess(false);
+    setIsSubmitting(true);
+    setReleaseStatus("releasing");
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    releaseTimerRef.current = setTimeout(() => {
+      releaseTimerRef.current = null;
+      setContent("");
+      setIsSubmitting(false);
+      setReleaseStatus("released");
+      setIsLampLit(true);
+
+      resetTimerRef.current = setTimeout(() => {
+        resetTimerRef.current = null;
+        setReleaseStatus("idle");
+      }, 6000);
+    }, reducedMotion ? 200 : 1200);
   };
 
   return (
@@ -256,9 +303,16 @@ export const GratitudeScreen: React.FC<GratitudeScreenProps> = ({
                   rows={6}
                   value={content}
                   maxLength={maxChars}
-                  onChange={(e) => setContent(e.target.value)}
+                  disabled={isSubmitting}
+                  aria-label="Lời tri ân của bạn"
+                  onChange={(event) => {
+                    setContent(event.target.value);
+                    setSaveSuccess(false);
+                    setSaveError("");
+                    setReleaseStatus("idle");
+                  }}
                   placeholder="Viết đôi dòng nhắn gửi lòng biết ơn đến gia đình, người thương, hoặc tiền nhân đã nâng đỡ bước chân bạn... (Nếu chọn buông xuống, bạn có thể để trống ô này)"
-                  className="w-full p-4 rounded-panel border border-line focus:border-accent focus:ring-2 focus:ring-accent/10 outline-none text-ink placeholder:text-subtle text-sm leading-relaxed resize-none transition-all bg-surface"
+                  className="w-full p-4 rounded-panel border border-line focus:border-accent focus:ring-2 focus:ring-accent/10 outline-none text-ink placeholder:text-subtle text-base leading-relaxed resize-none transition-all bg-surface"
                 />
 
                 {/* Counter & Clear Button */}
@@ -266,7 +320,7 @@ export const GratitudeScreen: React.FC<GratitudeScreenProps> = ({
                   <button
                     type="button"
                     onClick={handleClear}
-                    disabled={!content}
+                    disabled={isSubmitting || !content}
                     className="inline-flex items-center gap-1 hover:text-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -382,7 +436,7 @@ export const GratitudeScreen: React.FC<GratitudeScreenProps> = ({
                 <div className="mt-5 p-4 rounded-panel bg-surface border border-line text-success text-sm flex items-start gap-3 animate-fadeIn">
                   <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-success" />
                   <div>
-                    <p className="font-bold">Đã lưu kín đáo vào Góc của tôi</p>
+                    <p className="font-bold">Đã lưu vào Góc của tôi</p>
                     <p className="text-sm text-success mt-0.5 leading-relaxed">
                       Bạn có thể xem lại tại tab <strong>“Điều ước & Lời tri ân”</strong> bất cứ lúc nào.
                     </p>
@@ -392,20 +446,33 @@ export const GratitudeScreen: React.FC<GratitudeScreenProps> = ({
 
               {/* Primary Action Button */}
               <div className="mt-6">
+                {saveError && (
+                  <p role="alert" className="mt-4 text-sm text-danger">
+                    {saveError}
+                  </p>
+                )}
                 <Button
                   onClick={handleSendOrSave}
-                  disabled={isSubmitting || (sendMode === "save" && !content.trim())}
+                  disabled={
+                    isSubmitting ||
+                    (
+                      sendMode === "save" &&
+                      (!content.trim() || saveSuccess)
+                    )
+                  }
                   className="w-full py-4 text-base font-semibold rounded-panel bg-action hover:bg-action text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>
                     {isSubmitting
-                      ? "Đang gửi tâm tình..."
+                      ? "Đang thả trôi..."
                       : sendMode === "ephemeral"
-                      ? "Gửi nén hương lòng & Buông xuống"
-                      : content.trim()
-                      ? "Lưu lời tri ân vào Góc của tôi"
-                      : "Vui lòng viết lời tri ân trước khi lưu"}
+                        ? "Thả trôi — không lưu"
+                        : saveSuccess
+                          ? "Đã lưu lời tri ân"
+                          : user
+                            ? "Lưu vào Góc của tôi"
+                            : "Đăng nhập để lưu"}
                   </span>
                 </Button>
               </div>
@@ -431,9 +498,9 @@ export const GratitudeScreen: React.FC<GratitudeScreenProps> = ({
         <div className="mt-10 p-5 rounded-panel bg-surface/80 border border-line flex items-start gap-3.5 text-xs text-muted leading-relaxed">
           <Info className="w-4 h-4 text-accent shrink-0 mt-0.5" />
           <div>
-            <span className="font-bold text-ink">Lưu ý chân thành từ Tin Lắm Tâm Linh: </span>
-            Đây là hoạt động chiêm nghiệm mang tính biểu tượng; nội dung bản demo được lưu an toàn trên trình duyệt nếu bạn chọn lưu riêng.
-            Nền tảng hướng trọn vẹn đến sự lắng đọng và nuôi dưỡng tâm từ, không phục vụ mục đích thương mại hóa hay tín ngưỡng dị đoan.
+            Đây là thực hành mang tính biểu tượng.
+            Nếu chọn lưu, nội dung được giữ trên trình duyệt này;
+            nếu chọn thả trôi, nội dung không được ghi vào nhật ký.
           </div>
         </div>
 

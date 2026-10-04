@@ -19,6 +19,8 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 
+const SESSION_SECONDS = 180;
+
 interface ZenScreenProps {
   onBackToExperience: () => void;
   onGoToHome: () => void;
@@ -38,10 +40,13 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
   const [isLampLit, setIsLampLit] = useState(false);
 
   // Timer & Breathing Loop (3 minutes = 180 seconds)
-  const [secondsRemaining, setSecondsRemaining] = useState(180);
+  const [secondsRemaining, setSecondsRemaining] =
+    useState(SESSION_SECONDS);
   const [isPaused, setIsPaused] = useState(false);
   const [breathPhase, setBreathPhase] = useState<"inhale" | "hold" | "exhale">("inhale");
-  const [breathCycleTime, setBreathCycleTime] = useState(0);
+
+  const accumulatedTimeRef = useRef(0);
+  const sessionVersionRef = useRef(0);
 
   // Canvas ref for 3D Perspective Scene
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -136,39 +141,67 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
   };
 
   useEffect(() => {
-    if (soundEnabled && zenState === "active") {
+    if (
+      soundEnabled &&
+      zenState === "active" &&
+      !isPaused
+    ) {
       startAmbientSound();
     } else {
       stopAmbientSound();
     }
     return () => stopAmbientSound();
-  }, [soundEnabled, zenState]);
+  }, [soundEnabled, zenState, isPaused]);
 
   // Timer interval & Breathing Cycle
   useEffect(() => {
     if (zenState !== "active" || isPaused) return;
 
-    const timer = setInterval(() => {
-      setSecondsRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setZenState("completed");
-          return 0;
-        }
-        return prev - 1;
-      });
+    const version = sessionVersionRef.current;
+    const startedAt = performance.now();
+    const previousTime = accumulatedTimeRef.current;
 
-      // Breathing Cycle: 4s inhale, 4s hold, 4s exhale (total 12s)
-      setBreathCycleTime((prev) => {
-        const next = (prev + 1) % 12;
-        if (next < 4) setBreathPhase("inhale");
-        else if (next < 8) setBreathPhase("hold");
-        else setBreathPhase("exhale");
-        return next;
-      });
-    }, 1000);
+    const updateTimer = () => {
+      const elapsedMs =
+        previousTime + performance.now() - startedAt;
 
-    return () => clearInterval(timer);
+      const remaining = Math.max(
+        0,
+        SESSION_SECONDS - Math.floor(elapsedMs / 1000)
+      );
+
+      setSecondsRemaining(remaining);
+
+      const cycleSecond =
+        Math.floor(elapsedMs / 1000) % 12;
+
+      setBreathPhase(
+        cycleSecond < 4
+          ? "inhale"
+          : cycleSecond < 8
+            ? "hold"
+            : "exhale"
+      );
+
+      if (remaining === 0) {
+        setZenState("completed");
+      }
+    };
+
+    updateTimer();
+
+    const timer = window.setInterval(updateTimer, 250);
+
+    return () => {
+      window.clearInterval(timer);
+
+      if (sessionVersionRef.current === version) {
+        accumulatedTimeRef.current = Math.min(
+          SESSION_SECONDS * 1000,
+          previousTime + performance.now() - startedAt
+        );
+      }
+    };
   }, [zenState, isPaused]);
 
   // 3D Canvas Rendering Engine (Perspective Projection with 3D Particles & Golden Bell)
@@ -288,13 +321,21 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
   }, [viewMode, breathPhase, isLampLit, reducedMotion]);
 
   const handleStartZen = () => {
-    setSecondsRemaining(180);
+    sessionVersionRef.current += 1;
+    accumulatedTimeRef.current = 0;
+
+    setSecondsRemaining(SESSION_SECONDS);
+    setBreathPhase("inhale");
     setIsPaused(false);
     setZenState("active");
   };
 
   const handleReset = () => {
-    setSecondsRemaining(180);
+    sessionVersionRef.current += 1;
+    accumulatedTimeRef.current = 0;
+
+    setSecondsRemaining(SESSION_SECONDS);
+    setBreathPhase("inhale");
     setIsPaused(false);
     setZenState("ready");
   };
@@ -304,6 +345,11 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
+
+  const elapsedSeconds =
+    SESSION_SECONDS - secondsRemaining;
+
+  const completedFullSession = secondsRemaining === 0;
 
   return (
     <div className="screen-shell">
@@ -339,7 +385,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="page-title mb-2.5">
-                Không gian tĩnh tâm: Lắng đọng tâm trí giữa đời sống hiện đại
+                Một khoảng nghỉ ba phút
               </h1>
               <p className="text-sm sm:text-base text-ink leading-relaxed max-w-3xl">
                 Một khoảng lặng tương tác tượng trưng lấy cảm hứng từ mỹ thuật và kiến trúc dân
@@ -364,6 +410,8 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
           <div className="flex items-center gap-2">
             <span className="font-semibold text-ink">HIỂN THỊ:</span>
             <button
+              type="button"
+              aria-pressed={viewMode === "2D"}
               onClick={() => setViewMode("2D")}
               className={`px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                 viewMode === "2D"
@@ -374,6 +422,8 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
               <span>Chế độ 2D hiên nhà</span>
             </button>
             <button
+              type="button"
+              aria-pressed={viewMode === "3D"}
               onClick={() => setViewMode("3D")}
               className={`px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                 viewMode === "3D"
@@ -389,6 +439,8 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
           {/* Sound & Motion toggles */}
           <div className="flex items-center gap-2">
             <button
+              type="button"
+              aria-pressed={soundEnabled}
               onClick={() => setSoundEnabled(!soundEnabled)}
               className={`px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 cursor-pointer ${
                 soundEnabled
@@ -410,6 +462,8 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
             </button>
 
             <button
+              type="button"
+              aria-pressed={reducedMotion}
               onClick={() => setReducedMotion(!reducedMotion)}
               className="px-3 py-1.5 rounded-full bg-surface border border-line text-ink hover:border-line flex items-center gap-1.5 cursor-pointer"
             >
@@ -519,30 +573,37 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
                 {/* Breathing Text Guide */}
                 <div className="mb-6">
                   <div className="text-base sm:text-lg font-display font-bold text-on-inverse mb-1">
-                    {breathPhase === "inhale" && "Hít vào nhẹ nhàng..."}
-                    {breathPhase === "hold" && "Giữ hơi an định..."}
-                    {breathPhase === "exhale" && "Thở ra thảnh thơi..."}
+                    {isPaused
+                      ? "Phiên đang tạm dừng"
+                      : breathPhase === "inhale"
+                        ? "Hít vào nhẹ nhàng..."
+                        : breathPhase === "hold"
+                          ? "Một khoảng dừng..."
+                          : "Thở ra nhẹ nhàng..."}
                   </div>
                   <p className="text-sm text-white/70 italic">
-                    {breathPhase === "inhale" && "Cảm nhận luồng dưỡng khí mát lành tràn ngập thân tâm."}
-                    {breathPhase === "hold" && "Tĩnh tại trong khoảnh khắc hiện tiền trọn vẹn."}
-                    {breathPhase === "exhale" && "Buông bỏ mọi căng thẳng theo từng nhịp thở êm."}
+                    {isPaused
+                      ? "Bấm tiếp tục khi bạn muốn trở lại."
+                      : "Bạn có thể theo nhịp gợi ý hoặc thở theo nhịp tự nhiên của mình."}
                   </p>
                 </div>
 
                 {/* Active Controls */}
                 <div className="flex items-center justify-center gap-3">
                   <button
+                    type="button"
+                    aria-pressed={isPaused}
                     onClick={() => setIsPaused(!isPaused)}
-                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white backdrop-blur-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="min-h-11 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white backdrop-blur-xs transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
                     <span>{isPaused ? "Tiếp tục" : "Tạm dừng"}</span>
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => setZenState("completed")}
-                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white/80 hover:text-white backdrop-blur-xs transition-all cursor-pointer"
+                    className="min-h-11 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white/80 hover:text-white backdrop-blur-xs transition-all cursor-pointer"
                   >
                     Kết thúc sớm
                   </button>
@@ -558,16 +619,18 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
                 </div>
 
                 <div className="text-xs uppercase font-bold tracking-widest text-accent mb-1.5">
-                  KHOẢNH KHẮC HOÀN THÀNH
+                  PHIÊN THIỀN ĐÃ KẾT THÚC
                 </div>
 
                 <h2 className="section-title text-xl sm:text-2xl mb-2.5">
-                  Khoảnh khắc an tĩnh đã trọn vẹn
+                  {completedFullSession
+                    ? "Bạn đã dành ba phút cho mình"
+                    : "Bạn đã kết thúc phiên"}
                 </h2>
 
                 <p className="text-sm text-ink leading-relaxed mb-6">
-                  Tâm đã lắng, lòng đã nhẹ. Mang theo sự an định này bước vào những khoảnh khắc
-                  tiếp theo của ngày mới bằng thái độ an hòa và thấu suốt.
+                  Bạn đã dành {formatTime(elapsedSeconds)} cho phiên này.
+                  <br className="hidden sm:inline" /> Bạn có thể trở về ngày của mình hoặc bắt đầu một phiên mới.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
@@ -588,7 +651,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
                     className="w-full sm:w-auto px-4 py-2.5 text-xs font-semibold gap-1.5"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Bắt đầu lại</span>
+                    <span>Chuẩn bị phiên mới</span>
                   </Button>
                 </div>
               </div>
@@ -649,10 +712,9 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
                 NGUYÊN TẮC KHÔNG GIAN TĨNH TÂM & MINH BẠCH VĂN HÓA
               </div>
               <p className="text-sm text-ink leading-relaxed max-w-4xl">
-                Không gian này được tạo ra hoàn toàn phi thương mại và phi tôn giáo, nhằm phục vụ sự
-                an định tinh thần và tình yêu di sản văn hóa Việt của người trẻ hiện đại. Tuyệt đối
-                không thay thế các nghi lễ thực tế ngoài đời, không có tính năng cúng dường, quyên
-                góp tiền, xin xăm bói toán hay lời hứa hẹn chữa lành kỳ diệu.
+                Đây là không gian thực hành ngắn với hình ảnh lấy cảm hứng
+                từ văn hóa Việt. Bạn có thể bật hoặc tắt âm thanh,
+                tạm dừng và kết thúc bất cứ lúc nào.
               </p>
             </div>
           </div>

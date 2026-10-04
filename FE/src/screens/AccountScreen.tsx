@@ -24,6 +24,8 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { MoodKey } from "../data/demoSignals";
+import { SavedItemActions } from "../components/SavedItemActions";
+import { AppDialog } from "../components/AppDialog";
 
 export interface SavedSignalItem {
   id: string;
@@ -68,7 +70,7 @@ interface AccountScreenProps {
   onToggleStarSignal?: (id: string) => void;
   onToggleStarXam: (id: string) => void;
   onToggleStarWish: (id: string) => void;
-  onGoToSignalResult: (signalId: string) => void;
+  onGoToSignalResult: (entryId: string) => void;
   onGoToXinXam: () => void;
   onGoToWish: () => void;
   onGoToMood: () => void;
@@ -99,7 +101,15 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
   onGoToSettings,
 }) => {
   // 3 Primary Tabs
-  const [activeTab, setActiveTab] = useState<"signals" | "xinxam" | "wishes">("xinxam");
+  const [activeTab, setActiveTab] = useState<
+    "signals" | "xinxam" | "wishes"
+  >(() => {
+    if (savedSignals.length > 0) return "signals";
+    if (savedXamList.length > 0) return "xinxam";
+    if (savedWishList.length > 0) return "wishes";
+
+    return "signals";
+  });
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -132,17 +142,34 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
     return 0;
   };
 
-  const isWithinDays = (dateStr: string, days: number): boolean => {
-    const ts = parseVnDate(dateStr);
-    if (!ts) return true;
-    const now = Date.now();
-    const diffDays = (now - ts) / (1000 * 60 * 60 * 24);
-    return diffDays <= days && diffDays >= -1;
+  const isWithinDays = (
+    dateStr: string,
+    days: number
+  ): boolean => {
+    const timestamp = parseVnDate(dateStr);
+
+    if (!timestamp || !Number.isFinite(timestamp)) {
+      return false;
+    }
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const start = new Date(startOfToday);
+    start.setDate(start.getDate() - (days - 1));
+
+    const end = new Date(startOfToday);
+    end.setDate(end.getDate() + 1);
+
+    return (
+      timestamp >= start.getTime() &&
+      timestamp < end.getTime()
+    );
   };
 
   const isCurrentMonth = (dateStr: string): boolean => {
     const ts = parseVnDate(dateStr);
-    if (!ts) return true;
+    if (!ts || !Number.isFinite(ts)) return false;
     const itemDate = new Date(ts);
     const now = new Date();
     return (
@@ -278,8 +305,8 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
             </p>
 
             <p className="text-sm text-ink leading-relaxed">
-              Nơi cất giữ những khoảnh khắc tĩnh tại, những thẻ quẻ chiêm nghiệm và lời tâm sự
-              được niêm phong cẩn trọng. Một trạm dừng chân ấm áp sau những vội vã đời thường.
+              Nơi xem lại lời chiêm nghiệm, thẻ xăm và lời gửi gắm
+              bạn đã chọn lưu trên trình duyệt này.
             </p>
           </div>
 
@@ -333,17 +360,35 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
         </div>
 
         {onGoToMoodJourney && (
-          <Card onClick={onGoToMoodJourney} className="group p-5 mb-8 border-line bg-surface-soft cursor-pointer hover:bg-surface">
+          <Card
+            onClick={onGoToMoodJourney}
+            className="group p-5 mb-8 border-line bg-surface-soft cursor-pointer hover:bg-surface"
+          >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-surface border border-line flex items-center justify-center text-accent"><Sparkles className="w-4 h-4" /></div><div><h2 className="font-display font-bold text-lg group-hover:text-accent">Hành trình cảm xúc</h2><p className="text-xs text-muted mt-0.5">Nhìn lại những nhịp bạn đã ghi nhận, thật nhẹ nhàng.</p></div></div>
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent">Mở hành trình <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" /></span>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-surface border border-line flex items-center justify-center text-accent">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="font-display font-bold text-lg group-hover:text-accent">
+                    Nhìn lại lời chiêm nghiệm
+                  </h2>
+                  <p className="text-xs text-muted mt-0.5">
+                    Xem lại những lời chiêm nghiệm và ghi chép bạn đã lưu.
+                  </p>
+                </div>
+              </div>
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent">
+                Xem nội dung đã lưu{" "}
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </span>
             </div>
           </Card>
         )}
 
         {onGoToNotifications && (
           <Card onClick={onGoToNotifications} className="group p-5 mb-8 border-line cursor-pointer hover:bg-surface-soft">
-            <div className="flex items-center justify-between gap-4"><span className="flex items-center gap-3 font-semibold"><Bell className="w-4 h-4 text-accent" /> Thông báo & lời nhắc</span><span className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent">Mở trung tâm <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" /></span></div>
+            <div className="flex items-center justify-between gap-4"><span className="flex items-center gap-3 font-semibold"><Bell className="w-4 h-4 text-accent" /> Thông báo</span><span className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent">Xem trạng thái <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" /></span></div>
           </Card>
         )}
 
@@ -444,7 +489,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                   : "bg-surface border border-line text-ink"
               }`}
             >
-              Tuần này
+              7 ngày gần đây
             </button>
             <button
               onClick={() => setActiveFilter("thisMonth")}
@@ -540,7 +585,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                     </div>
 
                     {/* Card Actions */}
-                    <div className="pt-3 border-t border-line flex items-center justify-between">
+                    <div className="pt-3 border-t border-line flex flex-wrap items-center justify-between gap-2">
                       <button
                         onClick={() => setOpenedXam(item)}
                         className="text-xs font-semibold text-accent hover:underline flex items-center gap-1 cursor-pointer"
@@ -549,29 +594,18 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
 
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => onToggleStarXam(item.id)}
-                          className={`p-1.5 rounded-full hover:bg-surface transition-colors cursor-pointer ${
-                            item.starred ? "text-amber-500 fill-current" : "text-muted"
-                          }`}
-                        >
-                          <Star className="w-4 h-4" />
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            setItemToDelete({
-                              type: "xinxam",
-                              id: item.id,
-                              title: `Thẻ số ${item.stickNumber} - ${item.category}`,
-                            })
-                          }
-                          className="p-1.5 rounded-full hover:bg-danger-soft text-muted hover:text-danger transition-colors cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <SavedItemActions
+                        label={`Thẻ số ${item.stickNumber}, ${item.category}`}
+                        starred={Boolean(item.starred)}
+                        onToggleStar={() => onToggleStarXam(item.id)}
+                        onDelete={() =>
+                          setItemToDelete({
+                            type: "xinxam",
+                            id: item.id,
+                            title: `Thẻ số ${item.stickNumber} - ${item.category}`,
+                          })
+                        }
+                      />
                     </div>
                   </Card>
                 ))}
@@ -660,7 +694,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                           </Badge>
                           <span className="text-xs px-2 py-0.5 rounded-full bg-surface text-muted font-medium flex items-center gap-1">
                             <Lock className="w-3 h-3 text-accent" />
-                            <span>Đã niêm phong kín</span>
+                            <span>Đã lưu trên trình duyệt này</span>
                           </span>
                         </div>
                       </div>
@@ -677,7 +711,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                     </div>
 
                     {/* Actions */}
-                    <div className="pt-3 border-t border-line flex items-center justify-between">
+                    <div className="pt-3 border-t border-line flex flex-wrap items-center justify-between gap-2">
                       <Button
                         variant="default"
                         size="sm"
@@ -688,30 +722,18 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                         <span>Mở điều ước</span>
                       </Button>
 
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => onToggleStarWish(wish.id)}
-                          className={`p-1.5 rounded-full hover:bg-surface transition-colors cursor-pointer ${
-                            wish.starred ? "text-amber-500 fill-current" : "text-muted"
-                          }`}
-                        >
-                          <Star className="w-4 h-4" />
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            setItemToDelete({
-                              type: "wish",
-                              id: wish.id,
-                              title: `Điều ước [${wish.category}]`,
-                            })
-                          }
-                          className="inline-flex items-center gap-1 text-xs text-muted hover:text-danger transition-colors cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>Xóa</span>
-                        </button>
-                      </div>
+                      <SavedItemActions
+                        label={`Lời gửi gắm ${wish.category}, ngày ${wish.date}`}
+                        starred={Boolean(wish.starred)}
+                        onToggleStar={() => onToggleStarWish(wish.id)}
+                        onDelete={() =>
+                          setItemToDelete({
+                            type: "wish",
+                            id: wish.id,
+                            title: `Lời gửi gắm [${wish.category}]`,
+                          })
+                        }
+                      />
                     </div>
                   </Card>
                 ))}
@@ -787,47 +809,42 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                       )}
 
                       {item.actionTitle && (
-                        <div className="text-xs text-muted flex items-center gap-1.5 mb-4">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-success" />
-                          <span>{item.actionTitle}</span>
-                        </div>
+                        <p className="mb-4 text-sm leading-relaxed text-muted">
+                          <span className="font-medium text-ink">
+                            Hành động gợi ý:{" "}
+                          </span>
+                          {item.actionTitle}
+                        </p>
                       )}
                     </div>
 
-                    <div className="pt-3 border-t border-line flex items-center justify-between">
+                    <div className="pt-3 border-t border-line flex flex-wrap items-center justify-between gap-2">
                       <Button
                         variant="default"
                         size="sm"
-                        onClick={() => onGoToSignalResult(item.signalId)}
+                        onClick={() => onGoToSignalResult(item.id)}
                         className="text-xs font-semibold gap-1 rounded-xl"
                       >
                         <span>Xem chi tiết</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </Button>
 
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => onToggleStarSignal?.(item.id)}
-                          className={`p-1.5 rounded-full hover:bg-surface transition-colors cursor-pointer ${
-                            item.starred ? "text-amber-500 fill-current" : "text-muted"
-                          }`}
-                        >
-                          <Star className="w-4 h-4" />
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            setItemToDelete({
-                              type: "signal",
-                              id: item.id,
-                              title: `Tín hiệu [${item.mood}]`,
-                            })
-                          }
-                          className="p-1.5 rounded-full hover:bg-danger-soft text-muted hover:text-danger transition-colors cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <SavedItemActions
+                        label={`Lời chiêm nghiệm ${item.mood}, ngày ${item.date}`}
+                        starred={Boolean(item.starred)}
+                        onToggleStar={
+                          onToggleStarSignal
+                            ? () => onToggleStarSignal(item.id)
+                            : undefined
+                        }
+                        onDelete={() =>
+                          setItemToDelete({
+                            type: "signal",
+                            id: item.id,
+                            title: `Lời chiêm nghiệm [${item.mood}]`,
+                          })
+                        }
+                      />
                     </div>
                   </Card>
                 ))}
@@ -871,161 +888,192 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
           MODAL 1: XÁC NHẬN XÓA (MATCHING IMAGE 2)
          ========================================================================= */}
       {itemToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="max-w-md w-full p-6 sm:p-8 rounded-card bg-surface shadow-2xl border border-line text-center animate-in fade-in zoom-in-95 duration-200">
-            {/* Red alert square icon */}
-            <div className="w-12 h-12 rounded-panel bg-danger-soft border border-danger/25 mx-auto mb-4 flex items-center justify-center text-danger">
-              <Trash2 className="w-6 h-6" />
-            </div>
-
-            <h3 className="font-display font-bold text-xl text-ink mb-2.5">
-              Xác nhận xóa {itemToDelete.type === "wish" ? "điều ước lưu riêng" : "bản ghi này"}?
-            </h3>
-
-            <p className="text-sm text-muted leading-relaxed mb-6">
-              Mục này sẽ được gỡ bỏ vĩnh viễn khỏi <strong>Góc của tôi</strong>. Hành động này
-              không thể hoàn tác sau khi xác nhận.
-            </p>
-
-            <div className="flex items-center justify-center gap-3">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => setItemToDelete(null)}
-                className="w-1/2 rounded-panel text-xs font-semibold"
-              >
-                Hủy bỏ
-              </Button>
-
-              <Button
-                variant="default"
-                size="lg"
-                onClick={handleConfirmDelete}
-                className="w-1/2 rounded-panel text-xs font-semibold bg-action hover:bg-action text-on-action"
-              >
-                <Trash2 className="w-3.5 h-3.5 mr-1" />
-                <span>Xóa vĩnh viễn</span>
-              </Button>
-            </div>
+        <AppDialog
+          labelledBy="delete-saved-item-title"
+          onClose={() => setItemToDelete(null)}
+          className="max-w-md text-center"
+        >
+          {/* Red alert square icon */}
+          <div className="w-12 h-12 rounded-panel bg-danger-soft border border-danger/25 mx-auto mb-4 flex items-center justify-center text-danger">
+            <Trash2 className="w-6 h-6" />
           </div>
-        </div>
+
+          <h3
+            id="delete-saved-item-title"
+            className="font-display font-bold text-xl text-ink mb-2.5"
+          >
+            Xác nhận xóa {itemToDelete.type === "wish" ? "điều ước lưu riêng" : "bản ghi này"}?
+          </h3>
+
+          <p className="text-sm text-muted leading-relaxed mb-6">
+            Mục này sẽ được gỡ bỏ vĩnh viễn khỏi <strong>Góc của tôi</strong>. Hành động này
+            không thể hoàn tác sau khi xác nhận.
+          </p>
+
+          <div className="flex items-center justify-center gap-3">
+            <Button
+              type="button"
+              autoFocus
+              variant="outline"
+              size="lg"
+              onClick={() => setItemToDelete(null)}
+              className="w-1/2 rounded-panel text-xs font-semibold"
+            >
+              Hủy bỏ
+            </Button>
+
+            <Button
+              type="button"
+              variant="default"
+              size="lg"
+              onClick={handleConfirmDelete}
+              className="w-1/2 rounded-panel text-xs font-semibold bg-action hover:bg-action text-on-action"
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1" />
+              <span>Xóa vĩnh viễn</span>
+            </Button>
+          </div>
+        </AppDialog>
       )}
 
       {/* =========================================================================
           MODAL 2: MỞ ĐIỀU ƯỚC CHI TIẾT
          ========================================================================= */}
       {openedWish && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="max-w-lg w-full p-6 sm:p-8 rounded-card bg-surface shadow-2xl border border-line relative animate-in fade-in zoom-in-95 duration-200">
-            <button
-              onClick={() => setOpenedWish(null)}
-              className="absolute top-5 right-5 p-2 rounded-full hover:bg-surface text-muted transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+        <AppDialog
+          labelledBy="saved-wish-title"
+          onClose={() => setOpenedWish(null)}
+          className="relative"
+        >
+          <button
+            type="button"
+            autoFocus
+            aria-label="Đóng lời gửi gắm"
+            onClick={() => setOpenedWish(null)}
+            className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-xl text-muted hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <X
+              className="h-5 w-5"
+              aria-hidden="true"
+            />
+          </button>
 
-            <div className="flex items-center gap-2 mb-3">
-              <Badge variant="terracotta" className="text-xs">
-                {openedWish.category}
-              </Badge>
-              <span className="text-xs text-muted">{openedWish.date}</span>
-            </div>
-
-            <h3 className="font-display font-bold text-xl text-ink mb-4">
-              {openedWish.category.includes("tri ân") ||
-              openedWish.category.includes("Tri ân") ||
-              openedWish.category === "Lòng biết ơn"
-                ? "Lời tri ân đã lưu riêng"
-                : "Ước nguyện đã niêm phong"}
-            </h3>
-
-            <div className="p-5 rounded-panel bg-surface border border-line text-sm sm:text-base font-display leading-relaxed text-gold mb-6 whitespace-pre-wrap">
-              “{openedWish.content}”
-            </div>
-
-            <div className="text-xs text-muted italic mb-6">
-              ⓘ Lời tâm sự này chỉ lưu trữ trên thiết bị của bạn và không gửi tới bất kỳ ai.
-            </div>
-
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => setOpenedWish(null)}
-              className="w-full rounded-panel text-xs font-semibold"
-            >
-              Đóng lại
-            </Button>
+          <div className="flex items-center gap-2 mb-3 pr-12">
+            <Badge variant="terracotta" className="text-xs">
+              {openedWish.category}
+            </Badge>
+            <span className="text-xs text-muted">{openedWish.date}</span>
           </div>
-        </div>
+
+          <h3
+            id="saved-wish-title"
+            className="font-display font-bold text-xl text-ink mb-4"
+          >
+            {openedWish.category.includes("tri ân") ||
+            openedWish.category.includes("Tri ân") ||
+            openedWish.category === "Lòng biết ơn"
+              ? "Lời tri ân đã lưu riêng"
+              : "Lời gửi gắm đã lưu"}
+          </h3>
+
+          <div className="p-5 rounded-panel bg-surface border border-line text-sm sm:text-base font-display leading-relaxed text-ink mb-6 whitespace-pre-wrap break-words">
+            “{openedWish.content}”
+          </div>
+
+          <div className="text-xs text-muted italic mb-6">
+            ⓘ Lời tâm sự này chỉ lưu trữ trên thiết bị của bạn và không gửi tới bất kỳ ai.
+          </div>
+
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => setOpenedWish(null)}
+            className="w-full rounded-panel text-xs font-semibold"
+          >
+            Đóng lại
+          </Button>
+        </AppDialog>
       )}
 
       {/* =========================================================================
           MODAL 3: MỞ THẺ XĂM CHI TIẾT
          ========================================================================= */}
       {openedXam && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="max-w-lg w-full p-6 sm:p-8 rounded-card bg-surface shadow-2xl border border-line relative animate-in fade-in zoom-in-95 duration-200">
-            <button
-              onClick={() => setOpenedXam(null)}
-              className="absolute top-5 right-5 p-2 rounded-full hover:bg-surface text-muted transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+        <AppDialog
+          labelledBy="saved-xam-title"
+          onClose={() => setOpenedXam(null)}
+          className="relative"
+        >
+          <button
+            type="button"
+            autoFocus
+            aria-label="Đóng thẻ xăm"
+            onClick={() => setOpenedXam(null)}
+            className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-xl text-muted hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <X
+              className="h-5 w-5"
+              aria-hidden="true"
+            />
+          </button>
 
-            <div className="flex items-center gap-2 mb-2">
-              <Badge variant="terracotta" className="text-xs">
-                {openedXam.region}
-              </Badge>
-              <Badge variant="outline" className="text-xs bg-surface text-accent border-line">
-                {openedXam.category}
-              </Badge>
-              <span className="text-xs text-muted">{openedXam.date}</span>
-            </div>
-
-            <div className="text-xs uppercase font-bold tracking-wider text-accent mb-1">
-              THẺ SỐ {openedXam.stickNumber} • QUẺ {openedXam.fortuneType.toUpperCase()}
-            </div>
-
-            <h3 className="font-display font-bold text-2xl text-ink mb-4">
-              Lời quẻ chiêm nghiệm
-            </h3>
-
-            <div className="p-5 rounded-panel bg-surface border border-line mb-5">
-              <p className="font-display italic text-base sm:text-lg text-accent font-semibold text-center leading-relaxed">
-                “{openedXam.quote}”
-              </p>
-            </div>
-
-            <p className="text-sm text-ink leading-relaxed mb-6">
-              Lời nhắc từ truyền thống dân gian: Mọi sự hanh thông bắt đầu từ việc giữ lòng an định,
-              chăm lo những điều thiết thực trong tầm tay và bao dung với chính mình.
-            </p>
-
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => setOpenedXam(null)}
-                className="w-1/2 rounded-panel text-xs font-semibold"
-              >
-                Đóng lại
-              </Button>
-
-              <Button
-                variant="default"
-                size="lg"
-                onClick={() => {
-                  setOpenedXam(null);
-                  onGoToXinXam();
-                }}
-                className="w-1/2 rounded-panel text-xs font-semibold gap-1.5"
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>Rút quẻ mới</span>
-              </Button>
-            </div>
+          <div className="flex items-center gap-2 mb-2 pr-12 flex-wrap">
+            <Badge variant="terracotta" className="text-xs">
+              {openedXam.region}
+            </Badge>
+            <Badge variant="outline" className="text-xs bg-surface text-accent border-line">
+              {openedXam.category}
+            </Badge>
+            <span className="text-xs text-muted">{openedXam.date}</span>
           </div>
-        </div>
+
+          <div className="text-xs uppercase font-bold tracking-wider text-accent mb-1">
+            THẺ SỐ {openedXam.stickNumber} • QUẺ {openedXam.fortuneType.toUpperCase()}
+          </div>
+
+          <h3
+            id="saved-xam-title"
+            className="font-display font-bold text-2xl text-ink mb-4"
+          >
+            Lời quẻ chiêm nghiệm
+          </h3>
+
+          <div className="p-5 rounded-panel bg-surface border border-line mb-5">
+            <p className="font-display italic text-base sm:text-lg text-accent font-semibold text-center leading-relaxed">
+              “{openedXam.quote}”
+            </p>
+          </div>
+
+          <p className="mb-6 text-sm leading-relaxed text-muted">
+            Đây là nội dung chiêm nghiệm trong bản thử nghiệm.
+            Bạn có thể tiếp nhận như một gợi ý suy ngẫm,
+            không phải dự đoán kết quả của sự việc.
+          </p>
+
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setOpenedXam(null)}
+              className="w-1/2 rounded-panel text-xs font-semibold"
+            >
+              Đóng lại
+            </Button>
+
+            <Button
+              variant="default"
+              size="lg"
+              onClick={() => {
+                setOpenedXam(null);
+                onGoToXinXam();
+              }}
+              className="w-1/2 rounded-panel text-xs font-semibold gap-1.5"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Rút quẻ mới</span>
+            </Button>
+          </div>
+        </AppDialog>
       )}
     </div>
   );

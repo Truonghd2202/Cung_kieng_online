@@ -64,6 +64,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
   const [mode, setMode] = useState<WishMode>("journal");
   const [isGentleAnimation, setIsGentleAnimation] = useState(true);
   const [hasActuallySaved, setHasActuallySaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   const TOPICS: WishTopic[] = ["Bình an", "Gia đình", "Học tập", "Công việc", "Khác"];
 
@@ -71,27 +72,41 @@ export const WishScreen: React.FC<WishScreenProps> = ({
     setContent(SAMPLE_WISHES[topic] || SAMPLE_WISHES["Bình an"]);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!content.trim()) return;
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    setSaveError("");
+
+    const cleanContent = content.trim();
+    if (!cleanContent) return;
 
     if (mode === "journal") {
-      let saved = false;
-      if (onSaveJournal) {
-        saved = onSaveJournal(content.trim(), topic) === true;
-      }
+      const saved =
+        onSaveJournal?.(cleanContent, topic) === true;
+
       setHasActuallySaved(saved);
-      if (saved) {
-        setViewState("variantA");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+
+      if (!saved) {
+        if (isLoggedIn) {
+          setSaveError(
+            "Chưa lưu được nội dung. Bạn hãy thử lại."
+          );
+        }
+
+        // Với khách, App chuyển sang đăng nhập.
+        return;
       }
+
+      setViewState("variantA");
     } else {
-      // Ephemeral mode: thả trôi xong gọi setContent("");
       setContent("");
       setHasActuallySaved(false);
       setViewState("variantB");
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
+
+    window.scrollTo({
+      top: 0,
+      behavior: "auto",
+    });
   };
 
   return (
@@ -257,14 +272,16 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                           </div>
 
                           <p className="text-sm text-ink leading-relaxed mb-4">
-                            Giữ trọn vẹn câu chữ của bạn trong Góc của tôi để bạn có thể tự
-                            mình đọc lại bất cứ lúc nào. Hoàn toàn riêng tư, chỉ một mình bạn
-                            thấy.
+                            Nội dung được lưu trong Góc của tôi trên trình duyệt này.
+                            Bản thử nghiệm chưa có cơ chế mã hóa hoặc đồng bộ tài khoản
+                            qua máy chủ.
                           </p>
                         </div>
 
                         <div className="p-2.5 rounded-xl bg-surface border border-line text-xs text-muted leading-relaxed">
-                          ⓘ {isLoggedIn ? "Đã vào demo: Nội dung bản demo được lưu trên trình duyệt này." : "Dành cho khách: Bạn sẽ được lưu tạm và có thể liên kết vào tài khoản demo."}
+                          ⓘ {isLoggedIn
+                            ? "Bạn có thể lưu nội dung trên trình duyệt này."
+                            : "Bạn sẽ được chuyển đến đăng nhập để lưu. Nội dung chờ lưu chưa được giữ khi tải lại trang."}
                         </div>
                       </Card>
 
@@ -311,6 +328,12 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                     </div>
                   </div>
 
+                  {saveError && (
+                    <p role="alert" className="text-sm text-danger">
+                      {saveError}
+                    </p>
+                  )}
+
                   {/* Action Buttons Row */}
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
                     <Button
@@ -337,8 +360,10 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                     >
                       <span>
                         {mode === "journal"
-                          ? "Lưu riêng điều ước"
-                          : "Thả hoa đăng buông bỏ"}
+                          ? isLoggedIn
+                            ? "Lưu vào Góc của tôi"
+                            : "Đăng nhập để lưu"
+                          : "Thả hoa đăng — không lưu"}
                       </span>
                       <ArrowRight className="w-4 h-4" />
                     </Button>
@@ -451,23 +476,14 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                 </div>
                 <div>
                   <h4 className="font-bold text-sm text-ink mb-0.5">
-                    Cam kết bảo mật & tôn trọng tâm trí
+                    Thông tin lưu trữ
                   </h4>
                   <p className="text-sm text-muted leading-relaxed max-w-2xl">
-                    Nội dung tâm sự là tài sản tinh thần vô giá của riêng bạn. Chúng tôi cam
-                    kết không dùng văn bản để huấn luyện mô hình thương mại, không đọc trộm,
-                    và trao toàn quyền xóa vĩnh viễn cho bạn bất kỳ lúc nào.
+                    Chọn lưu để giữ nội dung trên trình duyệt này.
+                    Chọn thả hoa đăng để kết thúc mà không ghi nội dung vào nhật ký.
                   </p>
                 </div>
               </div>
-
-              <button
-                type="button"
-                onClick={() => alert("Chính sách bảo mật: Toàn bộ dữ liệu nhật ký chỉ lưu trên thiết bị của bạn (Local Storage) hoặc tài khoản cá nhân đã mã hóa.")}
-                className="px-4 py-2 rounded-full border border-line text-xs font-semibold text-muted hover:text-accent flex-shrink-0 hover:bg-surface transition-colors cursor-pointer"
-              >
-                Đọc chính sách bảo mật
-              </button>
             </div>
           </div>
         )}
@@ -518,7 +534,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
               </div>
 
               <h1 className="page-title mb-3">
-                Điều bạn viết đã được lưu riêng
+                Đã lưu vào Góc của tôi
               </h1>
               <p className="text-sm text-muted max-w-xl mx-auto leading-relaxed">
                 Khoảng lặng này đã được cất giữ an toàn. Chỉ một mình bạn có thể mở lại khi
@@ -567,7 +583,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                     Trạng thái
                   </div>
                   <div className="font-semibold text-xs text-ink">
-                    {content.length} ký tự đã niêm phong
+                    {content.length} ký tự trong lời gửi gắm
                   </div>
                 </div>
               </div>

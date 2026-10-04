@@ -3,8 +3,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
-  CheckSquare,
-  Square,
   Share2,
   Printer,
   Bookmark,
@@ -36,6 +34,10 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
   const ritual = getRitualById(ritualId) || RITUAL_GUIDES[0];
   const detail = ritual.detail || RITUAL_GUIDES[0].detail!;
 
+  const validChecklistIds = new Set(
+    detail.checklists.map((item) => item.id)
+  );
+
   // Interactive checklist state isolated per ritual ID
   const [checkedIds, setCheckedIds] = useState<string[]>(() => {
     try {
@@ -57,8 +59,13 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
 
   const [showShareNotification, setShowShareNotification] = useState(false);
 
+  const completedChecklistCount = checkedIds.filter(
+    (id) => validChecklistIds.has(id)
+  ).length;
+
   // Sync state whenever ritual.id changes (prevents carrying old state to new article)
   useEffect(() => {
+    setShowShareNotification(false);
     try {
       const storedChecklist = localStorage.getItem(`tltl-ritual-checklist-${ritual.id}`);
       setCheckedIds(storedChecklist ? JSON.parse(storedChecklist) : []);
@@ -90,11 +97,23 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
     });
   };
 
-  const handleShare = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href);
+  const handleShare = async () => {
+    setShowShareNotification(false);
+
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard unavailable");
+      }
+
+      await navigator.clipboard.writeText(
+        window.location.href
+      );
+
       setShowShareNotification(true);
-      setTimeout(() => setShowShareNotification(false), 2500);
+    } catch {
+      window.alert(
+        "Chưa sao chép được. Bạn có thể sao chép địa chỉ bài từ thanh địa chỉ."
+      );
     }
   };
 
@@ -135,7 +154,7 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
             variant="terracotta"
             className="mb-3 px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-surface text-accent border-line"
           >
-            THỰC HÀNH TẠI GIA TIẾT GIẢM • PHÙ HỢP CĂN HỘ & NHÀ PHỐ TRẺ
+            Hướng dẫn tham khảo · Điều chỉnh theo nếp nhà
           </Badge>
 
           <h1 className="page-title mb-3">
@@ -150,15 +169,15 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="px-3 py-1.5 rounded-full bg-surface border border-line text-ink font-medium flex items-center gap-1.5">
               <Check className="w-3.5 h-3.5 text-accent" />
-              <span>4 bước giản dị</span>
+              <span>{detail.steps.length} bước gợi ý</span>
             </span>
             <span className="px-3 py-1.5 rounded-full bg-surface border border-line text-ink font-medium flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-accent" />
-              <span>Khoảng 15 - 20 phút</span>
+              <span>{ritual.timeEstimate}</span>
             </span>
             <span className="px-3 py-1.5 rounded-full bg-surface border border-line text-ink font-medium flex items-center gap-1.5">
               <Home className="w-3.5 h-3.5 text-accent" />
-              <span>Phù hợp căn hộ & nhà phố</span>
+              <span>{ritual.region}</span>
             </span>
             <span className="px-3 py-1.5 rounded-full bg-surface border border-line text-accent font-semibold flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" />
@@ -185,7 +204,7 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
         {/* Two Columns Layout: Left Content, Right Sticky Sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
           {/* Main Left Content (8 cols) */}
-          <div className="lg:col-span-8 space-y-12">
+          <div className="order-2 lg:order-1 lg:col-span-8 space-y-12">
             {/* Section 1: Ý nghĩa của việc dành thời gian tưởng nhớ */}
             <section>
               <div className="flex items-center gap-2 mb-3">
@@ -254,12 +273,12 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
               </div>
             </section>
 
-            {/* Section 3: 4 bước thực hành an tịnh nơi tổ ấm */}
+            {/* Section 3: Các bước thực hành gợi ý */}
             <section>
               <div className="flex items-center gap-2 mb-6">
                 <span className="w-1.5 h-4 rounded-full bg-action"></span>
                 <h2 className="section-title text-xl sm:text-2xl">
-                  4 bước: Thực hành an tịnh nơi tổ ấm
+                  Các bước thực hành gợi ý
                 </h2>
               </div>
 
@@ -350,14 +369,15 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
                 <Button
                   variant={isBookmarked ? "default" : "outline"}
                   size="sm"
+                  aria-pressed={isBookmarked}
                   onClick={handleToggleBookmark}
                   className="w-full sm:w-auto text-xs font-semibold gap-1.5"
                 >
                   <Bookmark className={`w-4 h-4 ${isBookmarked ? "fill-current" : ""}`} />
                   <span>
                     {isBookmarked
-                      ? "Đã lưu vào cẩm nang của tôi ✔"
-                      : "Lưu cẩm nang nghi thức"}
+                      ? "Đã đánh dấu trên trình duyệt này"
+                      : "Đánh dấu hướng dẫn"}
                   </span>
                 </Button>
               </div>
@@ -365,7 +385,7 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
           </div>
 
           {/* Right Sidebar: Sticky Checklist & Safety Controls (4 cols) */}
-          <div className="lg:col-span-4">
+          <div className="order-1 lg:order-2 lg:col-span-4">
             <div className="lg:sticky lg:top-24 space-y-6">
               {/* Checklist Card */}
               <Card className="p-5 rounded-card bg-surface border-line shadow-xs">
@@ -386,7 +406,7 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
                 <div className="p-3 rounded-panel bg-surface/70 border border-line text-xs font-semibold text-accent mb-4 flex items-center justify-between">
                   <span>Tiến độ thực hiện:</span>
                   <span className="font-sans tabular-nums text-sm">
-                    {checkedIds.length} / {detail.checklists.length} việc hoàn thành
+                    {completedChecklistCount} / {detail.checklists.length} việc hoàn thành
                   </span>
                 </div>
 
@@ -395,26 +415,27 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
                   {detail.checklists.map((chk) => {
                     const isDone = checkedIds.includes(chk.id);
                     return (
-                      <div
+                      <label
                         key={chk.id}
-                        onClick={() => toggleCheck(chk.id)}
-                        className={`p-3 rounded-xl border text-xs sm:text-sm flex items-start gap-2.5 cursor-pointer transition-all ${
+                        className={[
+                          "flex min-h-11 items-start gap-3 rounded-xl border p-3",
+                          "cursor-pointer text-sm",
                           isDone
-                            ? "bg-surface border-accent/40 text-ink font-medium"
-                            : "bg-surface border-line text-ink hover:border-line"
-                        }`}
+                            ? "bg-accent-soft border-accent/40"
+                            : "bg-surface border-line",
+                        ].join(" ")}
                       >
-                        <div className="mt-0.5 text-accent">
-                          {isDone ? (
-                            <CheckSquare className="w-4 h-4" />
-                          ) : (
-                            <Square className="w-4 h-4 text-muted" />
-                          )}
-                        </div>
-                        <span className={isDone ? "line-through text-muted" : ""}>
+                        <input
+                          type="checkbox"
+                          checked={isDone}
+                          onChange={() => toggleCheck(chk.id)}
+                          className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-action)]"
+                        />
+
+                        <span className={isDone ? "text-muted" : "text-ink"}>
                           {chk.label}
                         </span>
-                      </div>
+                      </label>
                     );
                   })}
                 </div>

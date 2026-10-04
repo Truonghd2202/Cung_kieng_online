@@ -18,6 +18,16 @@ import {
   RegionKey,
   CultureCategoryKey,
 } from "../data/cultureData";
+import { DiscoveryNav } from "../components/DiscoveryNav";
+
+const normalizeSearchText = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[đĐ]/g, "d")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
 
 interface CultureScreenProps {
   onSelectArticle: (id: string) => void;
@@ -39,42 +49,65 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [visibleCount, setVisibleCount] = useState(4);
 
-  const REGIONS: { key: string; label: string }[] = [
-    { key: "all", label: "Tất cả vùng miền" },
-    { key: "Bắc Bộ", label: "Bắc Bộ (Đình làng, Quan họ, Tứ Phủ)" },
-    { key: "Trung Bộ", label: "Trung Bộ (Xứ Huế, Miền biển, Cầu Ngư)" },
-    { key: "Nam Bộ", label: "Nam Bộ (Phù sa sông nước, Bà Chúa Xứ)" },
+  const REGIONS = [
+    { key: "all", label: "Tất cả" },
+    { key: "Bắc Bộ", label: "Bắc Bộ" },
+    { key: "Trung Bộ", label: "Trung Bộ" },
+    { key: "Nam Bộ", label: "Nam Bộ" },
   ];
 
-  const CATEGORIES: { key: string; label: string }[] = [
-    { key: "all", label: "Tất cả chủ đề" },
-    { key: "Lễ hội truyền thống", label: "Lễ hội truyền thống" },
-    { key: "Phong tục & Nghi lễ", label: "Phong tục & Nghi lễ tập quán" },
-    { key: "Điển tích xưa", label: "Điển tích & Tích xưa" },
-    { key: "Không gian tín ngưỡng", label: "Không gian tín ngưỡng (Đình, Đền, Miếu)" },
+  const CATEGORIES = [
+    { key: "all", label: "Tất cả" },
+    {
+      key: "Lễ hội truyền thống",
+      label: "Lễ hội",
+    },
+    {
+      key: "Phong tục & Nghi lễ",
+      label: "Phong tục & nghi lễ",
+    },
+    {
+      key: "Điển tích xưa",
+      label: "Điển tích",
+    },
+    {
+      key: "Không gian tín ngưỡng",
+      label: "Không gian tín ngưỡng",
+    },
   ];
 
   const filteredArticles = useMemo(() => {
+    const query = normalizeSearchText(searchQuery);
+
     return CULTURE_ARTICLES.filter((article) => {
-      // Region filter
-      if (selectedRegion !== "all" && article.region !== selectedRegion) {
-        return false;
-      }
-      // Category filter
-      if (selectedCategory !== "all" && article.category !== selectedCategory) {
-        return false;
-      }
-      // Search filter
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const matchTitle = article.title.toLowerCase().includes(q);
-        const matchSubtitle = article.subtitle.toLowerCase().includes(q);
-        const matchExcerpt = article.excerpt.toLowerCase().includes(q);
-        const matchRegion = article.region.toLowerCase().includes(q);
-        return matchTitle || matchSubtitle || matchExcerpt || matchRegion;
-      }
-      return true;
+      const matchesRegion =
+        selectedRegion === "all" ||
+        article.region === selectedRegion;
+
+      const matchesCategory =
+        selectedCategory === "all" ||
+        article.category === selectedCategory;
+
+      const searchableText = normalizeSearchText(
+        [
+          article.title,
+          article.subtitle,
+          article.excerpt,
+          article.region,
+          article.category,
+        ].join(" ")
+      );
+
+      const matchesSearch =
+        !query || searchableText.includes(query);
+
+      return (
+        matchesRegion &&
+        matchesCategory &&
+        matchesSearch
+      );
     });
   }, [selectedRegion, selectedCategory, searchQuery]);
 
@@ -84,11 +117,38 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
   // Cover story for magazine layout
   const featuredArticle = isDefaultView ? filteredArticles[0] : null;
   const catalogArticles = isDefaultView ? filteredArticles.slice(1) : filteredArticles;
+  const visibleArticles = catalogArticles.slice(
+    0,
+    visibleCount
+  );
+
+  const hasMoreArticles =
+    visibleArticles.length < catalogArticles.length;
 
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedRegion("all");
     setSelectedCategory("all");
+    setVisibleCount(4);
+  };
+
+  const handleArticleLinkClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    articleId: string
+  ) => {
+    // Giữ cách mở tab mới bằng Ctrl/Cmd/Shift.
+    if (
+      event.button !== 0 ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    onSelectArticle(articleId);
   };
 
   return (
@@ -109,51 +169,13 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
 
           <div className="flex items-center gap-2 uppercase font-medium tracking-wider text-xs text-muted">
             <span className="text-accent">✦</span>
-            <span>TẬP SAN DÂN GIAN • HỒN VIỆT ĐƯƠNG ĐẠI & ĐỜI SỐNG TÂM THỨC</span>
+            <span>CÂU CHUYỆN VĂN HÓA VIỆT</span>
           </div>
         </div>
 
-        {/* Khám phá Sub-tabs */}
-        <div className="flex items-center gap-2.5 mb-8 flex-wrap">
-          <button className="px-5 py-2.5 rounded-full bg-action text-white text-xs font-semibold shadow-sm">
-            Di sản & Điển tích dân gian
-          </button>
-          {onGoToRituals && (
-            <button
-              onClick={onGoToRituals}
-              className="px-5 py-2.5 rounded-full bg-surface/95 border border-line text-ink hover:border-accent hover:text-accent text-xs font-medium transition-all cursor-pointer shadow-2xs hover:shadow-xs"
-            >
-              Cẩm nang nghi lễ tại gia
-            </button>
-          )}
-          {onGoToCalendar && (
-            <button
-              onClick={onGoToCalendar}
-              className="px-5 py-2.5 rounded-full bg-surface/95 border border-line text-ink hover:border-accent hover:text-accent text-xs font-medium transition-all cursor-pointer shadow-2xs hover:shadow-xs"
-            >
-              Lịch văn hóa & Tiết khí
-            </button>
-          )}
-          {onGoToGoodDays && (
-            <button
-              onClick={onGoToGoodDays}
-              className="px-5 py-2.5 rounded-full bg-surface/95 border border-line text-ink hover:border-accent hover:text-accent text-xs font-medium transition-all cursor-pointer shadow-2xs hover:shadow-xs"
-            >
-              Tra cứu ngày lành
-            </button>
-          )}
-          {onGoToMap && (
-            <button
-              onClick={onGoToMap}
-              className="px-5 py-2.5 rounded-full bg-surface/95 border border-line text-ink hover:border-accent hover:text-accent text-xs font-medium transition-all cursor-pointer shadow-2xs hover:shadow-xs"
-            >
-              Bản đồ văn hóa 3 miền
-            </button>
-          )}
-        </div>
 
         {/* Editorial Masthead Opening */}
-        <div className="discovery-masthead mb-8">
+        <div className="discovery-masthead culture-masthead mb-8">
           <div className="relative max-w-2xl">
             <div className="mb-3">
               <Badge
@@ -165,12 +187,12 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
             </div>
 
             <h1 className="page-title mb-4">
-              Khám phá phong thổ & nét thiêng dân gian
+              Khám phá văn hóa Việt
             </h1>
 
             <p className="text-sm sm:text-base text-ink leading-relaxed">
-              Tìm hiểu chiều sâu tập tục, huyền tích và không gian tín ngưỡng ba miền dưới
-              góc nhìn văn hóa, nhân bản và lịch sử thuần khiết của người Việt.
+              Tìm hiểu câu chuyện, phong tục và không gian văn hóa
+              Bắc, Trung, Nam. Chọn vùng hoặc chủ đề bạn muốn khám phá.
             </p>
           </div>
           <img
@@ -180,17 +202,28 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
           />
         </div>
 
+        <DiscoveryNav
+          current="culture"
+          onGoToRituals={onGoToRituals}
+          onGoToCalendar={onGoToCalendar}
+          onGoToPlan={onGoToGoodDays}
+          onGoToMap={onGoToMap}
+        />
+
         {/* Search & Filter Toolbar */}
         <div className="py-6 border-y border-line/70 mb-10 space-y-4">
           {/* Search Input Box */}
           <div className="relative">
             <input
-              type="text"
+              type="search"
               aria-label="Tìm kiếm chuyên đề văn hóa"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm lễ hội, phong tục, điển tích dân gian, đền miếu xưa..."
-              className="w-full pl-11 pr-4 py-3 rounded-panel bg-surface/70 border border-line text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-1 focus:ring-accent transition-all"
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setVisibleCount(4);
+              }}
+              placeholder="Tìm bài viết, phong tục, lễ hội..."
+              className="w-full pl-11 pr-4 py-3 rounded-panel bg-surface/70 border border-line text-base text-ink placeholder:text-subtle focus:outline-none focus:ring-1 focus:ring-accent transition-all"
             />
             <Search className="w-5 h-5 text-muted absolute left-3.5 top-3.5" />
           </div>
@@ -207,8 +240,13 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
                 return (
                   <button
                     key={r.key}
-                    onClick={() => setSelectedRegion(r.key)}
-                    className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => {
+                      setSelectedRegion(r.key);
+                      setVisibleCount(4);
+                    }}
+                    className={`min-h-11 px-3.5 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${
                       isActive
                         ? "bg-action text-white shadow-2xs font-semibold"
                         : "bg-surface text-ink border border-line hover:border-accent/40"
@@ -233,8 +271,13 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
                 return (
                   <button
                     key={c.key}
-                    onClick={() => setSelectedCategory(c.key)}
-                    className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => {
+                      setSelectedCategory(c.key);
+                      setVisibleCount(4);
+                    }}
+                    className={`min-h-11 px-3.5 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${
                       isActive
                         ? "bg-action text-white shadow-2xs font-semibold"
                         : "bg-surface text-ink border border-line hover:border-accent/40"
@@ -251,8 +294,8 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-line/50 text-xs text-muted">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-action"></span>
-              <span>
-                Hiển thị <strong>{filteredArticles.length}</strong> chuyên đề di sản tuyển chọn
+              <span role="status" aria-live="polite" aria-atomic="true">
+                Tìm thấy <strong>{filteredArticles.length}</strong> bài viết
               </span>
             </div>
 
@@ -270,17 +313,16 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
 
         {/* ================= EDITORIAL COVER STORY (When browsing default) ================= */}
         {featuredArticle && (
-          <section className="mb-14">
+          <section className="mb-8 sm:mb-12">
             <div className="text-xs font-bold uppercase tracking-widest text-accent mb-3 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-accent" />
               <span>CHUYÊN ĐỀ TÂM ĐIỂM KỲ NÀY</span>
             </div>
 
             <article
-              onClick={() => onSelectArticle(featuredArticle.id)}
-              className="group cursor-pointer rounded-card overflow-hidden bg-surface border border-line shadow-xs hover:shadow-card transition-all duration-300 grid grid-cols-1 lg:grid-cols-12"
+              className="group rounded-card overflow-hidden bg-surface border border-line shadow-xs hover:shadow-card transition-all duration-300 grid grid-cols-1 lg:grid-cols-12"
             >
-              <div className="lg:col-span-7 relative h-72 sm:h-96 lg:h-full overflow-hidden bg-surface-soft">
+              <div className="lg:col-span-7 relative h-48 sm:h-72 lg:h-full overflow-hidden bg-surface-soft">
                 <img
                   src={featuredArticle.image}
                   alt={featuredArticle.title}
@@ -307,10 +349,20 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
                   </div>
 
                   <h2 className="font-display font-bold text-2xl sm:text-3xl text-ink leading-tight mb-4 group-hover:text-accent transition-colors">
-                    {featuredArticle.title}
+                    <a
+                      href={`/culture-detail?articleId=${encodeURIComponent(
+                        featuredArticle.id
+                      )}`}
+                      onClick={(event) =>
+                        handleArticleLinkClick(event, featuredArticle.id)
+                      }
+                      className="rounded-sm hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    >
+                      {featuredArticle.title}
+                    </a>
                   </h2>
 
-                  <p className="text-sm sm:text-base text-ink/90 leading-relaxed first-letter:text-4xl first-letter:font-serif first-letter:font-bold first-letter:mr-2.5 first-letter:float-left first-letter:text-accent first-letter:leading-none">
+                  <p className="line-clamp-3 text-sm leading-relaxed text-muted sm:line-clamp-none sm:text-base">
                     {featuredArticle.subtitle}
                   </p>
                 </div>
@@ -320,8 +372,10 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
                     Di sản & Không gian tín ngưỡng
                   </span>
                   <Button
+                    type="button"
                     variant="default"
                     size="sm"
+                    onClick={() => onSelectArticle(featuredArticle.id)}
                     className="gap-2 bg-action text-white shadow-xs group-hover:shadow-card cursor-pointer"
                   >
                     <span>Đọc chuyên đề</span>
@@ -366,54 +420,122 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-            {catalogArticles.map((article) => (
-              <article
-                key={article.id}
-                onClick={() => onSelectArticle(article.id)}
-                className="group cursor-pointer flex flex-col justify-between border-b lg:border-b-0 pb-6 lg:pb-0"
-              >
-                <div>
-                  {/* Photo Container */}
-                  <div className="relative aspect-16/10 rounded-panel overflow-hidden bg-surface-soft mb-4">
-                    <img
-                      src={article.image}
-                      alt={article.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
-                    <div className="absolute bottom-2.5 left-3 text-xs font-semibold text-white/90 drop-shadow-sm">
-                      {article.region}
+          <>
+            <div
+              id="culture-article-list"
+              className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-7 lg:grid-cols-3"
+            >
+              {visibleArticles.map((article) => (
+                <article
+                  key={article.id}
+                  className="group border-b border-line pb-5 md:flex md:flex-col md:pb-6"
+                >
+                  <div className="flex items-start gap-4 md:block">
+                    <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-surface-soft md:mb-4 md:h-auto md:w-full md:aspect-16/10">
+                      <img
+                        src={article.image}
+                        alt={article.title}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover transition-transform duration-300 motion-reduce:transition-none md:group-hover:scale-105"
+                      />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="mb-1.5 text-xs font-medium text-accent">
+                        {article.region}
+                        <span aria-hidden="true"> · </span>
+                        {article.readingTime}
+                      </p>
+
+                      <h3 className="mb-2 font-display text-base font-bold leading-snug text-ink md:text-xl">
+                        <a
+                          href={`/culture-detail?articleId=${encodeURIComponent(
+                            article.id
+                          )}`}
+                          onClick={(event) =>
+                            handleArticleLinkClick(
+                              event,
+                              article.id
+                            )
+                          }
+                          className="rounded-sm hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                        >
+                          {article.title}
+                        </a>
+                      </h3>
+
+                      <p className="line-clamp-2 text-sm leading-relaxed text-muted">
+                        {article.excerpt}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Kicker Category */}
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-1.5">
-                    <span>{article.category}</span>
-                    <span>•</span>
-                    <span className="text-muted font-normal">{article.readingTime}</span>
+                  <div className="mt-3 flex items-center justify-between gap-3 md:mt-auto md:pt-4">
+                    <span className="min-w-0 text-xs text-muted">
+                      {article.category}
+                    </span>
+
+                    <a
+                      href={`/culture-detail?articleId=${encodeURIComponent(
+                        article.id
+                      )}`}
+                      onClick={(event) =>
+                        handleArticleLinkClick(
+                          event,
+                          article.id
+                        )
+                      }
+                      aria-label={`Đọc bài: ${article.title}`}
+                      className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-accent hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    >
+                      Đọc bài
+                      <ArrowRight
+                        className="h-4 w-4"
+                        aria-hidden="true"
+                      />
+                    </a>
                   </div>
+                </article>
+              ))}
+            </div>
 
-                  {/* Title & Excerpt */}
-                  <h3 className="font-display font-bold text-lg sm:text-xl text-ink leading-snug mb-2 group-hover:text-accent transition-colors">
-                    {article.title}
-                  </h3>
-                  <p className="text-sm text-ink/80 leading-relaxed line-clamp-3 mb-4">
-                    {article.excerpt}
-                  </p>
-                </div>
+            <div className="mb-10 mt-6 flex flex-col items-center gap-3">
+              <p
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                className="text-sm text-muted"
+              >
+                Đang hiển thị {visibleArticles.length} /{" "}
+                {catalogArticles.length} bài
+                {featuredArticle
+                  ? " trong danh sách, ngoài bài nổi bật."
+                  : "."}
+              </p>
 
-                {/* Footer read link */}
-                <div className="pt-3 border-t border-line/60 flex items-center justify-between text-xs">
-                  <span className="text-muted italic">Khảo cứu văn hóa</span>
-                  <span className="text-accent font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                    <span>Khám phá</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </article>
-            ))}
-          </div>
+              {catalogArticles.length > 4 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!hasMoreArticles}
+                  aria-controls="culture-article-list"
+                  onClick={() =>
+                    setVisibleCount((count) => count + 4)
+                  }
+                  className="min-h-11 w-full sm:w-auto"
+                >
+                  {hasMoreArticles
+                    ? `Xem thêm ${Math.min(
+                        4,
+                        catalogArticles.length -
+                          visibleArticles.length
+                      )} bài`
+                    : "Đã hiển thị tất cả"}
+                </Button>
+              )}
+            </div>
+          </>
         )}
 
         {/* Editorial Principles Callout Banner */}
@@ -430,9 +552,9 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
                 NGUYÊN TẮC BIÊN TẬP & BẢO TỒN DI SẢN
               </div>
               <p className="text-sm text-ink/80 leading-relaxed max-w-2xl">
-                Tổng hợp từ góc nhìn dân tộc học, văn hóa học và di sản tập tục dân gian Việt Nam.
-                Mỗi bài viết đều được đối chiếu từ các công trình khảo cứu uy tín, trân trọng nét đẹp
-                thuần khiết của người xưa.
+                Nội dung được giới thiệu theo góc nhìn văn hóa.
+                Bạn có thể xem tài liệu tham khảo trong từng bài;
+                các nguồn cần tiếp tục được đối chiếu trước khi phát hành chính thức.
               </p>
             </div>
           </div>

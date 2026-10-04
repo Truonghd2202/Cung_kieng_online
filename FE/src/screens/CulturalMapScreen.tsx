@@ -24,12 +24,40 @@ export const CulturalMapScreen: React.FC<CulturalMapScreenProps> = ({ onBackToCu
         <button onClick={onBackToCulture} className="inline-flex items-center gap-1.5 hover:text-accent transition-colors"><ArrowLeft className="w-3.5 h-3.5" /> Khám phá văn hóa</button>
         <Badge variant="outline">Ba miền · Một dòng chảy</Badge>
       </div>
-      <header className="max-w-3xl mb-9"><span className="text-xs font-semibold uppercase tracking-widest text-accent">Bản đồ văn hóa</span><h1 className="page-title mt-2 mb-3">Bản đồ tín ngưỡng Việt Nam</h1><p className="text-sm sm:text-base text-muted leading-relaxed">Khám phá những nét văn hóa và tín ngưỡng đặc trưng theo từng vùng miền, dưới góc nhìn nhân văn và tôn trọng đời sống.</p></header>
+      <header className="max-w-3xl mb-9">
+        <span className="text-xs font-semibold uppercase tracking-widest text-accent">Bắc · Trung · Nam</span>
+        <h1 className="page-title mt-2 mb-3">Khám phá văn hóa ba miền</h1>
+        <p className="text-sm sm:text-base text-muted leading-relaxed">
+          Khám phá những nét văn hóa và tín ngưỡng đặc trưng theo từng vùng miền, dưới góc nhìn nhân văn và tôn trọng đời sống.
+        </p>
+      </header>
       <div className="grid lg:grid-cols-3 gap-5 mb-12">
         {REGIONS.map(({ slug, title, subtitle, image, icon: Icon, description }) => (
-          <Card key={slug} onClick={() => onSelectRegion(slug)} className="group overflow-hidden cursor-pointer hover:bg-surface-soft border-line">
-            <div className="relative h-44 overflow-hidden"><img src={image} alt={title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-canvas/90 via-transparent to-transparent" /><div className="absolute bottom-4 left-5 flex items-center gap-2 text-white"><Icon className="w-4 h-4" /><span className="font-display text-xl font-bold">{title}</span></div></div>
-            <div className="p-6"><span className="text-xs text-accent font-semibold uppercase tracking-wider">{subtitle}</span><p className="text-sm text-muted leading-relaxed mt-3 mb-5">{description}</p><span className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent">Mở vùng văn hóa <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></span></div>
+          <Card
+            key={slug}
+            aria-label={`Khám phá văn hóa ${title}`}
+            onClick={() => onSelectRegion(slug)}
+            className="group overflow-hidden cursor-pointer hover:bg-surface-soft border-line"
+          >
+            <div className="relative h-44 overflow-hidden">
+              <img
+                src={image}
+                alt={title}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              <div className="absolute bottom-4 left-5 flex items-center gap-2 text-white">
+                <Icon className="w-4 h-4" />
+                <span className="font-display text-xl font-bold">{title}</span>
+              </div>
+            </div>
+            <div className="p-6">
+              <span className="text-xs text-accent font-semibold uppercase tracking-wider">{subtitle}</span>
+              <p className="text-sm text-muted leading-relaxed mt-3 mb-5">{description}</p>
+              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
+                Mở vùng văn hóa <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </div>
           </Card>
         ))}
       </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowLeft, ArrowRight, CalendarDays, Edit2, Heart, Plus, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, Edit2, Heart, Plus, UserRound } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
@@ -18,6 +18,14 @@ interface MemorialSpaceScreenProps {
   onEdit: () => void;
   onGoToAltar: () => void;
 }
+
+const formatMemorialDate = (value: string): string => {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+  if (!match) return value;
+
+  return `${match[3]}/${match[2]}/${match[1]}`;
+};
 
 export const MemorialSpaceScreen: React.FC<MemorialSpaceScreenProps> = ({ memorial, onBack, onCreate, onEdit, onGoToAltar }) => {
   return (
@@ -50,15 +58,26 @@ export const MemorialSpaceScreen: React.FC<MemorialSpaceScreenProps> = ({ memori
                   <div>
                     <Badge variant="terracotta" className="mb-2">Góc riêng của bạn</Badge>
                     <h2 className="font-display text-2xl sm:text-3xl font-bold">{memorial.name}</h2>
-                    <p className="text-sm text-muted mt-1">{memorial.relation} · Ngày tưởng niệm {memorial.date}</p>
+                    <p className="text-sm text-muted mt-1">
+                      {memorial.relation} · Ngày ghi nhớ:{" "}
+                      {formatMemorialDate(memorial.date)} (dương lịch)
+                    </p>
                   </div>
                 </div>
                 <Button variant="outline" onClick={onEdit} className="gap-2"><Edit2 className="w-4 h-4" /> Chỉnh sửa</Button>
               </div>
 
               <div className="mt-8 pt-6 border-t border-line grid sm:grid-cols-2 gap-5">
-                <div><span className="text-xs text-muted uppercase tracking-wider">Lời tri ân</span><p className="font-display text-lg italic mt-2 text-ink">{memorial.note || "Bạn chưa viết lời tri ân nào."}</p></div>
-                <div className="sm:border-l sm:border-line sm:pl-5"><span className="text-xs text-muted uppercase tracking-wider">Một nhịp nhớ</span><p className="text-sm text-muted leading-relaxed mt-2">Bạn có thể trở lại bất cứ khi nào muốn thắp một nén nhang lòng.</p></div>
+                <div>
+                  <span className="text-xs text-muted uppercase tracking-wider">Lời tri ân</span>
+                  <p className="font-display text-lg italic mt-2 text-ink whitespace-pre-wrap break-words">
+                    {memorial.note || "Bạn chưa viết lời tri ân nào."}
+                  </p>
+                </div>
+                <div className="sm:border-l sm:border-line sm:pl-5">
+                  <span className="text-xs text-muted uppercase tracking-wider">Một nhịp nhớ</span>
+                  <p className="text-sm text-muted leading-relaxed mt-2">Bạn có thể trở lại bất cứ khi nào muốn thắp một nén nhang lòng.</p>
+                </div>
               </div>
             </Card>
 
@@ -69,16 +88,11 @@ export const MemorialSpaceScreen: React.FC<MemorialSpaceScreenProps> = ({ memori
           </>
         )}
 
-        <section className="mb-12">
-          <div className="flex items-center gap-2 mb-4"><CalendarDays className="w-5 h-5 text-accent" /><h2 className="section-title">Những ngày muốn nhớ</h2></div>
-          <div className="grid sm:grid-cols-3 gap-4">
-            {[
-              ["Ngày giỗ", "Theo lịch gia đình"],
-              ["Ngày sinh", "Một ngày đã lưu"],
-              ["Ngày gặp lại", "Dành cho một kỷ niệm"],
-            ].map(([title, detail]) => <Card key={title} className="p-5 border-line"><span className="text-xs text-muted">{detail}</span><h3 className="font-display font-bold mt-2">{title}</h3></Card>)}
-          </div>
-        </section>
+        <p className="mb-8 text-sm text-muted leading-relaxed">
+          Bản thử nghiệm hiện hỗ trợ một góc tưởng niệm cho mỗi
+          tài khoản hoặc phiên khách trên trình duyệt này.
+          Chưa có lịch nhắc tự động.
+        </p>
       </main>
     </div>
   );
