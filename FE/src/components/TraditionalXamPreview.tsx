@@ -153,6 +153,31 @@ export function TraditionalXamPreview() {
         </section>
       </div>
 
+      {stick.culturalContext && (
+        <section className="rounded-card border border-line bg-canvas p-4">
+          <p className="text-xs font-semibold text-accent">
+            Bối cảnh văn bản · Đọc thử
+          </p>
+
+          <h4 className="mt-2 font-semibold text-ink">
+            {stick.culturalContext.title}
+          </h4>
+
+          <p className="mt-3 text-sm leading-relaxed text-ink">
+            {stick.culturalContext.description}
+          </p>
+
+          <p className="mt-3 text-xs leading-relaxed text-muted">
+            Vị trí đối chiếu: {stick.culturalContext.sourceLocator}
+          </p>
+
+          <p className="mt-2 text-xs text-muted">
+            Nguồn được dẫn ở phần “Nguồn nguyên văn” bên dưới.
+            Nội dung đang trong quá trình hoàn thiện biên tập.
+          </p>
+        </section>
+      )}
+
       <section className="space-y-3">
         <label
           htmlFor="traditional-xam-preview-topic"

@@ -6,6 +6,8 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/src/components/ui/button";
+import { BirthChartDemoPanel } from "../components/BirthChartDemoPanel";
+import { PhysiognomyDemoPanel } from "../components/PhysiognomyDemoPanel";
 
 interface AstrologyHubScreenProps {
   onBackToExperience: () => void;
@@ -98,6 +100,63 @@ export const AstrologyHubScreen: React.FC<
             Nội dung không dự đoán tương lai.
           </p>
         </section>
+        <section
+          aria-labelledby="astrology-scope-title"
+          className="mt-6 rounded-card border border-line bg-surface p-6 sm:p-8"
+        >
+          <h2
+            id="astrology-scope-title"
+            className="font-display text-2xl font-semibold text-ink"
+          >
+            Các trải nghiệm trong nhóm tử vi
+          </h2>
+
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <article className="rounded-panel border border-line p-5">
+              <h3 className="font-semibold text-ink">
+                Lá số tử vi và diễn giải AI
+              </h3>
+
+              <p className="mt-2 text-sm leading-relaxed text-muted">
+                Có thể thử luồng nhập thông tin và xem kết quả mẫu bên dưới.
+                Chưa có tính toán lá số hoặc xử lý AI.
+              </p>
+
+              <a
+                href="#birth-chart-demo-title"
+                className="mt-3 inline-block py-2 text-sm font-semibold text-accent underline underline-offset-4"
+              >
+                Đến biểu mẫu demo
+              </a>
+            </article>
+
+            <article className="rounded-panel border border-line p-5">
+              <h3 className="font-semibold text-ink">
+                Nhân tướng học bằng AI
+              </h3>
+
+              <p className="mt-2 text-sm leading-relaxed text-muted">
+                Có thể thử chọn ảnh, xem trước và kiểm tra các trạng thái
+                xử lý bên dưới. Chưa có phân tích AI.
+              </p>
+
+              <a
+                href="#physiognomy-demo-title"
+                className="mt-3 inline-block py-2 text-sm font-semibold text-accent underline underline-offset-4"
+              >
+                Đến biểu mẫu demo
+              </a>
+            </article>
+          </div>
+
+          <p className="mt-5 text-sm leading-relaxed text-muted">
+            Bạn có thể sử dụng trải nghiệm biểu tượng ngày sinh ở trên.
+            Kết quả hiện tại được tạo bằng quy tắc và nội dung biên soạn sẵn.
+          </p>
+        </section>
+
+        <BirthChartDemoPanel />
+        <PhysiognomyDemoPanel />
       </main>
     </div>
   );

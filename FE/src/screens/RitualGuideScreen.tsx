@@ -13,6 +13,7 @@ import {
   Compass,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
+import { OnlineRitualDraftPanel } from "../components/OnlineRitualDraftPanel";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import {
@@ -33,6 +34,7 @@ const normalizeRitualSearch = (value: string) =>
     .replace(/\s+/g, " ");
 
 interface RitualGuideScreenProps {
+  currentUserEmail?: string;
   onSelectRitual: (id: string) => void;
   onGoToCulture?: () => void;
   onGoToCalendar?: () => void;
@@ -43,6 +45,7 @@ interface RitualGuideScreenProps {
 export const RitualGuideScreen: React.FC<
   RitualGuideScreenProps
 > = ({
+  currentUserEmail,
   onSelectRitual,
   onGoToCulture,
   onGoToCalendar,
@@ -60,6 +63,7 @@ export const RitualGuideScreen: React.FC<
     { key: "Mùng một", label: "Mùng một" },
     { key: "Tết Nguyên Đán", label: "Tết Nguyên Đán" },
     { key: "Dịp gia đình", label: "Dịp gia đình" },
+    { key: "Động thổ", label: "Động thổ" },
   ];
 
   const REGIONS: { key: RitualRegionKey; label: string }[] = [
@@ -432,6 +436,11 @@ export const RitualGuideScreen: React.FC<
             © {new Date().getFullYear()} Tin Lắm Tâm Linh • Chiêm nghiệm dân gian đương đại
           </div>
         </div>
+
+        <OnlineRitualDraftPanel
+          key={currentUserEmail || "guest"}
+          email={currentUserEmail}
+        />
       </main>
     </div>
   );

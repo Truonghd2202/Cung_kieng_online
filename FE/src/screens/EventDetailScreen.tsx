@@ -21,7 +21,7 @@ interface EventDetailScreenProps {
   eventId?: string;
   onBackToCalendar: () => void;
   onGoToRituals?: () => void;
-  onGoToHome?: () => void;
+  onGoToHome: () => void;
   onGoToExplore?: () => void;
 }
 

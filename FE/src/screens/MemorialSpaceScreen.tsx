@@ -17,6 +17,7 @@ interface MemorialSpaceScreenProps {
   onCreate: () => void;
   onEdit: () => void;
   onGoToAltar: () => void;
+  onGoToReminders: () => void;
 }
 
 const formatMemorialDate = (value: string): string => {
@@ -27,7 +28,15 @@ const formatMemorialDate = (value: string): string => {
   return `${match[3]}/${match[2]}/${match[1]}`;
 };
 
-export const MemorialSpaceScreen: React.FC<MemorialSpaceScreenProps> = ({ memorial, onBack, onCreate, onEdit, onGoToAltar }) => {
+export const MemorialSpaceScreen:
+  React.FC<MemorialSpaceScreenProps> = ({
+    memorial,
+    onBack,
+    onCreate,
+    onEdit,
+    onGoToAltar,
+    onGoToReminders,
+  }) => {
   return (
     <div className="screen-shell">
       <main className="page-container max-w-5xl">
@@ -113,18 +122,83 @@ export const MemorialSpaceScreen: React.FC<MemorialSpaceScreenProps> = ({ memori
               </div>
             </Card>
 
-            <div className="grid sm:grid-cols-2 gap-4 mb-12">
-              <Card onClick={onGoToAltar} className="group p-5 cursor-pointer hover:bg-surface-soft border-line flex items-center justify-between"><span className="flex items-center gap-3 font-semibold"><Heart className="w-5 h-5 text-accent" /> Thắp nhang</span><ArrowRight className="w-4 h-4 text-accent group-hover:translate-x-1 transition-transform" /></Card>
-              <Card onClick={onEdit} className="group p-5 cursor-pointer hover:bg-surface-soft border-line flex items-center justify-between"><span className="flex items-center gap-3 font-semibold"><Edit2 className="w-5 h-5 text-accent" /> Viết một lời</span><ArrowRight className="w-4 h-4 text-accent group-hover:translate-x-1 transition-transform" /></Card>
+            <div className="mb-12 grid gap-4 sm:grid-cols-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onGoToAltar}
+                className="h-auto min-h-16 w-full justify-between whitespace-normal p-5 text-left"
+              >
+                <span className="flex items-center gap-3">
+                  <Heart
+                    className="h-5 w-5 shrink-0 text-accent"
+                    aria-hidden="true"
+                  />
+                  Thắp nhang
+                </span>
+
+                <ArrowRight
+                  className="h-4 w-4 shrink-0"
+                  aria-hidden="true"
+                />
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onEdit}
+                className="h-auto min-h-16 w-full justify-between whitespace-normal p-5 text-left"
+              >
+                <span className="flex items-center gap-3">
+                  <Edit2
+                    className="h-5 w-5 shrink-0 text-accent"
+                    aria-hidden="true"
+                  />
+                  Viết một lời
+                </span>
+
+                <ArrowRight
+                  className="h-4 w-4 shrink-0"
+                  aria-hidden="true"
+                />
+              </Button>
             </div>
           </>
         )}
 
-        <p className="mb-8 text-sm text-muted leading-relaxed">
-          Bản thử nghiệm hiện hỗ trợ một góc tưởng niệm cho mỗi
-          tài khoản hoặc phiên khách trên trình duyệt này.
-          Chưa có lịch nhắc tự động.
-        </p>
+        <section
+          aria-labelledby="memorial-reminders-title"
+          className="mb-8 rounded-card border border-line bg-surface p-5 sm:p-6"
+        >
+          <h2
+            id="memorial-reminders-title"
+            className="mb-3 font-display text-xl font-semibold text-ink"
+          >
+            Những ngày bạn muốn nhớ
+          </h2>
+
+          <p className="mb-3 text-sm leading-relaxed text-muted">
+            Bản thử nghiệm hỗ trợ một góc tưởng niệm cho mỗi
+            tài khoản hoặc phiên khách trên trình duyệt này.
+            Ngày ghi trong hồ sơ chưa tự tạo lịch nhắc.
+          </p>
+
+          <p className="mb-5 text-sm leading-relaxed text-muted">
+            Bạn có thể thêm ngày giỗ theo âm lịch hoặc dương lịch,
+            hoặc bật nhắc ngày rằm và mùng một.
+            Lời nhắc hiển thị khi mở web; chưa có thông báo
+            khi đóng web.
+          </p>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onGoToReminders}
+            className="w-full sm:w-auto"
+          >
+            Mở nhắc lịch
+          </Button>
+        </section>
       </main>
     </div>
   );

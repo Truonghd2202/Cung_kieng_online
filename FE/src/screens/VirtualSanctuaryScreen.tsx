@@ -11,6 +11,10 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { SceneErrorBoundary } from "../components/SceneErrorBoundary";
+import {
+  DigitalItemsPanel,
+  type DigitalItemId,
+} from "../components/DigitalItemsPanel";
 
 import type { MemorialRecord } from "./MemorialSpaceScreen";
 
@@ -22,6 +26,8 @@ const SanctuaryScene = lazy(() =>
 
 interface VirtualSanctuaryScreenProps {
   memorial: MemorialRecord | null;
+  currentUserEmail?: string;
+  onGoToLogin: () => void;
   onBackToExperience: () => void;
   onGoToAltar: () => void;
   onGoToMemorial: () => void;
@@ -32,12 +38,16 @@ export const VirtualSanctuaryScreen: React.FC<
   VirtualSanctuaryScreenProps
 > = ({
   memorial,
+  currentUserEmail,
+  onGoToLogin,
   onBackToExperience,
   onGoToAltar,
   onGoToMemorial,
   onGoToZen,
 }) => {
   const [show3D, setShow3D] = useState(false);
+  const [decoration, setDecoration] =
+    useState<DigitalItemId | null>(null);
 
   return (
     <div className="screen-shell">
@@ -89,6 +99,13 @@ export const VirtualSanctuaryScreen: React.FC<
           </div>
         </section>
 
+        <DigitalItemsPanel
+          key={currentUserEmail?.trim().toLowerCase() || "guest"}
+          currentUserEmail={currentUserEmail}
+          onGoToLogin={onGoToLogin}
+          onDecorationChange={setDecoration}
+        />
+
         <section aria-labelledby="sanctuary-3d-title" className="mb-10">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2
@@ -125,6 +142,12 @@ export const VirtualSanctuaryScreen: React.FC<
                   <SanctuaryScene
                     memorial={memorial}
                     onOpenMemorial={onGoToMemorial}
+                    decoration={
+                      decoration === "lotus-vase" ||
+                      decoration === "river-lantern"
+                        ? decoration
+                        : null
+                    }
                   />
                 </Suspense>
               </SceneErrorBoundary>

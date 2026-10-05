@@ -23,6 +23,9 @@ interface GratitudeScreenProps {
   user?: { name: string; email: string } | null;
   onSaveGratitude?: (content: string) => boolean;
   onRequireLogin?: (content: string) => void;
+  initialContent?: string;
+  initialSaveMode?: boolean;
+  onDraftChange?: (content: string | null) => void;
 }
 
 export const GratitudeScreen: React.FC<GratitudeScreenProps> = ({
@@ -32,15 +35,38 @@ export const GratitudeScreen: React.FC<GratitudeScreenProps> = ({
   user,
   onSaveGratitude,
   onRequireLogin,
+  initialContent = "",
+  initialSaveMode = false,
+  onDraftChange,
 }) => {
-  const [content, setContent] = useState("");
-  const [sendMode, setSendMode] = useState<"ephemeral" | "save">("ephemeral");
+  const [content, setContent] = useState(initialContent);
+  const [sendMode, setSendMode] =
+    useState<"ephemeral" | "save">(
+      initialSaveMode ? "save" : "ephemeral"
+    );
   // Ban đầu hình ảnh chưa thắp nến theo đúng yêu cầu trải nghiệm
   const [isLampLit, setIsLampLit] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [releaseStatus, setReleaseStatus] = useState<"idle" | "releasing" | "released">("idle");
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
+
+  useEffect(() => {
+    const shouldKeepDraft =
+      sendMode === "save" &&
+      !saveSuccess &&
+      releaseStatus === "idle";
+
+    onDraftChange?.(
+      shouldKeepDraft ? content : null
+    );
+  }, [
+    content,
+    sendMode,
+    saveSuccess,
+    releaseStatus,
+    onDraftChange,
+  ]);
 
   const releaseTimerRef = useRef<
     ReturnType<typeof setTimeout> | null

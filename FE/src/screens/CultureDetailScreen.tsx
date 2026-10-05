@@ -21,9 +21,15 @@ import {
   CultureArticle,
 } from "../data/cultureData";
 import { DetailNotFound } from "../components/DetailNotFound";
+import { ReadingBookmarkButton } from "../components/ReadingBookmarkButton";
+import { SavedReadingList } from "../components/SavedReadingList";
+import { ContentProvenance } from "../components/ContentProvenance";
+import { getCultureMetadata } from "../data/readingMetadata";
+import { ChauVanAudioLibrary } from "../components/ChauVanAudioLibrary";
 
 interface CultureDetailScreenProps {
   articleId?: string;
+  currentUserEmail?: string;
   onBackToCulture: () => void;
   onSelectRelatedArticle: (id: string) => void;
   onGoToExperience: () => void;
@@ -32,6 +38,7 @@ interface CultureDetailScreenProps {
 
 const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
   articleId = "dinh-lang-bac-bo",
+  currentUserEmail,
   onBackToCulture,
   onSelectRelatedArticle,
   onGoToExperience,
@@ -113,6 +120,15 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
         <p className="text-base sm:text-lg text-ink leading-relaxed max-w-3xl mb-8">
           {article.subtitle}
         </p>
+
+        <div className="my-4">
+          <ReadingBookmarkButton
+            key={`${currentUserEmail || "guest"}:${article.id}`}
+            kind="culture"
+            id={article.id}
+            email={currentUserEmail}
+          />
+        </div>
 
         {/* Hero Artwork Image with Frame */}
         <div className="rounded-card overflow-hidden bg-surface border border-line shadow-sm mb-10">
@@ -238,68 +254,31 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
               </section>
             ))}
 
+            {article.audioRecordingIds !== undefined && (
+              <ChauVanAudioLibrary
+                key={article.id}
+                recordingIds={article.audioRecordingIds}
+              />
+            )}
+
             {/* Editorial Principle & Verified Scholarly Citations Section */}
-            <div
+            <section
               id="article-sources"
               tabIndex={-1}
-              className="scroll-mt-24 p-6 rounded-card bg-surface border border-line shadow-2xs space-y-4"
+              aria-labelledby="article-sources-title"
+              className="scroll-mt-24 rounded-card border border-line bg-surface p-6"
             >
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-surface text-accent flex items-center justify-center shrink-0 mt-0.5">
-                  <BookOpen className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="font-display font-bold text-base text-ink">
-                    Tài liệu tham khảo
-                  </h3>
-                  <p className="text-sm text-muted leading-relaxed mt-0.5">
-                    Danh sách dưới đây là thông tin tham khảo trong bản thử nghiệm.
-                    Cần bổ sung thông tin xuất bản, đường dẫn hoặc trang trích dẫn
-                    để đối chiếu trước khi phát hành chính thức.
-                  </p>
-                </div>
-              </div>
+              <h2
+                id="article-sources-title"
+                className="mb-4 font-display text-xl font-bold text-ink"
+              >
+                Nguồn và biên tập
+              </h2>
 
-              {/* Citations List */}
-              {article.sources && article.sources.length > 0 && (
-                <div className="space-y-3 pt-3 border-t border-line">
-                  <div className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Danh sách tài liệu trong bản thử nghiệm</span>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-2.5">
-                    {article.sources.map((src, sIdx) => (
-                      <div
-                        key={sIdx}
-                        className="p-3.5 rounded-panel bg-surface/70 border border-line flex flex-col sm:flex-row sm:items-start justify-between gap-2"
-                      >
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-xs sm:text-sm text-ink">
-                              {src.title}
-                            </span>
-                            <span className="text-xs text-muted">
-                              — {src.author}
-                            </span>
-                          </div>
-                          <p className="text-sm text-ink leading-relaxed">
-                            Thông tin mô tả tài liệu trong bản mẫu; chưa đối chiếu
-                            bản xuất bản hoặc vị trí trích dẫn cụ thể.
-                          </p>
-                        </div>
-                        <Badge
-                          variant="outline"
-                          className="shrink-0 text-xs uppercase font-semibold text-accent border-line bg-surface self-start"
-                        >
-                          {src.sourceType}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+              <ContentProvenance
+                metadata={getCultureMetadata(article)}
+              />
+            </section>
 
             {/* Navigation Action Buttons Row */}
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-line">
@@ -448,6 +427,10 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
           </div>
         </div>
 
+        <SavedReadingList
+          key={currentUserEmail || "guest"}
+          email={currentUserEmail}
+        />
       </main>
     </div>
   );

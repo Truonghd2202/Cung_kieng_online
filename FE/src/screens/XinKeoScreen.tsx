@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   Sparkles,
@@ -39,12 +39,12 @@ const KEO_OUTCOMES: Record<KeoResultType, KeoOutcome> = {
     type: "nhat-am-nhat-duong",
     title: "Nhất Âm Nhất Dương",
     subTitle: "Một Ngửa (Âm) • Một Úp (Dương)",
-    statusLabel: "Được keo • Hòa hợp",
+    statusLabel: "Một nhịp cân bằng",
     badgeColor: "bg-success-soft text-success border border-success/30",
     meaning:
-      "Dân gian xem đây là thế đại cát và thông thuận nhất; lòng người và thời thế hòa quyện, âm dương lưỡng nghi tương sinh cân bằng tuyệt hảo.",
+      "Hai mặt khác nhau được dùng ở đây như một hình ảnh để suy ngẫm về sự cân bằng. Kết quả mô phỏng không xác nhận vận may hay quyết định nào là đúng.",
     guidance:
-      "Tâm trí bạn hiện đã đạt độ trong sáng và chín muồi. Hãy vững tâm tự tin triển khai các dự định thiện lành, từng bước chắc chắn mà không cần hoài nghi hay chùn bước.",
+      "Bạn đang có điều gì thuận lợi và điều gì cần cân nhắc thêm? Hãy chọn một bước nhỏ có thể thử, rồi đánh giá bằng thông tin và trải nghiệm thực tế.",
     piece1: "am",
     piece2: "duong",
   },
@@ -52,12 +52,12 @@ const KEO_OUTCOMES: Record<KeoResultType, KeoOutcome> = {
     type: "nhi-duong",
     title: "Nhị Dương (Keo Tiếu)",
     subTitle: "Cùng Sấp • Hai mặt cong úp xuống",
-    statusLabel: "Keo cười • Khoan vội",
+    statusLabel: "Một nhịp nhìn lại",
     badgeColor: "bg-gold-soft text-gold border border-gold/40",
     meaning:
-      "Thế quẻ biểu thị nụ cười hiền hậu của tiền nhân, nhắc nhở người hỏi rằng thời cơ chưa hẳn đã trọn vẹn, chớ nên nóng vội hay hấp tấp khởi sự.",
+      "Hai mặt giống nhau gợi một nhịp dừng để nhìn vấn đề từ góc khác. Kết quả mô phỏng không cho biết thời cơ hay dự đoán thành bại.",
     guidance:
-      "Hãy bình tâm quan sát lại nội lực bản thân và các phương án dự phòng. Một nhịp dừng đúng lúc sẽ giúp bạn tránh được những sơ sót không đáng có trên đường dài.",
+      "Bạn còn thiếu thông tin nào trước khi quyết định? Có thể viết ra hai phương án và trao đổi với một người bạn tin tưởng.",
     piece1: "duong",
     piece2: "duong",
   },
@@ -65,12 +65,12 @@ const KEO_OUTCOMES: Record<KeoResultType, KeoOutcome> = {
     type: "nhi-am",
     title: "Nhị Âm (Chưa Ứng)",
     subTitle: "Cùng Ngửa • Hai mặt phẳng ngửa lên",
-    statusLabel: "Chưa ứng • Cần tĩnh xét",
+    statusLabel: "Một nhịp lắng nghe",
     badgeColor: "bg-surface-soft text-muted border border-line",
     meaning:
-      "Thế quẻ khuyên người hỏi nên lắng lòng định trí, việc trăn trở hiện thời chưa hội đủ duyên lành hoặc chưa thực sự phù hợp với mục tiêu sâu xa của bạn.",
+      "Kết quả này được dùng như lời mời lắng nghe điều bạn đang quan tâm. Nó không thể hiện sự chấp thuận, từ chối hay đánh giá về bạn.",
     guidance:
-      "Hãy tạm gác âu lo sang một bên, dành thời gian lắng nghe thêm ý kiến của các bậc tiền bối và tự hỏi bản thân điều gì mới thực sự mang lại an yên bền vững.",
+      "Điều gì khiến bạn băn khoăn nhất lúc này? Hãy dành một chút thời gian gọi tên điều đó và chọn một việc nhỏ trong khả năng của mình.",
     piece1: "am",
     piece2: "am",
   },
@@ -298,6 +298,36 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
   // mặt sẽ chạm đĩa, không bị thay hình ở khoảnh khắc animation kết thúc.
   const [landingResult, setLandingResult] = useState<KeoOutcome | null>(null);
 
+  const castTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const castLockedRef = useRef(false);
+  const hapticStartedRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (castTimerRef.current !== null) {
+        clearTimeout(castTimerRef.current);
+        castTimerRef.current = null;
+      }
+
+      castLockedRef.current = false;
+
+      if (hapticStartedRef.current) {
+        try {
+          if (
+            typeof navigator !== "undefined" &&
+            typeof navigator.vibrate === "function"
+          ) {
+            navigator.vibrate(0);
+          }
+        } catch {
+          // Trình duyệt có thể không hỗ trợ rung.
+        }
+
+        hapticStartedRef.current = false;
+      }
+    };
+  }, []);
+
   const topics = [
     { id: "hoctap", label: "Học tập & Thi cử" },
     { id: "congviec", label: "Công việc & Sự nghiệp" },
@@ -306,41 +336,65 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
   ];
 
   const handleCastKeo = () => {
-    if (isCasting) return;
+    // Khóa bằng ref để chặn cả hai lần bấm sát nhau trước khi React render.
+    if (castLockedRef.current) return;
+    castLockedRef.current = true;
+
+    const prefersReducedMotion = () =>
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const vibrate = (pattern: number | number[]) => {
+      if (prefersReducedMotion()) return;
+
+      try {
+        if (
+          typeof navigator !== "undefined" &&
+          typeof navigator.vibrate === "function"
+        ) {
+          hapticStartedRef.current = navigator.vibrate(pattern);
+        }
+      } catch {
+        // Không để lỗi rung làm gián đoạn lượt xin keo.
+      }
+    };
+
     const weightedPool: KeoResultType[] = [
       "nhat-am-nhat-duong",
       "nhat-am-nhat-duong",
       "nhi-duong",
       "nhi-am",
     ];
-    const picked = weightedPool[Math.floor(Math.random() * weightedPool.length)];
+
+    const picked =
+      weightedPool[Math.floor(Math.random() * weightedPool.length)];
+
     const outcome = KEO_OUTCOMES[picked];
 
     setLandingResult(outcome);
     setCastResult(null);
-    setIsCasting(true);
 
-    // Haptic feedback
-    try {
-      if (typeof navigator !== "undefined" && navigator.vibrate) {
-        navigator.vibrate([60, 40, 80]);
-      }
-    } catch {
-      // ignore
-    }
-
-    // Chừa một frame sau khi CSS animation kết thúc để trạng thái cố định
-    // nhận đúng vị trí/góc tiếp đất, không bị kéo về giữa khi công bố quẻ.
-    setTimeout(() => {
+    // Hiển thị ngay kết quả khi người dùng muốn giảm chuyển động.
+    if (prefersReducedMotion()) {
       setCastResult(outcome);
       setIsCasting(false);
-      try {
-        if (typeof navigator !== "undefined" && navigator.vibrate) {
-          navigator.vibrate([140]);
-        }
-      } catch {
-        // ignore
-      }
+      castLockedRef.current = false;
+      return;
+    }
+
+    setIsCasting(true);
+    vibrate([60, 40, 80]);
+
+    castTimerRef.current = setTimeout(() => {
+      castTimerRef.current = null;
+
+      setCastResult(outcome);
+      setIsCasting(false);
+      castLockedRef.current = false;
+
+      // Kiểm tra lại tùy chọn vì người dùng có thể đổi trong lúc chờ.
+      vibrate([140]);
     }, 2200);
   };
 

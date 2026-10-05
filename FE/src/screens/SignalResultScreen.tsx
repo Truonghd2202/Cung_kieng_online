@@ -10,7 +10,16 @@ import {
   Share2,
 } from "lucide-react";
 
-import type { MoodKey, SignalData } from "../data/demoSignals";
+import {
+  MOOD_CONTEXTS,
+  getSignalsByMood,
+  type MoodContextKey,
+  type MoodKey,
+  type SignalData,
+} from "../data/demoSignals";
+
+import { getCultureArticleById } from
+  "../data/cultureData";
 import { Button } from "@/src/components/ui/button";
 import { ContentProvenance } from "../components/ContentProvenance";
 
@@ -25,6 +34,8 @@ interface SignalResultScreenProps {
   onSaveToAccount: () => void;
   onRefreshSignal: () => void;
   onGoToDiary: () => void;
+  onChangeContext: (contextKey: MoodContextKey) => void;
+  onOpenCultureArticle: (articleId: string) => void;
 }
 
 export const SignalResultScreen: React.FC<
@@ -39,6 +50,8 @@ export const SignalResultScreen: React.FC<
   onSaveToAccount,
   onRefreshSignal,
   onGoToDiary,
+  onChangeContext,
+  onOpenCultureArticle,
 }) => {
   const [copyState, setCopyState] = useState<
     "idle" | "copying" | "success" | "error"
@@ -72,6 +85,62 @@ export const SignalResultScreen: React.FC<
       ? "Lời biên soạn minh họa"
       : "Câu trích đang chờ đối chiếu";
 
+  const contextKey = signal.contextKey ?? "general";
+
+  const contextLabel =
+    MOOD_CONTEXTS.find(
+      (context) => context.key === contextKey
+    )?.label ?? "Chưa muốn chọn";
+
+  const availableSignals = getSignalsByMood(
+    signal.mood
+  ).filter(
+    (item) => item.contextKey === signal.contextKey
+  );
+
+  const canRefresh = availableSignals.length > 1;
+
+  const suggestedReading: Record<
+    MoodContextKey,
+    {
+      articleId: string;
+      reason: string;
+    }
+  > = {
+    general: {
+      articleId: "dinh-lang-bac-bo",
+      reason:
+        "Một hướng tìm hiểu không gian sinh hoạt và ký ức cộng đồng.",
+    },
+    study: {
+      articleId: "bai-choi-hoi-an",
+      reason:
+        "Tìm hiểu cách nghệ thuật dân gian được truyền dạy và tiếp nối.",
+    },
+    work: {
+      articleId: "le-hoi-cau-ngu",
+      reason:
+        "Khám phá tín ngưỡng gắn với đời sống và nghề nghiệp của cộng đồng ven biển.",
+    },
+    family: {
+      articleId: "dinh-lang-bac-bo",
+      reason:
+        "Tìm hiểu ký ức cộng đồng và sự kết nối giữa các thế hệ.",
+    },
+    relationship: {
+      articleId: "tien-dung-chu-dong-tu",
+
+      reason:
+        "Đọc cách bản thử nghiệm giới thiệu truyện Tiên Dung – Chử Đồng Tử, rồi tự suy ngẫm về sự kết nối. Bài đọc không dùng để dự đoán chuyện tình cảm của bạn.",
+    },
+  };
+
+  const readingSuggestion = suggestedReading[contextKey];
+
+  const suggestedArticle = getCultureArticleById(
+    readingSuggestion.articleId
+  );
+
   return (
     <div className="screen-shell">
       <main className="page-container max-w-5xl">
@@ -93,6 +162,61 @@ export const SignalResultScreen: React.FC<
             . Hãy đọc chậm và giữ lại điều phù hợp với mình.
           </p>
         </header>
+
+        <section
+          aria-labelledby="result-context-title"
+          className="mb-6 rounded-card border border-line bg-surface p-5"
+        >
+          <h2
+            id="result-context-title"
+            className="font-display text-lg font-semibold text-ink"
+          >
+            Hoàn cảnh bạn đang chọn
+          </h2>
+
+          <p className="mt-2 text-sm leading-relaxed text-muted">
+            {contextKey === "general"
+              ? "Bạn đang đọc lời gợi mở chung theo tâm trạng."
+              : `Lời gợi mở hướng đến ${contextLabel.toLowerCase()}.`}
+            {" "}
+            Bạn có thể đổi lựa chọn bên dưới.
+          </p>
+
+          <fieldset className="mt-4">
+            <legend className="sr-only">
+              Đổi hoàn cảnh cho lời gợi mở
+            </legend>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {MOOD_CONTEXTS.map((context) => (
+                <label
+                  key={context.key}
+                  className="flex min-h-12 cursor-pointer items-center gap-3 rounded-control border border-line p-3"
+                >
+                  <input
+                    type="radio"
+                    name="result-context"
+                    value={context.key}
+                    checked={contextKey === context.key}
+                    onChange={() =>
+                      onChangeContext(context.key)
+                    }
+                    className="h-4 w-4 accent-action"
+                  />
+
+                  <span className="text-sm font-semibold text-ink">
+                    {context.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <p className="mt-3 text-xs leading-relaxed text-muted">
+            Đổi hoàn cảnh sẽ mở một kết quả mới và giữ ghi chép
+            của lượt này. Nội dung đã lưu trước đó không bị sửa.
+          </p>
+        </section>
 
         {journalText.trim() && (
           <details className="group mb-6 rounded-card border border-line bg-surface">
@@ -161,10 +285,15 @@ export const SignalResultScreen: React.FC<
               <Button
                 type="button"
                 variant="outline"
+                disabled={!canRefresh}
                 onClick={onRefreshSignal}
               >
                 <RotateCw className="w-4 h-4" aria-hidden="true" />
-                <span>Nhận lời khác</span>
+                <span>
+                  {canRefresh
+                    ? "Đọc lời gợi mở khác"
+                    : "Hiện có một lời gợi mở"}
+                </span>
               </Button>
 
               <Button
@@ -358,6 +487,47 @@ export const SignalResultScreen: React.FC<
             </div>
           </details>
         </div>
+
+        {suggestedArticle && (
+          <section
+            aria-labelledby="result-reading-title"
+            className="mt-8 rounded-card border border-line bg-surface p-5 sm:p-6"
+          >
+            <h2
+              id="result-reading-title"
+              className="font-display text-xl font-semibold text-ink"
+            >
+              Khám phá thêm một câu chuyện văn hóa
+            </h2>
+
+            <p className="mt-2 text-sm leading-relaxed text-muted">
+              {readingSuggestion.reason}
+            </p>
+
+            <h3 className="mt-5 font-display text-lg font-semibold text-ink">
+              {suggestedArticle.title}
+            </h3>
+
+            <p className="mt-2 text-sm leading-relaxed text-muted">
+              {suggestedArticle.excerpt}
+            </p>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-5 w-full sm:w-auto"
+              onClick={() =>
+                onOpenCultureArticle(suggestedArticle.id)
+              }
+            >
+              Đọc bài văn hóa
+              <ArrowRight
+                className="h-4 w-4"
+                aria-hidden="true"
+              />
+            </Button>
+          </section>
+        )}
 
         <p className="mt-6 text-sm text-muted leading-relaxed">
           Nội dung dành cho chiêm nghiệm và khám phá văn hóa,

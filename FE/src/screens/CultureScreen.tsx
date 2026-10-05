@@ -76,6 +76,10 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
       key: "Không gian tín ngưỡng",
       label: "Không gian tín ngưỡng",
     },
+    {
+      key: "Sinh hoạt văn hóa",
+      label: "Sinh hoạt văn hóa",
+    },
   ];
 
   const filteredArticles = useMemo(() => {

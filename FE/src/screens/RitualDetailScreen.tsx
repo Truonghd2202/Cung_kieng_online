@@ -21,6 +21,13 @@ import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { RITUAL_GUIDES, getRitualById } from "../data/ritualData";
 import { DetailNotFound } from "../components/DetailNotFound";
+import {
+  setReadingBookmark,
+  useReadingBookmark,
+} from "../hooks/useReadingBookmarks";
+import { ContentProvenance } from "../components/ContentProvenance";
+import { RitualPrayerSection } from "../components/RitualPrayerSection";
+import { getRitualMetadata } from "../data/readingMetadata";
 
 interface RitualDetailScreenProps {
   ritualId?: string;
@@ -47,9 +54,6 @@ const RitualDetailContent: React.FC<
   const checklistStorageKey =
     `tltl-ritual-checklist-${accountId}-${ritual.id}`;
 
-  const bookmarkStorageKey =
-    `tltl-ritual-bookmark-${accountId}-${ritual.id}`;
-
   const validChecklistIds = new Set(
     detail.checklists.map((item) => item.id)
   );
@@ -73,23 +77,16 @@ const RitualDetailContent: React.FC<
     }
   };
 
-  const readBookmark = (key: string): boolean => {
-    try {
-      return localStorage.getItem(key) === "true";
-    } catch {
-      return false;
-    }
-  };
-
   const [checkedIds, setCheckedIds] =
     useState<string[]>(() =>
       readChecklist(checklistStorageKey)
     );
 
-  const [isBookmarked, setIsBookmarked] =
-    useState<boolean>(() =>
-      readBookmark(bookmarkStorageKey)
-    );
+  const isBookmarked = useReadingBookmark(
+    "ritual",
+    ritual.id,
+    currentUserEmail
+  );
 
   const [
     showShareNotification,
@@ -110,15 +107,10 @@ const RitualDetailContent: React.FC<
       readChecklist(checklistStorageKey)
     );
 
-    setIsBookmarked(
-      readBookmark(bookmarkStorageKey)
-    );
-
     setShowShareNotification(false);
     setRitualSaveError("");
   }, [
     checklistStorageKey,
-    bookmarkStorageKey,
   ]);
 
   const toggleCheck = (id: string) => {
@@ -155,21 +147,18 @@ const RitualDetailContent: React.FC<
   const handleToggleBookmark = () => {
     setRitualSaveError("");
 
-    const nextValue = !isBookmarked;
+    const saved = setReadingBookmark(
+      "ritual",
+      ritual.id,
+      !isBookmarked,
+      currentUserEmail
+    );
 
-    try {
-      localStorage.setItem(
-        bookmarkStorageKey,
-        String(nextValue)
-      );
-    } catch {
+    if (!saved) {
       setRitualSaveError(
         "Chưa cập nhật được dấu lưu bài. Bạn hãy thử lại."
       );
-      return;
     }
-
-    setIsBookmarked(nextValue);
   };
 
   const handleShare = async () => {
@@ -333,9 +322,11 @@ const RitualDetailContent: React.FC<
                   <p key={index}>{paragraph}</p>
                 ))}
 
-                <blockquote className="border-l-2 border-accent pl-4 font-display italic text-accent">
-                  {detail.meaningQuote}
-                </blockquote>
+                {detail.meaningQuote.trim() && (
+                  <blockquote className="border-l-2 border-accent pl-4 font-display italic text-accent">
+                    {detail.meaningQuote}
+                  </blockquote>
+                )}
               </div>
             </details>
 
@@ -344,7 +335,7 @@ const RitualDetailContent: React.FC<
               <div className="flex items-center gap-2 mb-3">
                 <span className="w-1.5 h-4 rounded-full bg-action"></span>
                 <h2 className="section-title text-xl sm:text-2xl">
-                  Danh sách vật phẩm tinh gọn có thể điều chỉnh theo gia đình
+                  {detail.offeringsTitle || "Lễ vật và cách chuẩn bị"}
                 </h2>
               </div>
 
@@ -472,14 +463,42 @@ const RitualDetailContent: React.FC<
                     <li key={idx}>{rule}</li>
                   ))}
                 </ul>
-              </div>
-
-              {/* Classical Excerpt Quote */}
-              <div className="p-4 rounded-panel bg-surface/70 border border-line text-center">
-                <p className="font-display italic font-semibold text-sm sm:text-base text-accent">
-                  {detail.closingQuote}
+                <p className="mt-3 text-xs leading-relaxed text-muted">
+                  Tham khảo hướng dẫn về thiết bị báo khói và sử dụng nến của{" "}
+                  <a
+                    href="https://www.usfa.fema.gov/prevention/home-fires/prepare-for-fire/smoke-alarms/index.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent underline underline-offset-4"
+                  >
+                    U.S. Fire Administration — báo khói
+                  </a>
+                  {" và "}
+                  <a
+                    href="https://www.usfa.fema.gov/prevention/home-fires/prevent-fires/candle/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent underline underline-offset-4"
+                  >
+                    sử dụng nến
+                  </a>
+                  . Tuân thủ quy định tại nơi ở của bạn.
                 </p>
               </div>
+
+              <RitualPrayerSection
+                key={`${accountId}-${ritual.id}`}
+                prayers={detail.prayers}
+              />
+
+              {/* Classical Excerpt Quote */}
+              {detail.closingQuote.trim() && (
+                <div className="p-4 rounded-panel bg-surface/70 border border-line text-center">
+                  <p className="font-display italic font-semibold text-sm sm:text-base text-accent">
+                    {detail.closingQuote}
+                  </p>
+                </div>
+              )}
 
               {/* Bottom Action Buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-line ">
@@ -668,6 +687,22 @@ const RitualDetailContent: React.FC<
             © {new Date().getFullYear()} Tin Lắm Tâm Linh • Chiêm nghiệm dân gian đương đại
           </div>
         </div>
+
+        <section
+          aria-labelledby="ritual-sources-title"
+          className="mt-6 rounded-card border border-line bg-surface p-6"
+        >
+          <h2
+            id="ritual-sources-title"
+            className="mb-4 font-display text-xl font-bold text-ink"
+          >
+            Nguồn và biên tập
+          </h2>
+
+          <ContentProvenance
+            metadata={getRitualMetadata(ritual)}
+          />
+        </section>
       </main>
     </div>
   );

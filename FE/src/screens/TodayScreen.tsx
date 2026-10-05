@@ -10,6 +10,11 @@ import {
 
 import type { MoodKey, SignalData } from "../data/demoSignals";
 import { Button } from "@/src/components/ui/button";
+import { TodayReminderCard } from "../components/TodayReminderCard";
+import {
+  CULTURAL_TOPICS,
+  sanitizeCulturalTopics,
+} from "../data/culturalTopics";
 
 interface TodayScreenProps {
   signal: SignalData;
@@ -22,6 +27,12 @@ interface TodayScreenProps {
   onGoToCulture: () => void;
   onGoToExperience: () => void;
   onGoToZen: () => void;
+  currentUserEmail?: string;
+  onGoToReminders: () => void;
+  onGoToXinXam: () => void;
+  onGoToRituals: () => void;
+  onGoToGratitude: () => void;
+  onGoToCultureMap: () => void;
 }
 
 export const TodayScreen: React.FC<TodayScreenProps> = ({
@@ -31,9 +42,16 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
   mood = "Chênh vênh",
   onSelectMoodClick,
   onViewSignalDetails,
+  selectedTopics = [],
   onGoToCulture,
   onGoToExperience,
   onGoToZen,
+  currentUserEmail,
+  onGoToReminders,
+  onGoToXinXam,
+  onGoToRituals,
+  onGoToGratitude,
+  onGoToCultureMap,
 }) => {
   const today = new Date();
 
@@ -77,6 +95,69 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
       buttonLabel: "Mở không gian thiền",
     },
   ];
+
+  type CulturalTopicId =
+    (typeof CULTURAL_TOPICS)[number]["id"];
+
+  const topicSuggestions: Record<
+    CulturalTopicId,
+    {
+      title: string;
+      description: string;
+      buttonLabel: string;
+      onClick: () => void;
+    }
+  > = {
+    cadao: {
+      title: "Một lời chiêm nghiệm",
+      description:
+        "Bắt đầu từ cảm xúc của bạn để đọc một lời gợi mở trong kho nội dung thử nghiệm.",
+      buttonLabel: "Chọn tâm trạng",
+      onClick: onSelectMoodClick,
+    },
+
+    xinxam: {
+      title: "Xin xăm theo chủ đề",
+      description:
+        "Chọn vùng và chủ đề để trải nghiệm rút một thẻ chiêm nghiệm mẫu.",
+      buttonLabel: "Mở xin xăm",
+      onClick: onGoToXinXam,
+    },
+
+    bamien: {
+      title: "Khám phá văn hóa ba miền",
+      description:
+        "Chọn một vùng để đọc các câu chuyện và phong tục đang có trong thư viện.",
+      buttonLabel: "Chọn vùng văn hóa",
+      onClick: onGoToCultureMap,
+    },
+
+    nghile: {
+      title: "Phong tục và nghi lễ",
+      description:
+        "Đọc cẩm nang tham khảo, xem các bước chuẩn bị và trạng thái nguồn tư liệu.",
+      buttonLabel: "Mở cẩm nang",
+      onClick: onGoToRituals,
+    },
+
+    trian: {
+      title: "Gửi một lời tri ân",
+      description:
+        "Viết lời biết ơn hoặc dành một khoảng nhỏ để nhớ về người thân.",
+      buttonLabel: "Mở góc tri ân",
+      onClick: onGoToGratitude,
+    },
+  };
+
+  const validTopicIds =
+    sanitizeCulturalTopics(selectedTopics) as CulturalTopicId[];
+
+  const preferredSuggestions = validTopicIds
+    .slice(0, 3)
+    .map((id) => ({
+      id,
+      ...topicSuggestions[id],
+    }));
 
   return (
     <div className="screen-shell">
@@ -236,6 +317,60 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
                 alt="Chén trà trong một khoảng nghỉ yên tĩnh"
                 className="w-full h-full min-h-72 object-cover"
               />
+            </div>
+          </section>
+        )}
+
+        <TodayReminderCard
+          email={currentUserEmail}
+          onOpenReminders={onGoToReminders}
+        />
+
+        {preferredSuggestions.length > 0 && (
+          <section
+            aria-labelledby="today-preferred-title"
+            className="mt-9 sm:mt-12"
+          >
+            <h2
+              id="today-preferred-title"
+              className="mb-2 font-display text-xl font-semibold text-ink sm:text-2xl"
+            >
+              Theo chủ đề bạn quan tâm
+            </h2>
+
+            <p className="mb-5 text-base text-muted">
+              Gợi ý dựa trên các chủ đề bạn chọn trong Cài đặt.
+              Bạn vẫn có thể khám phá mọi nội dung khác.
+            </p>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              {preferredSuggestions.map((suggestion) => (
+                <article
+                  key={suggestion.id}
+                  className="flex flex-col rounded-card border border-line bg-surface p-5"
+                >
+                  <h3 className="mb-3 font-display text-lg font-semibold text-ink">
+                    {suggestion.title}
+                  </h3>
+
+                  <p className="mb-5 text-sm leading-relaxed text-muted">
+                    {suggestion.description}
+                  </p>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={suggestion.onClick}
+                    className="mt-auto w-full"
+                  >
+                    {suggestion.buttonLabel}
+                    <ArrowRight
+                      className="h-4 w-4"
+                      aria-hidden="true"
+                    />
+                  </Button>
+                </article>
+              ))}
             </div>
           </section>
         )}

@@ -17,15 +17,22 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
+import { MembershipDemoFlow } from "../components/MembershipDemoFlow";
+import { BrandPartnershipForm } from "../components/BrandPartnershipForm";
+import type { MembershipTerm } from "../data/membershipIntent";
 
 interface MembershipScreenProps {
   onBackToHome: () => void;
   onGoToExperience?: () => void;
+  currentUserEmail?: string;
+  onGoToLogin: (term: MembershipTerm) => void;
 }
 
 export const MembershipScreen: React.FC<MembershipScreenProps> = ({
   onBackToHome,
   onGoToExperience,
+  currentUserEmail,
+  onGoToLogin,
 }) => {
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [interestError, setInterestError] = useState("");
@@ -580,6 +587,12 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
           </div>
         </Card>
 
+        <MembershipDemoFlow
+          key={currentUserEmail || "guest"}
+          email={currentUserEmail}
+          onGoToLogin={onGoToLogin}
+        />
+        <BrandPartnershipForm />
 
       </main>
     </div>

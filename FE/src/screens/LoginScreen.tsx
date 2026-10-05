@@ -15,7 +15,7 @@ import { loginAccount, saveLocalDemoAccount, UserProfile, DEMO_USER } from "../d
 
 export interface LoginScreenProps {
   onBack?: () => void;
-  onSuccess: (name?: string, email?: string) => void;
+  onSuccess: (name?: string, email?: string) => boolean;
   onGoToRegister: () => void;
   onGoToForgotPassword?: () => void;
   onImmersiveChange?: (immersive: boolean) => void;
@@ -311,20 +311,37 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     }
   }, [isMuted]);
 
-  // Hoàn tất và chuyển vào trang trong
   const handleCompleteLogin = useCallback(() => {
     if (hasCompletedRef.current) return;
+
     hasCompletedRef.current = true;
 
-    if (audioElementRef.current) {
-      audioElementRef.current.pause();
+    const user = authenticatedUser || DEMO_USER;
+    let completed = false;
+
+    try {
+      completed = onSuccess(user.name, user.email);
+    } catch {
+      completed = false;
     }
+
+    if (!completed) {
+      hasCompletedRef.current = false;
+
+      setErrorMessage(
+        "Chưa hoàn tất đăng nhập vì trình duyệt chưa lưu được dữ liệu. Nội dung đang chờ vẫn được giữ trong phiên này. Bạn hãy bấm Vào ngay để thử lại."
+      );
+
+      return;
+    }
+
+    setErrorMessage("");
+
+    audioElementRef.current?.pause();
+
     if (audioCtxRef.current) {
       audioCtxRef.current.close().catch(() => {});
     }
-
-    const user = authenticatedUser || DEMO_USER;
-    onSuccess(user.name, user.email);
   }, [authenticatedUser, onSuccess]);
 
   // HÀNH ĐỘNG THẮP NHANG: BÙNG NỔ TIA LỬA + CHUÔNG THIỀN + BẮT ĐẦU TỎA KHÓI

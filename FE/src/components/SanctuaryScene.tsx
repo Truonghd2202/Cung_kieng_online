@@ -5,21 +5,31 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { Button } from "./ui/button";
 import type { MemorialRecord } from "../screens/MemorialSpaceScreen";
+import {
+  createDigitalDecoration,
+  disposeDigitalDecoration,
+  type DecorationId,
+} from "./createDigitalDecoration";
 
 interface SanctuarySceneProps {
   memorial: MemorialRecord | null;
   onOpenMemorial: () => void;
+  decoration?: DecorationId | null;
 }
 
 export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
   memorial,
   onOpenMemorial,
+  decoration = null,
 }) => {
   const hostRef = useRef<HTMLDivElement>(null);
   const resetRef = useRef<(() => void) | null>(null);
   const viewRef = useRef<{
     rotate: (angle: number) => void;
     zoom: (factor: number) => void;
+  } | null>(null);
+  const decorationControllerRef = useRef<{
+    set: (id: DecorationId | null) => void;
   } | null>(null);
   const [error, setError] = useState("");
   const [incenseLit, setIncenseLit] = useState(false);
@@ -1557,11 +1567,54 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
       },
     };
 
+    const decorationRoot = new THREE.Group();
+
+    // Mặt bàn trong cảnh hiện tại nằm ở cao độ 1.3.
+    // Đặt vật phẩm nhỏ phía trước bên trái lư hương.
+    decorationRoot.position.set(-0.55, 1.3, 0.38);
+
+    scene.add(decorationRoot);
+
+    let currentDecoration: THREE.Group | null = null;
+    let currentDecorationId: DecorationId | null = null;
+
+    const setDecoration = (nextId: DecorationId | null) => {
+      if (nextId === currentDecorationId) return;
+
+      if (currentDecoration) {
+        disposeDigitalDecoration(currentDecoration);
+        currentDecoration = null;
+      }
+
+      currentDecorationId = nextId;
+
+      if (nextId) {
+        currentDecoration = createDigitalDecoration(nextId);
+        decorationRoot.add(currentDecoration);
+      }
+
+      renderer.shadowMap.needsUpdate = true;
+      render();
+    };
+
+    decorationControllerRef.current = {
+      set: setDecoration,
+    };
+
     const observer = new ResizeObserver(resize);
     observer.observe(host);
     resize();
 
     return () => {
+      decorationControllerRef.current = null;
+
+      if (currentDecoration) {
+        disposeDigitalDecoration(currentDecoration);
+        currentDecoration = null;
+      }
+
+      decorationRoot.removeFromParent();
+
       stopSmokeAnimation();
       renderer.domElement.removeEventListener(
         "webglcontextlost",
@@ -1621,6 +1674,10 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
       renderer.domElement.remove();
     };
   }, []);
+
+  useEffect(() => {
+    decorationControllerRef.current?.set(decoration);
+  }, [decoration]);
 
   return (
     <div className="overflow-hidden rounded-card border border-line bg-surface">

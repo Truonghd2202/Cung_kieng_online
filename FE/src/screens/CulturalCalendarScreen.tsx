@@ -1,4 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, {
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -21,6 +25,7 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { AppDialog } from "../components/AppDialog";
+import { useLocalDay } from "../hooks/useLocalDay";
 import {
   CalendarEventType,
   CalendarEventItem,
@@ -29,6 +34,9 @@ import {
   getCanChiYear,
   loadCalendarPersonalNotes,
   saveCalendarPersonalNotes,
+  readCalendarNotesRaw,
+  parseCalendarPersonalNotes,
+  CALENDAR_NOTES_CHANGED_EVENT,
 } from "../data/calendarData";
 
 interface CulturalCalendarScreenProps {
@@ -41,6 +49,46 @@ interface CulturalCalendarScreenProps {
   currentUserEmail?: string;
 }
 
+const subscribeToCalendarNotes = (
+  onStoreChange: () => void
+) => {
+  const handleStorage = (event: StorageEvent) => {
+    if (
+      event.storageArea === window.localStorage ||
+      event.storageArea === null
+    ) {
+      onStoreChange();
+    }
+  };
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(
+    CALENDAR_NOTES_CHANGED_EVENT,
+    onStoreChange
+  );
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(
+      CALENDAR_NOTES_CHANGED_EVENT,
+      onStoreChange
+    );
+  };
+};
+
+const useCalendarPersonalNotes = (email?: string) => {
+  const raw = useSyncExternalStore(
+    subscribeToCalendarNotes,
+    () => readCalendarNotesRaw(email) ?? "[]",
+    () => "[]"
+  );
+
+  return useMemo(
+    () => parseCalendarPersonalNotes(raw),
+    [raw]
+  );
+};
+
 export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   onGoToToday,
   onGoToHome,
@@ -51,7 +99,12 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   currentUserEmail,
 }) => {
   // Lấy thời gian thực tế từ hệ thống (Date)
-  const today = useMemo(() => new Date(), []);
+  const localDay = useLocalDay();
+
+  const today = useMemo(
+    () => new Date(),
+    [localDay]
+  );
   const todayRealDay = today.getDate();
   const todayRealMonth = today.getMonth() + 1;
   const todayRealYear = today.getFullYear();
@@ -71,15 +124,8 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   const [noteSaveError, setNoteSaveError] = useState("");
   const [noteDeleteError, setNoteDeleteError] = useState("");
 
-  // Dữ liệu "Ngày tôi lưu": nạp trực tiếp theo tài khoản riêng biệt
-  const [personalNotes, setPersonalNotes] = useState<CalendarEventItem[]>(() =>
-    loadCalendarPersonalNotes(currentUserEmail)
-  );
-
-  // Khi tài khoản đăng nhập thay đổi hoặc đăng xuất, tự động nạp lại đúng dữ liệu lịch
-  useEffect(() => {
-    setPersonalNotes(loadCalendarPersonalNotes(currentUserEmail));
-  }, [currentUserEmail]);
+  const personalNotes =
+  useCalendarPersonalNotes(currentUserEmail);
 
   // Tổng hợp sự kiện: sự kiện lịch sử văn hóa đã kiểm chứng + ngày cá nhân người dùng thực sự lưu
   const allEvents = useMemo(() => {
@@ -192,9 +238,13 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
       lunarDate,
     };
 
+    // Đọc lại ngay trước khi lưu, tránh dùng danh sách của render cũ.
+    const latestNotes =
+      loadCalendarPersonalNotes(currentUserEmail);
+
     const updatedNotes = [
       newNote,
-      ...personalNotes,
+      ...latestNotes,
     ];
 
     const saved = saveCalendarPersonalNotes(
@@ -209,8 +259,6 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
       return;
     }
 
-    // Chỉ cập nhật màn hình sau khi lưu thành công.
-    setPersonalNotes(updatedNotes);
     setNewNoteTitle("");
     setNewNoteDesc("");
     setNoteSaveError("");
@@ -220,7 +268,17 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   const handleDeleteNote = (noteId: string) => {
     setNoteDeleteError("");
 
-    const updatedNotes = personalNotes.filter(
+    const latestNotes =
+      loadCalendarPersonalNotes(currentUserEmail);
+
+    const noteExists = latestNotes.some(
+      (note) => note.id !== noteId
+    );
+
+    // Tab khác có thể đã xóa ghi chú này.
+    if (!noteExists) return;
+
+    const updatedNotes = latestNotes.filter(
       (note) => note.id !== noteId
     );
 
@@ -233,10 +291,7 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
       setNoteDeleteError(
         "Chưa xóa được ghi chú. Nội dung vẫn được giữ nguyên; hãy thử lại."
       );
-      return;
     }
-
-    setPersonalNotes(updatedNotes);
   };
 
   // Các sự kiện hiển thị cho ngày được chọn (hoặc toàn bộ danh sách khi chọn tab "Ngày tôi lưu")
@@ -834,7 +889,7 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                 >
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-1">
                     <BookOpen className="w-3.5 h-3.5" />
-                    <span>Cẩm nang nghi lễ • Màn 18</span>
+                    <span>Cẩm nang nghi lễ</span>
                   </div>
                   <p className="text-sm text-ink leading-relaxed group-hover:text-ink transition-colors">
                     Bạn cần chuẩn bị cho ngày lễ sắp tới? Khám phá hướng dẫn tinh gọn, mộc mạc tại{" "}

@@ -1,4 +1,6 @@
 import React, {
+  lazy,
+  Suspense,
   useEffect,
   useRef,
   useState,
@@ -8,8 +10,22 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { Textarea } from "@/src/components/ui/textarea";
+import { ChauVanAudioLibrary } from "../components/ChauVanAudioLibrary";
+import { SceneErrorBoundary } from "../components/SceneErrorBoundary";
 
 export type RegionalExperienceKind = "chau-van" | "sea-prayer" | "southern-culture";
+
+const SouthernRiverScene = lazy(() =>
+  import("../components/SouthernRiverScene").then((module) => ({
+    default: module.SouthernRiverScene,
+  }))
+);
+const CentralSeaScene = lazy(
+  () => import("../components/CentralSeaScene")
+);
+const NorthernShrineScene = lazy(
+  () => import("../components/NorthernShrineScene")
+);
 
 interface RegionalExperienceScreenProps {
   kind: RegionalExperienceKind;
@@ -71,6 +87,10 @@ export const RegionalExperienceScreen: React.FC<RegionalExperienceScreenProps> =
   const [savedNote, setSavedNote] = useState("");
   const [noteError, setNoteError] = useState("");
   const [started, setStarted] = useState(false);
+  const [showRiver, setShowRiver] = useState(false);
+  const [showSea, setShowSea] = useState(false);
+  const [showNorthernShrine, setShowNorthernShrine] =
+    useState(false);
 
   const readingSectionRef =
     useRef<HTMLElement | null>(null);
@@ -119,6 +139,7 @@ export const RegionalExperienceScreen: React.FC<RegionalExperienceScreenProps> =
   useEffect(() => {
     setNoteError("");
     setStarted(false);
+    setShowRiver(false);
 
     try {
       const stored =
@@ -134,6 +155,14 @@ export const RegionalExperienceScreen: React.FC<RegionalExperienceScreenProps> =
       );
     }
   }, [noteStorageKey]);
+
+  useEffect(() => {
+    setShowSea(false);
+  }, [kind, accountId]);
+
+  useEffect(() => {
+    setShowNorthernShrine(false);
+  }, [kind, accountId]);
 
   const handleSaveNote = () => {
     const cleanNote = note.trim();
@@ -234,6 +263,131 @@ export const RegionalExperienceScreen: React.FC<RegionalExperienceScreenProps> =
           <div className="relative h-64 rounded-card overflow-hidden border border-line"><img src={content.image} alt={content.region} className="h-full w-full object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-canvas/90 to-transparent" /><span className="absolute bottom-5 left-5 text-ink font-display text-lg">Một lát cắt văn hóa để lắng lại</span></div>
         </section>
 
+        {kind === "chau-van" && <ChauVanAudioLibrary />}
+
+        {kind === "sea-prayer" && (
+          <section className="mt-6 rounded-2xl border border-line bg-surface p-5">
+            <h2 className="text-lg font-semibold text-ink">
+              Không gian biển 3D
+            </h2>
+
+            <p className="mt-2 text-sm text-muted">
+              Mở một cảnh biển minh họa để quan sát và nghỉ một nhịp.
+              Bạn có thể tiếp tục đọc và viết lời chúc bên dưới.
+            </p>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-4"
+              aria-expanded={showSea}
+              aria-controls="central-sea-panel"
+              onClick={() => setShowSea((previous) => !previous)}
+            >
+              {showSea ? "Đóng cảnh biển" : "Mở cảnh biển 3D"}
+            </Button>
+
+            {showSea && (
+              <div id="central-sea-panel" className="mt-5">
+                <SceneErrorBoundary
+                  onClose={() => setShowSea(false)}
+                >
+                  <Suspense
+                    fallback={
+                      <p role="status" className="text-sm text-muted">
+                        Đang tải cảnh biển…
+                      </p>
+                    }
+                  >
+                    <CentralSeaScene />
+                  </Suspense>
+                </SceneErrorBoundary>
+              </div>
+            )}
+          </section>
+        )}
+
+        {kind === "southern-culture" && (
+          <section className="mb-8">
+            <Button
+              type="button"
+              variant="outline"
+              aria-expanded={showRiver}
+              aria-controls="southern-river-panel"
+              onClick={() => setShowRiver((value) => !value)}
+            >
+              {showRiver
+                ? "Đóng cảnh sông nước"
+                : "Mở cảnh sông nước 3D"}
+            </Button>
+
+            {showRiver && (
+              <div id="southern-river-panel" className="mt-4">
+                <SceneErrorBoundary
+                  onClose={() => setShowRiver(false)}
+                >
+                  <Suspense
+                    fallback={
+                      <p role="status" className="py-6 text-sm text-muted">
+                        Đang tải cảnh sông nước…
+                      </p>
+                    }
+                  >
+                    <SouthernRiverScene wishText={note} />
+                  </Suspense>
+                </SceneErrorBoundary>
+              </div>
+            )}
+          </section>
+        )}
+
+        {kind === "chau-van" && (
+          <section className="mt-6 rounded-2xl border border-line bg-surface p-5">
+            <h2 className="text-lg font-semibold text-ink">
+              Không gian Bắc Bộ 3D
+            </h2>
+
+            <p className="mt-2 text-sm text-muted">
+              Quan sát mô hình minh họa và thử thao tác thắp nhang.
+              Nội dung về đạo Mẫu và chầu văn được trình bày riêng
+              trong phần bài đọc và thư viện âm thanh.
+            </p>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-4"
+              aria-expanded={showNorthernShrine}
+              aria-controls="northern-shrine-panel"
+              onClick={() =>
+                setShowNorthernShrine((previous) => !previous)
+              }
+            >
+              {showNorthernShrine
+                ? "Đóng không gian 3D"
+                : "Mở không gian Bắc Bộ 3D"}
+            </Button>
+
+            {showNorthernShrine && (
+              <div id="northern-shrine-panel" className="mt-5">
+                <SceneErrorBoundary
+                  onClose={() => setShowNorthernShrine(false)}
+                >
+                  <Suspense
+                    fallback={
+                      <p role="status" className="text-sm text-muted">
+                        Đang tải không gian Bắc Bộ…
+                      </p>
+                    }
+                  >
+                    <NorthernShrineScene />
+                  </Suspense>
+                </SceneErrorBoundary>
+              </div>
+            )}
+          </section>
+        )}
+
         {kind === "chau-van" && started && (
           <section
             ref={readingSectionRef}
@@ -291,9 +445,9 @@ export const RegionalExperienceScreen: React.FC<RegionalExperienceScreenProps> =
             </ol>
 
             <p className="mt-6 rounded-panel bg-surface-soft p-4 text-sm leading-relaxed text-muted">
-              Đây là hướng dẫn chiêm nghiệm do dự án biên soạn.
-              Phần này chưa có bản thu âm hay tư liệu chuyên đề
-              Chầu Văn để nghe và đối chiếu.
+              Đây là gợi ý đọc và suy ngẫm do dự án biên soạn.
+              Các bản thu sẵn sàng, nếu có, được trình bày riêng
+              trong mục “Nghe chầu văn” cùng thông tin nguồn.
             </p>
           </section>
         )}
@@ -306,6 +460,7 @@ export const RegionalExperienceScreen: React.FC<RegionalExperienceScreenProps> =
             </h2>
 
             <Textarea
+              id="regional-note"
               value={note}
               maxLength={1000}
               aria-label="Cảm nhận về trải nghiệm văn hóa"

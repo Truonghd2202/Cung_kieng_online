@@ -1,4 +1,9 @@
-import React, { lazy, Suspense, useState } from "react";
+import React, {
+  lazy,
+  Suspense,
+  useEffect,
+  useState,
+} from "react";
 import { ArrowLeft, Heart } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -16,8 +21,11 @@ interface AncestorAltarScreenProps {
   memorial: MemorialRecord | null;
   onBack: () => void;
   onGoToMemorial: () => void;
+  onGoToReminders: () => void;
   isLoggedIn: boolean;
   onSaveTribute: (content: string) => boolean;
+  initialContent?: string;
+  onDraftChange?: (content: string | null) => void;
 }
 
 export const AncestorAltarScreen: React.FC<
@@ -26,13 +34,26 @@ export const AncestorAltarScreen: React.FC<
   memorial,
   onBack,
   onGoToMemorial,
+  onGoToReminders,
   isLoggedIn,
   onSaveTribute,
+  initialContent = "",
+  onDraftChange,
 }) => {
   const [show3D, setShow3D] = useState(false);
-  const [tribute, setTribute] = useState("");
+  const [tribute, setTribute] = useState(initialContent);
   const [submitted, setSubmitted] = useState(false);
   const [saveError, setSaveError] = useState("");
+
+  useEffect(() => {
+    onDraftChange?.(
+      submitted ? null : tribute
+    );
+  }, [
+    tribute,
+    submitted,
+    onDraftChange,
+  ]);
 
   const sendTribute = () => {
     const cleanContent = tribute.trim();
@@ -136,19 +157,35 @@ export const AncestorAltarScreen: React.FC<
             Giữ lại một người bạn muốn nhớ
           </h2>
 
-          <p className="text-sm text-muted leading-relaxed mb-4">
+          <p className="mb-4 text-sm leading-relaxed text-muted">
             Tạo góc tưởng niệm để ghi tên, ngày và lời tri ân.
-            Bản thử nghiệm chưa tính ngày giỗ hằng năm hoặc gửi
-            lời nhắc tự động.
+            Nếu muốn nhắc ngày giỗ, bạn có thể thêm ngày âm lịch
+            hoặc dương lịch trong Nhắc lịch.
           </p>
 
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onGoToMemorial}
-          >
-            Mở góc tưởng niệm
-          </Button>
+          <p className="mb-5 text-sm leading-relaxed text-muted">
+            Hồ sơ tưởng niệm chưa tự tạo lịch nhắc.
+            Bản thử nghiệm hiển thị lời nhắc khi mở web,
+            chưa gửi thông báo khi đóng web.
+          </p>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onGoToMemorial}
+            >
+              Mở góc tưởng niệm
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onGoToReminders}
+            >
+              Mở nhắc lịch
+            </Button>
+          </div>
         </section>
 
         <Card className="p-6 sm:p-8 border-line mb-12">

@@ -14,7 +14,12 @@ import {
   PenLine,
 } from "lucide-react";
 
-import { MoodKey, MOODS_LIST } from "../data/demoSignals";
+import {
+  MoodKey,
+  MOODS_LIST,
+  MOOD_CONTEXTS,
+  type MoodContextKey,
+} from "../data/demoSignals";
 import { Button } from "@/src/components/ui/button";
 import { Textarea } from "@/src/components/ui/textarea";
 
@@ -24,7 +29,9 @@ interface MoodCheckInScreenProps {
   journalText: string;
   onChangeJournal: (text: string) => void;
   onBackToToday: () => void;
-  onSubmit: () => void;
+  onSubmit: (contextKey: MoodContextKey) => void;
+  contextKey: MoodContextKey;
+  onChangeContext: (contextKey: MoodContextKey) => void;
 }
 
 const getMoodIcon = (iconType: string) => {
@@ -58,6 +65,10 @@ const MOOD_SHORT_DESCRIPTIONS: Record<
   "Nôn nóng": "Muốn mọi việc nhanh hơn",
   "Biết ơn": "Trân trọng điều đang có",
   "Cần điểm tựa": "Muốn được lắng nghe",
+  "Áp lực": "Nhiều việc đang dồn lại",
+  "Cô đơn": "Muốn được kết nối",
+  "Vui vẻ": "Có niềm vui muốn giữ",
+  "Mông lung": "Chưa rõ bước tiếp theo",
 };
 
 export const MoodCheckInScreen: React.FC<
@@ -69,7 +80,10 @@ export const MoodCheckInScreen: React.FC<
   onChangeJournal,
   onBackToToday,
   onSubmit,
+  contextKey,
+  onChangeContext,
 }) => {
+
   return (
     <div className="screen-shell">
       <main className="page-container max-w-3xl pb-40 sm:pb-12">
@@ -163,6 +177,39 @@ export const MoodCheckInScreen: React.FC<
           </div>
         </section>
 
+        <fieldset className="mb-6">
+          <legend className="mb-2 font-display text-lg font-semibold text-ink">
+            Bạn muốn lời gợi mở hướng đến điều gì?
+          </legend>
+
+          <p className="mb-4 text-sm leading-relaxed text-muted">
+            Không bắt buộc. Nội dung được chọn theo tâm trạng
+            và hoàn cảnh bạn chọn; chưa phân tích tâm sự bằng AI.
+          </p>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {MOOD_CONTEXTS.map((context) => (
+              <label
+                key={context.key}
+                className="flex min-h-12 cursor-pointer items-center gap-3 rounded-control border border-line bg-surface p-3"
+              >
+                <input
+                  type="radio"
+                  name="mood-context"
+                  value={context.key}
+                  checked={contextKey === context.key}
+                  onChange={() => onChangeContext(context.key)}
+                  className="h-4 w-4 accent-action"
+                />
+
+                <span className="text-sm font-semibold text-ink">
+                  {context.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
         <details className="group mt-6 rounded-xl border border-line bg-surface">
           <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 rounded-xl p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
             <PenLine
@@ -207,6 +254,11 @@ export const MoodCheckInScreen: React.FC<
               aria-describedby="mood-journal-note"
               className="resize-y"
             />
+
+            <p className="mt-2 text-xs leading-relaxed text-muted">
+              Không bắt buộc viết. Nội dung chưa gửi chỉ được giữ trong phiên
+              hiện tại; tải lại trang hoặc mở lượt check-in mới sẽ xóa bản nháp.
+            </p>
 
             <p
               id="mood-journal-note"
@@ -254,7 +306,7 @@ export const MoodCheckInScreen: React.FC<
 
               <Button
                 type="button"
-                onClick={onSubmit}
+                onClick={() => onSubmit(contextKey)}
                 aria-label="Nhận lời chiêm nghiệm"
                 className="min-h-11 flex-1 sm:flex-none sm:min-w-60"
               >

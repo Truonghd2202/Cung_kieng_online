@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/src/components/ui/button";
+import { GoodDayLookupPanel } from "../components/GoodDayLookupPanel";
 
 interface DayPlan {
   title: string;
@@ -111,18 +112,10 @@ export const GoodDayScreen: React.FC<GoodDayScreenProps> = ({
           </p>
         </header>
 
-        <section className="rounded-xl border border-line bg-surface p-5 mb-6">
-          <h2 className="text-base font-semibold text-ink mb-2">
-            Tra cứu ngày lành chưa sẵn sàng
-          </h2>
-
-          <p className="text-sm text-muted leading-relaxed">
-            Bản thử nghiệm chưa có dữ liệu và quy tắc tra
-            cứu đủ để đưa ra ngày phù hợp theo mục đích.
-            Ngày bạn chọn bên dưới là kế hoạch cá nhân,
-            không phải kết quả đánh giá ngày tốt.
-          </p>
-        </section>
+        <GoodDayLookupPanel
+          onSaveDayToCalendar={onSaveDayToCalendar}
+          onGoToCalendar={onGoToCalendar}
+        />
 
         <form
           onSubmit={handleSubmit}

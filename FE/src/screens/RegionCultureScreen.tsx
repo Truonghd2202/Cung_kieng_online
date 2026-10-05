@@ -4,15 +4,16 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { CULTURE_ARTICLES, RegionKey } from "../data/cultureData";
+import { REGIONAL_TOPICS } from "../data/regionalTopics";
 import type { CultureRegionSlug } from "./CulturalMapScreen";
 import type { RegionalExperienceKind } from "./RegionalExperienceScreen";
 
 interface RegionCultureScreenProps { region: CultureRegionSlug; onBack: () => void; onSelectArticle: (id: string) => void; onGoToExperience: () => void; onGoToRegionalExperience: (kind: RegionalExperienceKind) => void; }
 
-const REGION_META: Record<CultureRegionSlug, { title: string; region: RegionKey; image: string; description: string; topics: string[] }> = {
-  north: { title: "Bắc Bộ", region: "Bắc Bộ", image: "/images/temple_bac_bo.jpg", description: "Từ mái đình, câu quan họ đến những nếp nhà thân thuộc, Bắc Bộ lưu giữ nhiều lớp ký ức cộng đồng của người Việt.", topics: ["Đạo Mẫu", "Chầu văn", "Xin quẻ đầu năm", "Đình làng"] },
-  central: { title: "Trung Bộ", region: "Trung Bộ", image: "/images/hue_trung_bo.jpg", description: "Một miền văn hóa trầm lắng, nơi di sản cố đô gặp đời sống biển và những lời cầu bình an chân thành.", topics: ["Lễ Cầu Ngư", "Cá Ông", "Văn hóa Huế", "Nếp biển"] },
-  south: { title: "Nam Bộ", region: "Nam Bộ", image: "/images/mekong_nam_bo.jpg", description: "Phù sa, sông nước và sự rộng rãi trong cách sống tạo nên một sắc thái văn hóa vừa gần gũi vừa phóng khoáng.", topics: ["Vía Bà", "Bà Đen", "Văn hóa sông nước", "Hoa đăng"] },
+const REGION_META: Record<CultureRegionSlug, { title: string; region: RegionKey; image: string; description: string }> = {
+  north: { title: "Bắc Bộ", region: "Bắc Bộ", image: "/images/temple_bac_bo.jpg", description: "Từ mái đình, câu quan họ đến những nếp nhà thân thuộc, Bắc Bộ lưu giữ nhiều lớp ký ức cộng đồng của người Việt." },
+  central: { title: "Trung Bộ", region: "Trung Bộ", image: "/images/hue_trung_bo.jpg", description: "Một miền văn hóa trầm lắng, nơi di sản cố đô gặp đời sống biển và những lời cầu bình an chân thành." },
+  south: { title: "Nam Bộ", region: "Nam Bộ", image: "/images/mekong_nam_bo.jpg", description: "Phù sa, sông nước và sự rộng rãi trong cách sống tạo nên một sắc thái văn hóa vừa gần gũi vừa phóng khoáng." },
 };
 
 export const RegionCultureScreen: React.FC<RegionCultureScreenProps> = ({
@@ -23,6 +24,7 @@ export const RegionCultureScreen: React.FC<RegionCultureScreenProps> = ({
   onGoToRegionalExperience,
 }) => {
   const meta = REGION_META[region];
+  const topics = REGIONAL_TOPICS[region];
   const articles = CULTURE_ARTICLES.filter(
     (article) => article.region === meta.region
   );
@@ -61,12 +63,61 @@ export const RegionCultureScreen: React.FC<RegionCultureScreenProps> = ({
             <p className="text-sm sm:text-base text-muted leading-relaxed mb-6">
               {meta.description}
             </p>
-            <div className="flex flex-wrap gap-2">
-              {meta.topics.map((topic) => (
-                <Badge key={topic} variant="outline">
-                  {topic}
-                </Badge>
-              ))}
+            <div className="space-y-3">
+              <h2 className="text-sm font-semibold text-ink">
+                Chủ đề trong vùng
+              </h2>
+
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {topics.map((topic) => {
+                  const article = topic.articleId
+                    ? articles.find(
+                        (item) => item.id === topic.articleId
+                      )
+                    : undefined;
+
+                  return (
+                    <li
+                      key={topic.id}
+                      className="rounded-panel border border-line bg-surface p-3"
+                    >
+                      {article ? (
+                        <a
+                          href={`/culture-detail?articleId=${encodeURIComponent(article.id)}`}
+                          className="block font-semibold text-accent underline-offset-4 hover:underline"
+                          onClick={(event) => {
+                            const regularClick =
+                              event.button === 0 &&
+                              !event.ctrlKey &&
+                              !event.metaKey &&
+                              !event.shiftKey &&
+                              !event.altKey;
+
+                            if (!regularClick) return;
+
+                            event.preventDefault();
+                            onSelectArticle(article.id);
+                          }}
+                        >
+                          {topic.label}
+                        </a>
+                      ) : (
+                        <span className="font-semibold text-ink">
+                          {topic.label}
+                        </span>
+                      )}
+
+                      <p className="mt-1 text-xs text-muted">
+                        {article
+                          ? article.metadata?.editorialStatus === "approved"
+                            ? "Có bài giới thiệu · Đã duyệt biên tập"
+                            : "Có bài giới thiệu · Đang rà soát"
+                          : "Đang bổ sung tư liệu"}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           </div>
           <div className="relative h-64 rounded-card overflow-hidden border border-line">

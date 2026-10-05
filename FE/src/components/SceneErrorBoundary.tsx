@@ -3,8 +3,8 @@ import { Button } from "./ui/button";
 
 interface Props {
   children: ReactNode;
-  onClose: () => void;
-  onOpenAltar: () => void;
+  onClose?: () => void;
+  onOpenAltar?: () => void;
 }
 
 interface State {
@@ -35,26 +35,35 @@ export class SceneErrorBoundary extends Component<Props, State> {
           </h3>
 
           <p role="status" className="mt-2 text-sm text-muted">
-            Bạn có thể tiếp tục ở bàn thờ gia tiên hoặc
-            đóng cảnh và sử dụng những mục bên dưới.
+            {this.props.onOpenAltar
+              ? "Bạn có thể mở bàn thờ gia tiên để tiếp tục trải nghiệm."
+              : this.props.onClose
+                ? "Bạn có thể đóng cảnh và tiếp tục sử dụng những mục bên dưới."
+                : "Bạn có thể tiếp tục sử dụng những mục bên dưới."}
           </p>
 
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Button
-              type="button"
-              onClick={this.props.onOpenAltar}
-            >
-              Mở bàn thờ gia tiên
-            </Button>
+          {(this.props.onOpenAltar || this.props.onClose) && (
+            <div className="mt-4 flex flex-wrap gap-3">
+              {this.props.onOpenAltar && (
+                <Button
+                  type="button"
+                  onClick={this.props.onOpenAltar}
+                >
+                  Mở bàn thờ gia tiên
+                </Button>
+              )}
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={this.props.onClose}
-            >
-              Đóng cảnh 3D
-            </Button>
-          </div>
+              {this.props.onClose && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={this.props.onClose}
+                >
+                  Đóng cảnh 3D
+                </Button>
+              )}
+            </div>
+          )}
         </section>
       );
     }

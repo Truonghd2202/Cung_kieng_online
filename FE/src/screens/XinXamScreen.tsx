@@ -27,7 +27,10 @@ import { Card } from "../components/ui/card";
 import { AppDialog } from "../components/AppDialog";
 import { ContentProvenance } from "../components/ContentProvenance";
 import { TraditionalXamPreview } from "../components/TraditionalXamPreview";
+import { TraditionalXamExperience } from "../components/TraditionalXamExperience";
+import type { TraditionalXamSaveRequest } from "../data/savedTraditionalXam";
 import { CULTURE_ARTICLES } from "../data/cultureData";
+import { TRADITIONAL_XAM_TEST_MODE } from "../data/traditionalXamData";
 import {
   RegionType,
   TopicType,
@@ -38,6 +41,7 @@ import {
 
 export type XinXamDrawResult = XinXamResult & {
   drawId: string;
+  completedAction?: boolean;
 };
 
 interface XinXamScreenProps {
@@ -51,21 +55,41 @@ interface XinXamScreenProps {
   savedXamList?: {
     drawId?: string;
   }[];
+  initialDraw?: XinXamDrawResult | null;
+  onSnapshotChange?: (snapshot: XinXamDrawResult | null) => void;
+  currentUserEmail?: string;
+  onRequestTraditionalSave: (
+    request: TraditionalXamSaveRequest
+  ) => void;
 }
 
 export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   onBackToExperienceHome,
   onGoToArticle,
   onSaveToAccount,
+  onSnapshotChange,
   onGoToLogin,
   onGoToExplore,
   onGoToWish,
   isLoggedIn = false,
   savedXamList,
+  initialDraw = null,
+  currentUserEmail,
+  onRequestTraditionalSave,
 }) => {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [selectedRegion, setSelectedRegion] = useState<RegionType>("Bắc Bộ");
-  const [selectedTopic, setSelectedTopic] = useState<TopicType>("Bình an");
+  const [step, setStep] = useState<1 | 2 | 3>(
+    initialDraw ? 3 : 1
+  );
+
+  const [selectedRegion, setSelectedRegion] =
+    useState<RegionType>(
+      initialDraw?.region ?? "Bắc Bộ"
+    );
+
+  const [selectedTopic, setSelectedTopic] =
+    useState<TopicType>(
+      initialDraw?.topic ?? "Bình an"
+    );
 
   // Step 2 Interactive States
   const [drawPhase, setDrawPhase] = useState<"idle" | "shaking" | "dropped">("idle");
@@ -74,21 +98,69 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   const [showGuideModal, setShowGuideModal] = useState(false);
 
   // Step 3 State
-  const [isActionDone, setIsActionDone] = useState(false);
+  const [isActionDone, setIsActionDone] = useState(
+    initialDraw?.completedAction ?? false
+  );
+
   const [currentDrawId, setCurrentDrawId] =
-    useState<string | null>(null);
+    useState<string | null>(
+      initialDraw?.drawId ?? null
+    );
   const [saveError, setSaveError] = useState("");
   const [drawNotice, setDrawNotice] = useState("");
+  const [traditionalPanelOpen, setTraditionalPanelOpen] = useState(
+    () => Boolean(window.history.state?.traditionalXam?.stickId),
+  );
 
   const drawTimerRef = useRef<
     ReturnType<typeof setTimeout> | null
   >(null);
 
-  const [currentResult, setCurrentResult] = useState<XinXamResult>(() =>
-    getXinXamResult(selectedRegion, selectedTopic)
-  );
+  const [currentResult, setCurrentResult] =
+    useState<XinXamResult>(() =>
+      initialDraw ??
+      getXinXamResult(selectedRegion, selectedTopic)
+    );
 
   useEffect(() => {
+    if (!onSnapshotChange) return;
+
+    if (!currentDrawId) {
+      onSnapshotChange(null);
+      return;
+    }
+
+    onSnapshotChange({
+      ...currentResult,
+      drawId: currentDrawId,
+      completedAction: isActionDone,
+    });
+  }, [
+    currentResult,
+    currentDrawId,
+    isActionDone,
+    onSnapshotChange,
+  ]);
+
+  const previousSelectionRef = useRef({
+    region: selectedRegion,
+    topic: selectedTopic,
+  });
+
+  useEffect(() => {
+    const previous = previousSelectionRef.current;
+
+    const selectionChanged =
+      previous.region !== selectedRegion ||
+      previous.topic !== selectedTopic;
+
+    previousSelectionRef.current = {
+      region: selectedRegion,
+      topic: selectedTopic,
+    };
+
+    if (!selectionChanged) return;
+
     if (drawTimerRef.current !== null) {
       clearTimeout(drawTimerRef.current);
       drawTimerRef.current = null;
@@ -223,6 +295,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
       saved = onSaveToAccount({
         ...currentResult,
         drawId: currentDrawId,
+        completedAction: isActionDone,
       }) === true;
     } catch {
       setSaveError("Chưa lưu được thẻ. Bạn hãy thử lại.");
@@ -246,6 +319,30 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   return (
     <div className="screen-shell">
       <main className="page-container max-w-5xl">
+        {TRADITIONAL_XAM_TEST_MODE && (
+          <aside
+            aria-label="Chế độ kiểm thử xin xăm"
+            className="mb-6 rounded-card border border-line bg-surface p-5"
+          >
+            <h2 className="font-semibold text-ink">
+              Đang kiểm thử luồng xin xăm
+            </h2>
+
+            <p className="mt-2 text-sm leading-relaxed text-muted">
+              Các thẻ Quan Âm và Quan Thánh là dữ liệu giả để kiểm tra
+              thao tác FE. Kết quả lưu vào kho kiểm thử riêng.
+              Chế độ này giữ trong tab hiện tại khi chuyển màn hoặc tải lại.
+              Dùng liên kết bên dưới để trở về tư liệu thật.
+            </p>
+
+            <a
+              href="/xinxam?xamTest=0"
+              className="mt-3 inline-flex min-h-11 items-center font-semibold text-accent underline underline-offset-4"
+            >
+              Thoát kiểm thử và mở lại tư liệu thật
+            </a>
+          </aside>
+        )}
         {saveError && (
           <p
             role="alert"
@@ -455,6 +552,26 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                 </Button>
               </div>
             </Card>
+
+            <details
+              open={traditionalPanelOpen}
+              onToggle={(event) => {
+                setTraditionalPanelOpen(event.currentTarget.open);
+              }}
+              className="mb-6 rounded-card border border-line bg-surface p-4"
+            >
+              <summary className="min-h-11 cursor-pointer rounded-control py-3 text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                Khám phá bộ xăm Quan Âm / Quan Thánh
+              </summary>
+
+              <div className="mt-4 border-t border-line pt-5">
+                <TraditionalXamExperience
+                  key={currentUserEmail || "guest"}
+                  currentUserEmail={currentUserEmail}
+                  onRequestLoginToSave={onRequestTraditionalSave}
+                />
+              </div>
+            </details>
 
             {import.meta.env.DEV && (
               <details className="mb-6 rounded-card border border-line bg-surface p-4">

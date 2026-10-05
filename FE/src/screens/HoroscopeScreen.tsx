@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
   Sparkles,
@@ -47,13 +47,33 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
   const [calculationResult, setCalculationResult] =
     useState<HoroscopeCalculationResult | null>(null);
   const [birthDateError, setBirthDateError] = useState("");
+  const feedbackRef = useRef<HTMLDivElement | null>(null);
+  const submittedRef = useRef(false);
+  const [feedback, setFeedback] = useState("");
+
+  const focusFeedback = () => {
+    requestAnimationFrame(() => {
+      feedbackRef.current?.focus();
+    });
+  };
 
   const handleGenerate = (
     event: React.FormEvent
   ) => {
     event.preventDefault();
+    submittedRef.current = true;
 
-    if (!agreedDisclaimer) return;
+    setCalculationResult(null);
+    setShowResult(false);
+
+    if (!agreedDisclaimer) {
+      setBirthDateError("");
+      setFeedback(
+        "Bạn hãy đọc và xác nhận thông tin về bản thử nghiệm trước khi tiếp tục.",
+      );
+      focusFeedback();
+      return;
+    }
 
     const dateError = validateBirthDate(
       day,
@@ -63,8 +83,8 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
 
     if (dateError) {
       setBirthDateError(dateError);
-      setCalculationResult(null);
-      setShowResult(false);
+      setFeedback(dateError);
+      focusFeedback();
       return;
     }
 
@@ -81,59 +101,31 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
       setBirthDateError("");
       setCalculationResult(result);
       setShowResult(true);
+      setFeedback(
+        "Đã tạo bản chiêm nghiệm từ thông tin bạn vừa gửi. Nội dung sử dụng quy tắc và bài viết có sẵn, chưa có AI hoặc lá số tử vi đầy đủ.",
+      );
     } catch (error) {
-      setBirthDateError(
+      const message =
         error instanceof Error
           ? error.message
-          : "Chưa tạo được bản chiêm nghiệm. Bạn hãy thử lại."
-      );
+          : "Chưa tạo được bản chiêm nghiệm. Bạn hãy thử lại.";
 
-      setCalculationResult(null);
-      setShowResult(false);
+      setBirthDateError(message);
+      setFeedback(message);
     }
+
+    focusFeedback();
   };
 
   useEffect(() => {
-    const dateError = validateBirthDate(
-      day,
-      month,
-      year
-    );
+    setCalculationResult(null);
+    setShowResult(false);
+    setBirthDateError("");
 
-    // Xóa lỗi ngày khi người dùng đã sửa hợp lệ.
-    if (!dateError) {
-      setBirthDateError("");
-    }
-
-    if (!showResult || !agreedDisclaimer) return;
-
-    if (dateError) {
-      setBirthDateError(dateError);
-      setCalculationResult(null);
-      setShowResult(false);
-      return;
-    }
-
-    try {
-      const result = calculateHoroscope({
-        day,
-        month,
-        year,
-        hourCanh,
-        noHour,
-        region,
-      });
-
-      setCalculationResult(result);
-    } catch (error) {
-      setBirthDateError(
-        error instanceof Error
-          ? error.message
-          : "Chưa cập nhật được bản chiêm nghiệm."
+    if (submittedRef.current) {
+      setFeedback(
+        "Thông tin đã thay đổi. Bấm tạo bản chiêm nghiệm để nhận kết quả mới.",
       );
-
-      setCalculationResult(null);
-      setShowResult(false);
     }
   }, [
     day,
@@ -142,14 +134,14 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
     hourCanh,
     noHour,
     region,
-    showResult,
     agreedDisclaimer,
   ]);
-
   const handleReset = () => {
+    submittedRef.current = false;
     setShowResult(false);
     setCalculationResult(null);
     setBirthDateError("");
+    setFeedback("");
   };
 
   return (
@@ -369,7 +361,6 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
                   <label className="flex items-start gap-2.5 text-xs text-ink leading-relaxed cursor-pointer">
                     <input
                       type="checkbox"
-                      required
                       checked={agreedDisclaimer}
                       onChange={(e) => setAgreedDisclaimer(e.target.checked)}
                       className="mt-0.5 rounded text-accent focus:ring-accent"
@@ -394,7 +385,6 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
                 <div className="flex gap-2">
                   <Button
                     type="submit"
-                    disabled={!agreedDisclaimer}
                     className="flex-1 py-3.5 rounded-panel bg-action hover:bg-action text-white font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     <Eye className="w-4 h-4" />
@@ -429,7 +419,23 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
 
           {/* Blueprint & Results Column (7 cols) */}
           <div className="lg:col-span-7 space-y-5">
-            <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
+            <div
+              ref={feedbackRef}
+              tabIndex={-1}
+              className="rounded-panel focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              <p
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                className={feedback ? "my-4 text-sm text-muted" : "sr-only"}
+              >
+                {feedback}
+              </p>
+            </div>
+
+            {showResult && calculationResult && agreedDisclaimer && (
+              <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-line">
                 <h3 className="font-display font-bold text-lg text-ink flex items-center gap-2">
                   <Compass className="w-4 h-4 text-accent" />
@@ -703,6 +709,7 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
                 Mỗi biểu tượng chỉ là một lăng kính mộc mạc để bạn thấu hiểu chính mình sâu sắc hơn trong dòng chảy cuộc sống hôm nay.
               </div>
             </Card>
+            )}
           </div>
         </div>
 

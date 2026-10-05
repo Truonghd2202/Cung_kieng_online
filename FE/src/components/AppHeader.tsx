@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { LogOut, Menu, Moon, Sun, UserRound, X } from "lucide-react";
+import { LogOut, Menu, Moon, Sun, X } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
+import { ProfileAvatar } from "./ProfileAvatar";
 
 export type NavScreen =
   | "guest"
@@ -185,7 +186,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 title={`Tài khoản: ${user.name}`}
                 aria-label={`Mở Góc của tôi — ${user.name}`}
               >
-                <UserRound className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+                <ProfileAvatar
+                  email={user?.email}
+                  name={user?.name}
+                  className="h-7 w-7 border border-line text-xs"
+                />
                 <span className="hidden truncate sm:inline">{user.name}</span>
               </button>
               {onLogout && (

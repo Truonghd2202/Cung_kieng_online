@@ -11,7 +11,6 @@ import {
   ShieldCheck,
   CheckCircle2,
   Sparkles,
-  Camera,
   Edit2,
   Check,
   AlertTriangle,
@@ -23,6 +22,8 @@ import { Card } from "@/src/components/ui/card";
 import type { ThemePreference } from "../hooks/useTheme";
 import { CULTURAL_TOPICS } from "../data/culturalTopics";
 import { AppDialog } from "../components/AppDialog";
+import { ProfileAvatar } from "../components/ProfileAvatar";
+import { ProfileAvatarEditor } from "../components/ProfileAvatarEditor";
 
 interface SettingsScreenProps {
   onBackToAccount: () => void;
@@ -37,6 +38,7 @@ interface SettingsScreenProps {
   ) => boolean;
   onLogout?: () => void;
   onClearAllLocalData?: () => boolean;
+  onGoToReminders: () => void;
 }
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
@@ -50,9 +52,31 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onUpdateProfile,
   onLogout,
   onClearAllLocalData,
+  onGoToReminders,
 }) => {
   // Navigation section scroll
   const [activeSection, setActiveSection] = useState<string>("profile");
+
+  const goToSection = (
+    section: "profile" | "experience" | "notifications" | "data"
+  ) => {
+    const target = document.getElementById(`settings-${section}`);
+
+    if (!target) return;
+
+    setActiveSection(section);
+
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    target.focus({ preventScroll: true });
+
+    target.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "start",
+    });
+  };
 
   // Profile Edit State
   const [displayName, setDisplayName] = useState(user?.name || "An Nhiên");
@@ -184,7 +208,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-accent transition-colors cursor-pointer self-start sm:self-auto"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Về Góc của tôi (Màn 21)</span>
+            <span>Về Góc của tôi</span>
           </button>
         </div>
 
@@ -209,11 +233,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             {/* User Badge Card */}
             <Card className="p-5 rounded-card bg-surface border border-line shadow-xs">
               <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-surface border border-line shrink-0">
-                  <span className="grid h-full w-full place-items-center bg-accent-soft font-display text-xl font-semibold text-accent" aria-hidden="true">
-                    {displayName.trim().charAt(0).toUpperCase()}
-                  </span>
-                </div>
+                <ProfileAvatar
+                  email={user?.email}
+                  name={displayName}
+                  className="h-12 w-12 border border-line text-xl"
+                />
                 <div>
                   <h3 className="font-display font-bold text-base text-ink">
                     {displayName}
@@ -227,7 +251,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <Card className="p-3 rounded-card bg-surface border border-line shadow-xs space-y-1 text-xs font-semibold text-ink">
               <button
                 type="button"
-                onClick={() => setActiveSection("profile")}
+                onClick={() => goToSection("profile")}
                 className={`w-full text-left px-4 py-2.5 rounded-panel flex items-center justify-between transition-all cursor-pointer ${
                   activeSection === "profile"
                     ? "bg-accent-soft text-accent"
@@ -243,7 +267,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
               <button
                 type="button"
-                onClick={() => setActiveSection("experience")}
+                onClick={() => goToSection("experience")}
                 className={`w-full text-left px-4 py-2.5 rounded-panel flex items-center justify-between transition-all cursor-pointer ${
                   activeSection === "experience"
                     ? "bg-accent-soft text-accent"
@@ -259,7 +283,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
               <button
                 type="button"
-                onClick={() => setActiveSection("notifications")}
+                onClick={() => goToSection("notifications")}
                 className={`w-full text-left px-4 py-2.5 rounded-panel flex items-center justify-between transition-all cursor-pointer ${
                   activeSection === "notifications"
                     ? "bg-accent-soft text-accent"
@@ -274,7 +298,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
               <button
                 type="button"
-                onClick={() => setActiveSection("data")}
+                onClick={() => goToSection("data")}
                 className={`w-full text-left px-4 py-2.5 rounded-panel flex items-center justify-between transition-all cursor-pointer ${
                   activeSection === "data"
                     ? "bg-accent-soft text-accent"
@@ -311,7 +335,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           {/* Right Column (8 cols): Setting Blocks */}
           <div className="lg:col-span-9 space-y-6">
             {/* Block 1: Hồ sơ cá nhân */}
-            <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
+            <section
+              id="settings-profile"
+              aria-label="Hồ sơ cá nhân"
+              tabIndex={-1}
+              className="scroll-mt-28 rounded-card focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current"
+            >
+              <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-1">
                 <User className="w-3.5 h-3.5" />
                 <span>HỒ SƠ CÁ NHÂN</span>
@@ -324,29 +354,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               </p>
 
               {/* Avatar Row */}
-              <div className="flex items-center justify-between p-4 rounded-panel bg-surface border border-line mb-5">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-14 h-14 rounded-full overflow-hidden bg-surface border border-line">
-                    <span className="grid h-full w-full place-items-center bg-accent-soft font-display text-2xl font-semibold text-accent" aria-hidden="true">
-                      {displayName.trim().charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div>
-                    <div className="font-bold text-sm text-ink">Ảnh đại diện người dùng</div>
-                    <div className="text-xs text-muted">Định dạng JPG, PNG • Chỉ lưu tại bộ nhớ máy</div>
-                  </div>
-                </div>
-
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-xs border-line gap-1.5"
-                  onClick={() => alert("Tính năng đổi ảnh đại diện cá nhân hóa từ tệp tin sẽ có khi mở rộng bộ nhớ.")}
-                >
-                  <Camera className="w-3.5 h-3.5 text-accent" />
-                  <span>Đổi ảnh</span>
-                </Button>
-              </div>
+              {user?.email && (
+                <ProfileAvatarEditor
+                  key={user.email}
+                  email={user.email}
+                  name={displayName}
+                />
+              )}
 
               {/* Fields */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -420,10 +434,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 Tên hiển thị dùng để gọi bạn trong các lời chào buổi sớm và lưu trữ các dòng chiêm
                 nghiệm tại góc lưu bút riêng tư.
               </p>
-            </Card>
+              </Card>
+            </section>
 
             {/* Block 2: Tùy biến trải nghiệm */}
-            <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
+            <section
+              id="settings-experience"
+              aria-label="Tùy biến trải nghiệm"
+              tabIndex={-1}
+              className="scroll-mt-28 rounded-card focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current"
+            >
+              <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-1">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>TÙY BIẾN TRẢI NGHIỆM</span>
@@ -579,10 +600,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   hoặc thứ tự bài viết.
                 </p>
               </fieldset>
-            </Card>
+              </Card>
+            </section>
 
             {/* Block 3: Nhắc lịch & Thông báo */}
-            <Card className="p-6 sm:p-8 rounded-card bg-surface border-line">
+            <section
+              id="settings-notifications"
+              aria-label="Thông báo và nhắc lịch"
+              tabIndex={-1}
+              className="scroll-mt-28 rounded-card focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current"
+            >
+              <Card className="p-6 sm:p-8 rounded-card bg-surface border-line">
               <div className="flex items-center gap-2 mb-3">
                 <Bell
                   className="w-5 h-5 text-accent"
@@ -593,25 +621,30 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 </h2>
               </div>
 
-              <span className="inline-flex rounded-full bg-accent-soft px-3 py-1.5 text-sm text-accent mb-4">
-                Chưa có trong bản thử nghiệm
-              </span>
-
-              <p className="text-base text-muted leading-relaxed">
-                Trang chưa gửi lời nhắc tự động cho ngày rằm,
-                mùng một, lễ hội hoặc giờ check-in. Các tùy chọn
-                sẽ xuất hiện khi chức năng hoạt động.
+              <p className="text-sm text-muted leading-relaxed">
+                Bật nhắc rằm, mùng một và lưu ngày giỗ để xem khi mở
+                ứng dụng. Chưa gửi thông báo khi đóng web.
               </p>
 
-              <p className="mt-3 text-sm text-muted leading-relaxed">
-                Nếu trước đây bạn đã cấp quyền thông báo, quyền
-                đó vẫn do trình duyệt quản lý. Nó không đồng nghĩa
-                với việc đã đặt lịch nhắc.
-              </p>
-            </Card>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-4"
+                onClick={onGoToReminders}
+              >
+                Quản lý nhắc lịch
+              </Button>
+              </Card>
+            </section>
 
             {/* Block 4: Dữ liệu bản demo & Lưu trữ thiết bị */}
-            <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
+            <section
+              id="settings-data"
+              aria-label="Dữ liệu trên trình duyệt"
+              tabIndex={-1}
+              className="scroll-mt-28 rounded-card focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current"
+            >
+              <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span>DỮ LIỆU BẢN DEMO & LƯU TRỮ THIẾT BỊ</span>
@@ -638,7 +671,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 <div className="p-3.5 rounded-panel bg-success-soft border border-success/25 text-success text-xs mb-4 flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
                   <span>
-                    Đã xóa nội dung trong Góc của tôi và ghi chú lịch
+                    Đã xóa nội dung đã lưu, ghi chú lịch và ba miền,
+                    bản nháp nghi lễ, đăng ký hội viên demo và vật phẩm số
                     của tài khoản hiện tại trên trình duyệt này.
                   </span>
                 </div>
@@ -666,10 +700,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   className="w-full sm:w-auto text-xs rounded-xl border-danger/25 text-danger hover:bg-danger-soft gap-1.5"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Xóa nội dung đã lưu và ghi chú lịch</span>
+                  <span>Xóa nội dung và dữ liệu trải nghiệm</span>
                 </Button>
               </div>
-            </Card>
+              </Card>
+            </section>
 
             {/* Block 5: Đang đăng nhập dưới phiên */}
             <div className="p-5 rounded-panel bg-surface border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
@@ -719,12 +754,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </h3>
 
             <p className="mb-6 text-sm leading-relaxed text-muted">
-              Xóa lời chiêm nghiệm, thẻ xăm, lời gửi gắm
-              trong Góc của tôi và ghi chú lịch của tài
-              khoản hiện tại trên trình duyệt này.
-              Thao tác không thể hoàn tác.
-              Góc tưởng niệm, tùy chọn giao diện và dữ liệu
-              của tài khoản khác được giữ lại.
+              Thao tác này xóa tín hiệu, thẻ xăm, lời gửi gắm,
+              ghi chú lịch và ba miền, bản nháp nghi lễ,
+              đăng ký hội viên demo và vật phẩm số của tài khoản
+              hiện tại trên trình duyệt này. Bạn không thể hoàn tác.
+            </p>
+
+            <p className="mb-6 text-sm leading-relaxed text-muted">
+              Bài đã đánh dấu, góc tưởng niệm, tùy chọn nhắc lịch,
+              giao diện và dữ liệu của tài khoản khác được giữ lại.
+              Yêu cầu hợp tác demo có mục xóa riêng trong biểu mẫu Hợp tác.
             </p>
 
             {clearDataError && (

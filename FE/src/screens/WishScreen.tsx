@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -23,6 +23,12 @@ interface WishScreenProps {
   onGoToExplore: () => void;
   onSaveJournal?: (text: string, topic: WishTopic) => boolean;
   isLoggedIn?: boolean;
+  initialContent?: string;
+  initialCategory?: string;
+  onDraftChange?: (
+    content: string | null,
+    category: string
+  ) => void;
 }
 
 const SAMPLE_WISHES: Record<WishTopic, string> = {
@@ -45,16 +51,52 @@ export const WishScreen: React.FC<WishScreenProps> = ({
   onGoToExplore,
   onSaveJournal,
   isLoggedIn = false,
+  initialContent = "",
+  initialCategory = "Bình an",
+  onDraftChange,
 }) => {
   // Screen views: 'form' | 'variantA' (Lưu riêng) | 'variantB' (Biểu tượng tan biến)
   const [viewState, setViewState] = useState<"form" | "variantA" | "variantB">("form");
 
   // Form State - default to empty string so user never accidentally saves sample text
-  const [content, setContent] = useState("");
-  const [topic, setTopic] = useState<WishTopic>("Bình an");
+  const [content, setContent] = useState(initialContent);
+
+  const [topic, setTopic] = useState<WishTopic>(() => {
+    const validTopics: WishTopic[] = [
+      "Bình an",
+      "Gia đình",
+      "Học tập",
+      "Công việc",
+      "Khác",
+    ];
+
+    return (
+      validTopics.find((value) => value === initialCategory) ??
+      "Bình an"
+    );
+  });
   const [mode, setMode] = useState<WishMode>("journal");
   const [hasActuallySaved, setHasActuallySaved] = useState(false);
   const [saveError, setSaveError] = useState("");
+
+  useEffect(() => {
+    const shouldKeepDraft =
+      mode === "journal" &&
+      viewState === "form" &&
+      !hasActuallySaved;
+
+    onDraftChange?.(
+      shouldKeepDraft ? content : null,
+      topic
+    );
+  }, [
+    content,
+    topic,
+    mode,
+    viewState,
+    hasActuallySaved,
+    onDraftChange,
+  ]);
 
   const TOPICS: WishTopic[] = ["Bình an", "Gia đình", "Học tập", "Công việc", "Khác"];
 

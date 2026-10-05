@@ -9,10 +9,26 @@ export type MoodKey =
   | "Băn khoăn"
   | "Nôn nóng"
   | "Biết ơn"
-  | "Cần điểm tựa";
+  | "Cần điểm tựa"
+  | "Áp lực"
+  | "Cô đơn"
+  | "Vui vẻ"
+  | "Mông lung";
+
+export const MOOD_CONTEXTS = [
+  { key: "general", label: "Chưa muốn chọn" },
+  { key: "study", label: "Học tập" },
+  { key: "work", label: "Công việc" },
+  { key: "family", label: "Gia đình" },
+  { key: "relationship", label: "Tình cảm" },
+] as const;
+
+export type MoodContextKey =
+  (typeof MOOD_CONTEXTS)[number]["key"];
 
 export interface SignalData {
   id: string;
+  contextKey?: MoodContextKey;
   metadata: ContentMetadata;
   mood: MoodKey;
   moodDesc: string;
@@ -100,8 +116,32 @@ export const MOODS_LIST: {
   {
     key: "Cần điểm tựa",
     name: "Cần điểm tựa",
-    desc: "Mệt mỏi sau ngày dài, muốn được vỗ về trong khoảng lặng",
+    desc: "Cần một lời động viên và một khoảng được lắng nghe",
     iconType: "moon",
+  },
+  {
+    key: "Áp lực",
+    name: "Áp lực",
+    desc: "Nhiều việc dồn lại, muốn nhẹ gánh hơn một chút",
+    iconType: "wind",
+  },
+  {
+    key: "Cô đơn",
+    name: "Cô đơn",
+    desc: "Muốn có một người lắng nghe và kết nối",
+    iconType: "moon",
+  },
+  {
+    key: "Vui vẻ",
+    name: "Vui vẻ",
+    desc: "Có một niềm vui muốn tận hưởng hoặc chia sẻ",
+    iconType: "lotus",
+  },
+  {
+    key: "Mông lung",
+    name: "Mông lung",
+    desc: "Chưa rõ hướng đi, muốn tìm một bước nhỏ tiếp theo",
+    iconType: "question",
   },
 ];
 
@@ -767,6 +807,372 @@ export const ALL_SIGNALS: SignalData[] = [
   },
 ];
 
+type AddedMood =
+  | "Áp lực"
+  | "Cô đơn"
+  | "Vui vẻ"
+  | "Mông lung";
+
+const ADDED_MOOD_CONTENT: Record<
+  AddedMood,
+  {
+    id: string;
+    message: string;
+    reflection: string;
+    actionTitle: string;
+    actionDescription: string;
+  }
+> = {
+  "Áp lực": {
+    id: "mood-ap-luc-01",
+    message: "Bạn không cần giải quyết mọi việc trong cùng một lúc.",
+    reflection:
+      "Khi nhiều việc cùng đòi hỏi sự chú ý, cảm giác quá tải có thể xuất hiện. Bạn thử phân biệt việc thật sự cần làm hôm nay với việc có thể chờ hoặc cần thêm sự hỗ trợ.",
+    actionTitle: "Chọn một việc vừa sức",
+    actionDescription:
+      "Viết ra một việc có thể làm trong vài phút. Nếu phù hợp, chọn thêm một việc có thể hoãn hoặc nhờ người khác hỗ trợ.",
+  },
+
+  "Cô đơn": {
+    id: "mood-co-don-01",
+    message: "Mong muốn được lắng nghe của bạn đáng được trân trọng.",
+    reflection:
+      "Bạn không cần ép mình phải vui lên ngay. Nếu muốn, hãy nghĩ đến một người hoặc một cộng đồng khiến bạn thấy thoải mái khi kết nối.",
+    actionTitle: "Mở một kết nối nhỏ",
+    actionDescription:
+      "Bạn có thể gửi một lời hỏi thăm đến người mình tin tưởng. Nếu chưa muốn trò chuyện, hãy viết điều bạn muốn được người khác hiểu.",
+  },
+
+  "Vui vẻ": {
+    id: "mood-vui-ve-01",
+    message: "Bạn có thể dành một chút thời gian để tận hưởng niềm vui này.",
+    reflection:
+      "Niềm vui không cần phải lớn mới đáng ghi nhớ. Bạn thử nhận ra điều đã làm ngày hôm nay dễ chịu hơn và cách mình muốn giữ lại khoảnh khắc ấy.",
+    actionTitle: "Ghi lại một điều vui",
+    actionDescription:
+      "Viết một câu về điều khiến bạn vui hôm nay. Nếu muốn, chia sẻ niềm vui đó với một người thân quen.",
+  },
+
+  "Mông lung": {
+    id: "mood-mong-lung-01",
+    message: "Chưa rõ toàn bộ con đường cũng không ngăn bạn tìm một bước nhỏ.",
+    reflection:
+      "Bạn có thể chưa có đủ thông tin để quyết định. Thay vì buộc mình chọn ngay, hãy nhận diện điều còn chưa rõ và một cách tìm hiểu thêm.",
+    actionTitle: "Làm rõ một câu hỏi",
+    actionDescription:
+      "Viết một câu hỏi bạn đang băn khoăn. Chọn một thông tin cần tìm hoặc một người có thể giúp bạn hiểu thêm.",
+  },
+};
+
+for (const [mood, content] of Object.entries(
+  ADDED_MOOD_CONTENT
+) as [AddedMood, (typeof ADDED_MOOD_CONTENT)[AddedMood]][]) {
+  const signal: SignalData = {
+    id: content.id,
+    metadata: createDemoMetadata(),
+    mood,
+    moodDesc:
+      MOODS_LIST.find((item) => item.key === mood)?.desc ?? mood,
+    badge: "Lời gợi mở",
+
+    poem: {
+      line1: content.message,
+      line2: "Bạn có thể chọn điều phù hợp với mình.",
+      subtext:
+        "Lời biên soạn cho bản thử nghiệm; không phải ca dao, tục ngữ hoặc nguyên văn quẻ cổ.",
+    },
+
+    research: {
+      title: "Về lời gợi mở này",
+      source: "Nội dung biên soạn cho bản thử nghiệm",
+      region: "Không gán vùng miền",
+      note:
+        "Chưa phải tư liệu dân gian đã đối chiếu nguồn. Nội dung dùng để thử luồng chọn cảm xúc và thực hành nhỏ.",
+    },
+
+    reflection: {
+      title: "Một góc nhìn cho bạn",
+      highlightWord: mood,
+      content: content.reflection,
+      advice: content.message,
+      signalNumber: "Bản thử nghiệm",
+    },
+
+    action: {
+      title: content.actionTitle,
+      duration: "Khoảng 2 phút",
+      description: content.actionDescription,
+      buttonLabel: "Tôi đã thực hiện",
+      tag: "Tự nguyện",
+    },
+
+    artwork: {
+      tag: "Hình ảnh minh họa",
+      image: "/images/tea_bowl.jpg",
+      caption: "Chén trà minh họa cho một khoảng nghỉ.",
+    },
+
+    loadingFacts: {
+      breathingText: "Bạn có thể dừng lại một chút nếu muốn.",
+      thoughtTitle: "Một lời gợi mở",
+      thoughtContent: content.message,
+      originTitle: "Nội dung của bản thử nghiệm",
+      originContent:
+        "Lời biên soạn theo cảm xúc bạn chọn; chưa phân tích nội dung nhật ký.",
+      stepText: "Mở lời chiêm nghiệm",
+    },
+
+    guestPreview: {
+      title: "Một khoảng dành cho bạn",
+      message: content.message,
+    },
+  };
+
+  ALL_SIGNALS.push(signal);
+}
+
+const CONTEXT_CONTENT: Record<
+  Exclude<MoodContextKey, "general">,
+  {
+    label: string;
+    message: string;
+    reflection: string;
+    actionTitle: string;
+    actionDescription: string;
+  }
+> = {
+  study: {
+    label: "Học tập",
+    message:
+      "Bạn có thể bắt đầu từ một phần nhỏ của việc học.",
+    reflection:
+      "Hãy nhìn vào điều bạn đang cần học thay vì buộc mình giải quyết mọi thứ ngay. Một câu hỏi rõ ràng hoặc một lần luyện tập vừa sức cũng là một bước tiến.",
+    actionTitle: "Chọn một phần cần làm rõ",
+    actionDescription:
+      "Ghi một câu hỏi hoặc một phần bài bạn muốn hiểu thêm. Chọn cách tìm lời giải: đọc lại tài liệu, thử một ví dụ hoặc hỏi người có thể hỗ trợ.",
+  },
+
+  work: {
+    label: "Công việc",
+    message:
+      "Một bước rõ ràng có thể giúp việc trước mắt dễ bắt đầu hơn.",
+    reflection:
+      "Bạn thử phân biệt điều mình có thể chủ động với điều cần thêm thông tin hoặc sự hỗ trợ. Không cần dùng một thông điệp để quyết định thay cho những điều kiện thực tế.",
+    actionTitle: "Làm rõ bước tiếp theo",
+    actionDescription:
+      "Chọn một việc cụ thể, ghi kết quả bạn muốn đạt và điều còn thiếu để bắt đầu. Nếu cần, xác định người có thể cùng bạn làm rõ.",
+  },
+
+  family: {
+    label: "Gia đình",
+    message:
+      "Bạn có thể chọn một cách kết nối phù hợp với hoàn cảnh của mình.",
+    reflection:
+      "Mỗi gia đình có những câu chuyện riêng. Nếu bạn thấy thoải mái, một lời hỏi thăm hoặc khoảng thời gian lắng nghe có thể là điểm bắt đầu. Bạn cũng có thể chọn giữ khoảng riêng khi cần.",
+    actionTitle: "Chọn một điều muốn nói",
+    actionDescription:
+      "Viết một lời hỏi thăm, một điều biết ơn hoặc một điều bạn muốn được hiểu. Bạn có thể giữ riêng hoặc chia sẻ khi thấy phù hợp.",
+  },
+
+  relationship: {
+    label: "Tình cảm",
+
+    message:
+      "Bạn có thể dành thời gian hiểu cảm xúc và điều mình cần trong một mối quan hệ.",
+
+    reflection:
+      "Dù bạn đang tìm hiểu ai đó, ở trong một mối quan hệ hay vừa trải qua thay đổi, cảm xúc của bạn vẫn đáng được lắng nghe. Bạn thử phân biệt điều mình biết rõ với điều đang suy đoán, rồi chọn một cách trao đổi hoặc giữ khoảng riêng phù hợp.",
+
+    actionTitle: "Viết một điều bạn cần",
+
+    actionDescription:
+      "Ghi lại một cảm xúc, một nhu cầu và một giới hạn bạn muốn được tôn trọng. Bạn có thể giữ riêng hoặc chia sẻ khi sẵn sàng; không cần đưa ra quyết định ngay.",
+  },
+};
+
+const MOOD_GUIDANCE: Record<
+  MoodKey,
+  {
+    opening: string;
+    question: string;
+    smallStep: string;
+  }
+> = {
+  "Chênh vênh": {
+    opening:
+      "Khi chưa thấy một điểm tựa rõ ràng, bạn có thể bắt đầu từ điều mình biết chắc trong hiện tại.",
+    question:
+      "Điều gì đang giúp bạn cảm thấy vững hơn, dù chỉ một chút?",
+    smallStep:
+      "Ghi lại một điều đang nâng đỡ bạn và một bước nhỏ bạn có thể chủ động.",
+  },
+
+  "An yên": {
+    opening:
+      "Khoảng bình yên này có thể giúp bạn nhận ra điều đang phù hợp với mình.",
+    question:
+      "Bạn muốn giữ lại thói quen hoặc điều kiện nào đang tạo nên sự dễ chịu?",
+    smallStep:
+      "Chọn một điều đang có ích và nghĩ cách dành chỗ cho nó trong những ngày tới.",
+  },
+
+  "Băn khoăn": {
+    opening:
+      "Khi đứng trước nhiều lựa chọn, bạn không cần buộc mình có câu trả lời ngay.",
+    question:
+      "Bạn còn thiếu thông tin gì để hiểu rõ các lựa chọn?",
+    smallStep:
+      "Viết một điều đã biết và một câu hỏi cần làm rõ trước khi quyết định.",
+  },
+
+  "Nôn nóng": {
+    opening:
+      "Mong muốn tiến nhanh có thể khiến khoảng chờ trở nên khó chịu. Bạn thử nhìn vào phần việc mình có thể làm trước.",
+    question:
+      "Điều gì nằm trong khả năng chủ động của bạn lúc này?",
+    smallStep:
+      "Chọn một việc vừa sức để làm trong hôm nay, thay vì kiểm tra kết quả liên tục.",
+  },
+
+  "Biết ơn": {
+    opening:
+      "Bạn có thể dành một khoảng nhỏ để gọi tên điều đang khiến mình thấy biết ơn.",
+    question:
+      "Có người, hành động hoặc khoảnh khắc nào bạn muốn ghi nhớ?",
+    smallStep:
+      "Viết một lời cảm ơn cụ thể. Bạn có thể giữ riêng hoặc gửi đi nếu muốn.",
+  },
+
+  "Cần điểm tựa": {
+    opening:
+      "Bạn không nhất thiết phải tự gánh mọi việc. Tìm sự hỗ trợ cũng là một cách chăm sóc mình.",
+    question:
+      "Bạn cần được lắng nghe, hỗ trợ việc cụ thể hay có thêm thời gian?",
+    smallStep:
+      "Gọi tên một nhu cầu và một người hoặc nguồn hỗ trợ mà bạn thấy thoải mái tìm đến.",
+  },
+
+  "Áp lực": {
+    opening:
+      "Khi nhiều việc cùng đòi hỏi sự chú ý, bạn có thể thu nhỏ phần việc cần giải quyết trước mắt.",
+    question:
+      "Việc nào cần làm trước, việc nào có thể chờ hoặc nhờ hỗ trợ?",
+    smallStep:
+      "Chọn một việc ưu tiên và một việc có thể tạm để sang lúc khác.",
+  },
+
+  "Cô đơn": {
+    opening:
+      "Cảm giác cô đơn không buộc bạn phải vội tìm một mối quan hệ. Bạn có thể chọn một cách kết nối khiến mình thấy an toàn và thoải mái.",
+    question:
+      "Bạn đang cần được trò chuyện, được hiểu hay có người cùng làm một việc nhỏ?",
+    smallStep:
+      "Nếu muốn, nhắn một lời hỏi thăm đến người bạn tin cậy; hoặc viết điều bạn muốn được lắng nghe.",
+  },
+
+  "Vui vẻ": {
+    opening:
+      "Bạn có thể tận hưởng niềm vui hiện tại mà không cần biến nó thành một mục tiêu mới.",
+    question:
+      "Điều gì làm bạn vui và bạn muốn ghi nhớ khoảnh khắc này như thế nào?",
+    smallStep:
+      "Ghi lại một chi tiết đáng nhớ hoặc chia sẻ niềm vui với người bạn muốn.",
+  },
+
+  "Mông lung": {
+    opening:
+      "Khi chưa rõ mình muốn đi đâu, việc nhận ra điều quan trọng với mình có thể là điểm bắt đầu.",
+    question:
+      "Điều gì bạn muốn tìm hiểu thêm trước khi chọn hướng tiếp theo?",
+    smallStep:
+      "Chọn một câu hỏi nhỏ để tìm hiểu, thay vì yêu cầu bản thân lập ngay một kế hoạch dài.",
+  },
+};
+
+const CONTEXT_BASE_SIGNALS = MOODS_LIST.map((mood) =>
+  ALL_SIGNALS.find((signal) => signal.mood === mood.key)
+).filter((signal): signal is SignalData => Boolean(signal));
+
+for (const base of CONTEXT_BASE_SIGNALS) {
+  for (const contextKey of [
+    "study",
+    "work",
+    "family",
+    "relationship",
+  ] as const) {
+    const content = CONTEXT_CONTENT[contextKey];
+    const guidance = MOOD_GUIDANCE[base.mood];
+
+    ALL_SIGNALS.push({
+      ...base,
+
+      id: `${base.id}-context-${contextKey}`,
+      contextKey,
+      metadata: createDemoMetadata(),
+      badge: `Lời gợi mở · ${content.label}`,
+
+      poem: {
+        line1: content.message,
+        line2: "Bạn có thể chọn điều phù hợp với mình.",
+        subtext:
+          "Lời biên soạn cho bản thử nghiệm; không phải nguyên văn ca dao, tục ngữ hoặc quẻ cổ.",
+      },
+
+      research: {
+        title: "Về lời gợi mở này",
+        source: "Nội dung biên soạn cho bản thử nghiệm",
+        region: "Không gán vùng miền",
+        note:
+          "Nội dung dựa trên tâm trạng và hoàn cảnh bạn chọn. Chưa phân tích nhật ký bằng AI.",
+      },
+
+      reflection: {
+        title: `Một góc nhìn về ${content.label.toLowerCase()}`,
+        highlightWord: base.mood,
+
+        content: [
+          guidance.opening,
+          content.reflection,
+          guidance.question,
+        ].join("\n\n"),
+
+        advice: guidance.smallStep,
+        signalNumber: "Bản thử nghiệm",
+      },
+
+      action: {
+        title: content.actionTitle,
+        duration: "Khoảng 2 phút",
+
+        description:
+          guidance.smallStep +
+          "\n\n" +
+          `Nếu muốn hướng đến ${content.label.toLowerCase()}: ` +
+          content.actionDescription,
+
+        buttonLabel: "Tôi đã thực hiện",
+        tag: "Tự nguyện",
+      },
+
+      loadingFacts: {
+        breathingText:
+          "Bạn có thể dừng lại một chút nếu muốn.",
+        thoughtTitle: `Một lời gợi mở về ${content.label.toLowerCase()}`,
+        thoughtContent: content.message,
+        originTitle: "Theo lựa chọn của bạn",
+        originContent:
+          "Nội dung mẫu theo tâm trạng và hoàn cảnh; chưa phân tích nhật ký.",
+        stepText: "Mở lời chiêm nghiệm",
+      },
+
+      guestPreview: {
+        title: `Một khoảng dành cho ${content.label.toLowerCase()}`,
+        message: content.message,
+      },
+    });
+  }
+}
+
 // Helper methods
 export function getSignalById(id: string): SignalData | undefined {
   return ALL_SIGNALS.find((s) => s.id === id);
@@ -781,11 +1187,32 @@ export function getDefaultSignalForMood(mood: MoodKey): SignalData {
   return list[0] || ALL_SIGNALS[0];
 }
 
+export function getSignalForMoodContext(
+  mood: MoodKey,
+  contextKey: MoodContextKey
+): SignalData {
+  if (contextKey === "general") {
+    return getDefaultSignalForMood(mood);
+  }
+
+  return (
+    ALL_SIGNALS.find(
+      (signal) =>
+        signal.mood === mood &&
+        signal.contextKey === contextKey
+    ) ?? getDefaultSignalForMood(mood)
+  );
+}
+
 export function getNextSignalForMood(
   currentSignalId: string,
   mood: MoodKey
 ): SignalData {
-  const list = getSignalsByMood(mood);
+  const current = getSignalById(currentSignalId);
+
+  const list = getSignalsByMood(mood).filter(
+    (signal) => signal.contextKey === current?.contextKey
+  );
   if (list.length <= 1) return list[0] || ALL_SIGNALS[0];
   const currentIndex = list.findIndex((s) => s.id === currentSignalId);
   const nextIndex = (currentIndex + 1) % list.length;
@@ -800,4 +1227,8 @@ export const SIGNALS_DATA: Record<MoodKey, SignalData> = {
   "Nôn nóng": getDefaultSignalForMood("Nôn nóng"),
   "Biết ơn": getDefaultSignalForMood("Biết ơn"),
   "Cần điểm tựa": getDefaultSignalForMood("Cần điểm tựa"),
+  "Áp lực": getDefaultSignalForMood("Áp lực"),
+  "Cô đơn": getDefaultSignalForMood("Cô đơn"),
+  "Vui vẻ": getDefaultSignalForMood("Vui vẻ"),
+  "Mông lung": getDefaultSignalForMood("Mông lung"),
 };

@@ -533,51 +533,207 @@ export function getReliableLunarDate(
 /**
  * Khóa lưu trữ ghi chú lịch cá nhân theo tài khoản độc lập
  */
-export const getCalendarNotesStorageKey = (email?: string | null): string => {
-  const accountId = email ? email.trim().toLowerCase() : "guest";
-  return `tltl-calendar-personal-notes_${accountId}`;
+export const CALENDAR_NOTES_CHANGED_EVENT =
+  "tltl-reminders-change";
+
+export const getCalendarNotesStorageKey = (
+  email?: string | null
+): string => {
+  const account = email?.trim().toLowerCase() || "guest";
+  return `tltl-calendar-personal-notes_${account}`;
 };
 
-/**
- * Tải ghi chú lịch cá nhân của đúng tài khoản đang đăng nhập
- */
-export const loadCalendarPersonalNotes = (email?: string | null): CalendarEventItem[] => {
-  try {
-    const key = getCalendarNotesStorageKey(email);
-    const stored = localStorage.getItem(key);
-    if (stored) return JSON.parse(stored);
+// Dùng khi chuẩn bị ghi dữ liệu: lỗi đọc phải được truyền ra.
+const readCalendarNotesRawStrict = (
+  email?: string | null
+): string => {
+  const scoped = localStorage.getItem(
+    getCalendarNotesStorageKey(email)
+  );
 
-    // Dành cho tài khoản demo An Nhiên hoặc guest: nếu chưa có key riêng, kiểm tra dữ liệu từ key cũ
-    const accountId = email ? email.trim().toLowerCase() : "guest";
-    if (accountId === "annhien@tinlamtamlinh.vn" || accountId === "guest") {
-      const legacy = localStorage.getItem("tltl-calendar-personal-notes");
-      if (legacy) {
-        try {
-          const parsed = JSON.parse(legacy);
-          localStorage.setItem(key, legacy);
-          return parsed;
-        } catch {}
+  if (scoped !== null) return scoped;
+
+  const account = email?.trim().toLowerCase() || "guest";
+
+  if (
+    account === "guest" ||
+    account === "annhien@tinlamtamlinh.vn"
+  ) {
+    return (
+      localStorage.getItem("tltl-calendar-personal-notes") ??
+      "[]"
+    );
+  }
+
+  return "[]";
+};
+
+// Giữ cách đọc an toàn cho phần hiển thị hiện tại.
+export const readCalendarNotesRaw = (
+  email?: string | null
+): string => {
+  try {
+    return readCalendarNotesRawStrict(email);
+  } catch {
+    return "[]";
+  }
+};
+
+export const parseCalendarPersonalNotes = (
+  raw: string
+): CalendarEventItem[] => {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+
+    if (!Array.isArray(parsed)) return [];
+
+    const result: CalendarEventItem[] = [];
+    const ids = new Set<string>();
+
+    for (const entry of parsed) {
+      if (
+        typeof entry !== "object" ||
+        entry === null ||
+        Array.isArray(entry)
+      ) {
+        continue;
       }
+
+      const item = entry as Record<string, unknown>;
+
+      if (
+        typeof item.id !== "string" ||
+        !item.id.trim() ||
+        typeof item.title !== "string" ||
+        !item.title.trim() ||
+        typeof item.day !== "number" ||
+        typeof item.month !== "number" ||
+        typeof item.year !== "number" ||
+        !Number.isInteger(item.day) ||
+        !Number.isInteger(item.month) ||
+        !Number.isInteger(item.year) ||
+        item.year < 1900 ||
+        item.year > 9999 ||
+        item.month < 1 ||
+        item.month > 12 ||
+        item.day < 1 ||
+        item.day > 31
+      ) {
+        continue;
+      }
+
+      const id = item.id.trim();
+
+      if (ids.has(id)) continue;
+
+      const date = new Date(
+        item.year,
+        item.month - 1,
+        item.day,
+        12
+      );
+
+      if (
+        date.getFullYear() !== item.year ||
+        date.getMonth() + 1 !== item.month ||
+        date.getDate() !== item.day
+      ) {
+        continue;
+      }
+
+      ids.add(id);
+
+      result.push({
+        id,
+        title: item.title.trim(),
+        day: item.day,
+        month: item.month,
+        year: item.year,
+
+        // Key này chứa ghi chú cá nhân, không phải kho lễ hội.
+        type: "personal",
+
+        typeLabel:
+          typeof item.typeLabel === "string"
+            ? item.typeLabel
+            : "Ghi chú cá nhân",
+
+        region:
+          typeof item.region === "string"
+            ? item.region
+            : "Cá nhân",
+
+        shortDesc:
+          typeof item.shortDesc === "string"
+            ? item.shortDesc
+            : "",
+
+        lunarDate:
+          typeof item.lunarDate === "string"
+            ? item.lunarDate
+            : "",
+      });
     }
-    return [];
+
+    return result;
   } catch {
     return [];
   }
 };
 
-/**
- * Trả về true khi ghi chú đã được lưu thành công.
- */
+const parseCalendarPersonalNotesStrict = (
+  raw: string
+): CalendarEventItem[] => {
+  const parsed: unknown = JSON.parse(raw);
+
+  if (!Array.isArray(parsed)) {
+    throw new Error("Kho ghi chú Lịch không phải danh sách.");
+  }
+
+  const notes = parseCalendarPersonalNotes(raw);
+
+  // Parser hiện tại loại bỏ mục lỗi và ID trùng.
+  // Khi ghi, không được âm thầm bỏ những mục đó.
+  if (notes.length !== parsed.length) {
+    throw new Error(
+      "Kho ghi chú Lịch có mục không hợp lệ hoặc ID trùng."
+    );
+  }
+
+  return notes;
+};
+
+export const loadCalendarPersonalNotes = (
+  email?: string | null
+): CalendarEventItem[] => {
+  return parseCalendarPersonalNotes(
+    readCalendarNotesRaw(email)
+  );
+};
+
 export const saveCalendarPersonalNotes = (
   email: string | null | undefined,
   notes: CalendarEventItem[]
 ): boolean => {
   try {
-    const key = getCalendarNotesStorageKey(email);
+    // Kiểm tra kho đang lưu trước.
+    // Nếu đọc lỗi hoặc dữ liệu hỏng, dừng trước khi ghi.
+    parseCalendarPersonalNotesStrict(
+      readCalendarNotesRawStrict(email)
+    );
+
+    // Kiểm tra toàn bộ danh sách sắp ghi.
+    const cleanNotes = parseCalendarPersonalNotesStrict(
+      JSON.stringify(notes)
+    );
 
     localStorage.setItem(
-      key,
-      JSON.stringify(notes)
+      getCalendarNotesStorageKey(email),
+      JSON.stringify(cleanNotes)
+    );
+
+    window.dispatchEvent(
+      new Event(CALENDAR_NOTES_CHANGED_EVENT)
     );
 
     return true;

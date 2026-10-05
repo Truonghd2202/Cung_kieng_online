@@ -1,9 +1,12 @@
+import type { ContentMetadata } from "./contentMetadata";
+
 export type RitualOccasionKey =
   | "all"
   | "Rằm"
   | "Mùng một"
   | "Tết Nguyên Đán"
-  | "Dịp gia đình";
+  | "Dịp gia đình"
+  | "Động thổ";
 
 export type RitualRegionKey =
   | "all"
@@ -37,6 +40,16 @@ export interface RitualRegionalDetail {
   desc: string;
 }
 
+export interface RitualPrayer {
+  id: string;
+  title: string;
+  kind: "Văn khấn" | "Văn khấn nôm";
+  applicableTo: string;
+  paragraphs: string[];
+  usageNote?: string;
+  metadata: ContentMetadata;
+}
+
 export interface RitualDetailContent {
   fullTitle: string;
   subtitle: string;
@@ -48,12 +61,14 @@ export interface RitualDetailContent {
   meaningQuote: string;
   checklists: RitualChecklistItem[];
   safetyTip: string;
+  offeringsTitle?: string;
   offeringAdvice: string;
   offerings: RitualOfferingItem[];
   steps: RitualStep[];
   regionalDetails: RitualRegionalDetail[];
   fireSafetyRules: string[];
   closingQuote: string;
+  prayers?: RitualPrayer[];
 }
 
 export interface RitualGuideItem {
@@ -72,6 +87,7 @@ export interface RitualGuideItem {
   occasion: RitualOccasionKey;
   region: RitualRegionKey;
   detail?: RitualDetailContent;
+  metadata?: ContentMetadata;
 }
 
 export const RITUAL_GUIDES: RitualGuideItem[] = [
@@ -97,14 +113,13 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
       heroImage: "/images/ritual_ram.jpg",
       heroCaption:
         "Góc thờ tự ngày Rằm: Dĩa hoa quả tươi trang thanh khiết, chung nước lọc thanh tịnh và nén hương thơm mộc.",
-      heroArtCredit: "Tranh: Hồn Việt Xưa - Tinh tuyển nguồn dân gian",
+      heroArtCredit: "Ảnh minh họa trong bản thử nghiệm",
       meaningTitle: "Ý nghĩa của việc dành thời gian tưởng nhớ và giữ nếp nhà",
       meaningParagraphs: [
         "Trong nếp sinh hoạt truyền thống của người Việt, ngày sóc vọng (mùng một và ngày rằm) định kỳ mỗi tháng là khoảng lặng quý giá để người trong gia đình cùng nhìn lại mình, lắng đọng sau những bộn bề công việc và thể hiện lòng tri ân sâu xa tới cội nguồn, tổ tiên.",
         "Đối với người trẻ, sinh sống nơi đô thị hoặc trong các căn hộ chung cư hiện đại, nghi thức không đòi hỏi mâm cao cỗ đầy hay những thủ tục rườm rà cầu kỳ. Điều cốt tủy nằm ở sự thanh tịnh, sạch sẽ và cái tâm tĩnh lặng. Đó là dịp để làm mới không gian sống, mở toang khung cửa đón gió lành và dành vài phút đứng trước hương án chiêm nghiệm lại chính mình.",
       ],
-      meaningQuote:
-        "“Nén bánh lên trang, lễ vật tùy nghi. Đốt đuốc trong coi lại dạ người, nếp ấm gia đình làm nơi chặc phục.”",
+      meaningQuote: "",
       checklists: [
         { id: "c1", label: "Dọn sạch bụi mờ trên mặt bàn thờ" },
         { id: "c2", label: "Thay ly nước sạch (nước tinh khiết mát lành)" },
@@ -113,7 +128,7 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         { id: "c5", label: "Dành 3 - 5 phút tĩnh tâm & hướng tâm an lành" },
       ],
       safetyTip:
-        "Gợi ý dùng trầm nụ kèm đĩa kim loại/gốm sứ sâu lòng hoặc chỉ thắp 1 nén hương ngắn để không làm chuông báo khói kêu tại chung cư.",
+        "Tuân thủ quy định của nơi ở về sử dụng lửa và hương. Không che, tháo pin hoặc vô hiệu hóa thiết bị báo khói. Nếu nơi ở không cho phép đốt hương, bạn có thể chọn cách tưởng nhớ không dùng lửa.",
       offeringAdvice:
         "Lời khuyên: “Thực vật theo thời, bày biện tuỳ tâm, quý sạch không quý sang”. Người trẻ không bắt buộc phải đầy đủ mâm cao cỗ đầy nếu không đủ thời gian; sự chỉn chu và tâm niệm hướng thiện là điều quý giá nhất.",
       offerings: [
@@ -189,8 +204,7 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Tuyệt đối không dùng nến thơm có bấc quá dài cạnh đồ gỗ; đặt nến trong cốc thủy tinh hoặc đĩa gốm sứ cách nhiệt vững chãi.",
         "Trước khi đi làm hoặc đi ngủ, luôn kiểm tra tắt tàn hương/nến. Không thắp hương quá muộn sau 21h nếu không có người canh chừng.",
       ],
-      closingQuote:
-        "“Hương trầm một nén kết nối tâm tình muôn thuở, lòng an một khắc mở lối vạn sự hanh thông.”",
+      closingQuote: "",
     },
   },
   {
@@ -213,13 +227,13 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Mùng một sớm mai mang ý nghĩa khởi đầu. Bằng những việc làm nhỏ giản dị: dọn dẹp hương án, dâng chén nước tinh khiết và nén trầm thơm, hướng tâm tới sự thuận hòa, tươi mới cho cả tháng.",
       heroImage: "/images/tea_bowl.jpg",
       heroCaption: "Tĩnh lặng sớm mùng một: Chén trà thơm ấm và nén trầm thanh khiết.",
-      heroArtCredit: "Tranh: Trà Đạo & Không Gian Thiền Tự Việt",
+      heroArtCredit: "Ảnh minh họa trong bản thử nghiệm",
       meaningTitle: "Ý nghĩa của ngày sóc (mùng một) trong nếp sống",
       meaningParagraphs: [
         "Ngày mùng một âm lịch (ngày Sóc) đánh dấu chu kỳ tuần hoàn mới của vầng trăng và vạn vật. Trong truyền thống người Việt, đây là thời khắc chuyển hóa năng lượng, là dịp để mỗi người dọn sạch những muộn phiền tháng cũ và mở lòng đón nhận những điều lành tháng mới.",
         "Nghi thức mùng một không nhằm cầu xin tài lộc tức thời, mà là một khoảng lặng thiêng liêng để ta nhắc nhở chính mình sống chánh niệm, nói lời hòa ái và nuôi dưỡng tâm từ bi trong từng hành động hàng ngày.",
       ],
-      meaningQuote: "“Khởi đầu ngày mới bằng tâm sáng, cả tháng trôi qua trong an định và thuận hòa.”",
+      meaningQuote: "",
       checklists: [
         { id: "mm-1", label: "Quét dọn gian phòng và bàn thờ sạch sẽ, trang nghiêm" },
         { id: "mm-2", label: "Rửa sạch chén thờ, thay nước trong hoặc pha ấm trà ấm mới" },
@@ -290,7 +304,7 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Không thắp hương sát rèm cửa, giấy thờ hay các vật liệu dễ bắt lửa.",
         "Đảm bảo tàn nhang đã nguội hoàn toàn trước khi rời khỏi nhà đi làm.",
       ],
-      closingQuote: "“Sáng mùng một tâm an, vạn nẻo đường đời đều thênh thang rạng rỡ.”",
+      closingQuote: "",
     },
   },
   {
@@ -313,13 +327,13 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Bàn thờ gia tiên là trái tim của ngôi nhà Việt. Bằng sự chu toàn mộc mạc, hướng dẫn này gợi ý cách chăm chút góc kỷ niệm tổ tiên ấm áp, nơi con cháu cùng hướng về công đức cội nguồn.",
       heroImage: "/images/ancestor_portrait.jpg",
       heroCaption: "Góc thờ gia tiên ấm cúng: Nơi lưu giữ ký ức và tình thương của bao thế hệ.",
-      heroArtCredit: "Tư liệu: Mỹ học đời sống gia đình Việt",
+      heroArtCredit: "Ảnh minh họa trong bản thử nghiệm",
       meaningTitle: "Uống nước nhớ nguồn — Gốc rễ của đạo làm người",
       meaningParagraphs: [
         "Tập tục thờ phụng tổ tiên của người Việt không phải là sự kính sợ thần linh trừu tượng, mà là sự tiếp nối tình cảm hiếu đễ đối với những người đã sinh thành và dưỡng dục mình. Ngay cả trong nhịp sống chung cư bận rộn, một góc tưởng niệm nhỏ xinh cũng đủ làm ấm lòng người đi xa trở về.",
         "Mỗi dịp giỗ chạp hay kỷ niệm, việc sum vầy bên mâm cơm gia đình chính là sợi dây vô hình kết nối các thế hệ, nhắc nhở con cháu về nếp nhà và cội nguồn yêu thương.",
       ],
-      meaningQuote: "“Cây có gốc mới nở cành xanh ngọn, nước có nguồn mới biển rộng sông sâu.”",
+      meaningQuote: "",
       checklists: [
         { id: "tn-1", label: "Dùng khăn mềm sạch lau bụi quanh khung ảnh và kỷ vật gia tiên" },
         { id: "tn-2", label: "Chuẩn bị mâm cơm gia đình ấm cúng với những món người xưa yêu thích" },
@@ -374,7 +388,7 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Sử dụng tấm chống ám khói hoặc gắn kính cách nhiệt phía trên trần bàn thờ.",
         "Tắt hết nến và kiểm tra hương tàn trước khi rời khỏi khu vực ăn uống.",
       ],
-      closingQuote: "“Nhớ ơn tổ tiên xây nền đắp móng, con cháu muôn đời giữ trọn hiếu ân.”",
+      closingQuote: "",
     },
   },
   {
@@ -397,13 +411,13 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Tết Nguyên Đán là điểm chạm linh thiêng nhất trong dòng chảy văn hóa Việt. Từ ngày 23 tháng Chạp đến đêm trừ tịch, mỗi nếp tục đều hướng tới sự đoàn viên, xóa bỏ hiềm khích và đón chào vận hội mới.",
       heroImage: "/images/hero_family.jpg",
       heroCaption: "Sum vầy ngày Tết: Nồi bánh chưng xanh, cành đào thắm và nụ cười rạng rỡ của cả gia đình.",
-      heroArtCredit: "Tranh: Nếp Tết Xưa & Nay - Bộ sưu tập Tinh hoa Văn hóa",
+      heroArtCredit: "Ảnh minh họa trong bản thử nghiệm",
       meaningTitle: "Tết là sự trở về và khởi sinh của tình thân",
       meaningParagraphs: [
         "Tết không chỉ là thời điểm chuyển giao giữa năm cũ và năm mới, mà là dịp tống cựu nghinh tân: dọn sạch những bụi bặm âu lo của năm cũ để mở lòng đón nhận vạn sự hanh thông. Từ mâm cơm cúng Táo quân giản dị đến mâm ngũ quả ngày Tết, tất cả đều gửi gắm ước nguyện về một mái ấm no đủ, thuận hòa.",
         "Trong không gian đô thị ngày nay, việc giữ gìn nghi thức Tết tinh gọn, không rườm rà giúp gia đình có thêm thời gian thực sự thảnh thơi trò chuyện, gắn kết bên nhau.",
       ],
-      meaningQuote: "“Tết ấm không tại mâm cao cỗ đầy, mà tại lòng người hướng về nhau trong hòa ái.”",
+      meaningQuote: "",
       checklists: [
         { id: "tet-1", label: "Dọn dẹp trang hoàng nhà cửa, quét dọn bàn thờ đón Tết" },
         { id: "tet-2", label: "Chuẩn bị mâm lễ tiễn ông Táo chầu trời (23 tháng Chạp)" },
@@ -458,7 +472,7 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Tuyệt đối không đốt vàng mã tại hành lang, ban công hay gần lối thoát hiểm chung cư.",
         "Cắm hương chắc chắn vào bát hương, tránh để chân hương quá dày gây bốc hỏa.",
       ],
-      closingQuote: "“Đón xuân mới trong lòng an tịnh, vạn sự cát tường tự khắc đến bên.”",
+      closingQuote: "",
     },
   },
   {
@@ -481,13 +495,13 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Cúng giỗ ở Nam Bộ mang phong vị phóng khoáng, nghĩa tình. Đó không chỉ là ngày nhớ ơn người đã khuất, mà còn là ngày sum họp của đại gia đình và thắt chặt tình nghĩa xóm giềng đầm ấm.",
       heroImage: "/images/mekong_nam_bo.jpg",
       heroCaption: "Hương vị đám giỗ miền Tây: Nồi thịt kho nước dừa, đĩa bánh tét và tình làng nghĩa xóm sum vầy.",
-      heroArtCredit: "Ảnh: Nếp sống văn hóa sông nước miền Tây",
+      heroArtCredit: "Ảnh minh họa trong bản thử nghiệm",
       meaningTitle: "Ăn giỗ phương Nam — Ngày hội của tình thân",
       meaningParagraphs: [
         "Người phương Nam quan niệm 'sống sao chết vậy'. Ngày giỗ là ngày mời người xưa về ăn bữa cơm thân mật cùng con cháu. Mâm cỗ giỗ không câu nệ sự kiểu cách mà đề cao sự hào sảng, tươi ngon và bàn tay chăm chút của các thế hệ.",
         "Sau khi cúng gia tiên, mâm cỗ được dọn ra đãi đằng bà con họ hàng, lối xóm. Mọi người ngồi lại cùng nhau hỏi thăm mùa màng, công việc, chia sẻ ngọt bùi với tinh thần trượng nghĩa, bao dung.",
       ],
-      meaningQuote: "“Bát canh khổ qua gửi gắm ước mong qua hết nhọc nhằn, đón trọn an vui.”",
+      meaningQuote: "",
       checklists: [
         { id: "cg-1", label: "Chuẩn bị các món đặc trưng: thịt kho tàu hột vịt, canh khổ qua, cá lóc nướng/kho" },
         { id: "cg-2", label: "Dọn dẹp bàn thờ gia tiên sạch sẽ, dâng hoa huệ trắng và nải chuối vàng" },
@@ -541,7 +555,7 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Kiểm tra khóa van bình gas cẩn thận sau khi nấu nướng phục vụ đám giỗ đông người.",
         "Bát hương sau khi thắp nhiều nén cần theo dõi để không cháy lan sang giấy tờ.",
       ],
-      closingQuote: "“Uống miếng nước ngọt lành phương Nam, lòng nhớ mãi ơn người mở cõi gầy dựng cơ đồ.”",
+      closingQuote: "",
     },
   },
   {
@@ -564,13 +578,13 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Chuyển về nơi ở mới là cột mốc quan trọng của đời người. Bằng những hành động tượng trưng ấm áp: mang bếp lửa, đun ấm nước sôi và dâng nén trầm an trú, hướng dẫn này giúp bạn vững tâm bắt đầu nếp sống mới.",
       heroImage: "/images/hue_trung_bo.jpg",
       heroCaption: "Không gian tổ ấm mới: Ánh sáng chan hòa, gian bếp ấm cúng và sự an tâm nơi chốn đi về.",
-      heroArtCredit: "Tranh: An Cư Lạc Nghiệp - Không Gian Sống Người Việt",
+      heroArtCredit: "Ảnh minh họa trong bản thử nghiệm",
       meaningTitle: "An cư lạc nghiệp — Thổi hồn cho mái ấm",
       meaningParagraphs: [
         "Người xưa dạy 'An cư mới lạc nghiệp'. Nghi thức chuyển về nhà mới (nhập trạch) về bản chất là việc đánh thức sinh khí cho ngôi nhà, xua đi sự lạnh lẽo của công trình xây dựng và mang lại hơi ấm của sự sống con người.",
         "Không cần mâm cao cỗ đầy hay thầy cúng phức tạp, chính tâm niệm yêu thương, trân trọng tổ ấm của gia chủ cùng ngọn lửa bếp ấm và lời chúc lành của người thân là nguồn năng lượng phong thủy tốt đẹp nhất.",
       ],
-      meaningQuote: "“Nhà là nơi bão dừng sau cánh cửa, tâm là chốn bình an giữa cuộc đời.”",
+      meaningQuote: "",
       checklists: [
         { id: "nm-1", label: "Mang bếp lửa (hoặc ấm đun nước) và gạo, muối vào nhà đầu tiên" },
         { id: "nm-2", label: "Mở rộng tất cả cửa sổ và bật sáng các bóng đèn để đón sinh khí" },
@@ -578,7 +592,8 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         { id: "nm-4", label: "Dâng đĩa ngũ quả, hoa tươi và chén nước sạch tạ ơn trời đất, tiền chủ" },
         { id: "nm-5", label: "Thắp nén trầm thơm thanh lọc không gian, cầu chúc gia đạo an khang" },
       ],
-      safetyTip: "Khi đun nước và thắp hương tại căn hộ chung cư mới, lưu ý kiểm tra hệ thống báo khói tự động.",
+      safetyTip:
+        "Trước khi dùng lửa hoặc đốt hương, kiểm tra quy định của nơi ở. Giữ thiết bị báo khói hoạt động bình thường. Nếu sử dụng nến, đặt trên giá đỡ vững chắc, tránh vật dễ cháy và tắt trước khi rời phòng.",
       offeringAdvice: "Lễ vật tinh gọn: đĩa hoa tươi, đĩa ngũ quả, chén muối gạo, ấm nước đun sôi và nén hương mộc.",
       offerings: [
         {
@@ -625,7 +640,162 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Luôn có người túc trực bên bếp khi đun nước lần đầu ở căn nhà mới.",
         "Bố trí bình cứu hỏa mini ở vị trí dễ thấy trong gian bếp gia đình.",
       ],
-      closingQuote: "“Đất lành chim đậu, lòng an nhà ắt thành tổ ấm thiêng liêng.”",
+      closingQuote: "",
+    },
+  },
+  {
+    id: "chuan-bi-dong-tho",
+    title: "Chuẩn bị dịp động thổ",
+    badge: "Bản nháp",
+    badgeType: "occasion",
+    subBadgeOccasion: "Động thổ",
+    tagOnImage: "Hướng dẫn chuẩn bị",
+    stepsCount: "4 bước chuẩn bị",
+    timeEstimate: "Tùy quy mô",
+    desc:
+      "Checklist để trao đổi với gia đình, chuẩn bị không gian và ghi lại những việc cần làm. Phần nghi thức truyền thống đang được đối chiếu nguồn.",
+    image: "/images/ritual_ram.jpg",
+    tagPill: "CHUẨN BỊ CHU ĐÁO",
+    actionText: "Xem hướng dẫn",
+    occasion: "Động thổ",
+    region: "Thích ứng đa vùng",
+
+    metadata: {
+      contentKind: "editorial",
+      editorialStatus: "draft",
+      quotationVerified: false,
+      sources: [],
+      editorialNote:
+        "Đây là checklist chuẩn bị do sản phẩm biên tập, chưa phải hướng dẫn nghi thức truyền thống đã duyệt. Chưa bổ sung văn khấn, danh mục lễ vật hoặc khác biệt vùng miền khi chưa đối chiếu nguồn.",
+    },
+
+    detail: {
+      fullTitle: "Chuẩn bị dịp động thổ",
+      subtitle:
+        "Thống nhất cách tổ chức với gia đình, chuẩn bị gọn gàng và ghi rõ những việc cần làm.",
+
+      heroImage: "/images/ritual_ram.jpg",
+      heroCaption:
+        "Ảnh minh họa không gian chuẩn bị; không mô tả mâm lễ động thổ.",
+      heroArtCredit: "Ảnh minh họa trong bản thử nghiệm",
+
+      meaningTitle: "Phạm vi của hướng dẫn",
+      meaningParagraphs: [
+        "Hướng dẫn này giúp bạn lập danh sách chuẩn bị và trao đổi với những người cùng tham gia. Nội dung không xác định nghi thức bắt buộc cho mọi gia đình.",
+        "Phần giải thích phong tục, văn khấn và cách sắp đặt lễ vật sẽ được bổ sung sau khi đối chiếu nguồn. Bạn có thể lưu checklist hiện tại để chuẩn bị theo cách gia đình đã thống nhất.",
+      ],
+      meaningQuote: "",
+
+      checklists: [
+        {
+          id: "dt-discuss",
+          label:
+            "Trao đổi với gia đình về việc có tổ chức nghi lễ và phạm vi tổ chức",
+        },
+        {
+          id: "dt-plan",
+          label:
+            "Thống nhất thời gian, người tham gia và người phụ trách",
+        },
+        {
+          id: "dt-space",
+          label:
+            "Thống nhất vị trí tổ chức với người phụ trách khu vực",
+        },
+        {
+          id: "dt-items",
+          label:
+            "Ghi danh sách vật dụng theo lựa chọn của gia đình",
+        },
+        {
+          id: "dt-budget",
+          label:
+            "Thống nhất ngân sách và tránh mua thêm vì áp lực",
+        },
+        {
+          id: "dt-cleanup",
+          label:
+            "Phân công thu dọn sau khi kết thúc",
+        },
+      ],
+
+      safetyTip:
+        "Không tự thực hiện thao tác đào, cuốc hoặc sử dụng thiết bị tại khu vực thi công. Trao đổi với người phụ trách trước khi tổ chức.",
+
+      offeringsTitle: "Vật dụng chuẩn bị tùy chọn",
+
+      offeringAdvice:
+        "Danh mục dưới đây là vật dụng chuẩn bị tùy chọn, không phải mâm lễ truyền thống đã được xác nhận.",
+
+      offerings: [
+        {
+          id: "dt-checklist",
+          name: "Danh sách chuẩn bị",
+          subname: "Giấy hoặc ghi chú trên điện thoại",
+          desc:
+            "Ghi các việc cần làm, người phụ trách và thời gian.",
+          isCustomizable: true,
+        },
+        {
+          id: "dt-surface",
+          name: "Vị trí đặt vật dụng",
+          subname: "Theo điều kiện thực tế",
+          desc:
+            "Trao đổi để chọn vị trí ổn định và không cản trở hoạt động tại khu vực.",
+          isCustomizable: true,
+        },
+        {
+          id: "dt-family-items",
+          name: "Vật dụng gia đình lựa chọn",
+          subname: "Không có danh sách bắt buộc trong bản nháp",
+          desc:
+            "Chỉ chuẩn bị những gì đã thống nhất; phần lễ vật truyền thống cần tiếp tục đối chiếu nguồn.",
+          isCustomizable: true,
+        },
+      ],
+
+      steps: [
+        {
+          stepNumber: "01",
+          title: "Thống nhất cách tổ chức",
+          desc:
+            "Trao đổi với gia đình về mong muốn, quy mô và những người tham gia.",
+        },
+        {
+          stepNumber: "02",
+          title: "Lập danh sách chuẩn bị",
+          desc:
+            "Ghi vật dụng, ngân sách và người phụ trách từng việc.",
+        },
+        {
+          stepNumber: "03",
+          title: "Chuẩn bị không gian",
+          desc:
+            "Thống nhất vị trí và thời gian với người phụ trách khu vực; sắp xếp theo kế hoạch đã chọn.",
+        },
+        {
+          stepNumber: "04",
+          title: "Thu dọn và ghi lại",
+          desc:
+            "Thu dọn vật dụng, kiểm tra khu vực và lưu những ghi chú gia đình muốn giữ.",
+        },
+      ],
+
+      regionalDetails: [
+        {
+          region: "Theo gia đình và địa phương",
+          desc:
+            "Chưa có dữ liệu đủ căn cứ để trình bày khác biệt Bắc, Trung và Nam. Bản nháp không đưa một cách thực hành làm chuẩn chung.",
+        },
+      ],
+
+      fireSafetyRules: [
+        "Nếu lựa chọn dùng hương hoặc nến, cần có người theo dõi trong suốt thời gian sử dụng.",
+        "Không đặt nguồn lửa sát vật liệu dễ cháy hoặc tại vị trí không được người phụ trách khu vực cho phép.",
+        "Kiểm tra nguồn lửa đã tắt trước khi rời khu vực.",
+      ],
+
+      closingQuote: "",
     },
   },
 ];

@@ -1,9 +1,10 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { AppHeader, NavScreen } from "./components/AppHeader";
 import { AppFooter } from "./components/AppFooter";
 import { ScreenFocus } from "./components/ScreenFocus";
 import { SavedSignalDialog } from "./components/SavedSignalDialog";
 import { useTheme } from "./hooks/useTheme";
+import { useLocalDay } from "./hooks/useLocalDay";
 import type { MemorialRecord } from "./screens/MemorialSpaceScreen";
 import type { CultureRegionSlug } from "./screens/CulturalMapScreen";
 import type { RegionalExperienceKind } from "./screens/RegionalExperienceScreen";
@@ -11,12 +12,20 @@ import { GuestScreen } from "./screens/GuestScreen";
 import { TodayScreen } from "./screens/TodayScreen";
 import type { WishTopic } from "./screens/WishScreen";
 import type { SavedSignalItem, SavedXinXamItem, SavedWishItem } from "./screens/AccountScreen";
+import type { XinXamDrawResult } from "./screens/XinXamScreen";
 import {
   MoodKey,
   getSignalById,
   getDefaultSignalForMood,
   getNextSignalForMood,
+  getSignalForMoodContext,
+  type MoodContextKey,
 } from "./data/demoSignals";
+import {
+  readMembershipIntent,
+  writeMembershipIntent,
+  clearMembershipIntent,
+} from "./data/membershipIntent";
 
 import { Trash2, Calendar, BookOpen, ArrowRight, Flower2, Sparkles } from "lucide-react";
 import {
@@ -30,6 +39,19 @@ import {
   saveCalendarPersonalNotes,
 } from "./data/calendarData";
 import { sanitizeCulturalTopics } from "./data/culturalTopics";
+import {
+  getTraditionalXamStorageKey,
+  TRADITIONAL_XAM_CHANGED_EVENT,
+  saveTraditionalXam,
+  type TraditionalXamSaveRequest,
+} from "./data/savedTraditionalXam";
+import { TRADITIONAL_XAM_COLLECTIONS } from "./data/traditionalXamData";
+import { getPublishableTraditionalSticks } from "./data/traditionalXamEligibility";
+import {
+  readPendingTraditionalXam,
+  writePendingTraditionalXam,
+  clearPendingTraditionalXam,
+} from "./data/pendingTraditionalXam";
 
 const MoodCheckInScreen = lazy(() => import("./screens/MoodCheckInScreen").then((module) => ({ default: module.MoodCheckInScreen })));
 const SignalLoadingScreen = lazy(() => import("./screens/SignalLoadingScreen").then((module) => ({ default: module.SignalLoadingScreen })));
@@ -135,8 +157,9 @@ const getAnNhienDefaultData = (): UserCornerData => ({
   ],
 });
 
-export const getUserCornerStorageKey = (email: string) => {
-  return `tltl-user-corner-${email.trim().toLowerCase()}`;
+export const getUserCornerStorageKey = (email?: string | null) => {
+  const accountId = email ? email.trim().toLowerCase() : "guest";
+  return `tltl-user-corner-${accountId}`;
 };
 
 const hasStringFields = (
@@ -165,6 +188,10 @@ const validSavedMoods: MoodKey[] = [
   "Nôn nóng",
   "Biết ơn",
   "Cần điểm tựa",
+  "Áp lực",
+  "Cô đơn",
+  "Vui vẻ",
+  "Mông lung",
 ];
 
 const hasValidOptionalFields = (
@@ -355,6 +382,8 @@ export const loadUserCornerData = (
   return demoData;
 };
 
+const USER_CORNER_CHANGED_EVENT = "tltl-user-corner-change";
+
 export const saveUserCornerData = (
   email: string,
   data: UserCornerData
@@ -389,6 +418,11 @@ export const saveUserCornerData = (
     }
 
     localStorage.setItem(key, JSON.stringify(data));
+
+    window.dispatchEvent(
+      new Event(USER_CORNER_CHANGED_EVENT)
+    );
+
     return true;
   } catch {
     // Nếu sao lưu hoặc ghi dữ liệu mới thất bại, không báo thành công.
@@ -456,7 +490,7 @@ export const loadUserSessionState = (user: UserProfile | null, todayStr: string)
     const savedMood = localStorage.getItem(moodKey);
     if (
       savedMood &&
-      ["An yên", "Chênh vênh", "Băn khoăn", "Nôn nóng", "Biết ơn", "Cần điểm tựa"].includes(savedMood)
+      validSavedMoods.includes(savedMood as MoodKey)
     ) {
       mood = savedMood as MoodKey;
     }
@@ -495,10 +529,39 @@ export const loadUserSessionState = (user: UserProfile | null, todayStr: string)
   return { checkedIn, mood, topics, actionDone, signalId };
 };
 
+type PrivateWishOrigin =
+  | "wish"
+  | "gratitude"
+  | "ancestor-altar";
+
 export type PendingSave =
   | { type: "signal"; item: SavedSignalItem }
   | { type: "xam"; item: SavedXinXamItem }
-  | { type: "wish"; item: SavedWishItem };
+  | {
+      type: "traditional-xam";
+      item: TraditionalXamSaveRequest;
+    }
+  | {
+      type: "wish";
+      item: SavedWishItem;
+      origin: PrivateWishOrigin;
+    };
+
+type ReturnedWishDraft = {
+  origin: PrivateWishOrigin;
+  content: string;
+  category: string;
+};
+
+type WishHistorySnapshot = {
+  account: string;
+  draft: ReturnedWishDraft;
+};
+
+type XamHistorySnapshot = {
+  account: string;
+  draw: XinXamDrawResult;
+};
 
 const isSameSavedReflection = (
   entry: SavedSignalItem,
@@ -637,8 +700,18 @@ const loadMemorialRecord = (
   }
 };
 
+interface ReflectionSnapshot {
+  id: string;
+  account: string;
+  signalId: string;
+  journal: string;
+}
+
+const getReflectionAccount = (email?: string | null) =>
+  email?.trim().toLowerCase() || "guest";
+
 export default function App() {
-  const todayDateString = new Date().toDateString();
+  const todayDateString = useLocalDay();
 
   const initialUser = loadCurrentDemoUser();
   const initialSession = loadUserSessionState(initialUser, todayDateString);
@@ -726,6 +799,33 @@ export default function App() {
   const [selectedRitualId, setSelectedRitualId] = useState<string>(initialUrlRitualId);
   const [selectedCalendarEventId, setSelectedCalendarEventId] = useState<string>(initialUrlCalendarEventId);
   const [journalText, setJournalText] = useState("");
+  const [resultJournalText, setResultJournalText] = useState("");
+
+  const reflectionSnapshotsRef = useRef(
+    new Map<string, ReflectionSnapshot>()
+  );
+
+  const activeReflectionIdRef = useRef<string | null>(null);
+
+  const createReflectionSnapshot = (
+    signalId: string,
+    journal: string,
+    email: string | null | undefined
+  ): string => {
+    const id = crypto.randomUUID();
+
+    reflectionSnapshotsRef.current.set(id, {
+      id,
+      account: getReflectionAccount(email),
+      signalId,
+      journal,
+    });
+
+    activeReflectionIdRef.current = id;
+    setResultJournalText(journal);
+
+    return id;
+  };
   const {
     dark,
     themePreference,
@@ -734,7 +834,42 @@ export default function App() {
   } = useTheme();
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(initialUser);
-  const [pendingSave, setPendingSave] = useState<PendingSave | null>(null);
+  const [pendingSave, setPendingSave] =
+    useState<PendingSave | null>(() => {
+      const path = window.location.pathname;
+
+      const inAuthenticationFlow =
+        path === "/login" ||
+        path === "/register" ||
+        path === "/forgot";
+
+      if (!inAuthenticationFlow) return null;
+
+      const request = readPendingTraditionalXam();
+
+      return request
+        ? {
+            type: "traditional-xam",
+            item: request,
+          }
+        : null;
+    });
+  const [returnedWishDraft, setReturnedWishDraft] =
+    useState<ReturnedWishDraft | null>(null);
+  const [returnedXamDraw, setReturnedXamDraw] =
+    useState<XinXamDrawResult | null>(null);
+
+  const wishHistorySnapshotsRef = useRef(
+    new Map<string, WishHistorySnapshot>()
+  );
+
+  const [wishRestoreVersion, setWishRestoreVersion] = useState(0);
+
+  const xamHistorySnapshotsRef = useRef(
+    new Map<string, XamHistorySnapshot>()
+  );
+
+  const [xamRestoreVersion, setXamRestoreVersion] = useState(0);
   const [isLoginImmersive, setIsLoginImmersive] = useState(false);
 
   useEffect(() => {
@@ -749,6 +884,15 @@ export default function App() {
   // Check-in theo tài khoản
   const [isCheckedIn, setIsCheckedIn] = useState<boolean>(initialSession.checkedIn);
 
+  useEffect(() => {
+    const session = loadUserSessionState(
+      currentUser,
+      todayDateString
+    );
+
+    setIsCheckedIn(session.checkedIn);
+  }, [todayDateString, currentUser?.email]);
+
   // Mood theo tài khoản
   const [selectedMood, setSelectedMood] = useState<MoodKey>(() => {
     if (initialUrlSignal) {
@@ -756,6 +900,9 @@ export default function App() {
     }
     return initialSession.mood;
   });
+
+  const [draftMoodContext, setDraftMoodContext] =
+    useState<MoodContextKey>("general");
 
   // Current signal theo tài khoản
   const [currentSignalId, setCurrentSignalId] = useState<string>(() => {
@@ -794,8 +941,100 @@ export default function App() {
     return loadUserCornerData(initialUser);
   });
 
+  useEffect(() => {
+    const refresh = () => {
+      setUserCornerData(
+        loadUserCornerData(currentUser)
+      );
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.storageArea !== window.localStorage) return;
+
+      const key = getUserCornerStorageKey(
+        currentUser?.email
+      );
+
+      if (event.key === key || event.key === null) {
+        refresh();
+      }
+    };
+
+    refresh();
+
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener(
+      USER_CORNER_CHANGED_EVENT,
+      refresh
+    );
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener(
+        USER_CORNER_CHANGED_EVENT,
+        refresh
+      );
+    };
+  }, [currentUser?.email]);
+
   const [openedSavedSignal, setOpenedSavedSignal] =
     useState<SavedSignalItem | null>(null);
+
+  const previousScreenRef = useRef<NavScreen>(screen);
+
+  useEffect(() => {
+    const previousScreen = previousScreenRef.current;
+
+    const startsNewCheckIn =
+      screen === "mood" &&
+      previousScreen !== "mood" &&
+      previousScreen !== "loading";
+
+    if (startsNewCheckIn) {
+      setJournalText("");
+    }
+
+    previousScreenRef.current = screen;
+  }, [screen]);
+
+  useEffect(() => {
+    if (!returnedWishDraft) return;
+
+    // Chỉ dọn sau khi đã trở về đúng màn hình nhận bản nháp.
+    if (screen === returnedWishDraft.origin) {
+      setReturnedWishDraft(null);
+    }
+  }, [screen, returnedWishDraft]);
+
+  useEffect(() => {
+    if (screen === "xinxam" && returnedXamDraw) {
+      // Màn xăm đã nhận snapshot vào state lúc mount.
+      setReturnedXamDraw(null);
+    }
+  }, [screen, returnedXamDraw]);
+
+  useEffect(() => {
+    const inAuthenticationFlow =
+      screen === "login" ||
+      screen === "register" ||
+      screen === "forgot";
+
+    if (!inAuthenticationFlow) {
+      clearPendingTraditionalXam();
+
+      if (pendingSave) {
+        setPendingSave(null);
+      }
+
+      return;
+    }
+
+    if (pendingSave?.type === "traditional-xam") {
+      writePendingTraditionalXam(pendingSave.item);
+    } else {
+      clearPendingTraditionalXam();
+    }
+  }, [screen, pendingSave]);
 
   const handleOpenSavedSignal = (entryId: string) => {
     const entry = userCornerData.signals.find(
@@ -875,12 +1114,23 @@ export default function App() {
 
   // Handle URL history sync & direct link / popstate reload with full context restoration
   useEffect(() => {
-    // If opened directly on /result without ?signalId=..., ensure URL query param is normalized
-    if (screen === "result" && !initialUrlSignalId) {
+    const currentParams = new URLSearchParams(
+      window.location.search
+    );
+
+    if (
+      window.location.pathname === "/result" &&
+      !currentParams.get("signalId")
+    ) {
       window.history.replaceState(
-        { screen: "result", signalId: activeSignal.id, mood: selectedMood },
+        {
+          ...window.history.state,
+          screen: "result",
+          signalId: activeSignal.id,
+          mood: selectedMood,
+        },
         "",
-        `/result?signalId=${activeSignal.id}`
+        `/result?signalId=${encodeURIComponent(activeSignal.id)}`
       );
     }
 
@@ -902,10 +1152,55 @@ export default function App() {
       const state = event.state as {
         screen?: NavScreen;
         signalId?: string;
+        reflectionId?: string;
         articleId?: string;
         ritualId?: string;
         mood?: MoodKey;
+        xamSnapshotId?: string;
+        wishSnapshotId?: string;
       } | null;
+
+      if (
+        path === "wish" ||
+        path === "gratitude" ||
+        path === "ancestor-altar"
+      ) {
+        const snapshot = state?.wishSnapshotId
+          ? wishHistorySnapshotsRef.current.get(state.wishSnapshotId)
+          : undefined;
+
+        const account = currentUser?.email || "guest";
+
+        const canRestore =
+          snapshot?.account === account &&
+          snapshot.draft.origin === path;
+
+        setReturnedWishDraft(
+          canRestore && snapshot
+            ? { ...snapshot.draft }
+            : null
+        );
+
+        setWishRestoreVersion((version) => version + 1);
+      }
+
+      if (path === "xinxam") {
+        const snapshot = state?.xamSnapshotId
+          ? xamHistorySnapshotsRef.current.get(state.xamSnapshotId)
+          : undefined;
+
+        const account = currentUser?.email || "guest";
+
+        setReturnedXamDraw(
+          snapshot?.account === account
+            ? { ...snapshot.draw }
+            : null
+        );
+
+        // Khởi tạo lại state của màn xăm, kể cả khi Back/Forward
+        // giữa hai mục lịch sử đều có đường dẫn /xinxam.
+        setXamRestoreVersion((version) => version + 1);
+      }
 
       // Restore signal context
       const urlSignalId = params.get("signalId") || state?.signalId;
@@ -924,6 +1219,40 @@ export default function App() {
           "",
           `/result?signalId=${fallbackSig.id}`
         );
+      }
+
+      if (path === "result") {
+        const reflectionId = state?.reflectionId;
+
+        const snapshot = reflectionId
+          ? reflectionSnapshotsRef.current.get(reflectionId)
+          : undefined;
+
+        const expectedSignalId =
+          params.get("signalId") || state?.signalId;
+
+        const canRestore =
+          snapshot !== undefined &&
+          snapshot.account ===
+            getReflectionAccount(currentUser?.email) &&
+          snapshot.signalId === expectedSignalId;
+
+        if (canRestore) {
+          activeReflectionIdRef.current = snapshot.id;
+          setResultJournalText(snapshot.journal);
+
+          const signal = getSignalById(snapshot.signalId);
+
+          if (signal) {
+            setCurrentSignalId(signal.id);
+            setSelectedMood(signal.mood);
+          }
+        } else {
+          // URL chia sẻ hoặc snapshot không còn:
+          // không lấy nhật ký của lượt đang đọc trước đó.
+          activeReflectionIdRef.current = null;
+          setResultJournalText("");
+        }
       }
 
       // Restore article context
@@ -1013,6 +1342,121 @@ export default function App() {
     selectedCultureRegion,
   ]);
 
+  const recordWishHistorySnapshot = (
+    origin: PrivateWishOrigin,
+    content: string | null,
+    category: string
+  ) => {
+    // Tránh ghi nhầm vào màn đăng nhập khi component vừa bị gỡ.
+    if (window.location.pathname !== `/${origin}`) return;
+
+    const previousState = window.history.state ?? {};
+
+    const existingId =
+      typeof previousState.wishSnapshotId === "string"
+        ? previousState.wishSnapshotId
+        : undefined;
+
+    if (content === null || !content.trim()) {
+      if (existingId) {
+        wishHistorySnapshotsRef.current.delete(existingId);
+      }
+
+      const nextState = { ...previousState };
+      delete nextState.wishSnapshotId;
+
+      window.history.replaceState(
+        nextState,
+        "",
+        window.location.href
+      );
+
+      return;
+    }
+
+    const account = currentUser?.email || "guest";
+
+    const existingSnapshot = existingId
+      ? wishHistorySnapshotsRef.current.get(existingId)
+      : undefined;
+
+    const snapshotId =
+      existingId &&
+      existingSnapshot?.account === account &&
+      existingSnapshot.draft.origin === origin
+        ? existingId
+        : crypto.randomUUID();
+
+    wishHistorySnapshotsRef.current.set(snapshotId, {
+      account,
+      draft: {
+        origin,
+        content,
+        category,
+      },
+    });
+
+    window.history.replaceState(
+      {
+        ...previousState,
+        wishSnapshotId: snapshotId,
+      },
+      "",
+      window.location.href
+    );
+  };
+
+  const recordXamHistorySnapshot = (
+    draw: XinXamDrawResult | null
+  ) => {
+    // Không cập nhật nhầm mục đăng nhập nếu màn xăm vừa bị gỡ.
+    if (window.location.pathname !== "/xinxam") return;
+
+    const previousState = window.history.state ?? {};
+
+    if (!draw) {
+      const nextState = { ...previousState };
+      delete nextState.xamSnapshotId;
+
+      window.history.replaceState(
+        nextState,
+        "",
+        window.location.href
+      );
+
+      return;
+    }
+
+    const account = currentUser?.email || "guest";
+    const existingId =
+      typeof previousState.xamSnapshotId === "string"
+        ? previousState.xamSnapshotId
+        : undefined;
+
+    const existingSnapshot = existingId
+      ? xamHistorySnapshotsRef.current.get(existingId)
+      : undefined;
+
+    const snapshotId =
+      existingId && existingSnapshot?.account === account
+        ? existingId
+        : crypto.randomUUID();
+
+    xamHistorySnapshotsRef.current.set(snapshotId, {
+      account,
+      draw: { ...draw },
+    });
+
+    window.history.replaceState(
+      {
+        ...previousState,
+        xamSnapshotId: snapshotId,
+      },
+      "",
+      window.location.href
+    );
+  };
+
   const navigateTo = (
     newScreen: NavScreen,
     signalIdParam?: string,
@@ -1037,10 +1481,35 @@ export default function App() {
     let resolvedArticleId = undefined;
     let resolvedRitualId = undefined;
     let resolvedEventId = undefined;
+    let resolvedReflectionId: string | undefined;
 
     if (targetScreen === "result") {
-      resolvedSignalId = signalIdParam || currentSignalId || activeSignal.id;
-      url = `/result?signalId=${resolvedSignalId}`;
+      resolvedSignalId =
+        signalIdParam || currentSignalId || activeSignal.id;
+
+      url = `/result?signalId=${encodeURIComponent(
+        resolvedSignalId
+      )}`;
+
+      const reflectionId = activeReflectionIdRef.current;
+
+      const snapshot = reflectionId
+        ? reflectionSnapshotsRef.current.get(reflectionId)
+        : undefined;
+
+      const matchesCurrentResult =
+        snapshot !== undefined &&
+        snapshot.signalId === resolvedSignalId &&
+        snapshot.account ===
+          getReflectionAccount(effectiveUser?.email);
+
+      if (matchesCurrentResult) {
+        resolvedReflectionId = snapshot.id;
+        setResultJournalText(snapshot.journal);
+      } else {
+        activeReflectionIdRef.current = null;
+        setResultJournalText("");
+      }
     } else if (targetScreen === "culture-detail") {
       resolvedArticleId = signalIdParam || selectedArticleId || "dinh-lang-bac-bo";
       url = `/culture-detail?articleId=${resolvedArticleId}`;
@@ -1079,6 +1548,7 @@ export default function App() {
     const historyPayload = {
       screen: targetScreen,
       signalId: resolvedSignalId,
+      reflectionId: resolvedReflectionId,
       articleId: resolvedArticleId,
       ritualId: resolvedRitualId,
       eventId: resolvedEventId,
@@ -1121,37 +1591,108 @@ export default function App() {
     return true;
   };
 
-  const handleSubmitMood = () => {
-    // Mỗi lần gửi cảm xúc là một lượt mới,
-    // kể cả khi chọn lại cùng cảm xúc.
+  const handleSubmitMood = (
+    contextKey: MoodContextKey
+  ) => {
+    setDraftMoodContext(contextKey);
+
     const resetSucceeded = handleToggleAction(false);
 
     if (!resetSucceeded) return;
 
-    const nextSignal = getDefaultSignalForMood(
-      selectedMood
+    const nextSignal = getSignalForMoodContext(
+      selectedMood,
+      contextKey
+    );
+
+    createReflectionSnapshot(
+      nextSignal.id,
+      journalText.trim(),
+      currentUser?.email
     );
 
     setCurrentSignalId(nextSignal.id);
     navigateTo("loading");
   };
 
-  const handleFinishLoading = () => {
-    setIsCheckedIn(true);
+  const handleFinishLoading = (): boolean => {
+    const email = currentUser?.email;
+
+    const writes = [
+      {
+        key: getAccountScopedKey("tltl-last-checkin-date", email),
+        value: todayDateString,
+      },
+      {
+        key: getAccountScopedKey("tltl-today-mood", email),
+        value: selectedMood,
+      },
+      {
+        key: getAccountScopedKey("tltl-current-signal-id", email),
+        value: activeSignal.id,
+      },
+    ];
+
+    const previous = new Map<string, string | null>();
+    const completedKeys: string[] = [];
+
+    // Đọc đủ trạng thái cũ trước khi bắt đầu ghi.
     try {
-      const email = currentUser?.email;
-      localStorage.setItem(getAccountScopedKey("tltl-last-checkin-date", email), todayDateString);
-      localStorage.setItem(getAccountScopedKey("tltl-today-mood", email), selectedMood);
-      localStorage.setItem(getAccountScopedKey("tltl-current-signal-id", email), activeSignal.id);
-    } catch {}
+      for (const write of writes) {
+        previous.set(
+          write.key,
+          localStorage.getItem(write.key),
+        );
+      }
+    } catch {
+      return false;
+    }
+
+    try {
+      for (const write of writes) {
+        localStorage.setItem(write.key, write.value);
+        completedKeys.push(write.key);
+      }
+    } catch {
+      // Thử khôi phục các kho đã ghi thành công.
+      for (const key of completedKeys.reverse()) {
+        try {
+          const oldValue = previous.get(key);
+
+          if (oldValue === null) {
+            localStorage.removeItem(key);
+          } else if (oldValue !== undefined) {
+            localStorage.setItem(key, oldValue);
+          }
+        } catch {
+          // Không bảo đảm khôi phục nếu bộ nhớ tiếp tục bị chặn.
+        }
+      }
+
+      return false;
+    }
+
+    setIsCheckedIn(true);
     navigateTo("result", activeSignal.id);
+
+    return true;
   };
 
-  const handleRefreshSignal = () => {
-    const nextSignal = getNextSignalForMood(
-      activeSignal.id,
-      activeSignal.mood
-    );
+  const handleRefreshSignal = (
+    contextKey?: MoodContextKey
+  ) => {
+    const nextSignal =
+      contextKey === undefined
+        ? getNextSignalForMood(
+            activeSignal.id,
+            activeSignal.mood
+          )
+        : getSignalForMoodContext(
+            activeSignal.mood,
+            contextKey
+          );
+
+    if (nextSignal.id === activeSignal.id) return;
 
     const signalKey = getAccountScopedKey(
       "tltl-current-signal-id",
@@ -1208,15 +1749,26 @@ export default function App() {
       return;
     }
 
+    if (contextKey !== undefined) {
+      setDraftMoodContext(contextKey);
+    }
+
     setIsActionDone(false);
     setSelectedMood(nextSignal.mood);
     setCurrentSignalId(nextSignal.id);
+
+    const reflectionId = createReflectionSnapshot(
+      nextSignal.id,
+      resultJournalText,
+      currentUser?.email
+    );
 
     window.history.replaceState(
       {
         screen: "result",
         signalId: nextSignal.id,
         mood: nextSignal.mood,
+        reflectionId,
       },
       "",
       `/result?signalId=${encodeURIComponent(nextSignal.id)}`
@@ -1240,7 +1792,7 @@ export default function App() {
       mood: activeSignal.mood,
       createdAt,
       date: new Date(createdAt).toLocaleDateString("vi-VN"),
-      journal: journalText.trim() || undefined,
+      journal: resultJournalText.trim() || undefined,
       poemLine1: activeSignal.poem.line1,
       poemLine2: activeSignal.poem.line2,
       actionTitle: activeSignal.action.title,
@@ -1248,6 +1800,7 @@ export default function App() {
     };
 
     if (!currentUser) {
+      clearMembershipIntent();
       setPendingSave({
         type: "signal",
         item: newEntry,
@@ -1257,40 +1810,36 @@ export default function App() {
       return;
     }
 
-    const exists = userCornerData.signals.some((entry) =>
-      isSameSavedReflection(entry, newEntry)
-    );
+    const saved = commitCornerData(
+      (latest) => {
+        const exists = latest.signals.some((entry) =>
+          isSameSavedReflection(entry, newEntry)
+        );
 
-    if (exists) return;
+        if (exists) return latest;
 
-    const updated: UserCornerData = {
-      ...userCornerData,
-      signals: [
-        newEntry,
-        ...userCornerData.signals,
-      ],
-    };
-
-    const saved = saveUserCornerData(
-      currentUser.email,
-      updated
+        return {
+          ...latest,
+          signals: [
+            newEntry,
+            ...latest.signals,
+          ],
+        };
+      },
+      false
     );
 
     if (!saved) {
       window.alert(
-        "Chưa lưu được lời chiêm nghiệm. Trình duyệt có thể hết dung lượng hoặc đang chặn lưu dữ liệu. Bạn hãy thử lại."
+        "Chưa lưu được lời chiêm nghiệm. Bạn hãy thử lại."
       );
-
-      return;
     }
-
-    setUserCornerData(updated);
   };
 
   const handleSimulatedLogin = (
     name?: string,
     email?: string
-  ) => {
+  ): boolean => {
     const user: UserProfile = {
       name: name?.trim() || "An Nhiên",
       email: email?.trim().toLowerCase() ||
@@ -1299,6 +1848,10 @@ export default function App() {
 
     // Giữ nội dung đang chờ trước khi cập nhật state.
     const pending = pendingSave;
+    const membershipIntent =
+      pending === null
+        ? readMembershipIntent()
+        : null;
 
     const existingData = loadUserCornerData(user);
 
@@ -1351,11 +1904,36 @@ export default function App() {
 
     // Ghi trực tiếp để lỗi lưu không bị hàm helper bỏ qua.
     try {
-      if (pending) {
+      if (pending && pending.type !== "traditional-xam") {
         const saved = saveUserCornerData(user.email, nextData);
 
         if (!saved) {
           throw new Error("Không thể lưu nội dung đang chờ.");
+        }
+      }
+
+      if (pending?.type === "traditional-xam") {
+        const request = pending.item;
+
+        const collection = TRADITIONAL_XAM_COLLECTIONS.find(
+          (item) => item.id === request.collectionId
+        );
+
+        if (
+          collection?.editionLabel !== request.editionLabel
+        ) {
+          throw new Error("Bản tư liệu của thẻ đã thay đổi.");
+        }
+
+        const saved = saveTraditionalXam(
+          user.email,
+          request.collectionId,
+          request.topic,
+          request.stickId
+        );
+
+        if (!saved) {
+          throw new Error("Chưa lưu được thẻ truyền thống.");
         }
       }
 
@@ -1367,8 +1945,14 @@ export default function App() {
       window.alert(
         "Trình duyệt chưa lưu được dữ liệu. Nội dung đang chờ vẫn được giữ trong phiên này. Bạn hãy thử lại."
       );
-      return;
+      return false;
     }
+
+    clearPendingTraditionalXam();
+    xamHistorySnapshotsRef.current.clear();
+    wishHistorySnapshotsRef.current.clear();
+    setReturnedWishDraft(null);
+    setReturnedXamDraw(null);
 
     const userSession = loadUserSessionState(
       user,
@@ -1390,7 +1974,12 @@ export default function App() {
       setIsCheckedIn(true);
       setSelectedMood(savedSignal.mood);
       setCurrentSignalId(savedSignal.id);
-      setJournalText(pending.item.journal || "");
+      setJournalText("");
+      createReflectionSnapshot(
+        savedSignal.id,
+        pending.item.journal || "",
+        user.email
+      );
 
       try {
         localStorage.setItem(
@@ -1441,7 +2030,7 @@ export default function App() {
       setPendingSave(null);
 
       navigateTo("result", savedSignal.id, user);
-      return;
+      return true;
     }
 
     // Đăng nhập thông thường hoặc lưu xăm/lời nguyện:
@@ -1451,12 +2040,22 @@ export default function App() {
     setIsActionDone(userSession.actionDone);
     setCurrentSignalId(userSession.signalId);
     setJournalText("");
+    setResultJournalText("");
+    activeReflectionIdRef.current = null;
+    reflectionSnapshotsRef.current.clear();
     setPendingSave(null);
 
-    navigateTo("account", undefined, user);
+    navigateTo(
+      membershipIntent ? "membership" : "account",
+      undefined,
+      user
+    );
+    return true;
   };
 
   const handleLogout = () => {
+    clearMembershipIntent();
+    clearPendingTraditionalXam();
     try {
       localStorage.removeItem("tltl-current-user");
     } catch {
@@ -1486,8 +2085,16 @@ export default function App() {
     setSelectedTopics(guestSession.topics);
     setIsActionDone(guestSession.actionDone);
     setCurrentSignalId(guestSession.signalId);
+    setDraftMoodContext("general");
 
     setJournalText("");
+    setResultJournalText("");
+    activeReflectionIdRef.current = null;
+    reflectionSnapshotsRef.current.clear();
+    xamHistorySnapshotsRef.current.clear();
+    wishHistorySnapshotsRef.current.clear();
+    setReturnedWishDraft(null);
+    setReturnedXamDraw(null);
     setPendingSave(null);
 
     // Truyền null rõ ràng để không dùng hồ sơ của lần render cũ.
@@ -1566,38 +2173,45 @@ export default function App() {
   };
 
   const commitCornerData = (
-    updated: UserCornerData,
+    update: (latest: UserCornerData) => UserCornerData,
     showErrorAlert = true
   ): boolean => {
     if (!currentUser) return false;
 
-    const saved = saveUserCornerData(
-      currentUser.email,
-      updated
-    );
+    try {
+      const latest = loadUserCornerData(currentUser);
+      const updated = update(latest);
 
-    if (!saved) {
+      const saved = saveUserCornerData(
+        currentUser.email,
+        updated
+      );
+
+      if (!saved) {
+        throw new Error("Không lưu được dữ liệu.");
+      }
+
+      setUserCornerData(updated);
+      return true;
+    } catch {
       if (showErrorAlert) {
         window.alert(
-          "Chưa lưu được thay đổi. Nội dung trên màn hình vẫn được giữ nguyên. Bạn hãy thử lại."
+          "Chưa lưu được thay đổi. Nội dung vẫn được giữ; bạn hãy thử lại."
         );
       }
 
       return false;
     }
-
-    setUserCornerData(updated);
-    return true;
   };
 
   const handleDeleteSignal = (id: string): boolean => {
     const saved = commitCornerData(
-      {
-        ...userCornerData,
-        signals: userCornerData.signals.filter(
+      (latest) => ({
+        ...latest,
+        signals: latest.signals.filter(
           (item) => item.id !== id
         ),
-      },
+      }),
       false
     );
 
@@ -1608,69 +2222,65 @@ export default function App() {
     return saved;
   };
 
-  const handleDeleteXam = (id: string): boolean => {
-    return commitCornerData(
-      {
-        ...userCornerData,
-        xam: userCornerData.xam.filter(
+  const handleDeleteXam = (id: string): boolean =>
+    commitCornerData(
+      (latest) => ({
+        ...latest,
+        xam: latest.xam.filter(
           (item) => item.id !== id
         ),
-      },
+      }),
       false
     );
-  };
 
-  const handleDeleteWish = (id: string): boolean => {
-    return commitCornerData(
-      {
-        ...userCornerData,
-        wishes: userCornerData.wishes.filter(
+  const handleDeleteWish = (id: string): boolean =>
+    commitCornerData(
+      (latest) => ({
+        ...latest,
+        wishes: latest.wishes.filter(
           (item) => item.id !== id
         ),
-      },
+      }),
       false
     );
-  };
 
   const handleToggleStarSignal = (id: string) => {
-    commitCornerData({
-      ...userCornerData,
-      signals: userCornerData.signals.map(
-        (item) =>
-          item.id === id
-            ? { ...item, starred: !item.starred }
-            : item
+    commitCornerData((latest) => ({
+      ...latest,
+      signals: latest.signals.map((item) =>
+        item.id === id
+          ? { ...item, starred: !item.starred }
+          : item
       ),
-    });
+    }));
   };
 
   const handleToggleStarXam = (id: string) => {
-    commitCornerData({
-      ...userCornerData,
-      xam: userCornerData.xam.map(
-        (item) =>
-          item.id === id
-            ? { ...item, starred: !item.starred }
-            : item
+    commitCornerData((latest) => ({
+      ...latest,
+      xam: latest.xam.map((item) =>
+        item.id === id
+          ? { ...item, starred: !item.starred }
+          : item
       ),
-    });
+    }));
   };
 
   const handleToggleStarWish = (id: string) => {
-    commitCornerData({
-      ...userCornerData,
-      wishes: userCornerData.wishes.map(
-        (item) =>
-          item.id === id
-            ? { ...item, starred: !item.starred }
-            : item
+    commitCornerData((latest) => ({
+      ...latest,
+      wishes: latest.wishes.map((item) =>
+        item.id === id
+          ? { ...item, starred: !item.starred }
+          : item
       ),
-    });
+    }));
   };
 
   const handleSavePrivateWish = (
     content: string,
-    category: string
+    category: string,
+    origin: PrivateWishOrigin
   ): boolean => {
     const cleanContent = content.trim();
     if (!cleanContent) return false;
@@ -1688,29 +2298,39 @@ export default function App() {
     };
 
     if (!currentUser) {
+      recordWishHistorySnapshot(
+        origin,
+        content,
+        category
+      );
+
+      setReturnedWishDraft({
+        origin,
+        content: cleanContent,
+        category,
+      });
+
+      clearMembershipIntent();
       setPendingSave({
         type: "wish",
         item: newWish,
+        origin,
       });
 
       navigateTo("login");
       return false;
     }
 
-    const nextData: UserCornerData = {
-      ...userCornerData,
-      wishes: [newWish, ...userCornerData.wishes],
-    };
-
-    const saved = saveUserCornerData(
-      currentUser.email,
-      nextData
+    return commitCornerData(
+      (latest) => ({
+        ...latest,
+        wishes: [
+          newWish,
+          ...latest.wishes,
+        ],
+      }),
+      false
     );
-
-    if (!saved) return false;
-
-    setUserCornerData(nextData);
-    return true;
   };
 
 
@@ -1720,6 +2340,34 @@ export default function App() {
     month: number;
     year: number;
   }): boolean => {
+    const title = dayData.title.trim();
+
+    if (
+      !title ||
+      title.length > 120 ||
+      !Number.isInteger(dayData.year) ||
+      !Number.isInteger(dayData.month) ||
+      !Number.isInteger(dayData.day) ||
+      dayData.year < 1900 ||
+      dayData.year > 2100
+    ) {
+      return false;
+    }
+
+    const selectedDate = new Date(
+      dayData.year,
+      dayData.month - 1,
+      dayData.day,
+    );
+
+    if (
+      selectedDate.getFullYear() !== dayData.year ||
+      selectedDate.getMonth() !== dayData.month - 1 ||
+      selectedDate.getDate() !== dayData.day
+    ) {
+      return false;
+    }
+
     try {
       const currentList = loadCalendarPersonalNotes(
         currentUser?.email
@@ -1727,7 +2375,7 @@ export default function App() {
 
       const exists = currentList.some(
         (note) =>
-          note.title === dayData.title &&
+          note.title === title &&
           note.day === dayData.day &&
           note.month === dayData.month &&
           note.year === dayData.year
@@ -1743,7 +2391,7 @@ export default function App() {
 
       const newNote = {
         id: crypto.randomUUID(),
-        title: dayData.title,
+        title,
         typeLabel: "Ghi chú cá nhân",
         region: "Cá nhân",
         shortDesc: "Ngày dự định do bạn chọn.",
@@ -1756,12 +2404,10 @@ export default function App() {
         type: "personal" as const,
       };
 
-      localStorage.setItem(
-        getCalendarNotesStorageKey(currentUser?.email),
-        JSON.stringify([newNote, ...currentList])
+      return saveCalendarPersonalNotes(
+        currentUser?.email,
+        [newNote, ...currentList]
       );
-
-      return true;
     } catch {
       return false;
     }
@@ -1775,7 +2421,7 @@ export default function App() {
         isSameSavedReflection(entry, {
           signalId: activeSignal.id,
           date: currentDateLabel,
-          journal: journalText,
+          journal: resultJournalText,
         })
       )
   );
@@ -1818,6 +2464,8 @@ export default function App() {
 
         {screen === "today" && (
           <TodayScreen
+            currentUserEmail={currentUser?.email}
+            onGoToReminders={() => navigateTo("notifications")}
             signal={activeSignal}
             isCheckedIn={isCheckedIn}
             mood={selectedMood}
@@ -1830,6 +2478,10 @@ export default function App() {
             onGoToCulture={() => navigateTo("culture")}
             onGoToExperience={() => navigateTo("experience")}
             onGoToZen={() => navigateTo("zen")}
+            onGoToXinXam={() => navigateTo("xinxam")}
+            onGoToRituals={() => navigateTo("rituals")}
+            onGoToGratitude={() => navigateTo("gratitude")}
+            onGoToCultureMap={() => navigateTo("culture-map")}
           />
         )}
 
@@ -1844,12 +2496,14 @@ export default function App() {
               navigateTo("today");
             }}
             onSubmit={handleSubmitMood}
+            contextKey={draftMoodContext}
+            onChangeContext={setDraftMoodContext}
           />
         )}
 
         {screen === "loading" && (
           <SignalLoadingScreen
-            mood={selectedMood}
+            signal={activeSignal}
             onFinishLoading={handleFinishLoading}
             onCancel={() => navigateTo("mood")}
           />
@@ -1857,14 +2511,21 @@ export default function App() {
 
         {screen === "result" && (
           <SignalResultScreen
-            journalText={journalText}
+            journalText={resultJournalText}
             mood={selectedMood}
             signal={activeSignal}
             isActionDone={isActionDone}
             onToggleAction={handleToggleAction}
             onGoToCompletion={() => navigateTo("saved")}
             onSaveToAccount={handleSaveResult}
-            onRefreshSignal={handleRefreshSignal}
+            onRefreshSignal={() => handleRefreshSignal()}
+            onChangeContext={(contextKey) => {
+              handleRefreshSignal(contextKey);
+            }}
+            onOpenCultureArticle={(articleId) => {
+              setSelectedArticleId(articleId);
+              navigateTo("culture-detail", articleId);
+            }}
             onGoToDiary={() => navigateTo("account")}
             isSaved={isCurrentSignalSaved}
           />
@@ -1885,6 +2546,9 @@ export default function App() {
 
         {screen === "sanctuary" && (
           <VirtualSanctuaryScreen
+            key={currentUser?.email || "guest"}
+            currentUserEmail={currentUser?.email}
+            onGoToLogin={() => navigateTo("login")}
             memorial={memorial}
             onBackToExperience={() => navigateTo("experience")}
             onGoToAltar={() => navigateTo("ancestor-altar")}
@@ -1895,12 +2559,30 @@ export default function App() {
 
         {screen === "ancestor-altar" && (
           <AncestorAltarScreen
+            key={`ancestor-altar-${wishRestoreVersion}`}
+            onDraftChange={(content) =>
+              recordWishHistorySnapshot(
+                "ancestor-altar",
+                content,
+                "Tri ân & Tưởng niệm"
+              )
+            }
             memorial={memorial}
             onBack={() => navigateTo("sanctuary")}
             onGoToMemorial={() => navigateTo("memorial")}
+            onGoToReminders={() => navigateTo("notifications")}
             isLoggedIn={Boolean(currentUser)}
             onSaveTribute={(text) =>
-              handleSavePrivateWish(text, "Tri ân gia tiên")
+              handleSavePrivateWish(
+                text,
+                "Tri ân gia tiên",
+                "ancestor-altar"
+              )
+            }
+            initialContent={
+              returnedWishDraft?.origin === "ancestor-altar"
+                ? returnedWishDraft.content
+                : ""
             }
           />
         )}
@@ -1912,6 +2594,7 @@ export default function App() {
             onCreate={() => navigateTo("memorial-form")}
             onEdit={() => navigateTo("memorial-form")}
             onGoToAltar={() => navigateTo("ancestor-altar")}
+            onGoToReminders={() => navigateTo("notifications")}
           />
         )}
 
@@ -2007,6 +2690,7 @@ export default function App() {
 
         {screen === "culture-detail" && (
           <CultureDetailScreen
+            currentUserEmail={currentUser?.email}
             articleId={selectedArticleId}
             onBackToCulture={() => navigateTo("culture")}
             onSelectRelatedArticle={(id) => {
@@ -2020,12 +2704,17 @@ export default function App() {
 
         {screen === "xinxam" && (
           <XinXamScreen
+            key={`xam-${xamRestoreVersion}`}
+            initialDraw={returnedXamDraw}
+            onSnapshotChange={recordXamHistorySnapshot}
             onBackToExperienceHome={() => navigateTo("experience")}
             onGoToArticle={(articleId) => {
               setSelectedArticleId(articleId);
               navigateTo("culture-detail", articleId);
             }}
             onSaveToAccount={(result) => {
+              recordXamHistorySnapshot(result);
+
               const createdAt = Date.now();
 
               const newXam: SavedXinXamItem = {
@@ -2045,6 +2734,9 @@ export default function App() {
               };
 
               if (!currentUser) {
+                setReturnedXamDraw({ ...result });
+
+                clearMembershipIntent();
                 setPendingSave({
                   type: "xam",
                   item: newXam,
@@ -2054,57 +2746,103 @@ export default function App() {
                 return false;
               }
 
-              const exists = userCornerData.xam.some(
-                (item) =>
-                  Boolean(newXam.drawId) &&
-                  item.drawId === newXam.drawId
+              return commitCornerData(
+                (latest) => {
+                  const exists = latest.xam.some(
+                    (item) =>
+                      Boolean(newXam.drawId) &&
+                      item.drawId === newXam.drawId
+                  );
+
+                  if (exists) return latest;
+
+                  return {
+                    ...latest,
+                    xam: [
+                      newXam,
+                      ...latest.xam,
+                    ],
+                  };
+                },
+                false
               );
-
-              if (exists) return true;
-
-              const updated: UserCornerData = {
-                ...userCornerData,
-                xam: [
-                  newXam,
-                  ...userCornerData.xam,
-                ],
-              };
-
-              const saved = saveUserCornerData(
-                currentUser.email,
-                updated
-              );
-
-              if (!saved) {
-                return false;
-              }
-
-              setUserCornerData(updated);
-              return true;
             }}
             onGoToLogin={() => navigateTo("login")}
             onGoToExplore={() => navigateTo("culture")}
             onGoToWish={() => navigateTo("wish")}
             isLoggedIn={!!currentUser}
             savedXamList={userCornerData.xam}
+            currentUserEmail={currentUser?.email}
+            onRequestTraditionalSave={(request) => {
+              const collection = TRADITIONAL_XAM_COLLECTIONS.find(
+                (item) => item.id === request.collectionId
+              );
+
+              const eligible = getPublishableTraditionalSticks(
+                request.collectionId,
+                request.topic
+              ).some((item) => item.id === request.stickId);
+
+              if (
+                !eligible ||
+                collection?.editionLabel !== request.editionLabel
+              ) {
+                window.alert(
+                  "Thẻ hiện chưa đủ điều kiện lưu. Bạn hãy kiểm tra lại nội dung."
+                );
+                return;
+              }
+
+              const persisted = writePendingTraditionalXam(request);
+
+              if (!persisted) {
+                window.alert(
+                  "Trình duyệt chưa giữ được yêu cầu khi tải lại trang. " +
+                  "Bạn vẫn có thể đăng nhập và lưu trong phiên hiện tại."
+                );
+              }
+
+              clearMembershipIntent();
+              setPendingSave({
+                type: "traditional-xam",
+                item: { ...request },
+              });
+
+              navigateTo("login");
+            }}
           />
         )}
 
         {screen === "wish" && (
           <WishScreen
+            key={`wish-${wishRestoreVersion}`}
+            onDraftChange={(content, category) =>
+              recordWishHistorySnapshot("wish", content, category)
+            }
             onBackToExperience={() => navigateTo("experience")}
             onGoToDiary={() => navigateTo("account")}
             onGoToHome={() => navigateTo("today")}
             onGoToExplore={() => navigateTo("culture")}
             onSaveJournal={(text, topic) =>
-              handleSavePrivateWish(text, topic)
+              handleSavePrivateWish(text, topic, "wish")
             }
             isLoggedIn={!!currentUser}
+            initialContent={
+              returnedWishDraft?.origin === "wish"
+                ? returnedWishDraft.content
+                : ""
+            }
+            initialCategory={
+              returnedWishDraft?.origin === "wish"
+                ? returnedWishDraft.category
+                : "Bình an"
+            }
           />
         )}
 
         {screen === "rituals" && (
           <RitualGuideScreen
+            currentUserEmail={currentUser?.email}
             onSelectRitual={(id) => {
               setSelectedRitualId(id);
               navigateTo("ritual-detail", id);
@@ -2155,17 +2893,38 @@ export default function App() {
             onBackToCalendar={() => navigateTo("calendar")}
             onGoToRituals={() => navigateTo("rituals")}
             onGoToExplore={() => navigateTo("culture")}
+            onGoToHome={() => navigateTo("today")}
           />
         )}
 
         {screen === "gratitude" && (
           <GratitudeScreen
+            key={`gratitude-${wishRestoreVersion}`}
+            onDraftChange={(content) =>
+              recordWishHistorySnapshot(
+                "gratitude",
+                content,
+                "Tri ân & Tưởng niệm"
+              )
+            }
             onBackToExperience={() => navigateTo("experience")}
             onBackToHome={() => navigateTo("today")}
             onGoToCulture={() => navigateTo("culture")}
             user={currentUser}
             onSaveGratitude={(text) =>
-              handleSavePrivateWish(text, "Tri ân & Tưởng niệm")
+              handleSavePrivateWish(
+                text,
+                "Tri ân & Tưởng niệm",
+                "gratitude"
+              )
+            }
+            initialContent={
+              returnedWishDraft?.origin === "gratitude"
+                ? returnedWishDraft.content
+                : ""
+            }
+            initialSaveMode={
+              returnedWishDraft?.origin === "gratitude"
             }
           />
         )}
@@ -2179,15 +2938,62 @@ export default function App() {
         {screen === "login" && (
           <LoginScreen
             onBack={() => {
-              if (pendingSave?.type === "signal") {
-                navigateTo("result", pendingSave.item.signalId);
-              } else if (pendingSave?.type === "xam") {
-                navigateTo("xinxam");
-              } else if (pendingSave?.type === "wish") {
-                navigateTo("wish");
-              } else {
-                navigateTo("guest");
+              const pending = pendingSave;
+
+              clearPendingTraditionalXam();
+              // Hủy yêu cầu tự lưu khi đăng nhập.
+              setPendingSave(null);
+
+              if (pending?.type === "signal") {
+                navigateTo("result", pending.item.signalId);
+                return;
               }
+
+              if (pending?.type === "xam") {
+                navigateTo("xinxam");
+                return;
+              }
+
+              if (pending?.type === "traditional-xam") {
+                const request = pending.item;
+
+                navigateTo("xinxam");
+
+                window.history.replaceState(
+                  {
+                    ...window.history.state,
+                    traditionalXam: {
+                      entryId: crypto.randomUUID(),
+                      account: "guest",
+                      collectionId: request.collectionId,
+                      topic: request.topic,
+                      stickId: request.stickId,
+                    },
+                  },
+                  "",
+                  window.location.href
+                );
+
+                return;
+              }
+
+              if (pending?.type === "wish") {
+                setReturnedWishDraft({
+                  origin: pending.origin,
+                  content: pending.item.content,
+                  category: pending.item.category,
+                });
+
+                navigateTo(pending.origin);
+                return;
+              }
+
+              if (readMembershipIntent()) {
+                navigateTo("membership");
+                return;
+              }
+
+              navigateTo("guest");
             }}
             onSuccess={handleSimulatedLogin}
             onGoToRegister={() => navigateTo("register")}
@@ -2198,6 +3004,12 @@ export default function App() {
                 ? `Tín hiệu "${pendingSave.item.mood}"`
                 : pendingSave?.type === "xam"
                 ? `Thẻ xăm số ${pendingSave.item.stickNumber} (${pendingSave.item.fortuneType})`
+                : pendingSave?.type === "traditional-xam"
+                ? `Thẻ xăm truyền thống — ${
+                    pendingSave.item.collectionId === "quan-am"
+                      ? "Quan Âm"
+                      : "Quan Thánh"
+                  }`
                 : pendingSave?.type === "wish"
                 ? `Điều ước ${pendingSave.item.category}`
                 : undefined
@@ -2218,6 +3030,12 @@ export default function App() {
                 ? `Tín hiệu "${pendingSave.item.mood}"`
                 : pendingSave?.type === "xam"
                 ? `Thẻ xăm số ${pendingSave.item.stickNumber} (${pendingSave.item.fortuneType})`
+                : pendingSave?.type === "traditional-xam"
+                ? `Thẻ xăm truyền thống — ${
+                    pendingSave.item.collectionId === "quan-am"
+                      ? "Quan Âm"
+                      : "Quan Thánh"
+                  }`
                 : pendingSave?.type === "wish"
                 ? `Điều ước ${pendingSave.item.category}`
                 : undefined
@@ -2274,7 +3092,11 @@ export default function App() {
 
         {screen === "notifications" && (
           <NotificationScreen
-            onBack={() => navigateTo("account")}
+            key={currentUser?.email || "guest"}
+            currentUserEmail={currentUser?.email}
+            onBack={() =>
+              navigateTo(currentUser ? "account" : "experience")
+            }
             onGoToCalendar={() => navigateTo("calendar")}
           />
         )}
@@ -2316,6 +3138,23 @@ export default function App() {
           <MembershipScreen
             onBackToHome={() => navigateTo("today")}
             onGoToExperience={() => navigateTo("experience")}
+            currentUserEmail={currentUser?.email}
+            onGoToLogin={(term) => {
+              const saved = writeMembershipIntent(term);
+
+              if (!saved) {
+                window.alert(
+                  "Chưa giữ được lựa chọn hội viên. Bạn hãy thử lại."
+                );
+                return;
+              }
+
+              // Hai yêu cầu đăng nhập không được dùng chung.
+              clearPendingTraditionalXam();
+              setPendingSave(null);
+
+              navigateTo("login");
+            }}
           />
         )}
 
@@ -2323,6 +3162,7 @@ export default function App() {
           <SettingsScreen
             onBackToAccount={() => navigateTo("account")}
             onGoToHome={() => navigateTo("today")}
+            onGoToReminders={() => navigateTo("notifications")}
             themePreference={themePreference}
             onChangeTheme={setThemePreference}
             selectedTopics={selectedTopics}
@@ -2333,68 +3173,157 @@ export default function App() {
             onClearAllLocalData={() => {
               if (!currentUser) return false;
 
-              const cornerKey = getUserCornerStorageKey(
-                currentUser.email
-              );
-
-              const calendarKey = getCalendarNotesStorageKey(
-                currentUser.email
-              );
-
               const emptyData: UserCornerData = {
                 signals: [],
                 xam: [],
                 wishes: [],
               };
 
-              let previousCorner: string | null;
-              let previousCalendar: string | null;
+              const accountId = currentUser.email.trim().toLowerCase();
 
+              const writes = [
+                {
+                  key: getUserCornerStorageKey(currentUser.email),
+                  value: JSON.stringify(emptyData),
+                },
+                {
+                  key: getCalendarNotesStorageKey(currentUser.email),
+                  value: "[]",
+                },
+                {
+                  key: getTraditionalXamStorageKey(currentUser.email),
+                  value: "[]",
+                },
+                {
+                  key: `tltl-membership-demo-${accountId}`,
+                  value: "null",
+                },
+                {
+                  key: `tltl-digital-items-${accountId}`,
+                  value: JSON.stringify({
+                    owned: [],
+                    decoration: null,
+                  }),
+                },
+                {
+                  key: `tltl-ritual-drafts-${accountId}`,
+                  value: "[]",
+                },
+                ...[
+                  "chau-van",
+                  "sea-prayer",
+                  "southern-culture",
+                ].map((kind) => ({
+                  key: `tltl-regional-note-${accountId}-${kind}`,
+                  value: "",
+                })),
+              ];
+
+              const regionalSessionKeys = [
+                "chau-van",
+                "sea-prayer",
+                "southern-culture",
+              ].map(
+                (kind) =>
+                  `tltl-regional-note-${accountId}-${kind}`
+              );
+              const previous = new Map<string, string | null>();
+              const previousSession = new Map<string, string | null>();
+              const completedKeys: string[] = [];
+              const completedSessionKeys: string[] = [];
+
+              const notifyStores = () => {
+                window.dispatchEvent(
+                  new Event(USER_CORNER_CHANGED_EVENT),
+                );
+
+                window.dispatchEvent(
+                  new Event("tltl-reminders-change"),
+                );
+
+                window.dispatchEvent(
+                  new Event(TRADITIONAL_XAM_CHANGED_EVENT),
+                );
+
+                window.dispatchEvent(
+                  new Event("tltl-digital-items-change"),
+                );
+              };
+
+              // Đọc đủ bản cũ trước khi bắt đầu thay đổi dữ liệu.
               try {
-                previousCorner = localStorage.getItem(
-                  cornerKey
-                );
-
-                previousCalendar = localStorage.getItem(
-                  calendarKey
-                );
-              } catch {
-                return false;
-              }
-
-              try {
-                localStorage.setItem(
-                  cornerKey,
-                  JSON.stringify(emptyData)
-                );
-
-                localStorage.removeItem(calendarKey);
-              } catch {
-                // Cố khôi phục nếu chỉ một thao tác thành công.
-                try {
-                  if (previousCorner === null) {
-                    localStorage.removeItem(cornerKey);
-                  } else {
-                    localStorage.setItem(
-                      cornerKey,
-                      previousCorner
-                    );
-                  }
-
-                  if (previousCalendar === null) {
-                    localStorage.removeItem(calendarKey);
-                  } else {
-                    localStorage.setItem(
-                      calendarKey,
-                      previousCalendar
-                    );
-                  }
-                } catch {
-                  // Bộ nhớ vẫn có thể đang chặn thao tác.
+                for (const write of writes) {
+                  previous.set(
+                    write.key,
+                    localStorage.getItem(write.key)
+                  );
                 }
 
+                for (const key of regionalSessionKeys) {
+                  previousSession.set(
+                    key,
+                    sessionStorage.getItem(key)
+                  );
+                }
+              } catch {
                 return false;
               }
+
+              try {
+                for (const write of writes) {
+                  localStorage.setItem(write.key, write.value);
+                  completedKeys.push(write.key);
+                }
+
+                for (const key of regionalSessionKeys) {
+                  sessionStorage.removeItem(key);
+                  completedSessionKeys.push(key);
+                }
+              } catch {
+                // Khôi phục các ghi chú phiên đã xóa thành công.
+                for (const key of completedSessionKeys.reverse()) {
+                  try {
+                    const oldValue = previousSession.get(key);
+
+                    if (oldValue === null) {
+                      sessionStorage.removeItem(key);
+                    } else if (oldValue !== undefined) {
+                      sessionStorage.setItem(key, oldValue);
+                    }
+                  } catch {
+                    // Trình duyệt có thể tiếp tục chặn sessionStorage.
+                  }
+                }
+
+                // Khôi phục các kho đã ghi thành công.
+                // Thử từng kho riêng để một lỗi không chặn các kho còn lại.
+                for (const key of completedKeys.reverse()) {
+                  try {
+                    const oldValue = previous.get(key);
+
+                    if (oldValue === null) {
+                      localStorage.removeItem(key);
+                    } else if (oldValue !== undefined) {
+                      localStorage.setItem(key, oldValue);
+                    }
+                  } catch {
+                    // Không thể bảo đảm khôi phục nếu trình duyệt
+                    // tiếp tục chặn thao tác lưu trữ.
+                  }
+                }
+
+                notifyStores();
+
+                setUserCornerData(
+                  loadUserCornerData(currentUser)
+                );
+                setOpenedSavedSignal(null);
+
+                // Cài đặt hiển thị lỗi, không báo xóa thành công.
+                return false;
+              }
+
+              notifyStores();
 
               setUserCornerData(emptyData);
               setOpenedSavedSignal(null);

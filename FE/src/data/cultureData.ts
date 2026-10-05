@@ -1,10 +1,13 @@
+import type { ContentMetadata } from "./contentMetadata";
+
 export type RegionKey = "Bắc Bộ" | "Trung Bộ" | "Nam Bộ";
 
 export type CultureCategoryKey =
   | "Không gian tín ngưỡng"
   | "Điển tích xưa"
   | "Lễ hội truyền thống"
-  | "Phong tục & Nghi lễ";
+  | "Phong tục & Nghi lễ"
+  | "Sinh hoạt văn hóa";
 
 export interface PracticalCard {
   title: string;
@@ -22,7 +25,11 @@ export interface ArticleSection {
 export interface CultureSource {
   title: string;
   author: string;
-  sourceType: "Tác phẩm kinh điển" | "Di sản Quốc gia / UNESCO" | "Khảo cứu học thuật";
+  sourceType:
+    | "Tác phẩm kinh điển"
+    | "Di sản Quốc gia / UNESCO"
+    | "Khảo cứu học thuật"
+    | "Thông tin cơ quan / đơn vị";
   annotation: string;
 }
 
@@ -39,6 +46,8 @@ export interface CultureArticle {
   sections: ArticleSection[];
   editorialNote: string;
   sources: CultureSource[];
+  metadata?: ContentMetadata;
+  audioRecordingIds?: string[];
 }
 
 export const CULTURE_ARTICLES: CultureArticle[] = [
@@ -407,6 +416,725 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
       },
     ],
   },
+  {
+    id: "le-via-ba-linh-son-thanh-mau",
+    title: "Lễ Vía Bà Linh Sơn Thánh Mẫu tại núi Bà Đen",
+    subtitle: "Một góc nhìn về tín ngưỡng và lễ hội ở Tây Ninh",
+    region: "Nam Bộ",
+    category: "Lễ hội truyền thống",
+    image: "/images/mekong_nam_bo.jpg",
+    caption:
+      "Ảnh minh họa vùng Nam Bộ, không phải ảnh núi Bà Đen.",
+    readingTime: "2 phút",
+    excerpt:
+      "Tìm hiểu đối tượng được tưởng nhớ, hoạt động lễ hội và cách đọc tư liệu về Lễ Vía Bà tại núi Bà Đen.",
+
+    sections: [
+      {
+        id: "ba-den-gioi-thieu",
+        title: "Lễ hội tưởng nhớ ai?",
+        paragraphs: [
+          "Theo Cổng thông tin du lịch Tây Ninh, Lễ Vía Bà tại núi Bà Đen gắn với việc tưởng nhớ Linh Sơn Thánh Mẫu. Tư liệu địa phương trình bày hình tượng Bà trong đời sống tín ngưỡng Nam Bộ.",
+        ],
+      },
+      {
+        id: "ba-den-hoat-dong",
+        title: "Những hoạt động được giới thiệu",
+        paragraphs: [
+          "Nguồn giới thiệu các hoạt động như tắm Bà, dâng hương và cúng vía, cùng hoạt động văn hóa. Bài cũng nhấn mạnh sự kết hợp giữa tín ngưỡng dân gian và văn hóa Phật giáo.",
+        ],
+      },
+      {
+        id: "ba-den-doc-tu-lieu",
+        title: "Đọc tư liệu và tìm hiểu thêm",
+        paragraphs: [
+          "Khi đọc chuyện kể về Bà, hãy phân biệt truyền thuyết với thông tin lịch sử. Nếu muốn tham dự lễ hội, kiểm tra thông báo của năm đó thay vì dùng lại lịch từ một bài cũ.",
+        ],
+      },
+    ],
+
+    editorialNote:
+      "Bản giới thiệu ngắn dựa trên tư liệu địa phương. Chưa hoàn tất duyệt biên tập và chưa bổ sung ảnh đúng địa điểm.",
+    sources: [],
+
+    metadata: {
+      contentKind: "editorial",
+      editorialStatus: "in-review",
+      quotationVerified: false,
+      sources: [
+        {
+          id: "tay-ninh-le-via-ba",
+          title:
+            "Lễ Vía Bà Linh Sơn Thánh Mẫu tại núi Bà Đen – Nét đẹp văn hoá tâm linh của Nam Bộ",
+          authorOrOrganization:
+            "Cổng thông tin du lịch Tây Ninh",
+          url:
+            "https://dulich.tayninh.gov.vn/tin-tuc/le-via-ba-linh-son-thanh-mau-tai-nui-ba-den-net-dep-van-hoa-tam-linh-cua-nam-bo-1620",
+          locator:
+            "Phần Mô tả: đối tượng tưởng nhớ, hoạt động lễ hội và mối liên hệ tín ngưỡng dân gian – Phật giáo",
+          accessedOn: "2026-10-05",
+        },
+      ],
+      editorialNote:
+        "Đã bổ sung nguồn để đối chiếu. Chưa xác nhận toàn bộ nội dung qua quy trình duyệt của nhóm; ảnh hiện là minh họa.",
+    },
+  },
+  {
+    id: "tin-nguong-tho-mau-tam-phu",
+    title: "Tìm hiểu tín ngưỡng thờ Mẫu Tam phủ",
+    subtitle:
+      "Một thực hành văn hóa gắn với ký ức cộng đồng và sự trân trọng vai trò của người phụ nữ.",
+    region: "Bắc Bộ",
+    category: "Không gian tín ngưỡng",
+    image: "/images/do_paper_still_life.jpg",
+    caption:
+      "Ảnh minh họa cho bài đọc; không phải ảnh tư liệu của nghi lễ thờ Mẫu.",
+    readingTime: "~2 phút",
+    excerpt:
+      "Tìm hiểu ba miền trong tín ngưỡng thờ Mẫu, những người gìn giữ thực hành và ý nghĩa của việc bảo vệ di sản.",
+    sections: [
+      {
+        id: "ba-mien-trong-tin-nguong",
+        title: "01. Tam phủ trong hồ sơ di sản",
+        paragraphs: [
+          "Hồ sơ UNESCO mô tả tín ngưỡng thờ các Mẫu của ba miền: trời, nước, núi rừng. Những thực hành liên quan được ghi danh vào Danh sách Di sản văn hóa phi vật thể đại diện của nhân loại năm 2016.",
+          "Bài đọc này giới thiệu phạm vi Tam phủ theo hồ sơ đó. Nội dung về Tứ phủ cần được tìm hiểu riêng, không nên xem hai tên gọi là hoàn toàn đồng nhất.",
+        ],
+      },
+      {
+        id: "nguoi-gin-giu-thuc-hanh",
+        title: "02. Một thực hành có cộng đồng gìn giữ",
+        paragraphs: [
+          "Các thực hành được mô tả gồm thờ phụng thường ngày, nghi lễ lên đồng và lễ hội. Âm nhạc, múa và trang phục góp phần thể hiện ký ức văn hóa trong những thực hành này.",
+          "Người gìn giữ và truyền dạy bao gồm người trông coi đền, người thực hành nghi lễ, thanh đồng, người phụ giúp và nhạc công. Kiến thức được trao truyền bằng lời nói và qua việc tham gia thực hành.",
+        ],
+      },
+      {
+        id: "gia-tri-va-bao-ve-di-san",
+        title: "03. Hiểu di sản từ giá trị cộng đồng",
+        paragraphs: [
+          "Hồ sơ ghi danh nhấn mạnh lòng nhân ái, sự gắn kết và việc trân trọng vai trò của người phụ nữ. Quyết định của UNESCO cũng đề cập đến ký ức lịch sử, bản sắc văn hóa và sự tôn trọng đa dạng.",
+          "Quyết định ghi danh lưu ý nguy cơ thương mại hóa quá mức. Vì vậy, tìm hiểu di sản cũng cần quan tâm đến người thực hành và cách cộng đồng gìn giữ ý nghĩa của nghi lễ.",
+        ],
+        practicalCards: [
+          {
+            title: "Đọc cùng nguồn",
+            desc:
+              "Mở hồ sơ UNESCO bên dưới để đối chiếu thông tin và tìm hiểu thêm.",
+          },
+          {
+            title: "Quan sát với sự tôn trọng",
+            desc:
+              "Khi đến một không gian tín ngưỡng, tìm hiểu nội quy và xin phép trước khi ghi hình người tham gia.",
+          },
+        ],
+      },
+    ],
+    editorialNote:
+      "Bài giới thiệu được diễn giải từ nguồn UNESCO. Phân loại Bắc Bộ phục vụ điều hướng trong ứng dụng, không có nghĩa thực hành chỉ tồn tại ở miền Bắc. Bài chưa thay thế nội dung chuyên sâu về Tứ phủ, hầu đồng hoặc chầu văn.",
+    sources: [
+      {
+        title: "Hồ sơ UNESCO về thực hành tín ngưỡng thờ Mẫu Tam phủ",
+        author: "UNESCO",
+        sourceType: "Di sản Quốc gia / UNESCO",
+        annotation:
+          "Đối chiếu phần mô tả ba miền, thực hành, người gìn giữ và giá trị cộng đồng.",
+      },
+      {
+        title: "Quyết định ghi danh 11.COM 10.b.37",
+        author: "Ủy ban Liên chính phủ UNESCO",
+        sourceType: "Di sản Quốc gia / UNESCO",
+        annotation:
+          "Đối chiếu việc ghi danh, giá trị văn hóa và lưu ý về thương mại hóa quá mức.",
+      },
+    ],
+    metadata: {
+      contentKind: "editorial",
+      editorialStatus: "in-review",
+      quotationVerified: false,
+      editorialNote:
+        "Nội dung diễn giải, không sử dụng trích dẫn nguyên văn. Chờ duyệt biên tập.",
+      sources: [
+        {
+          id: "unesco-mother-goddesses-three-realms",
+          title: "Hồ sơ di sản tín ngưỡng thờ Mẫu Tam phủ",
+          authorOrOrganization: "UNESCO",
+          url:
+            "https://ich.unesco.org/en/RL/practices-related-to-the-viet-beliefs-in-the-mother-goddesses-of-three-realms-01064",
+          locator: "Phần mô tả di sản và thông tin ghi danh",
+          accessedOn: "2026-10-05",
+        },
+        {
+          id: "unesco-decision-11-com-10-b-37",
+          title: "Quyết định ghi danh 11.COM 10.b.37",
+          authorOrOrganization: "UNESCO",
+          url: "https://ich.unesco.org/en/Decisions/11.COM/10.b.37",
+          locator: "Các tiêu chí R.1–R.3 và quyết định ghi danh",
+          accessedOn: "2026-10-05",
+        },
+      ],
+    },
+  },
+  {
+    id: "phu-tay-ho",
+    title: "Phủ Tây Hồ và tín ngưỡng thờ Mẫu",
+    subtitle:
+      "Một điểm tìm hiểu văn hóa tín ngưỡng tại Hà Nội, gắn với việc thờ Mẫu Liễu Hạnh.",
+    region: "Bắc Bộ",
+    category: "Không gian tín ngưỡng",
+    image: "/images/do_paper_still_life.jpg",
+    caption:
+      "Ảnh minh họa cho bài đọc; không phải ảnh chụp Phủ Tây Hồ.",
+    readingTime: "~2 phút",
+    excerpt:
+      "Tìm hiểu đối tượng thờ phụng tại Phủ Tây Hồ và cách đọc những câu chuyện truyền tụng quanh di tích.",
+    sections: [
+      {
+        id: "phu-tay-ho-tho-ai",
+        title: "01. Phủ Tây Hồ thờ ai?",
+        paragraphs: [
+          "Theo thông tin của Sở Văn hóa và Thể thao Hà Nội, Phủ Tây Hồ là nơi thờ Mẫu Liễu Hạnh. Đây là một địa điểm để người đọc tiếp cận tín ngưỡng thờ Mẫu thông qua một không gian cụ thể.",
+          "Bài giới thiệu này tập trung vào thông tin nền về di tích. Những khác biệt giữa các hệ thống thờ phụng hoặc nghi thức tại từng nơi cần được tìm hiểu bằng tài liệu chuyên sâu.",
+        ],
+      },
+      {
+        id: "doc-truyen-thuyet",
+        title: "02. Đọc truyền thuyết đúng cách",
+        paragraphs: [
+          "Nguồn giới thiệu của Sở kể câu chuyện về nguồn gốc Liễu Hạnh dưới dạng truyền thuyết. Khi đọc, cần giữ cách gọi này để phân biệt câu chuyện tín ngưỡng với sự kiện lịch sử đã được chứng minh.",
+          "Bạn có thể ghi lại điều mình muốn tìm hiểu thêm: câu chuyện được kể bởi ai, xuất hiện trong tài liệu nào và có những dị bản nào.",
+        ],
+      },
+      {
+        id: "tim-hieu-phu-tay-ho",
+        title: "03. Gợi ý khi tìm hiểu",
+        paragraphs: [
+          "Một chuyến tìm hiểu có thể bắt đầu bằng việc đọc thông tin giới thiệu tại di tích và quan sát cách không gian được tổ chức.",
+        ],
+        practicalCards: [
+          {
+            title: "Tôn trọng không gian thờ phụng",
+            desc:
+              "Đọc nội quy, giữ lối đi thông thoáng và xin phép trước khi ghi hình người đang thực hành nghi lễ.",
+          },
+          {
+            title: "Đối chiếu thông tin",
+            desc:
+              "Phân biệt nội dung trên bảng giới thiệu, lời kể của người tham gia và thông tin từ tài liệu nghiên cứu.",
+          },
+        ],
+      },
+    ],
+    editorialNote:
+      "Bài giới thiệu ngắn có nguồn đối chiếu. Không cung cấp lịch lễ, giờ mở cửa hoặc hướng dẫn thực hành nghi lễ.",
+    sources: [
+      {
+        title: "Thông tin kiểm tra di tích và lễ hội Phủ Tây Hồ",
+        author: "Sở Văn hóa và Thể thao Hà Nội",
+        sourceType: "Thông tin cơ quan / đơn vị",
+        annotation:
+          "Đối chiếu đối tượng thờ phụng và cách nguồn trình bày truyền thuyết về Liễu Hạnh.",
+      },
+    ],
+    metadata: {
+      contentKind: "editorial",
+      editorialStatus: "in-review",
+      quotationVerified: false,
+      editorialNote:
+        "Nội dung diễn giải từ nguồn được dẫn; chờ duyệt biên tập.",
+      sources: [
+        {
+          id: "hanoi-phu-tay-ho",
+          title: "Thông tin về di tích và lễ hội Phủ Tây Hồ",
+          authorOrOrganization: "Sở Văn hóa và Thể thao Hà Nội",
+          url:
+            "https://sovhtt.hanoi.gov.vn/kiem-tra-di-tich-va-le-hoi-phu-tay-ho/",
+          locator:
+            "Đoạn giới thiệu đối tượng thờ phụng và truyền thuyết",
+          accessedOn: "2026-10-05",
+        },
+      ],
+    },
+  },
+  {
+    id: "den-tran-nam-dinh",
+    title: "Đền Trần: không gian tưởng nhớ nhà Trần",
+    subtitle:
+      "Tìm hiểu ba công trình chính và ý nghĩa tưởng nhớ trong không gian di tích.",
+    region: "Bắc Bộ",
+    category: "Không gian tín ngưỡng",
+    image: "/images/do_paper_still_life.jpg",
+    caption:
+      "Ảnh minh họa cho bài đọc; không phải ảnh chụp Đền Trần.",
+    readingTime: "~2 phút",
+    excerpt:
+      "Phân biệt Thiên Trường, Cố Trạch và Trùng Hoa trước khi tìm hiểu những hoạt động lễ hội tại Đền Trần.",
+    sections: [
+      {
+        id: "ba-cong-trinh-den-tran",
+        title: "01. Ba công trình trong cụm di tích",
+        paragraphs: [
+          "Tài liệu giới thiệu trên cổng thông tin Nam Định mô tả Đền Trần gồm ba công trình kiến trúc chính: đền Thiên Trường, đền Cố Trạch và đền Trùng Hoa.",
+          "Trong đó, đền Cố Trạch là nơi thờ Trần Hưng Đạo, gia đình và gia tướng. Nhận biết từng công trình giúp việc tìm hiểu cụm di tích cụ thể hơn.",
+        ],
+      },
+      {
+        id: "tuong-nho-va-tri-an",
+        title: "02. Tưởng nhớ và tri an",
+        paragraphs: [
+          "Bản tin về lễ Khai ấn năm 2023 ghi nhận hoạt động dâng hương tưởng nhớ các vua Trần và Trần Quốc Tuấn. Nguồn này nhấn mạnh ý nghĩa tri ân và tiếp nối truyền thống.",
+          "Bài đọc sử dụng bản tin để giới thiệu ý nghĩa của hoạt động. Lịch tổ chức của năm 2023 không được dùng làm lịch lễ hiện tại.",
+        ],
+      },
+      {
+        id: "tim-hieu-den-tran",
+        title: "03. Gợi ý khi tìm hiểu",
+        paragraphs: [
+          "Bạn có thể bắt đầu bằng tên từng đền, đối tượng được thờ và thông tin giới thiệu tại chỗ, sau đó đối chiếu với tài liệu.",
+        ],
+        practicalCards: [
+          {
+            title: "Ghi lại tên công trình",
+            desc:
+              "Phân biệt Thiên Trường, Cố Trạch và Trùng Hoa khi đọc hoặc tham quan.",
+          },
+          {
+            title: "Kiểm tra lịch từng năm",
+            desc:
+              "Nếu muốn tham dự lễ hội, xem thông báo mới của đơn vị tổ chức thay vì dùng lịch trong bài tư liệu cũ.",
+          },
+        ],
+      },
+    ],
+    editorialNote:
+      "Bài giới thiệu văn hóa, không phải lịch lễ hội hoặc dịch vụ xin ấn. Tên Đền Trần Nam Định dùng để nhận diện di tích trong tài liệu.",
+    sources: [
+      {
+        title: "Tài liệu giới thiệu kiến trúc và lịch sử Đền Trần",
+        author: "Cổng thông tin điện tử Nam Định",
+        sourceType: "Thông tin cơ quan / đơn vị",
+        annotation:
+          "Đối chiếu ba công trình chính và đối tượng thờ tại đền Cố Trạch.",
+      },
+      {
+        title: "Bản tin lễ Khai ấn Đền Trần năm 2023",
+        author: "Cổng thông tin Hội đồng nhân dân tỉnh Nam Định",
+        sourceType: "Thông tin cơ quan / đơn vị",
+        annotation:
+          "Đối chiếu hoạt động tưởng nhớ, tri ân; không sử dụng lịch năm 2023 làm lịch hiện tại.",
+      },
+    ],
+    metadata: {
+      contentKind: "editorial",
+      editorialStatus: "in-review",
+      quotationVerified: false,
+      editorialNote:
+        "Nội dung diễn giải từ nguồn được dẫn; chờ duyệt biên tập.",
+      sources: [
+        {
+          id: "nam-dinh-den-tran-kien-truc",
+          title: "Tài liệu giới thiệu Đền Trần",
+          authorOrOrganization: "Cổng thông tin điện tử Nam Định",
+          url:
+            "https://namdinh.gov.vn/portal/VanBan/2023-01/46d10d777eea9a0dND-05---2-144-full.pdf",
+          locator:
+            "Bài giới thiệu Đền Trần; đoạn mô tả Thiên Trường, Cố Trạch và Trùng Hoa",
+          accessedOn: "2026-10-05",
+        },
+        {
+          id: "nam-dinh-khai-an-2023",
+          title: "Bản tin lễ Khai ấn Đền Trần năm 2023",
+          authorOrOrganization:
+            "Cổng thông tin Hội đồng nhân dân tỉnh Nam Định",
+          url:
+            "https://hdnd.namdinh.gov.vn/portal/pages/2023-2-6/le-hoi-khai-an-den-tran-xuan-quy-mao-2023dfzst9.aspx",
+          locator:
+            "Đoạn mô tả hoạt động dâng hương tưởng nhớ các vua Trần và Trần Quốc Tuấn",
+          accessedOn: "2026-10-05",
+        },
+      ],
+    },
+  },
+  {
+    id: "bai-choi-hoi-an",
+    title: "Bài chòi ở Hội An: nghe hát, gặp người giữ nghề",
+    subtitle:
+      "Một hướng khám phá văn hóa Quảng Nam qua diễn xướng và sự tương tác với người thưởng thức.",
+    region: "Trung Bộ",
+    category: "Sinh hoạt văn hóa",
+    image: "/images/do_paper_still_life.jpg",
+    caption:
+      "Ảnh minh họa cho bài đọc; không phải ảnh tư liệu biểu diễn bài chòi.",
+    readingTime: "~2 phút",
+    excerpt:
+      "Tìm hiểu bài chòi ở Hội An từ người hô hát đến hoạt động truyền dạy trong cộng đồng.",
+    sections: [
+      {
+        id: "bai-choi-la-gi",
+        title: "01. Một nghệ thuật kết hợp nhiều hình thức",
+        paragraphs: [
+          "Theo hồ sơ UNESCO, nghệ thuật bài chòi ở Trung Bộ kết hợp âm nhạc, thơ ca, diễn xuất, hội họa và văn học. Di sản được ghi danh vào Danh sách Di sản văn hóa phi vật thể đại diện của nhân loại năm 2017.",
+          "Bài đọc chọn Hội An làm điểm tiếp cận. Bài chòi thuộc không gian văn hóa Trung Bộ rộng hơn, không chỉ riêng Hội An hay Quảng Nam.",
+        ],
+      },
+      {
+        id: "nguoi-ho-hat",
+        title: "02. Người hô hát và người tham gia",
+        paragraphs: [
+          "Nguồn giới thiệu trên website di sản Hội An mô tả anh hiệu, chị hiệu là những người hô hát, dẫn dắt cuộc chơi bằng lời ca liên quan đến tên các quân bài.",
+          "Sự tương tác với khán giả và khả năng ứng biến là những điều đáng chú ý khi tìm hiểu hình thức diễn xướng này.",
+        ],
+      },
+      {
+        id: "truyen-day-bai-choi",
+        title: "03. Di sản được tiếp nối bởi con người",
+        paragraphs: [
+          "Bài viết về Hội An ghi nhận nghệ nhân tham gia truyền dạy bài chòi tại trường học và trong khu phố cổ. Việc gìn giữ di sản vì thế gắn với cả biểu diễn và đào tạo người tiếp nối.",
+        ],
+        practicalCards: [
+          {
+            title: "Lắng nghe người dẫn cuộc chơi",
+            desc:
+              "Khi có dịp thưởng thức, chú ý cách người hô hát dùng lời ca và tương tác với người tham gia.",
+          },
+          {
+            title: "Tìm hiểu người giữ nghề",
+            desc:
+              "Đọc thêm về nghệ nhân, nhạc công và những lớp truyền dạy thay vì chỉ xem tiết mục biểu diễn.",
+          },
+        ],
+      },
+    ],
+    editorialNote:
+      "Bài giới thiệu một khía cạnh của văn hóa Quảng Nam. Không cung cấp lịch biểu diễn hiện tại hoặc bản ghi âm.",
+    sources: [
+      {
+        title: "Hồ sơ UNESCO về nghệ thuật bài chòi Trung Bộ",
+        author: "UNESCO",
+        sourceType: "Di sản Quốc gia / UNESCO",
+        annotation:
+          "Đối chiếu đặc điểm kết hợp các hình thức nghệ thuật và thông tin ghi danh.",
+      },
+      {
+        title: "Thông tin bảo tồn và truyền dạy bài chòi tại Hội An",
+        author: "Website Phố cổ Hội An – Di sản văn hóa thế giới",
+        sourceType: "Thông tin cơ quan / đơn vị",
+        annotation:
+          "Đối chiếu vai trò người hô hát và hoạt động truyền dạy tại Hội An.",
+      },
+    ],
+    metadata: {
+      contentKind: "editorial",
+      editorialStatus: "in-review",
+      quotationVerified: false,
+      editorialNote:
+        "Diễn giải từ nguồn được dẫn; chờ duyệt biên tập.",
+      sources: [
+        {
+          id: "unesco-bai-choi",
+          title: "Hồ sơ nghệ thuật bài chòi Trung Bộ",
+          authorOrOrganization: "UNESCO",
+          url:
+            "https://ich.unesco.org/en/RL/the-art-of-bai-choi-in-central-viet-nam-01222",
+          locator: "Phần mô tả di sản và thông tin ghi danh",
+          accessedOn: "2026-10-05",
+        },
+        {
+          id: "hoi-an-bai-choi-truyen-day",
+          title: "Thông tin bảo tồn bài chòi tại Hội An",
+          authorOrOrganization:
+            "Website Phố cổ Hội An – Di sản văn hóa thế giới",
+          url:
+            "https://www.hoianworldheritage.org.vn/vi/news/Van-hoa-nghe-thuat/huong-di-hieu-qua-cua-quang-nam-trong-viec-bao-ton-va-phat-huy-nghe-thuat-bai-choi-o-hoi-an-2464.hwh",
+          locator:
+            "Các đoạn về anh hiệu, chị hiệu và hoạt động truyền dạy",
+          accessedOn: "2026-10-05",
+        },
+      ],
+    },
+  },
+  {
+    id: "neak-ta-khmer-nam-bo",
+    title: "Néak Tà trong đời sống người Khmer Nam Bộ",
+    subtitle:
+      "Tìm hiểu một tín ngưỡng gắn với đất đai, nơi cư trú và ký ức cộng đồng.",
+    region: "Nam Bộ",
+    category: "Không gian tín ngưỡng",
+    image: "/images/do_paper_still_life.jpg",
+    caption:
+      "Ảnh minh họa cho bài đọc; không phải ảnh miếu hoặc vật thờ Néak Tà.",
+    readingTime: "~2 phút",
+    excerpt:
+      "Một góc tiếp cận chủ đề Ông Tà qua nghiên cứu về tín ngưỡng Néak Tà của người Khmer Nam Bộ.",
+    sections: [
+      {
+        id: "neak-ta-va-noi-cu-tru",
+        title: "01. Tín ngưỡng gắn với nơi cư trú",
+        paragraphs: [
+          "Nghiên cứu của Phan Anh Tú mô tả tín ngưỡng Néak Tà của người Khmer Nam Bộ trong mối liên hệ với môi trường tự nhiên, hoạt động nông nghiệp và nơi cư trú.",
+          "Trong quan niệm được nghiên cứu, Néak Tà gắn với việc cai quản đất đai, xóm làng. Đây là cách cộng đồng hình dung vai trò của vị thần trong đời sống tín ngưỡng.",
+        ],
+      },
+      {
+        id: "vat-tho-va-bien-doi",
+        title: "02. Vật thờ và sự biến đổi",
+        paragraphs: [
+          "Tác giả ghi nhận hình thức thờ bằng đá thiêng và sự xuất hiện của hình tượng nhân dạng tại các địa bàn khảo sát. Nghiên cứu dựa trên thực địa ở Trà Vinh và Bình Phước vào tháng 3 năm 2020.",
+          "Những ghi nhận này giúp thấy thực hành tín ngưỡng có thể biến đổi. Không nên dùng một mẫu miếu hoặc vật thờ để mô tả mọi cộng đồng.",
+        ],
+      },
+      {
+        id: "tim-hieu-tu-cong-dong",
+        title: "03. Tìm hiểu từ cộng đồng cụ thể",
+        paragraphs: [
+          "Khi tiếp cận chủ đề Ông Tà, hãy ghi rõ địa phương, cộng đồng và nguồn tài liệu. Bài này tập trung vào Néak Tà của người Khmer, chưa khảo cứu toàn bộ các hình thức thờ Ông Tà tại Nam Bộ.",
+        ],
+        practicalCards: [
+          {
+            title: "Hỏi trước khi ghi hình",
+            desc:
+              "Tìm hiểu quy ước tại miếu và xin phép người quản lý trước khi chụp ảnh không gian thờ phụng.",
+          },
+          {
+            title: "Giữ vật thờ tại chỗ",
+            desc:
+              "Tôn trọng vật thờ của cộng đồng; không di chuyển hoặc mang về làm đồ lưu niệm.",
+          },
+        ],
+      },
+    ],
+    editorialNote:
+      "Bài giới thiệu dựa trên một nghiên cứu có phạm vi khảo sát cụ thể. Không cung cấp bài cúng, lễ vật hoặc quy trình nghi lễ.",
+    sources: [
+      {
+        title: "Nghiên cứu về biến đổi tín ngưỡng Néak Tà",
+        author: "Phan Anh Tú",
+        sourceType: "Khảo cứu học thuật",
+        annotation:
+          "Nghiên cứu Ấn Độ và Châu Á, số 10 (107), năm 2021, trang 40–47; đối chiếu phần tóm tắt và mục 1–2.",
+      },
+    ],
+    metadata: {
+      contentKind: "editorial",
+      editorialStatus: "in-review",
+      quotationVerified: false,
+      editorialNote:
+        "Diễn giải từ nghiên cứu được dẫn; chờ duyệt biên tập.",
+      sources: [
+        {
+          id: "phan-anh-tu-neak-ta-2021",
+          title: "Nghiên cứu về biến đổi tín ngưỡng Néak Tà",
+          authorOrOrganization: "Phan Anh Tú",
+          url:
+            "https://hcmussh.edu.vn/static/document/BiendoitinnguongNeakTaKhmerNamBo.pdf",
+          bibliographicReference:
+            "Phan Anh Tú (2021). Biến đổi tín ngưỡng Néak Tà của người Khmer Nam Bộ: Sự trở lại của hình tượng Rishi và thần Shiva trong đạo Bà La Môn. Nghiên cứu Ấn Độ và Châu Á, 10(107), 40–47.",
+          locator:
+            "Trang 40–42: tóm tắt, nguồn gốc và biến đổi của tín ngưỡng",
+          accessedOn: "2026-10-05",
+        },
+      ],
+    },
+  },
+  {
+    id: "hau-dong-chau-van",
+    audioRecordingIds: [],
+    title: "Hầu đồng và chầu văn trong tín ngưỡng thờ Mẫu",
+    subtitle:
+      "Tìm hiểu mối liên hệ giữa nghi lễ, lời ca và những người gìn giữ thực hành.",
+    region: "Bắc Bộ",
+    category: "Phong tục & Nghi lễ",
+    image: "/images/do_paper_still_life.jpg",
+    caption:
+      "Ảnh minh họa cho bài đọc; không phải ảnh tư liệu nghi lễ hầu đồng.",
+    readingTime: "~2 phút",
+    excerpt:
+      "Một bài giới thiệu giúp phân biệt nghi thức hầu đồng với hình thức ca hát chầu văn gắn với nghi thức này.",
+    sections: [
+      {
+        id: "hau-dong-va-chau-van",
+        title: "01. Hai khái niệm có liên hệ",
+        paragraphs: [
+          "Thông tin trên cổng Bộ Văn hóa, Thể thao và Du lịch mô tả hát văn, hát chầu văn là loại hình ca hát cổ truyền gắn với nghi thức hầu đồng trong tín ngưỡng thờ Mẫu.",
+          "Khi tìm hiểu, cần phân biệt nghi thức hầu đồng với phần ca hát chầu văn gắn với nghi thức. Hai khái niệm có liên hệ nhưng không nên dùng thay thế cho nhau.",
+        ],
+      },
+      {
+        id: "nguoi-thuc-hanh",
+        title: "02. Những người tham gia thực hành",
+        paragraphs: [
+          "Hồ sơ UNESCO về thực hành tín ngưỡng thờ Mẫu Tam phủ đề cập đến người trông coi đền, người thực hành nghi lễ, thanh đồng, người phụ giúp và nhạc công.",
+          "Trang phục, âm nhạc và múa là những thành tố xuất hiện trong các thực hành được mô tả. Tìm hiểu di sản cần quan tâm đến cả con người và bối cảnh thực hành.",
+        ],
+      },
+      {
+        id: "nghi-le-va-trinh-dien",
+        title: "03. Chú ý bối cảnh khi xem",
+        paragraphs: [
+          "Bản tin về liên hoan tại Thanh Hóa năm 2022 ghi nhận cả tiết mục hát văn và trình diễn trích đoạn giá hầu. Một chương trình giới thiệu trên sân khấu cần được đọc trong bối cảnh của chương trình đó.",
+        ],
+        practicalCards: [
+          {
+            title: "Đọc tên và bối cảnh",
+            desc:
+              "Khi xem một bản ghi, tìm thông tin về người biểu diễn, địa điểm và việc đó là nghi lễ hay chương trình giới thiệu.",
+          },
+          {
+            title: "Tôn trọng người tham gia",
+            desc:
+              "Xin phép trước khi ghi hình và tuân theo hướng dẫn của người quản lý không gian thờ phụng.",
+          },
+        ],
+      },
+    ],
+    editorialNote:
+      "Bài giới thiệu có nguồn đối chiếu, chưa phải hướng dẫn nghi lễ. Phân loại Bắc Bộ phục vụ điều hướng, không giới hạn thực hành vào riêng miền Bắc. Chưa cung cấp bản ghi âm chầu văn.",
+    sources: [
+      {
+        title: "Thông tin liên hoan hát văn, hát chầu văn tại Thanh Hóa",
+        author: "Cổng Bộ Văn hóa, Thể thao và Du lịch; theo Báo Thanh Hóa",
+        sourceType: "Thông tin cơ quan / đơn vị",
+        annotation:
+          "Đối chiếu mối liên hệ với hầu đồng và các hình thức trình diễn tại liên hoan năm 2022.",
+      },
+      {
+        title: "Hồ sơ UNESCO về thực hành tín ngưỡng thờ Mẫu Tam phủ",
+        author: "UNESCO",
+        sourceType: "Di sản Quốc gia / UNESCO",
+        annotation:
+          "Đối chiếu người gìn giữ và các thành tố văn hóa trong thực hành.",
+      },
+    ],
+    metadata: {
+      contentKind: "editorial",
+      editorialStatus: "in-review",
+      quotationVerified: false,
+      editorialNote:
+        "Nội dung diễn giải từ nguồn được dẫn; chờ duyệt biên tập.",
+      sources: [
+        {
+          id: "chau-van-thanh-hoa-2022",
+          title: "Thông tin liên hoan hát văn, hát chầu văn năm 2022",
+          authorOrOrganization:
+            "Cổng Bộ Văn hóa, Thể thao và Du lịch; theo Báo Thanh Hóa",
+        url:
+          "https://bvhttdl.gov.vn/Pages/chi-tiet.aspx?url=/lien-hoan-hat-van-hat-chau-van-tinh-thanh-hoa-lan-thu-nhat-20221228090051414.htm",
+          locator:
+            "Các đoạn giới thiệu hát văn, hát chầu văn và hình thức trình diễn tại liên hoan",
+          accessedOn: "2026-10-05",
+        },
+        {
+          id: "unesco-tho-mau-thuc-hanh",
+          title: "Hồ sơ thực hành tín ngưỡng thờ Mẫu Tam phủ",
+          authorOrOrganization: "UNESCO",
+          url:
+            "https://ich.unesco.org/en/RL/practices-related-to-the-viet-beliefs-in-the-mother-goddesses-of-three-realms-01064",
+          locator:
+            "Phần mô tả thực hành và người gìn giữ di sản",
+          accessedOn: "2026-10-05",
+        },
+      ],
+    },
+  },
+  {
+    id: "hoa-dang-ninh-kieu",
+    title: "Hoa đăng Ninh Kiều: một góc văn hóa sông nước",
+    subtitle:
+      "Tìm hiểu hoạt động hoa đăng trong một ngày hội văn hóa – du lịch tại Cần Thơ.",
+    region: "Nam Bộ",
+    category: "Sinh hoạt văn hóa",
+    image: "/images/do_paper_still_life.jpg",
+    caption:
+      "Ảnh minh họa cho bài đọc; không phải ảnh hoa đăng Ninh Kiều.",
+    readingTime: "~2 phút",
+    excerpt:
+      "Một trường hợp cụ thể để khám phá hoa đăng và không gian sinh hoạt bên sông tại Nam Bộ.",
+    sections: [
+      {
+        id: "hoa-dang-trong-ngay-hoi",
+        title: "01. Hoa đăng trong một ngày hội",
+        paragraphs: [
+          "Thông tin về Ngày hội Du lịch – Đêm Hoa đăng Ninh Kiều năm 2023 nêu mục tiêu tạo điểm nhấn du lịch cho Ninh Kiều và Cần Thơ, trong đó có du lịch sông nước.",
+          "Bài đọc tiếp cận hoa đăng trong bối cảnh sự kiện văn hóa – du lịch này. Nguồn được dẫn không đủ để kết luận đây là một nghi lễ cổ truyền chung của toàn Nam Bộ.",
+        ],
+      },
+      {
+        id: "mo-hinh-hoa-dang",
+        title: "02. Hoạt động có cộng đồng tham gia",
+        paragraphs: [
+          "Thông tin của Công đoàn Cần Thơ ghi nhận hơn 80 mô hình hoa đăng đã được hạ thủy trong đợt tổ chức năm 2023 và sự tham gia của Liên đoàn Lao động quận Ninh Kiều.",
+          "Các mô hình trong một sự kiện có tổ chức cần được phân biệt với việc cá nhân tự thả đèn xuống sông.",
+        ],
+      },
+      {
+        id: "tim-hieu-hoa-dang",
+        title: "03. Gợi ý khi tìm hiểu",
+        paragraphs: [
+          "Bạn có thể bắt đầu từ cách mô hình được tạo hình, đơn vị tham gia và vai trò của không gian ven sông trong hoạt động.",
+        ],
+        practicalCards: [
+          {
+            title: "Xem thông báo mới",
+            desc:
+              "Nếu muốn tham dự, kiểm tra thông báo của đơn vị tổ chức cho năm hiện tại. Bài này sử dụng tư liệu năm 2023.",
+          },
+          {
+            title: "Quan sát theo hướng dẫn",
+            desc:
+              "Tuân theo khu vực tham quan và hướng dẫn của ban tổ chức; không tự thả vật dụng xuống sông.",
+          },
+        ],
+      },
+    ],
+    editorialNote:
+      "Bài tư liệu về sự kiện văn hóa – du lịch năm 2023, không phải lịch hiện tại hoặc hướng dẫn nghi lễ. Chưa khảo cứu toàn bộ văn hóa hoa đăng tại Nam Bộ.",
+    sources: [
+      {
+        title: "Thông tin tổ chức ngày hội hoa đăng Ninh Kiều năm 2023",
+        author: "Cổng Bộ Văn hóa, Thể thao và Du lịch",
+        sourceType: "Thông tin cơ quan / đơn vị",
+        annotation:
+          "Đối chiếu mục tiêu văn hóa – du lịch và phạm vi sự kiện.",
+      },
+      {
+        title: "Thông tin tham gia mô hình hoa đăng năm 2023",
+        author: "Công đoàn Cần Thơ",
+        sourceType: "Thông tin cơ quan / đơn vị",
+        annotation:
+          "Đối chiếu việc hạ thủy mô hình và sự tham gia của đơn vị địa phương.",
+      },
+    ],
+    metadata: {
+      contentKind: "editorial",
+      editorialStatus: "in-review",
+      quotationVerified: false,
+      editorialNote:
+        "Nội dung diễn giải từ tư liệu năm 2023; chờ duyệt biên tập.",
+      sources: [
+        {
+          id: "ninh-kieu-hoa-dang-2023",
+          title: "Thông tin tổ chức ngày hội hoa đăng Ninh Kiều",
+          authorOrOrganization:
+            "Cổng Bộ Văn hóa, Thể thao và Du lịch",
+          url:
+            "https://bvhttdl.gov.vn/to-chuc-ngay-hoi-du-lich-dem-hoa-dang-ninh-kieu-can-tho-lan-thu-vi-nam-2023-20231121101920099.htm",
+          locator:
+            "Phần giới thiệu mục tiêu và kế hoạch tổ chức năm 2023",
+          accessedOn: "2026-10-05",
+        },
+        {
+          id: "cong-doan-can-tho-hoa-dang-2023",
+          title: "Thông tin tham gia mô hình hoa đăng",
+          authorOrOrganization: "Công đoàn Cần Thơ",
+          url:
+            "https://congdoan.cantho.gov.vn/lien-doan-lao-dong-quan-ninh-kieu-tham-gia-mo-hinh-hoa-dang-nam-2023-ky-niem-20-nam-thanh-lap-thanh-pho-can-tho-truc-thuoc-trung-uong-va-thanh-lap-quan-ninh-kieu-01012004-01012024",
+          locator:
+            "Đoạn thông tin về các mô hình hoa đăng năm 2023",
+          accessedOn: "2026-10-05",
+        },
+      ],
+    },
+  },
 ];
 
 export const getCultureArticleById = (
@@ -415,6 +1143,26 @@ export const getCultureArticleById = (
   return CULTURE_ARTICLES.find((article) => article.id === id);
 };
 
-export const getRelatedArticles = (currentId: string, limit = 3): CultureArticle[] => {
-  return CULTURE_ARTICLES.filter((a) => a.id !== currentId).slice(0, limit);
+export const getRelatedArticles = (
+  currentId: string,
+  limit = 3
+): CultureArticle[] => {
+  const current = getCultureArticleById(currentId);
+
+  const candidates = CULTURE_ARTICLES.filter(
+    (article) => article.id !== currentId
+  );
+
+  const sameRegion = candidates.filter(
+    (article) => article.region === current?.region
+  );
+
+  const otherRegions = candidates.filter(
+    (article) => article.region !== current?.region
+  );
+
+  return [...sameRegion, ...otherRegions].slice(
+    0,
+    Math.max(0, limit)
+  );
 };

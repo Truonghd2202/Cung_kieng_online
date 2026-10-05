@@ -23,9 +23,13 @@ import {
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Card } from "../components/ui/card";
+import { ProfileAvatar } from "../components/ProfileAvatar";
 import { MoodKey } from "../data/demoSignals";
 import { SavedItemActions } from "../components/SavedItemActions";
 import { AppDialog } from "../components/AppDialog";
+import { SavedReadingList } from "../components/SavedReadingList";
+import { SavedTraditionalXamList } from
+  "../components/SavedTraditionalXamList";
 
 export interface SavedSignalItem {
   id: string;
@@ -452,11 +456,11 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
           {/* User Profile Card */}
           <div className="p-4 sm:p-5 rounded-panel bg-surface/95 backdrop-blur-md border border-line shadow-sm flex items-center justify-between gap-4 min-w-0 w-full lg:w-auto">
             <div className="flex items-center gap-4">
-              <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-line shrink-0 bg-surface">
-                <span className="grid h-full w-full place-items-center bg-accent-soft font-display text-2xl font-semibold text-accent" aria-hidden="true">
-                  {(currentUser?.name || "An Nhiên").trim().charAt(0).toUpperCase()}
-                </span>
-              </div>
+              <ProfileAvatar
+                email={currentUser?.email}
+                name={currentUser?.name || "An Nhiên"}
+                className="h-14 w-14 border-2 border-line text-2xl"
+              />
 
               <div>
                 <div className="flex items-center gap-1.5">
@@ -497,6 +501,13 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
             )}
           </div>
         </div>
+
+        <SavedReadingList
+          key={currentUser?.email || "guest"}
+          email={currentUser?.email}
+        />
+
+        <SavedTraditionalXamList email={currentUser?.email} />
 
         {onGoToMoodJourney && (
           <Card
