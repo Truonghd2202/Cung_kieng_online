@@ -1,1 +1,773 @@
+generator client {
+  provider = "prisma-client-js"
+}
 
+datasource db {
+  provider = "postgresql"
+}
+
+model ai_generation_logs {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String?  @db.Uuid
+  feature         String   @db.VarChar(100)
+  model           String?  @db.VarChar(100)
+  prompt_version  String?  @db.VarChar(100)
+  input_snapshot  Json?
+  output_snapshot Json?
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  users           users?   @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+}
+
+model astrology_analyses {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  chart_id         String           @db.Uuid
+  analysis_type    String           @db.VarChar(100)
+  input_snapshot   Json?
+  content          String
+  model            String?          @db.VarChar(100)
+  prompt_version   String?          @db.VarChar(100)
+  created_at       DateTime         @default(now()) @db.Timestamptz(6)
+  astrology_charts astrology_charts @relation(fields: [chart_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model astrology_charts {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profile_id         String               @db.Uuid
+  year_stem          String?              @db.VarChar(50)
+  year_branch        String?              @db.VarChar(50)
+  element            String?              @db.VarChar(100)
+  destiny_palace     String?              @db.VarChar(100)
+  chart_data         Json                 @default("{}")
+  algorithm_version  String?              @db.VarChar(50)
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  astrology_analyses astrology_analyses[]
+  astrology_profiles astrology_profiles   @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model astrology_profiles {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id            String               @db.Uuid
+  full_name          String               @db.VarChar(255)
+  birth_date         DateTime             @db.Date
+  birth_time         DateTime?            @db.Time(6)
+  gender             String?              @db.VarChar(30)
+  birth_place        String?              @db.VarChar(255)
+  lunar_date         DateTime?            @db.Date
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime             @default(now()) @db.Timestamptz(6)
+  astrology_charts   astrology_charts[]
+  users              users                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  horoscope_readings horoscope_readings[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model calendar_events {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title          String           @db.VarChar(255)
+  description    String?
+  calendar       calendar_type    @default(LUNAR)
+  day            Int?             @db.SmallInt
+  month          Int?             @db.SmallInt
+  region         vietnam_region?  @default(NATIONWIDE)
+  category       String?          @db.VarChar(100)
+  source         String?
+  verified       Boolean          @default(false)
+  active         Boolean          @default(true)
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  calendar_notes calendar_notes[]
+}
+
+model calendar_notes {
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String           @db.Uuid
+  event_id        String?          @db.Uuid
+  title           String           @db.VarChar(255)
+  note            String?
+  event_date      DateTime         @db.Date
+  calendar        calendar_type    @default(SOLAR)
+  created_at      DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime         @default(now()) @db.Timestamptz(6)
+  calendar_events calendar_events? @relation(fields: [event_id], references: [id], onUpdate: NoAction)
+  users           users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model divination_results {
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  divination_type_id String             @db.Uuid
+  result_code        String             @db.VarChar(100)
+  title              String?            @db.VarChar(255)
+  content            String
+  meaning            String?
+  advice             String?
+  source             String?
+  verified           Boolean            @default(false)
+  active             Boolean            @default(true)
+  created_at         DateTime           @default(now()) @db.Timestamptz(6)
+  divination_types   divination_types   @relation(fields: [divination_type_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user_divinations   user_divinations[]
+
+  @@unique([divination_type_id, result_code])
+}
+
+model divination_types {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code               String               @unique @db.VarChar(80)
+  name               String               @db.VarChar(255)
+  description        String?
+  region             vietnam_region?      @default(NATIONWIDE)
+  active             Boolean              @default(true)
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  divination_results divination_results[]
+  user_divinations   user_divinations[]
+}
+
+model family_members {
+  id                                                                       String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  family_tree_id                                                           String                 @db.Uuid
+  linked_user_id                                                           String?                @db.Uuid
+  full_name                                                                String                 @db.VarChar(255)
+  gender                                                                   String?                @db.VarChar(30)
+  birth_date                                                               DateTime?              @db.Date
+  death_date                                                               DateTime?              @db.Date
+  avatar_url                                                               String?
+  biography                                                                String?
+  created_at                                                               DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at                                                               DateTime               @default(now()) @db.Timestamptz(6)
+  family_trees                                                             family_trees           @relation(fields: [family_tree_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users                                                                    users?                 @relation(fields: [linked_user_id], references: [id], onUpdate: NoAction)
+  family_relationships_family_relationships_from_member_idTofamily_members family_relationships[] @relation("family_relationships_from_member_idTofamily_members")
+  family_relationships_family_relationships_to_member_idTofamily_members   family_relationships[] @relation("family_relationships_to_member_idTofamily_members")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model family_relationships {
+  id                                                                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  family_tree_id                                                     String         @db.Uuid
+  from_member_id                                                     String         @db.Uuid
+  to_member_id                                                       String         @db.Uuid
+  relation                                                           relation_type
+  created_at                                                         DateTime       @default(now()) @db.Timestamptz(6)
+  family_trees                                                       family_trees   @relation(fields: [family_tree_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  family_members_family_relationships_from_member_idTofamily_members family_members @relation("family_relationships_from_member_idTofamily_members", fields: [from_member_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  family_members_family_relationships_to_member_idTofamily_members   family_members @relation("family_relationships_to_member_idTofamily_members", fields: [to_member_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([from_member_id, to_member_id, relation])
+}
+
+model family_trees {
+  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  owner_user_id        String                 @db.Uuid
+  name                 String                 @db.VarChar(255)
+  description          String?
+  created_at           DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime               @default(now()) @db.Timestamptz(6)
+  family_members       family_members[]
+  family_relationships family_relationships[]
+  users                users                  @relation(fields: [owner_user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model favorites {
+  id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String          @db.Uuid
+  target_type favorite_target
+  target_id   String          @db.Uuid
+  created_at  DateTime        @default(now()) @db.Timestamptz(6)
+  users       users           @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, target_type, target_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model file_assets {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String?         @db.Uuid
+  asset_type     file_asset_type @default(OTHER)
+  file_name      String          @db.VarChar(255)
+  mime_type      String?         @db.VarChar(120)
+  file_size      BigInt?
+  storage_bucket String?         @db.VarChar(100)
+  storage_path   String
+  public_url     String?
+  created_at     DateTime        @default(now()) @db.Timestamptz(6)
+  users          users?          @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+}
+
+model horoscope_readings {
+  id                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id              String              @db.Uuid
+  astrology_profile_id String?             @db.Uuid
+  period_type          horoscope_period
+  target_date          DateTime            @db.Date
+  content              String
+  advice               String?
+  model                String?             @db.VarChar(100)
+  prompt_version       String?             @db.VarChar(100)
+  created_at           DateTime            @default(now()) @db.Timestamptz(6)
+  astrology_profiles   astrology_profiles? @relation(fields: [astrology_profile_id], references: [id], onUpdate: NoAction)
+  users                users               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model incense_sessions {
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id             String               @db.Uuid
+  sanctuary_id        String?              @db.Uuid
+  memorial_id         String?              @db.Uuid
+  message             String?
+  incense_count       Int                  @default(1) @db.SmallInt
+  created_at          DateTime             @default(now()) @db.Timestamptz(6)
+  memorials           memorials?           @relation(fields: [memorial_id], references: [id], onUpdate: NoAction)
+  virtual_sanctuaries virtual_sanctuaries? @relation(fields: [sanctuary_id], references: [id], onUpdate: NoAction)
+  users               users                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model membership_interests {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email      String   @unique @db.VarChar(255)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model membership_plans {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code          String          @unique @db.VarChar(80)
+  name          String          @db.VarChar(150)
+  description   String?
+  price_monthly Decimal         @default(0) @db.Decimal(12, 2)
+  price_yearly  Decimal         @default(0) @db.Decimal(12, 2)
+  features      Json            @default("[]")
+  active        Boolean         @default(true)
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
+  subscriptions subscriptions[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model memorial_anniversaries {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memorial_id   String        @db.Uuid
+  calendar      calendar_type @default(LUNAR)
+  day           Int           @db.SmallInt
+  month         Int           @db.SmallInt
+  year          Int?
+  repeat_yearly Boolean       @default(true)
+  note          String?
+  created_at    DateTime      @default(now()) @db.Timestamptz(6)
+  memorials     memorials     @relation(fields: [memorial_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model memorials {
+  id                     String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                String                   @db.Uuid
+  full_name              String                   @db.VarChar(255)
+  relationship           String?                  @db.VarChar(100)
+  birth_date             DateTime?                @db.Date
+  death_date             DateTime?                @db.Date
+  lunar_death_day        Int?                     @db.SmallInt
+  lunar_death_month      Int?                     @db.SmallInt
+  avatar_url             String?
+  biography              String?
+  note                   String?
+  created_at             DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime                 @default(now()) @db.Timestamptz(6)
+  incense_sessions       incense_sessions[]
+  memorial_anniversaries memorial_anniversaries[]
+  users                  users                    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_memorials_user_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model mood_checkins {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String    @db.Uuid
+  mood        mood_type
+  note        String?
+  intensity   Int?      @db.SmallInt
+  signal_id   String?   @db.Uuid
+  action_done Boolean   @default(false)
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  signals     signals?  @relation(fields: [signal_id], references: [id], onUpdate: NoAction)
+  users       users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([created_at(sort: Desc)], map: "idx_mood_checkins_created_at")
+  @@index([user_id], map: "idx_mood_checkins_user_id")
+}
+
+model notifications {
+  id         String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String            @db.Uuid
+  type       notification_type @default(SYSTEM)
+  title      String            @db.VarChar(255)
+  message    String
+  data       Json?
+  is_read    Boolean           @default(false)
+  read_at    DateTime?         @db.Timestamptz(6)
+  created_at DateTime          @default(now()) @db.Timestamptz(6)
+  users      users             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model offerings {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String             @db.VarChar(255)
+  category         String?            @db.VarChar(100)
+  description      String?
+  image_url        String?
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  ritual_offerings ritual_offerings[]
+}
+
+model physiognomy_analyses {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String   @db.Uuid
+  image_url      String
+  analysis       String
+  disclaimer     String?
+  model          String?  @db.VarChar(100)
+  prompt_version String?  @db.VarChar(100)
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  users          users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model prayers {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ritual_id      String?         @db.Uuid
+  title          String          @db.VarChar(255)
+  content        String
+  region         vietnam_region? @default(NATIONWIDE)
+  language_style String?         @default("NOM") @db.VarChar(100)
+  source         String?
+  verified       Boolean         @default(false)
+  active         Boolean         @default(true)
+  created_at     DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime        @default(now()) @db.Timestamptz(6)
+  rituals        rituals?        @relation(fields: [ritual_id], references: [id], onUpdate: NoAction)
+}
+
+model proverbs {
+  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content    String
+  meaning    String?
+  category   String?         @db.VarChar(100)
+  mood       mood_type?
+  region     vietnam_region? @default(NATIONWIDE)
+  source     String?
+  verified   Boolean         @default(false)
+  active     Boolean         @default(true)
+  created_at DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at DateTime        @default(now()) @db.Timestamptz(6)
+  signals    signals[]
+}
+
+model refresh_tokens {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String    @db.Uuid
+  token_hash String    @unique
+  expires_at DateTime  @db.Timestamptz(6)
+  revoked_at DateTime? @db.Timestamptz(6)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_refresh_tokens_user_id")
+}
+
+model reminders {
+  id             String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String               @db.Uuid
+  title          String               @db.VarChar(255)
+  reminder_type  String?              @db.VarChar(100)
+  remind_at      DateTime             @db.Timestamptz(6)
+  repeat_type    reminder_repeat_type @default(NONE)
+  reference_type String?              @db.VarChar(100)
+  reference_id   String?              @db.Uuid
+  enabled        Boolean              @default(true)
+  created_at     DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime             @default(now()) @db.Timestamptz(6)
+  users          users                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model ritual_offerings {
+  ritual_id   String    @db.Uuid
+  offering_id String    @db.Uuid
+  quantity    String?   @db.VarChar(100)
+  required    Boolean   @default(false)
+  note        String?
+  offerings   offerings @relation(fields: [offering_id], references: [id], onUpdate: NoAction)
+  rituals     rituals   @relation(fields: [ritual_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([ritual_id, offering_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ritual_steps {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ritual_id   String   @db.Uuid
+  step_number Int      @db.SmallInt
+  title       String   @db.VarChar(255)
+  description String
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  rituals     rituals  @relation(fields: [ritual_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([ritual_id, step_number])
+}
+
+model rituals {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title            String             @db.VarChar(255)
+  slug             String             @unique @db.VarChar(255)
+  description      String?
+  occasion         String?            @db.VarChar(150)
+  region           vietnam_region?    @default(NATIONWIDE)
+  calendar         calendar_type?
+  source           String?
+  verified         Boolean            @default(false)
+  active           Boolean            @default(true)
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime           @default(now()) @db.Timestamptz(6)
+  prayers          prayers[]
+  ritual_offerings ritual_offerings[]
+  ritual_steps     ritual_steps[]
+}
+
+model sanctuary_items {
+  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                 String                 @db.VarChar(255)
+  item_type            String                 @db.VarChar(100)
+  asset_url            String
+  description          String?
+  premium              Boolean                @default(false)
+  active               Boolean                @default(true)
+  created_at           DateTime               @default(now()) @db.Timestamptz(6)
+  user_sanctuary_items user_sanctuary_items[]
+}
+
+model signals {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String?         @db.VarChar(255)
+  content       String
+  advice        String?
+  mood          mood_type?
+  region        vietnam_region? @default(NATIONWIDE)
+  category      String?         @db.VarChar(100)
+  proverb_id    String?         @db.Uuid
+  source        String?
+  active        Boolean         @default(true)
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
+  mood_checkins mood_checkins[]
+  proverbs      proverbs?       @relation(fields: [proverb_id], references: [id], onUpdate: NoAction)
+
+  @@index([mood], map: "idx_signals_mood")
+}
+
+model subscriptions {
+  id                       String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                  String              @db.Uuid
+  plan_id                  String              @db.Uuid
+  status                   subscription_status @default(ACTIVE)
+  started_at               DateTime            @default(now()) @db.Timestamptz(6)
+  expires_at               DateTime?           @db.Timestamptz(6)
+  cancelled_at             DateTime?           @db.Timestamptz(6)
+  provider                 String?             @db.VarChar(80)
+  provider_subscription_id String?             @db.VarChar(255)
+  created_at               DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime            @default(now()) @db.Timestamptz(6)
+  membership_plans         membership_plans    @relation(fields: [plan_id], references: [id], onUpdate: NoAction)
+  users                    users               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model user_divinations {
+  id                   String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id              String             @db.Uuid
+  divination_type_id   String             @db.Uuid
+  divination_result_id String             @db.Uuid
+  question             String?
+  ai_explanation       String?
+  created_at           DateTime           @default(now()) @db.Timestamptz(6)
+  divination_results   divination_results @relation(fields: [divination_result_id], references: [id], onUpdate: NoAction)
+  divination_types     divination_types   @relation(fields: [divination_type_id], references: [id], onUpdate: NoAction)
+  users                users              @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_user_divinations_user_id")
+}
+
+model user_sanctuary_items {
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sanctuary_id        String              @db.Uuid
+  sanctuary_item_id   String              @db.Uuid
+  position            Json?
+  rotation            Json?
+  scale               Json?
+  equipped            Boolean             @default(true)
+  created_at          DateTime            @default(now()) @db.Timestamptz(6)
+  virtual_sanctuaries virtual_sanctuaries @relation(fields: [sanctuary_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sanctuary_items     sanctuary_items     @relation(fields: [sanctuary_item_id], references: [id], onUpdate: NoAction)
+}
+
+model user_settings {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id             String   @unique @db.Uuid
+  locale              String   @default("vi") @db.VarChar(20)
+  theme               String   @default("dark") @db.VarChar(30)
+  email_notifications Boolean  @default(true)
+  push_notifications  Boolean  @default(true)
+  updated_at          DateTime @default(now()) @db.Timestamptz(6)
+  users               users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model user_topics {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
+  topic      String   @db.VarChar(100)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, topic])
+}
+
+model users {
+  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  full_name            String                 @db.VarChar(120)
+  email                String                 @unique @db.VarChar(255)
+  password_hash        String
+  avatar_url           String?
+  role                 user_role              @default(USER)
+  status               account_status         @default(ACTIVE)
+  date_of_birth        DateTime?              @db.Date
+  gender               String?                @db.VarChar(30)
+  phone                String?                @db.VarChar(30)
+  bio                  String?
+  last_login_at        DateTime?              @db.Timestamptz(6)
+  created_at           DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime               @default(now()) @db.Timestamptz(6)
+  ai_generation_logs   ai_generation_logs[]
+  astrology_profiles   astrology_profiles[]
+  calendar_notes       calendar_notes[]
+  family_members       family_members[]
+  family_trees         family_trees[]
+  favorites            favorites[]
+  file_assets          file_assets[]
+  horoscope_readings   horoscope_readings[]
+  incense_sessions     incense_sessions[]
+  memorials            memorials[]
+  mood_checkins        mood_checkins[]
+  notifications        notifications[]
+  physiognomy_analyses physiognomy_analyses[]
+  refresh_tokens       refresh_tokens[]
+  reminders            reminders[]
+  subscriptions        subscriptions[]
+  user_divinations     user_divinations[]
+  user_settings        user_settings?
+  user_topics          user_topics[]
+  virtual_sanctuaries  virtual_sanctuaries?
+  wishes               wishes[]
+  xin_keo_sessions     xin_keo_sessions[]
+  xin_xam_draws        xin_xam_draws[]
+
+  @@index([email], map: "idx_users_email")
+  @@index([role], map: "idx_users_role")
+}
+
+model virtual_sanctuaries {
+  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id              String                 @unique @db.Uuid
+  name                 String                 @default("Góc tri ân") @db.VarChar(255)
+  theme                String?                @default("MIEN_TAY") @db.VarChar(100)
+  region               vietnam_region?        @default(SOUTH)
+  background_asset_url String?
+  created_at           DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime               @default(now()) @db.Timestamptz(6)
+  incense_sessions     incense_sessions[]
+  user_sanctuary_items user_sanctuary_items[]
+  users                users                  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model wishes {
+  id            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id       String             @db.Uuid
+  title         String?            @db.VarChar(255)
+  content       String
+  category      String?            @db.VarChar(100)
+  visibility    visibility_type    @default(PRIVATE)
+  delivery_type wish_delivery_type @default(VOID)
+  is_sealed     Boolean            @default(true)
+  starred       Boolean            @default(false)
+  released_at   DateTime?          @db.Timestamptz(6)
+  created_at    DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime           @default(now()) @db.Timestamptz(6)
+  users         users              @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_wishes_user_id")
+}
+
+model xin_keo_sessions {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String           @db.Uuid
+  question       String
+  final_result   xin_keo_result?
+  ai_explanation String?
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  users          users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  xin_keo_throws xin_keo_throws[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model xin_keo_throws {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id       String           @db.Uuid
+  throw_number     Int              @db.SmallInt
+  left_side        String           @db.VarChar(20)
+  right_side       String           @db.VarChar(20)
+  result           xin_keo_result
+  created_at       DateTime         @default(now()) @db.Timestamptz(6)
+  xin_keo_sessions xin_keo_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([session_id, throw_number])
+}
+
+model xin_xam {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  stick_number  Int
+  name          String?         @db.VarChar(255)
+  xam_type      String          @db.VarChar(100)
+  region        vietnam_region  @default(NATIONWIDE)
+  category      String?         @db.VarChar(100)
+  fortune_level String?         @db.VarChar(80)
+  poem          String?
+  meaning       String?
+  advice        String?
+  source        String?
+  verified      Boolean         @default(false)
+  active        Boolean         @default(true)
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
+  xin_xam_draws xin_xam_draws[]
+
+  @@unique([xam_type, stick_number])
+  @@index([xam_type], map: "idx_xin_xam_type")
+}
+
+model xin_xam_draws {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String   @db.Uuid
+  xin_xam_id     String   @db.Uuid
+  question       String?
+  ai_explanation String?
+  starred        Boolean  @default(false)
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  users          users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  xin_xam        xin_xam  @relation(fields: [xin_xam_id], references: [id], onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_xin_xam_draws_user_id")
+}
+
+enum account_status {
+  ACTIVE
+  INACTIVE
+  BANNED
+}
+
+enum calendar_type {
+  SOLAR
+  LUNAR
+}
+
+enum favorite_target {
+  SIGNAL
+  PROVERB
+  XIN_XAM
+  RITUAL
+  PRAYER
+  WISH
+}
+
+enum file_asset_type {
+  AVATAR
+  MEMORIAL
+  PHYSIOGNOMY
+  SANCTUARY
+  OTHER
+}
+
+enum horoscope_period {
+  DAILY
+  MONTHLY
+  YEARLY
+}
+
+enum mood_type {
+  PEACEFUL
+  LONELY
+  PRESSURED
+  UNSTABLE
+  HAPPY
+  WORRIED
+  IMPATIENT
+  GRATEFUL
+  NEED_SUPPORT
+  OTHER
+}
+
+enum notification_type {
+  SYSTEM
+  REMINDER
+  MEMORIAL
+  RITUAL
+  MOOD
+  ASTROLOGY
+  MEMBERSHIP
+}
+
+enum relation_type {
+  PARENT
+  CHILD
+  SPOUSE
+  SIBLING
+  OTHER
+}
+
+enum reminder_repeat_type {
+  NONE
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum subscription_status {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum user_role {
+  USER
+  ADMIN
+}
+
+enum vietnam_region {
+  NORTH
+  CENTRAL
+  SOUTH
+  NATIONWIDE
+}
+
+enum visibility_type {
+  PRIVATE
+  PUBLIC
+  ANONYMOUS
+}
+
+enum wish_delivery_type {
+  LANTERN
+  SKY
+  VOID
+  LETTER
+}
+
+enum xin_keo_result {
+  YES
+  NO
+  UNCLEAR
+}
