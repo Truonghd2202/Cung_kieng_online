@@ -1,0 +1,6 @@
+module.exports = Object.freeze({
+  REFRESH_TOKEN_BYTES: 64,
+  BCRYPT_ROUNDS: 12,
+  AUTH_RATE_LIMIT_WINDOW_MS: 15 * 60 * 1000,
+  AUTH_RATE_LIMIT_MAX: 20,
+});
