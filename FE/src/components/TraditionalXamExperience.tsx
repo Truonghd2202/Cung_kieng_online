@@ -5,6 +5,7 @@ import {
   useState,
 } from "react";
 import { Button } from "./ui/button";
+import { Flower2 } from "lucide-react";
 import { ContentProvenance } from "./ContentProvenance";
 import { getPublishableTraditionalSticks } from
   "../data/traditionalXamEligibility";
@@ -329,32 +330,39 @@ export function TraditionalXamExperience({
   return (
     <section
       aria-labelledby={`${instanceId}-title`}
-      className="space-y-5"
+      className="space-y-6"
     >
       <header>
-        <h2
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent mb-2">
+          <Flower2 className="w-3.5 h-3.5" />
+          <span>Kho xăm di sản cổ phong</span>
+        </div>
+
+        <h3
           id={`${instanceId}-title`}
-          className="mb-3 font-display text-xl font-semibold text-ink"
+          className="font-display text-2xl font-semibold text-ink"
         >
           Chọn bộ xăm truyền thống
-        </h2>
+        </h3>
 
-        <p className="text-sm leading-relaxed text-muted">
-          Bộ xăm và bản lưu truyền được trình bày riêng.
-          Lời gợi mở theo chủ đề không thay đổi nguyên văn thẻ.
+        <p className="mt-1 text-sm leading-relaxed text-muted">
+          Bộ xăm nguyên bản lưu truyền dân gian được giữ nguyên văn. Lời gợi mở theo chủ đề không làm thay đổi nguyên tác thẻ.
         </p>
       </header>
 
+      {/* 1. Chọn bộ xăm */}
       <fieldset>
-        <legend className="mb-3 font-semibold text-ink">
-          Bộ xăm
+        <legend className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-accent">
+          Bộ xăm khảo cứu
         </legend>
 
         <div className="grid gap-3 sm:grid-cols-2">
           {COLLECTION_CHOICES.map((choice) => (
             <label
               key={choice.id}
-              className="flex min-h-14 cursor-pointer items-center gap-3 rounded-control border border-line bg-canvas p-4"
+              className={`traditional-collection-pill ${
+                collectionId === choice.id ? "traditional-collection-pill--active" : ""
+              }`}
             >
               <input
                 type="radio"
@@ -363,10 +371,10 @@ export function TraditionalXamExperience({
                 checked={collectionId === choice.id}
                 onChange={() => changeCollection(choice.id)}
                 disabled={isDrawing}
-                className="h-4 w-4 accent-action"
+                className="sr-only"
               />
 
-              <span className="font-semibold text-ink">
+              <span className="font-semibold text-sm sm:text-base">
                 {choice.title}
               </span>
             </label>
@@ -374,16 +382,19 @@ export function TraditionalXamExperience({
         </div>
       </fieldset>
 
+      {/* 2. Chọn chủ đề */}
       <fieldset>
-        <legend className="mb-3 font-semibold text-ink">
+        <legend className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-accent">
           Chủ đề chiêm nghiệm
         </legend>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="flex flex-wrap gap-2.5">
           {TOPICS.map((item) => (
             <label
               key={item}
-              className="flex min-h-12 cursor-pointer items-center gap-3 rounded-control border border-line p-3"
+              className={`xinxam-topic-pill ${
+                topic === item ? "xinxam-topic-pill--active" : ""
+              }`}
             >
               <input
                 type="radio"
@@ -392,19 +403,20 @@ export function TraditionalXamExperience({
                 checked={topic === item}
                 onChange={() => changeTopic(item)}
                 disabled={isDrawing}
-                className="h-4 w-4 accent-action"
+                className="sr-only"
               />
 
-              <span className="text-ink">{item}</span>
+              <span>{item}</span>
             </label>
           ))}
         </div>
       </fieldset>
 
+      {/* Tình trạng kho thẻ */}
       <div
         id={`${instanceId}-availability`}
         role="status"
-        className="rounded-panel border border-line bg-canvas p-4 text-sm leading-relaxed text-muted"
+        className="rounded-xl border border-line bg-surface p-4 text-xs sm:text-sm leading-relaxed text-muted"
       >
         {!collection ? (
           <p>
@@ -417,7 +429,7 @@ export function TraditionalXamExperience({
               Chưa sẵn sàng để rút thẻ
             </p>
 
-            <p className="mt-2">
+            <p className="mt-1">
               Bộ này đã có dữ liệu nhập thử, nhưng chưa có thẻ
               đáp ứng đầy đủ điều kiện sử dụng cho chủ đề này.
             </p>
@@ -425,44 +437,43 @@ export function TraditionalXamExperience({
         ) : (
           <>
             <p className="font-semibold text-ink">
-              Có {available.length} thẻ đủ điều kiện
+              Có {available.length} thẻ đủ điều kiện trong kho
             </p>
 
-            <p className="mt-2">
-              Đây là số thẻ đang dùng được trong kho ứng dụng,
-              không phải khẳng định toàn bộ bộ xăm đã được số hóa.
+            <p className="mt-1">
+              Bản tư liệu: <strong className="text-ink">{collection.editionLabel}</strong>. Thẻ được rút tự do theo tinh thần chiêm nghiệm.
             </p>
           </>
         )}
       </div>
 
-      {collection && (
-        <p className="text-sm leading-relaxed text-muted">
-          Bản tư liệu: {collection.editionLabel}
-        </p>
-      )}
-
-      <Button
-        type="button"
-        onClick={handleDraw}
-        disabled={isDrawing || available.length === 0}
-        aria-describedby={`${instanceId}-availability`}
-        className="w-full sm:w-auto"
-      >
-        {isDrawing
-          ? "Đang rút thẻ…"
-          : available.length > 0
-            ? result
-              ? "Rút lại từ bộ này"
-              : "Rút một thẻ"
-            : "Chưa có thẻ để rút"}
-      </Button>
+      {/* Nút rút thẻ xăm cổ phong */}
+      <div>
+        <button
+          type="button"
+          onClick={handleDraw}
+          disabled={isDrawing || available.length === 0}
+          aria-describedby={`${instanceId}-availability`}
+          className="xinxam-draw-btn w-full sm:w-auto"
+        >
+          <span className="xinxam-btn-sheen" />
+          <span>
+            {isDrawing
+              ? "Đang thỉnh quẻ xăm…"
+              : available.length > 0
+                ? result
+                  ? "Rút lại từ bộ này"
+                  : "Thỉnh một quẻ xăm"
+                : "Chưa có thẻ để rút"}
+          </span>
+        </button>
+      </div>
 
       {isDrawing && (
         <div
           role="status"
           aria-live="polite"
-          className="flex items-center gap-3 rounded-panel border border-line bg-canvas p-4"
+          className="flex items-center gap-3 rounded-xl border border-line bg-surface p-4"
         >
           <span
             aria-hidden="true"
@@ -470,62 +481,69 @@ export function TraditionalXamExperience({
           />
 
           <p className="text-sm text-muted">
-            Đang chọn một thẻ từ bộ bạn đã chọn…
+            Đang thỉnh một quẻ xăm từ kho tư liệu cổ truyền…
           </p>
         </div>
       )}
 
       {notice && (
-        <p role="status" className="text-sm text-muted">
-          {notice}
+        <p role="status" className="text-xs sm:text-sm text-muted italic">
+          ✦ {notice}
         </p>
       )}
 
+      {/* Thẻ xăm kết quả cổ phong */}
       {result && !isDrawing && (
-        <article className="space-y-5 rounded-card border border-line bg-canvas p-5">
-          <header>
-            <h3 className="font-display text-xl font-semibold text-ink">
-              {selectedTitle} — Thẻ số {result.stickNumber}
-            </h3>
+        <article className="traditional-stick-card space-y-6">
+          <header className="border-b border-line/60 pb-4">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-accent bg-accent/8 px-3 py-1 rounded-full border border-accent/15 mb-2">
+              <Flower2 className="w-3.5 h-3.5" />
+              <span>{selectedTitle}</span>
+            </span>
 
-            <p className="mt-2 text-sm text-muted">
-              Nội dung để tìm hiểu và chiêm nghiệm,
-              không bảo đảm kết quả tương lai.
+            <h4 className="font-display text-2xl sm:text-3xl font-semibold text-ink">
+              Thẻ số {result.stickNumber}
+            </h4>
+
+            <p className="mt-1 text-xs text-muted">
+              Nội dung lưu truyền phục vụ tìm hiểu văn hóa dân gian, không quyết định thay bạn.
             </p>
           </header>
 
+          {/* 1. Nguyên văn chữ Hán phồn thể */}
           <section>
-            <h4 className="mb-3 font-semibold text-ink">
-              Nguyên văn
-            </h4>
+            <h5 className="mb-2 text-xs font-semibold uppercase tracking-wider text-accent">
+              Nguyên văn chữ Hán
+            </h5>
 
             <div
               lang="zh-Hant"
-              className="space-y-2 text-xl leading-relaxed text-ink"
+              className="traditional-chinese-block space-y-2 font-display text-xl leading-relaxed"
             >
               {result.originalLines.map((line, index) => (
-                <p key={index}>{line}</p>
+                <p key={index} className="m-0 font-medium">{line}</p>
               ))}
             </div>
           </section>
 
+          {/* 2. Bản dịch thơ */}
           {result.translation && (
-            <section>
-              <h4 className="mb-3 font-semibold text-ink">
-                Bản dịch
-              </h4>
+            <section className="rounded-xl border border-line/60 bg-surface-soft/40 p-4 sm:p-5">
+              <h5 className="mb-2 text-xs font-semibold uppercase tracking-wider text-accent">
+                Bản dịch thơ
+              </h5>
 
-              <div className="space-y-2 text-ink">
+              <div className="space-y-1.5 font-display text-base sm:text-lg text-ink italic leading-relaxed">
                 {result.translation.lines.map((line, index) => (
-                  <p key={index}>{line}</p>
+                  <p key={index} className="m-0">“{line}”</p>
                 ))}
               </div>
 
-              <p className="mt-3 text-sm text-muted">
+              <p className="mt-3 text-xs text-muted">
                 {result.translation.attribution}
               </p>
 
-              <div className="mt-4">
+              <div className="mt-3">
                 <ContentProvenance
                   metadata={result.translation.metadata}
                 />
@@ -533,62 +551,58 @@ export function TraditionalXamExperience({
             </section>
           )}
 
+          {/* 3. Điển tích văn hóa */}
           {result.culturalContext && (
-            <section className="rounded-card border border-line bg-canvas p-4">
-              <h4 className="font-semibold text-ink">
+            <section className="rounded-xl border border-line bg-surface p-4 sm:p-5">
+              <h5 className="font-display font-semibold text-base sm:text-lg text-ink mb-1.5">
                 {result.culturalContext.title}
-              </h4>
+              </h5>
 
-              <p className="mt-3 text-sm leading-relaxed text-ink">
+              <p className="text-sm leading-relaxed text-ink">
                 {result.culturalContext.description}
               </p>
 
-              <p className="mt-3 text-xs leading-relaxed text-muted">
-                Vị trí đối chiếu: {result.culturalContext.sourceLocator}
-              </p>
-
               <p className="mt-2 text-xs text-muted">
-                Đây là bối cảnh văn bản, tách riêng với lời chiêm nghiệm
-                do sản phẩm biên soạn.
+                Vị trí đối chiếu: {result.culturalContext.sourceLocator}
               </p>
             </section>
           )}
 
-          <section>
-            <h4 className="mb-3 font-semibold text-ink">
+          {/* 4. Gợi mở chiêm nghiệm theo chủ đề */}
+          <section className="rounded-xl border border-line bg-surface p-4 sm:p-5">
+            <h5 className="mb-2 text-xs font-semibold uppercase tracking-wider text-accent">
               Gợi mở về {topic.toLocaleLowerCase("vi-VN")}
-            </h4>
+            </h5>
 
-            <p className="leading-relaxed text-ink">
+            <p className="text-base text-ink leading-relaxed">
               {result.reflectionByTopic[topic]}
             </p>
 
-            <p className="mt-3 text-sm text-muted">
-              Phần gợi mở do sản phẩm biên soạn,
-              được trình bày riêng với nguyên văn.
+            <p className="mt-2 text-xs text-muted">
+              Phần gợi mở do sản phẩm biên soạn, được trình bày riêng với nguyên văn.
             </p>
           </section>
 
           <ContentProvenance metadata={result.metadata} />
 
-          <div className="border-t border-line pt-5">
+          {/* Nút lưu vào Góc của tôi */}
+          <div className="border-t border-line/60 pt-4 flex flex-col sm:flex-row items-center gap-3">
             {currentUserEmail ? (
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleSave}
                 disabled={isSaved || readError}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto font-semibold"
               >
                 {isSaved
-                  ? "Đã lưu vào Góc của tôi"
+                  ? "Đã lưu vào Góc của tôi ✓"
                   : "Lưu thẻ vào Góc của tôi"}
               </Button>
             ) : (
-              <div className="space-y-3">
-                <p className="text-sm leading-relaxed text-muted">
-                  Đăng nhập để lưu thẻ đang đọc vào Góc của tôi.
-                  Bạn không cần rút lại.
+              <div className="space-y-2 w-full sm:w-auto">
+                <p className="text-xs text-muted">
+                  Đăng nhập để lưu thẻ đang đọc vào sổ tay của bạn.
                 </p>
 
                 <Button
@@ -613,7 +627,7 @@ export function TraditionalXamExperience({
             )}
 
             {(saveError || readError) && (
-              <p role="alert" className="mt-3 text-sm text-danger">
+              <p role="alert" className="text-xs text-danger">
                 {saveError ||
                   "Chưa đọc được kho thẻ đã lưu. Dữ liệu hiện có chưa bị ghi đè."}
               </p>

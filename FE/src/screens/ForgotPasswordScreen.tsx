@@ -1,32 +1,127 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Mail,
-  ArrowLeft,
+  ArrowRight,
   KeyRound,
+  CheckCircle2,
+  Bell,
 } from "lucide-react";
-import { AltarVisualSection } from "../components/AltarVisualSection";
+import { CelestialAuthLeft } from "../components/CelestialAuthLeft";
+import "../styles/LoginScreen.css";
 
-interface ForgotPasswordScreenProps {
+export interface ForgotPasswordScreenProps {
   onBackToLogin: () => void;
+  onImmersiveChange?: (immersive: boolean) => void;
 }
 
 export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
   onBackToLogin,
+  onImmersiveChange,
 }) => {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [bellRinging, setBellRinging] = useState(false);
+
+  const audioElementRef = useRef<HTMLAudioElement | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  useEffect(() => {
+    onImmersiveChange?.(true);
+    return () => {
+      onImmersiveChange?.(false);
+    };
+  }, [onImmersiveChange]);
+
+  useEffect(() => {
+    return () => {
+      if (audioElementRef.current) {
+        audioElementRef.current.pause();
+        audioElementRef.current = null;
+      }
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close().catch(() => {});
+        audioCtxRef.current = null;
+      }
+    };
+  }, []);
+
+  const playSynthesizedBell = (ctx: AudioContext, now: number) => {
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.001, now);
+    masterGain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 8.5);
+    masterGain.connect(ctx.destination);
+
+    const freqs = [216, 432, 648, 864, 1296];
+    const decays = [8.5, 6.2, 4.8, 3.5, 2.2];
+    const amps = [0.4, 0.25, 0.15, 0.08, 0.04];
+
+    freqs.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(amps[idx], now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + decays[idx]);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + decays[idx]);
+    });
+  };
+
+  const playZenBellSound = () => {
+    try {
+      const audio = new Audio("/audio/meditation-bowl.mp3");
+      audio.volume = 0.8;
+      audioElementRef.current = audio;
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          try {
+            const AudioCtx =
+              window.AudioContext ||
+              (window as unknown as { webkitAudioContext: typeof AudioContext })
+                .webkitAudioContext;
+            if (AudioCtx) {
+              const ctx = new AudioCtx();
+              audioCtxRef.current = ctx;
+              playSynthesizedBell(ctx, ctx.currentTime);
+            }
+          } catch {}
+        });
+      }
+    } catch {
+      try {
+        const AudioCtx =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext })
+            .webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          audioCtxRef.current = ctx;
+          playSynthesizedBell(ctx, ctx.currentTime);
+        }
+      } catch {}
+    }
+  };
+
+  const handleRingBell = () => {
+    setBellRinging(true);
+    playZenBellSound();
+    setTimeout(() => setBellRinging(false), 900);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
 
-    const cleanEmail = email.trim();
+    const cleanEmail = email.trim().toLowerCase();
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setErrorMessage(
-        "Bạn hãy nhập địa chỉ email hợp lệ."
-      );
+      setErrorMessage("Vui lòng nhập địa chỉ email hợp lệ.");
       return;
     }
 
@@ -35,155 +130,216 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
   };
 
   return (
-    <div className="relative w-full flex flex-col lg:flex-row bg-[#f6f2ea] dark:bg-[#151214] text-ink transition-all duration-700 overflow-hidden min-h-[calc(100vh-73px)] lg:h-[calc(100dvh-73px)] lg:max-h-[calc(100dvh-73px)]">
-      {/* CỘT TRÁI: BÀN THỜ GIA TIÊN SỐNG ĐỘNG (LỬA ĐÈN DẦU, BỤI VÀNG, PARALLAX 2.5D) */}
-      <AltarVisualSection
-        quoteText='"Vạn dặm khởi hành • Giữ tâm sáng trong"'
-        className="w-full lg:w-[58%] xl:w-[62%] h-48 sm:h-60 lg:h-full shrink-0 min-h-[200px] lg:min-h-0"
+    <div className="split-login-viewport" role="main">
+      {/* =====================================================================
+          CỘT TRÁI (~60%): TRANH TIÊN CẢNH NGHỆ THUẬT & LƯ HƯƠNG TAM THẾ
+          ===================================================================== */}
+      <CelestialAuthLeft
+        onBack={onBackToLogin}
       />
 
-      {/* CỘT PHẢI: FORM KHÔI PHỤC MẬT KHẨU */}
-      <section
-        aria-label="Biểu mẫu khôi phục mật khẩu"
-        className="relative w-full lg:w-[42%] xl:w-[38%] shrink-0 flex flex-col justify-center items-center px-6 py-6 sm:px-10 lg:px-8 xl:px-14 lg:h-full lg:max-h-full overflow-y-auto bg-[radial-gradient(ellipse_at_top_left,_rgba(217,119,6,0.05),_transparent_65%),_linear-gradient(to_bottom,_#fbf8f2,_#f5efe6)] dark:bg-[radial-gradient(ellipse_at_top_left,_rgba(180,83,9,0.06),_transparent_65%),_linear-gradient(to_bottom,_#1c1719,_#151214)]"
-      >
-        {/* Họa tiết hạt xơ giấy dó & hoa sen chìm truyền thống mờ ảo */}
-        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none bg-[radial-gradient(#8b1e28_1px,transparent_1px)] [background-size:18px_18px]" />
+      {/* =====================================================================
+          CỘT PHẢI (~40%): NỀN GIẤY DÓ THANH NHÃ & FORM KHÔI PHỤC MẬT KHẨU
+          ===================================================================== */}
+      <div className="split-login-right">
+        {/* Họa tiết mây dập chìm góc trên bên phải */}
         <svg
-          className="absolute -right-16 -bottom-16 w-72 h-72 text-amber-900/[0.035] dark:text-amber-300/[0.02] pointer-events-none select-none"
-          viewBox="0 0 100 100"
-          fill="currentColor"
+          className="split-corner-cloud-tr"
+          viewBox="0 0 120 90"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1"
           aria-hidden="true"
         >
-          <path d="M50 15 C35 30 20 45 20 65 C20 80 35 90 50 90 C65 90 80 80 80 65 C80 45 65 30 50 15 Z" />
+          <path d="M110 10c-15 0-25 8-28 18-5-2-12-1-16 4-6-2-14 1-16 8-4-1-9 1-11 5-4 0-8 4-8 9 0 8 7 14 15 14h64c12 0 22-9 22-21 0-11-9-20-20-21" />
         </svg>
 
-        <div className="relative z-10 w-full max-w-[390px] my-auto py-2">
-          {/* Nút quay lại */}
+        {/* Cành hoa đào/mai trang nhã góc dưới */}
+        <svg
+          className="split-corner-blossom-br"
+          viewBox="0 0 140 120"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.1"
+          aria-hidden="true"
+        >
+          <path d="M140 110c-35-5-65-25-85-55-10-15-18-35-20-55" />
+          <circle cx="85" cy="72" r="6" />
+          <circle cx="110" cy="50" r="5" />
+          <circle cx="55" cy="45" r="4" />
+        </svg>
+
+        {/* Thanh công cụ góc trên: Nút Thỉnh chuông */}
+        <div className="split-right-topbar">
           <button
             type="button"
-            onClick={onBackToLogin}
-            className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-ink transition-colors cursor-pointer mb-4"
+            onClick={handleRingBell}
+            className={`split-topbar-btn split-bell-btn ${
+              bellRinging ? "split-bell-btn--active" : ""
+            }`}
+            title="Thỉnh một tiếng chuông tĩnh tâm"
+            aria-label="Thỉnh chuông tĩnh tâm"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Quay lại Đăng nhập</span>
+            <Bell
+              className={`w-3.5 h-3.5 text-amber-700 ${
+                bellRinging ? "split-bell-shake" : ""
+              }`}
+            />
+            <span>Thỉnh chuông</span>
           </button>
+        </div>
 
-          {/* TIÊU ĐỀ TRANG NHÃ KÈM DẤU ẤN TRIỆN SON KHẮC GỖ */}
-          <div className="mb-5">
-            <div className="flex items-center gap-2.5">
-              <div 
-                className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8b1e28] to-[#68131b] border border-amber-400/50 flex items-center justify-center shadow-[0_2px_10px_rgba(139,30,40,0.35)] shrink-0 select-none"
-                title="Triện son Định"
-              >
-                <span className="font-serif font-black text-amber-200 text-xs tracking-tighter leading-none">
+        {/* Khung nội dung biểu mẫu */}
+        <div className="split-form-wrapper">
+          <div className="split-form-header">
+            <h1 className="split-form-title">
+              <div className="split-form-title-row">
+                <span className="split-seal-badge" title="Dấu ấn Định">
                   定
                 </span>
+                <span>Khôi phục hồ sơ</span>
+                <CloudOrnament className="split-cloud-svg" />
               </div>
-              <h1 className="font-serif text-2xl sm:text-[1.75rem] font-bold text-ink tracking-tight">
-                Khôi phục hồ sơ — bản mẫu
-              </h1>
-            </div>
-            <p className="mt-1 text-xs leading-relaxed text-muted sm:text-sm">
-              Màn này minh họa bước khôi phục.
-              Bản thử nghiệm chưa gửi email hoặc đặt lại mật khẩu.
+            </h1>
+            <p className="split-form-subtitle">
+              Nhập email tài khoản để nhận hướng dẫn khôi phục an lành.
             </p>
           </div>
 
-          {/* HỘP BÁO LỖI */}
+          {/* Thông báo lỗi */}
           {errorMessage && (
-            <div
-              role="alert"
-              className="mb-4 p-3 rounded-xl bg-danger-soft border border-danger/30 text-xs text-danger flex items-start gap-2"
-            >
-              <span className="font-bold leading-none mt-0.5">✕</span>
-              <span className="leading-relaxed flex-1">{errorMessage}</span>
+            <div role="alert" className="split-alert split-alert--error">
+              {errorMessage}
             </div>
           )}
 
           {submitted ? (
             /* TRẠNG THÁI GỬI THÀNH CÔNG */
             <div className="space-y-4">
-              <div
-                role="status"
-                aria-live="polite"
-                className="rounded-xl border border-line bg-accent-soft p-4"
-              >
-                <p className="mb-2 text-sm font-semibold text-accent">
-                  Đã xem bước minh họa
+              <div className="split-success-card">
+                <div className="split-success-card-title">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                  <span>Đã ghi nhận yêu cầu khôi phục</span>
+                </div>
+                <p className="split-success-card-body">
+                  Địa chỉ email bạn vừa nhập:
                 </p>
-
-                <p className="text-sm leading-relaxed text-muted">
-                  Email bạn vừa nhập:
-                </p>
-
-                <p className="my-2 break-all text-sm font-medium text-ink">
-                  {email}
-                </p>
-
-                <p className="text-sm leading-relaxed text-muted">
-                  Chưa có email hoặc mã khôi phục được gửi.
-                  Bạn có thể quay lại để tiếp tục dùng hồ sơ mẫu.
+                <div className="split-success-card-email">{email}</div>
+                <p className="split-success-card-body" style={{ marginTop: "8px" }}>
+                  Trong phiên thử nghiệm này, bạn có thể quay lại trang Đăng nhập
+                  để tiếp tục trải nghiệm hoặc sử dụng tài khoản mẫu với đầy đủ tính năng.
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={onBackToLogin}
-                className="w-full h-11 rounded-xl bg-gradient-to-r from-[#8b1e28] via-[#9e222d] to-[#781820] hover:from-[#781820] hover:via-[#8b1e28] hover:to-[#63131b] border border-amber-400/35 text-[#fff8ed] font-medium text-sm flex items-center justify-center gap-2 transition-all shadow-[0_4px_18px_rgba(139,30,40,0.28)] hover:shadow-[0_6px_26px_rgba(139,30,40,0.42)] cursor-pointer active:scale-[0.99]"
+                className="split-submit-btn"
               >
-                <KeyRound className="w-4 h-4 text-amber-200" />
-                <span>Trở lại Đăng nhập ngay</span>
+                <span className="split-sheen" />
+                <ButtonOrnament className="split-btn-ornament split-btn-ornament--left" />
+                <ButtonOrnament className="split-btn-ornament split-btn-ornament--right" />
+                <KeyRound className="w-4 h-4" />
+                <span>TRỞ LẠI ĐĂNG NHẬP NGAY</span>
               </button>
             </div>
           ) : (
             /* BIỂU MẪU NHẬP EMAIL */
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="recovery-email"
-                  className="block text-xs font-semibold text-ink mb-1.5 tracking-wide"
-                >
-                  Địa chỉ Email tài khoản
-                </label>
-                <div className="relative group">
-                  <Mail className="w-4 h-4 text-subtle group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    id="recovery-email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="tenban@domain.com"
-                    className="w-full h-11 pl-10 pr-3.5 rounded-xl border border-line bg-surface text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600/70 dark:focus:border-amber-500 transition-all shadow-xs"
-                  />
-                </div>
+            <form onSubmit={handleSubmit} className="split-form">
+              <div className="split-input-field">
+                <Mail className="split-input-icon" aria-hidden="true" />
+                <input
+                  id="recovery-email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Địa chỉ Email tài khoản"
+                  className="split-input-box"
+                />
               </div>
 
-              <button
-                type="submit"
-                className="group relative w-full h-11 rounded-xl bg-gradient-to-r from-[#8b1e28] via-[#9e222d] to-[#781820] hover:from-[#781820] hover:via-[#8b1e28] hover:to-[#63131b] border border-amber-400/35 text-[#fff8ed] font-medium text-sm flex items-center justify-center gap-2 transition-all shadow-[0_4px_18px_rgba(139,30,40,0.28)] hover:shadow-[0_6px_26px_rgba(139,30,40,0.42)] overflow-hidden cursor-pointer active:scale-[0.99]"
-              >
-                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-                <span>Xem bước minh họa</span>
+              <button type="submit" className="split-submit-btn">
+                <span className="split-sheen" />
+                <ButtonOrnament className="split-btn-ornament split-btn-ornament--left" />
+                <ButtonOrnament className="split-btn-ornament split-btn-ornament--right" />
+                <span>GỬI LIÊN KẾT KHÔI PHỤC</span>
+                <ArrowRight className="w-4 h-4" />
               </button>
             </form>
           )}
 
-          {/* Dòng chân trang */}
-          <div className="text-center text-xs text-muted mt-5 pt-3 border-t border-line">
-            <span>Nhớ lại mật khẩu? </span>
+          {/* Dải phân cách hoa sen */}
+          <div className="split-divider-row" aria-hidden="true">
+            <span className="split-divider-line" />
+            <div className="split-divider-center">
+              <svg viewBox="0 0 24 16" fill="none" stroke="currentColor" strokeWidth="1.2">
+                <path d="M12 2c-1.5 2-2 4.5-1.5 7 .5 1.5 1 2.5 1.5 3 .5-.5 1-1.5 1.5-3 .5-2.5 0-5-1.5-7Z" />
+                <path d="M9.5 6C7.5 5.5 5.5 6 4.5 7c1 2.2 3.2 4 7.5 4.8" />
+                <path d="M14.5 6c2-.5 4 0 5 1-1 2.2-3.2 4-7.5 4.8" />
+              </svg>
+            </div>
+            <span className="split-divider-line" />
+          </div>
+
+          {/* Chân trang */}
+          <div className="split-footer-link">
+            <span>Nhớ lại mật khẩu?</span>
             <button
               type="button"
               onClick={onBackToLogin}
-              className="text-accent font-medium hover:underline cursor-pointer ml-1"
+              className="split-register-action"
             >
               Đăng nhập ngay →
             </button>
           </div>
         </div>
-      </section>
+
+        {/* Khoảng đệm chân */}
+        <div className="h-6 w-full" aria-hidden="true" />
+      </div>
     </div>
   );
 };
+
+const CloudOrnament: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    className={className}
+    viewBox="0 0 60 28"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M4 18c2-3 5-4 8-3 1-3 4-5 8-4 2-4 7-4 10-1 3-3 8-2 10 2 3-1 6 1 7 4 2 3 1 7-2 9H6c-3 0-4-4-2-7Z" />
+    <path d="M12 18c3-1 7 1 9 3" />
+    <path d="M26 15c2-1 5 0 7 2" />
+    <path d="M46 19c3 0 6 2 8 4" />
+  </svg>
+);
+
+const ButtonOrnament: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    className={className}
+    viewBox="0 0 30 20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M2 3v14" />
+    <path d="M2 10h4" />
+    <path d="M9 10c0-2.6 2-4.4 4.4-4.4 2.2 0 3.8 1.6 3.8 3.6 0 1.6-1.2 2.8-2.7 2.8-1.2 0-2.1-.9-2.1-2 0-.9.7-1.6 1.6-1.6" />
+    <path d="M17.2 9.2c1.2-2.6 3.6-3.8 6-3.2 1.8.5 3 2 3 3.6" />
+    <path d="M9 10c0 2.6 2 4.4 4.6 4.4h12.4" />
+    <path d="M6 5.5c1.2-1.4 2.8-2.2 4.6-2.2" />
+    <path d="M6 14.5c1.2 1.4 2.8 2.2 4.6 2.2" />
+  </svg>
+);

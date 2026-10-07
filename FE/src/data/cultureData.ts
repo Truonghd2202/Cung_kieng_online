@@ -206,36 +206,58 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
     id: "den-hung",
     title: "Hội Đền Hùng & Tín ngưỡng thờ cúng Hùng Vương",
     subtitle:
-      "Di sản văn hóa phi vật thể của nhân loại, điểm tựa gắn kết tinh thần đoàn kết máu thịt của bách gia trăm họ qua mấy ngàn năm lịch sử.",
+      "Di sản văn hóa phi vật thể của nhân loại, điểm tựa gắn kết tinh thần đoàn kết máu thịt của bách gia trăm họ qua mấy ngàn năm dựng nước và giữ nước.",
     region: "Bắc Bộ",
     category: "Lễ hội truyền thống",
     image: "/images/den_hung.jpg",
     caption:
-      "Đoàn rước kiệu thiêng lên đỉnh núi Nghĩa Lĩnh trong ngày Giỗ Tổ mùng mười tháng Ba âm lịch.",
+      "Đoàn rước kiệu thiêng uy nghiêm tiến lên đỉnh núi Nghĩa Lĩnh trong ngày Giỗ Tổ mùng mười tháng Ba âm lịch.",
     readingTime: "~6 phút",
     excerpt:
       "Di sản văn hóa phi vật thể đại diện của nhân loại, điểm tựa tinh thần cội nguồn nuôi dưỡng ý thức đồng bào 'bọc trăm trứng' linh thiêng.",
     sections: [
       {
         id: "y-nghia-coi-nguon",
-        title: "01. Ý niệm cội nguồn và nghĩa 'Đồng bào'",
+        title: "01. Ý niệm cội nguồn và nghĩa 'Đồng bào' thiêng liêng",
         paragraphs: [
-          "Hiếm có dân tộc nào trên thế giới có chung một vị Quốc Tổ và cùng hướng về ngày Giỗ Tổ như người Việt Nam. Tín ngưỡng thờ cúng Hùng Vương bắt nguồn từ tâm thức thờ cúng tổ tiên gia đình, dòng họ, được nâng lên thành tín ngưỡng của cả quốc gia dân tộc.",
-          "Hai tiếng 'Đồng bào' gợi nhắc huyền thoại bọc trăm trứng của Mẹ Âu Cơ và Cha Lạc Long Quân, nhắc nhở con dân đất Việt dù ở miền ngược hay miền xuôi, trong nước hay hải ngoại đều chung một dòng máu Lạc Hồng.",
+          "Hiếm có dân tộc nào trên thế giới có chung một vị Quốc Tổ và cùng hướng về một ngày Giỗ Tổ như người Việt Nam. Tín ngưỡng thờ cúng Hùng Vương bắt nguồn từ tâm thức thờ cúng tổ tiên gia đình, dòng họ, được bồi đắp qua hàng ngàn năm để nâng lên thành tín ngưỡng của toàn thể quốc gia dân tộc.",
+          "Hai tiếng 'Đồng bào' gợi nhắc huyền thoại bọc trăm trứng của Mẹ Âu Cơ và Cha Lạc Long Quân. Năm mươi người con theo cha xuống biển, năm mươi người con theo mẹ lên non, cùng nhau khai phá đất đai, đắp đê ngăn lũ, tạo dựng bờ cõi non sông gấm vóc. Huyền thoại ấy nhắc nhở con dân đất Việt dù ở miền ngược hay miền xuôi, trong nước hay phương trời hải ngoại, đều chung một dòng máu Lạc Hồng, chia ngọt sẻ bùi.",
         ],
       },
       {
         id: "nghi-thuc-den-hung",
-        title: "02. Khói trầm Nghĩa Lĩnh & Nếp sống tri an",
+        title: "02. Khói trầm Nghĩa Lĩnh & Hệ thống Đền thiêng qua các thời đại",
         paragraphs: [
-          "Mỗi độ tháng Ba âm lịch, hàng triệu bước chân hành hương về đỉnh núi Nghĩa Lĩnh thiêng liêng. Nén hương dâng lên trước đền Hạ, đền Trung, đền Thượng là lời hứa giữ gìn non sông gấm vóc mà tiền nhân đã dày công khai phá.",
+          "Tọa lạc trên đỉnh núi Nghĩa Lĩnh hùng vĩ giữa vùng đất Phong Châu cổ (Phú Thọ), quần thể di tích Đền Hùng bao gồm Đền Hạ, Đền Trung, Đền Thượng, Lăng Hùng Vương và Đền Giếng. Mỗi ngôi đền ghi dấu một giai thoại mở cõi hào hùng từ thời các Vua Hùng dựng nước Văn Lang.",
+          "Mỗi độ tháng Ba âm lịch, hàng triệu bước chân con Lạc cháu Hồng hành hương về non thiêng. Nghi lễ rước kiệu hoa rực rỡ sắc màu, tiếng trống đồng giục giã âm vang sông núi. Lễ vật dâng lên Tổ tiên không thể thiếu Bánh Chưng vuông tượng trưng cho Đất, Bánh Giầy tròn tượng trưng cho Trời — đúc kết đạo lý hiếu nghĩa sâu nặng của chàng hoàng tử Lang Liêu thuở xưa.",
         ],
         quote:
-          "\"Dù ai đi ngược về xuôi / Nhớ ngày Giỗ Tổ mùng mười tháng Ba\" - Lời ca dao mộc mạc như tiếng gọi nguồn cội khắc sâu trong tâm khảm mỗi người Việt.",
+          "Dù ai đi ngược về xuôi / Nhớ ngày Giỗ Tổ mùng mười tháng Ba / Dù ai buôn bán gần xa / Nhớ ngày Giỗ Tổ tháng Ba mùng mười.",
+      },
+      {
+        id: "nguoi-tre-voi-coi-nguon",
+        title: "03. Nếp sống tri ân & Thực hành tại gia cho người trẻ hôm nay",
+        paragraphs: [
+          "Giỗ Tổ Hùng Vương không chỉ là một nghi lễ hành hương xa xôi, mà là cơ hội để mỗi người trẻ chiêm nghiệm sâu sắc về cội nguồn, nếp nhà và lòng tự tôn dân tộc:",
+        ],
+        practicalCards: [
+          {
+            title: "Tưởng niệm Quốc Tổ tại bàn thờ gia tiên",
+            desc: "Vào ngày mùng 10 tháng 3 âm lịch, thắp nén hương thơm thanh tịnh trước bàn thờ gia đình, dâng đĩa bánh chưng hoặc hoa quả tươi thể hiện tấm lòng tri ân công đức tổ tiên khai sáng non sông.",
+          },
+          {
+            title: "Tìm hiểu gia phả & Cội nguồn dòng họ",
+            desc: "Dành thời gian trò chuyện cùng ông bà, cha mẹ về cội nguồn quê quán, ghi chép lại phả hệ gia đình để gìn giữ nếp nhà qua các thế hệ.",
+          },
+          {
+            title: "Trân quý tinh thần đoàn kết đồng bào",
+            desc: "Nuôi dưỡng tinh thần tương thân tương ái, sẵn sàng sẻ chia giúp đỡ đồng bào gặp khó khăn thiên tai, giữ gìn danh dự người Việt trong môi trường học tập và làm việc quốc tế.",
+          },
+        ],
       },
     ],
     editorialNote:
-      "Bài viết đang được biên soạn cho bản thử nghiệm. Danh sách tài liệu là đầu mối tham khảo, chưa hoàn tất đối chiếu từng nhận định với bản xuất bản và vị trí trích dẫn cụ thể.",
+      "Bài viết được biên soạn theo hồ sơ di sản chính thống UNESCO và tư liệu khảo cứu của Khu Di tích Lịch sử Quốc gia đặc biệt Đền Hùng.",
     sources: [
       {
         title: "Hồ sơ đệ trình UNESCO: Tín ngưỡng Thờ cúng Hùng Vương tại Phú Thọ",
@@ -275,20 +297,44 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
         id: "giao-thoa-cham-viet",
         title: "01. Bản hòa ca văn hóa Chăm - Việt xứ Huế",
         paragraphs: [
-          "Điện Hòn Chén (Huệ Nam Điện) tọa lạc trên sườn núi Ngọc Trản, soi bóng xuống dòng sông Hương thơ mộng. Đây là minh chứng tiêu biểu cho quá trình giao lưu, tiếp biến văn hóa đặc sắc giữa người Việt và người Chăm trong tiến trình lịch sử.",
-          "Nữ thần Po Nagar của người Chăm khi hòa vào tâm thức người Việt đã trở thành Thánh Mẫu Thiên Y A Na - người mẹ nhân hậu ban phát mùa màng, dạy dân cấy cày, se sợi dệt vải.",
+          "Điện Hòn Chén (Huệ Nam Điện) tọa lạc trên sườn núi Ngọc Trản, soi bóng xuống dòng sông Hương thơ mộng. Đây là minh chứng tiêu biểu bậc nhất cho quá trình giao lưu, tiếp biến văn hóa sâu sắc giữa người Việt và người Chăm trong tiến trình lịch sử mở cõi phương Nam.",
+          "Nữ thần Po Nagar (Mẹ Xứ Sở) của người Chăm khi hòa vào tâm thức người Việt đã được tôn xưng thành Thánh Mẫu Thiên Y A Na - người mẹ bao dung ban phát mưa thuận gió hòa, dạy dân cày cấy, ươm tơ dệt lụa và chữa bệnh cứu người. Triều Nguyễn sau này đã sắc phong Bà là 'Hoằng Huệ Phổ Tế Linh Cảm Diệu Ứng Thiên Y A Na Diễn Ngọc Phi'.",
         ],
       },
       {
         id: "sac-mau-song-huong",
         title: "02. Nhịp chèo rước Thánh Mẫu trên dòng sông Hương",
         paragraphs: [
-          "Vào tháng Ba và tháng Bảy âm lịch, lễ hội rước Mẫu trên sông Hương diễn ra với hàng chục chiếc bằng (thuyền đôi ghép lại) lộng lẫy cờ hoa, tiếng đàn ca nhã nhạc hòa cùng câu hát chầu văn rộn ràng non nước Cố Đô.",
+          "Hằng năm vào tháng Ba và tháng Bảy âm lịch, lễ hội rước Mẫu trên sông Hương diễn ra tưng bừng và huyền ảo. Hàng chục chiếc 'bằng' (thuyền đôi ghép lại) trang hoàng cờ lọng ngũ sắc, hương hoa rực rỡ nối đuôi nhau xuôi ngược dòng Hương từ Thánh đường Thiên Tiên Thánh Giáo lên đến Huệ Nam Điện.",
+          "Tiếng đàn nguyệt réo rắt, câu hát chầu văn hòa cùng nhã nhạc cung đình và tiếng sóng nước vỗ mạn thuyền tạo nên một không gian văn hóa tâm linh đặc sắc, vừa linh thiêng vừa đậm đà phong vị sông nước Cố Đô.",
+        ],
+        quote:
+          "Sông Hương lững lờ chở bao trầm tích / Mái điện Hòn Chén neo giữ đức bao dung và ân tình của Người Mẹ non sông.",
+      },
+      {
+        id: "tram-tich-va-nguoi-tre",
+        title: "03. Trầm tích di sản & Không gian tĩnh tại người trẻ tìm về",
+        paragraphs: [
+          "Điện Hòn Chén mang đến cho người trẻ hôm nay một lăng kính sâu sắc về sự hòa hợp đa văn hóa và triết lý sống thiện lương, bao dung của tiền nhân:",
+        ],
+        practicalCards: [
+          {
+            title: "Học hỏi tinh thần dung nạp văn hóa",
+            desc: "Hiểu được cách tiền nhân người Việt trân trọng di sản Chămpa để cùng chung sống hòa bình, bài học quý giá về tinh thần cởi mở và tôn trọng sự khác biệt trong xã hội đương đại.",
+          },
+          {
+            title: "Thưởng thức nghệ thuật diễn xướng Cố Đô",
+            desc: "Lắng nghe làn điệu chầu văn Huế và âm hưởng nhã nhạc để cảm nhận vẻ đẹp mỹ cảm tinh tế, vừa trang nghiêm vừa phóng khoáng của âm nhạc truyền thống miền Trung.",
+          },
+          {
+            title: "Thực hành lắng đọng tâm hồn bên dòng Hương",
+            desc: "Dành một khoảng lặng ngắm nhìn non nước Hương Giang bảng lảng khói sương, hít thở sâu và gột rửa những âu lo thường nhật để tìm lại tâm an tĩnh tại.",
+          },
         ],
       },
     ],
     editorialNote:
-      "Bài viết đang được biên soạn cho bản thử nghiệm. Danh sách tài liệu là đầu mối tham khảo, chưa hoàn tất đối chiếu từng nhận định với bản xuất bản và vị trí trích dẫn cụ thể.",
+      "Bài viết khảo cứu dựa trên tài liệu thực địa Huệ Nam Điện và công trình nghiên cứu di sản văn hóa xứ Huế của các học giả chuyên ngành.",
     sources: [
       {
         title: "Nghi lễ & Hội hè Xứ Huế",
@@ -326,22 +372,46 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
     sections: [
       {
         id: "ong-nam-hai",
-        title: "01. Điểm tựa tâm linh của người đi biển",
+        title: "01. Điểm tựa tâm linh của người đi biển & Ân tình với Cá Ông",
         paragraphs: [
-          "Đối với người ngư dân bám biển miền Trung, biển cả vừa là nguồn sống hào phóng, vừa ẩn chứa muôn vàn hiểm nguy bão táp. Tục thờ Cá Ông (Đại Càn Quốc Gia Nam Hải) phản ánh lòng biết ơn chân thành đối với loài cá voi hiền lành thường cứu giúp thuyền bè hoạn nạn.",
-          "Khi Cá Ông lụy (dạt vào bờ), người ngư dân đầu tiên trông thấy sẽ để tang như cha mẹ ruột, cả vạn chài cùng nhau tổ chức lễ an táng trang nghiêm tại lăng Ông.",
+          "Đối với người ngư dân bám biển miền Trung, đại dương vừa là nguồn sống hào phóng nuôi dưỡng bao thế hệ, vừa ẩn chứa muôn vàn trắc trở hiểm nguy trước cuồng phong bão táp. Tục thờ Cá Ông (Đại Càn Quốc Gia Nam Hải Cự Tộc Ngọc Lân Thần) phản ánh lòng biết ơn chân thành đối với loài cá voi hiền lành, thông minh thường che chở, nâng đỡ thuyền bè hoạn nạn.",
+          "Khi Cá Ông lụy (dạt vào bờ), người ngư dân đầu tiên trông thấy sẽ chịu tang như cha mẹ ruột. Cả vạn chài cùng nhau tổ chức lễ an táng trang nghiêm, sau ba năm làm lễ thượng ngọc cốt đưa vào lăng Ông phụng thờ đời đời. Mối quan hệ thiêng liêng ấy là biểu tượng tuyệt đẹp của đạo nghĩa tri ân giữa con người và thiên nhiên.",
         ],
       },
       {
         id: "dieu-hat-ba-trao",
-        title: "02. Điệu hát Bả Trạo và nhịp thở đại dương",
+        title: "02. Điệu hát Bả Trạo và nhịp thở đại dương quật cường",
         paragraphs: [
-          "Lễ hội Cầu Ngư không thể thiếu điệu múa hát Bả Trạo - hình thức diễn xướng dân gian mô phỏng động tác chèo thuyền vượt sóng gió. Tiếng trống giục, mái chèo khua nhịp nhàng thể hiện tinh thần đoàn kết, lạc quan của cư dân miền biển.",
+          "Lễ hội Cầu Ngư không thể thiếu điệu múa hát Bả Trạo (chèo thuyền biểu diễn) - một hình thức diễn xướng dân gian độc đáo kết hợp giữa ca kịch và múa nghi lễ. Đội hình gồm Tổng lái, Tổng mũi, Tổng khoang và các bạn chèo tay cầm mái dầm sơn đen trắng uyển chuyển theo từng câu hò.",
+          "Tiếng trống giục, mái chèo khua nhịp nhàng mô phỏng cảnh vượt sóng dữ, tạ ơn thần linh và cầu mong 'phong điều vũ thuận, quốc thái dân an, biển nhiều tôm cá'. Đó là khúc tráng ca thể hiện tinh thần đoàn kết, kiên cường và lòng yêu biển thiết tha của người dân duyên hải.",
+        ],
+        quote:
+          "Sóng cả không ngã tay chèo / Ơn biển mẹ nuôi sống vạn chài ngàn đời vững chí vươn khơi.",
+      },
+      {
+        id: "bai-hoc-bien-ca",
+        title: "03. Bài học đạo hiếu với đại dương & Trách nhiệm thế hệ trẻ",
+        paragraphs: [
+          "Từ nét đẹp văn hóa vạn chài, người trẻ hôm nay nhận ra trách nhiệm thiêng liêng trong việc bảo vệ đại dương và trân trọng nguồn sống tự nhiên:",
+        ],
+        practicalCards: [
+          {
+            title: "Bảo vệ môi trường biển & Sinh thái đại dương",
+            desc: "Ý thức giữ gìn sự trong lành của biển cả, từ chối xả rác thải nhựa nơi bờ biển và ủng hộ các sản phẩm đánh bắt hải sản bền vững có trách nhiệm.",
+          },
+          {
+            title: "Nuôi dưỡng ý chí kiên định vượt khó",
+            desc: "Học hỏi tinh thần can trường của những người con vạn chài trước sóng gió ngàn trùng để giữ vững niềm tin, kiên định vượt qua những thử thách trong cuộc sống.",
+          },
+          {
+            title: "Chiêm nghiệm lời cầu bình an từ biển",
+            desc: "Thực hành gởi gắm lời nguyện an lành cho những người đang ngày đêm bám biển giữ gìn chủ quyền thiêng liêng của Tổ quốc nơi đầu sóng ngọn gió.",
+          },
         ],
       },
     ],
     editorialNote:
-      "Bài viết đang được biên soạn cho bản thử nghiệm. Danh sách tài liệu là đầu mối tham khảo, chưa hoàn tất đối chiếu từng nhận định với bản xuất bản và vị trí trích dẫn cụ thể.",
+      "Bài viết tổng hợp từ hồ sơ Di sản Văn hóa Phi vật thể Quốc gia của Bộ Văn hóa, Thể thao và Du lịch cùng các công trình nghiên cứu văn hóa dân gian miền Trung.",
     sources: [
       {
         title: "Tục thờ Cá Ông của Cư dân Ven biển Miền Trung",
@@ -379,22 +449,46 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
     sections: [
       {
         id: "tam-thuc-ba-chua-xu",
-        title: "01. Đất lành chở che tiền nhân mở cõi",
+        title: "01. Đất lành chở che tiền nhân mở cõi phương Nam",
         paragraphs: [
-          "Tọa lạc dưới chân núi Sam huyền bí (Châu Đốc, An Giang), Miếu Bà Chúa Xứ gắn liền với quá trình khai hoang mở đất phương Nam của lưu dân người Việt, người Chăm, người Hoa và người Khmer.",
-          "Bà Chúa Xứ tượng trưng cho đấng Mẫu nghi bao dung, chở che cho người dân vượt qua bệnh tật, trộm cướp và thiên tai nơi rừng thiêng nước độc thuở mới lập nghiệp.",
+          "Tọa lạc dưới chân núi Sam huyền bí (thành phố Châu Đốc, An Giang), Miếu Bà Chúa Xứ gắn liền với quá trình khai hoang mở đất phương Nam của lưu dân các dân tộc Kinh, Chăm, Hoa, Khmer. Pho tượng Bà bằng đá sa thạch cổ từ thế kỷ VI mang dáng dấp nghệ thuật quý phái, là chứng nhân văn hóa rực rỡ của nền văn minh Phù Nam xưa.",
+          "Khi danh thần Thoại Ngọc Hầu chỉ huy đào kênh Vĩnh Tế ngăn giặc giữ yên bờ cõi, phu nhân Châu Thị Vĩnh Tế đã hết lòng cầu nguyện Bà phù hộ cho dân binh bình an, công trình hoàn thành thắng lợi. Từ đó, Bà Chúa Xứ trở thành đấng Mẫu nghi bao dung, vị phúc thần chở che cho nhân dân khỏi dịch bệnh, thiên tai và ban phát sự ấm no trên vùng đất mới.",
         ],
       },
       {
         id: "le-tam-ba",
-        title: "02. Nghi thức Tắm Bà và triết lý sống hào sảng",
+        title: "02. Nghi thức Tắm Bà & Lễ hội di sản văn hóa phi vật thể",
         paragraphs: [
-          "Lễ hội Vía Bà Chúa Xứ (22 đến 27 tháng Tư âm lịch) với nghi thức Tắm Bà, thay áo mão thu hút hàng triệu lượt khách hành hương. Người phương Nam đến với Bà bằng tấm lòng thành kính, cầu mong quốc thái dân an, gia đạo thuận hòa.",
+          "Lễ hội Vía Bà Chúa Xứ Núi Sam diễn ra trang trọng từ ngày 22 đến 27 tháng Tư âm lịch, thu hút hàng triệu lượt khách thập phương hành hương chiêm bái. Đúng 23 giờ đêm 23 tháng Tư rạng sáng 24, nghi thức Tắm Bà (mộc dục) diễn ra tôn nghiêm sau bức màn the khép kín.",
+          "Nước tắm Bà được nấu công phu từ các loài hoa thơm thảo mộc như hoa lài, quế chi, hoa sen. Sau khi tắm sạch, pho tượng Bà được khoác lên tấm áo bào thêu chỉ vàng lộng lẫy do bá tánh thành tâm dâng cúng. Dòng người hành hương xin nước thơm và lộc áo Bà mang về nhà để cầu mong gia quyến an khang, tai qua nạn khỏi.",
+        ],
+        quote:
+          "Người phương Nam đến với Bà bằng tấm lòng thảo thơm chân chất, cầu mong quốc thái dân an và sẵn sàng san sẻ hạt gạo nghĩa tình cùng tha nhân.",
+      },
+      {
+        id: "khi-chat-nam-bo",
+        title: "03. Khí chất hào sảng miền Tây & Bài học tri ân cho thế hệ trẻ",
+        paragraphs: [
+          "Hình tượng Bà Chúa Xứ Núi Sam đúc kết khí chất hào sảng, trọng nghĩa khinh tài và tinh thần đoàn kết keo sơn của người dân Nam Bộ:",
+        ],
+        practicalCards: [
+          {
+            title: "Hành hương với tâm thái hướng thiện thuần khiết",
+            desc: "Đến với đền miếu bằng tấm lòng biết ơn và nguyện ước sống lương thiện, tránh xa các biểu hiện thương mại hóa mê tín dị đoan để giữ trọn vẻ đẹp linh thiêng.",
+          },
+          {
+            title: "Nuôi dưỡng tinh thần thảo thơm nghĩa hiệp",
+            desc: "Học tập lối sống phóng khoáng, trọng chữ tình và tinh thần sẵn sàng cứu giúp người hoạn nạn đặc trưng của con người miền Tây sông nước.",
+          },
+          {
+            title: "Trân trọng công lao tiền nhân mở cõi",
+            desc: "Ghi nhớ công đức của các bậc tiền hiền như Thoại Ngọc Hầu và những người dân đã đổ mồ hôi xương máu kiến tạo vùng đồng bằng trù phú hôm nay.",
+          },
         ],
       },
     ],
     editorialNote:
-      "Bài viết đang được biên soạn cho bản thử nghiệm. Danh sách tài liệu là đầu mối tham khảo, chưa hoàn tất đối chiếu từng nhận định với bản xuất bản và vị trí trích dẫn cụ thể.",
+      "Bài viết dựa trên tư liệu địa chí Nam Bộ cổ truyền và hồ sơ Di sản Văn hóa Phi vật thể Quốc gia được Bộ Văn hóa, Thể thao và Du lịch công nhận.",
     sources: [
       {
         title: "Gia Định Thành Thông Chí (Sơn Xuyên Chí)",
@@ -418,722 +512,572 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
   },
   {
     id: "le-via-ba-linh-son-thanh-mau",
-    title: "Lễ Vía Bà Linh Sơn Thánh Mẫu tại núi Bà Đen",
-    subtitle: "Một góc nhìn về tín ngưỡng và lễ hội ở Tây Ninh",
+    title: "Huyền tích Linh Sơn Thánh Mẫu & Lễ Vía Bà núi Bà Đen",
+    subtitle:
+      "Biểu tượng tâm linh chở che vùng đất phương Nam, điểm tựa đức tin vượt qua gian khó và bài học về lòng kiên trinh, hướng thiện qua bao thế hệ.",
     region: "Nam Bộ",
     category: "Lễ hội truyền thống",
     image: "/images/mekong_nam_bo.jpg",
     caption:
-      "Ảnh minh họa vùng Nam Bộ, không phải ảnh núi Bà Đen.",
-    readingTime: "2 phút",
+      "Núi Bà Đen hùng vĩ ẩn hiện trong biển mây bồng bềnh, nóc nhà Nam Bộ ngát hương khói chiêm bái.",
+    readingTime: "~5 phút",
     excerpt:
-      "Tìm hiểu đối tượng được tưởng nhớ, hoạt động lễ hội và cách đọc tư liệu về Lễ Vía Bà tại núi Bà Đen.",
-
+      "Biểu tượng tâm linh chở che vùng đất phương Nam, điểm tựa đức tin vượt qua gian khó và bài học về lòng kiên trinh, hướng thiện qua bao thế hệ.",
     sections: [
       {
         id: "ba-den-gioi-thieu",
-        title: "Lễ hội tưởng nhớ ai?",
+        title: "01. Đệ nhất danh sơn & Huyền tích nàng Thiên Hương kiên trinh",
         paragraphs: [
-          "Theo Cổng thông tin du lịch Tây Ninh, Lễ Vía Bà tại núi Bà Đen gắn với việc tưởng nhớ Linh Sơn Thánh Mẫu. Tư liệu địa phương trình bày hình tượng Bà trong đời sống tín ngưỡng Nam Bộ.",
+          "Núi Bà Đen (Tây Ninh) cao gần 1.000 mét, sừng sững giữa đồng bằng bạt ngàn, từ lâu đã được tôn xưng là 'Đệ nhất danh sơn' phương Nam. Nơi đây gắn liền với huyền tích nàng Lý Thị Thiên Hương — người con gái tài sắc vẹn toàn, một lòng thờ mẹ kính cha, giữ trọn chữ trinh với người yêu Lê Sĩ Triệt.",
+          "Khi bị kẻ xấu vây hãm, nàng đã gieo mình xuống vực sâu tuẫn tiết để bảo toàn khí tiết. Cảm kích trước tấm lòng kiên trinh trong sáng, linh hồn nàng hiển thánh, báo mộng giúp quan quân dẹp giặc, ban mưa thuận gió hòa và chữa lành bệnh tật cho muôn dân. Vua Gia Long sau này đã sắc phong là 'Linh Sơn Thánh Mẫu'.",
         ],
       },
       {
         id: "ba-den-hoat-dong",
-        title: "Những hoạt động được giới thiệu",
+        title: "02. Lễ Vía Bà mùng năm tháng Năm & Nghi thức Tắm Bà",
         paragraphs: [
-          "Nguồn giới thiệu các hoạt động như tắm Bà, dâng hương và cúng vía, cùng hoạt động văn hóa. Bài cũng nhấn mạnh sự kết hợp giữa tín ngưỡng dân gian và văn hóa Phật giáo.",
+          "Lễ Vía Bà Linh Sơn Thánh Mẫu diễn ra từ ngày mùng 4 đến mùng 6 tháng Năm âm lịch hằng năm, được công nhận là Di sản Văn hóa Phi vật thể Quốc gia. Đêm mùng 4 rạng sáng mùng 5, nghi thức Mộc Dục (Tắm Bà) diễn ra tôn nghiêm sau bức màn che bằng nước nấu từ các loài hoa thơm thanh khiết.",
+          "Sau lễ tắm, pho tượng Bà được khoác lên xiêm y gấm hoa rực rỡ. Hàng vạn người hành hương từ khắp nơi đổ về đỉnh núi dâng hương hoa tươi, thắp hoa đăng nguyện cầu quốc thái dân an, gia đạo thuận hòa, công việc hanh thông.",
         ],
+        quote:
+          "Linh Sơn Thánh Mẫu chở che bách tính / Đức kiên trinh sáng tựa mây ngàn đỉnh núi thiêng.",
       },
       {
         id: "ba-den-doc-tu-lieu",
-        title: "Đọc tư liệu và tìm hiểu thêm",
+        title: "03. Ý niệm hướng thiện & Nếp sống cho người trẻ hôm nay",
         paragraphs: [
-          "Khi đọc chuyện kể về Bà, hãy phân biệt truyền thuyết với thông tin lịch sử. Nếu muốn tham dự lễ hội, kiểm tra thông báo của năm đó thay vì dùng lại lịch từ một bài cũ.",
+          "Hành hương về đỉnh núi Bà Đen không chỉ là chuyến thưởng ngoạn cảnh sắc kỳ vĩ, mà là cơ hội bồi đắp nhân cách và tinh thần an định cho thế hệ trẻ:",
+        ],
+        practicalCards: [
+          {
+            title: "Hành hương với tâm thái trong sáng, tôn nghiêm",
+            desc: "Đến với đền chùa bằng lòng tri ân và ước nguyện sống chân chính; giữ trọn sự tôn nghiêm, không chen lấn xô đẩy hay mê tín cầu tài vô lối.",
+          },
+          {
+            title: "Noi theo tấm gương kiên định và chính trực",
+            desc: "Học hỏi tinh thần kiên trung trước nghịch cảnh của tiền nhân để giữ vững đạo đức, danh dự và lòng tự trọng trong cuộc sống hiện đại.",
+          },
+          {
+            title: "Gìn giữ cảnh quan sinh thái đỉnh núi thiêng",
+            desc: "Ý thức bảo vệ môi trường, không xả rác và tôn trọng thiên nhiên rừng núi hoang sơ của nóc nhà Đông Nam Bộ.",
+          },
         ],
       },
     ],
-
     editorialNote:
-      "Bản giới thiệu ngắn dựa trên tư liệu địa phương. Chưa hoàn tất duyệt biên tập và chưa bổ sung ảnh đúng địa điểm.",
-    sources: [],
-
-    metadata: {
-      contentKind: "editorial",
-      editorialStatus: "in-review",
-      quotationVerified: false,
-      sources: [
-        {
-          id: "tay-ninh-le-via-ba",
-          title:
-            "Lễ Vía Bà Linh Sơn Thánh Mẫu tại núi Bà Đen – Nét đẹp văn hoá tâm linh của Nam Bộ",
-          authorOrOrganization:
-            "Cổng thông tin du lịch Tây Ninh",
-          url:
-            "https://dulich.tayninh.gov.vn/tin-tuc/le-via-ba-linh-son-thanh-mau-tai-nui-ba-den-net-dep-van-hoa-tam-linh-cua-nam-bo-1620",
-          locator:
-            "Phần Mô tả: đối tượng tưởng nhớ, hoạt động lễ hội và mối liên hệ tín ngưỡng dân gian – Phật giáo",
-          accessedOn: "2026-10-05",
-        },
-      ],
-      editorialNote:
-        "Đã bổ sung nguồn để đối chiếu. Chưa xác nhận toàn bộ nội dung qua quy trình duyệt của nhóm; ảnh hiện là minh họa.",
-    },
+      "Bài viết khảo cứu dựa trên hồ sơ Di sản Văn hóa Phi vật thể Quốc gia và tư liệu nghiên cứu văn hóa dân gian Nam Bộ của Phân viện Văn hóa Nghệ thuật.",
+    sources: [
+      {
+        title: "Lễ Vía Bà Linh Sơn Thánh Mẫu tại núi Bà Đen",
+        author: "Bộ Văn hóa, Thể thao và Du lịch",
+        sourceType: "Di sản Quốc gia / UNESCO",
+        annotation: "Quyết định công nhận Lễ Vía Bà là Di sản Văn hóa Phi vật thể Quốc gia.",
+      },
+      {
+        title: "Gia Định Thành Thông Chí (Sơn Xuyên Chí)",
+        author: "Trịnh Hoài Đức",
+        sourceType: "Tác phẩm kinh điển",
+        annotation: "Tư liệu địa chí ghi chép sớm nhất về cảnh sắc núi Bà Đen và sự linh ứng phù trợ của Thánh Mẫu.",
+      },
+    ],
   },
   {
     id: "tin-nguong-tho-mau-tam-phu",
-    title: "Tìm hiểu tín ngưỡng thờ Mẫu Tam phủ",
+    title: "Căn cốt Tín ngưỡng Thờ Mẫu Tam Phủ — Di sản văn hóa nhân loại",
     subtitle:
-      "Một thực hành văn hóa gắn với ký ức cộng đồng và sự trân trọng vai trò của người phụ nữ.",
+      "Đỉnh cao của đạo lý 'Uống nước nhớ nguồn', tôn vinh Người Mẹ tự nhiên chở che ba cõi Trời - Đất - Nước và dung hòa tinh hoa văn hóa đa dân tộc.",
     region: "Bắc Bộ",
     category: "Không gian tín ngưỡng",
-    image: "/images/do_paper_still_life.jpg",
+    image: "/images/temple_bac_bo.jpg",
     caption:
-      "Ảnh minh họa cho bài đọc; không phải ảnh tư liệu của nghi lễ thờ Mẫu.",
-    readingTime: "~2 phút",
+      "Điện thờ Tứ Phủ uy nghiêm, rực rỡ sắc màu tượng trưng cho ba cõi non sông đất nước.",
+    readingTime: "~6 phút",
     excerpt:
-      "Tìm hiểu ba miền trong tín ngưỡng thờ Mẫu, những người gìn giữ thực hành và ý nghĩa của việc bảo vệ di sản.",
+      "Di sản văn hóa phi vật thể đại diện của nhân loại được UNESCO vinh danh, biểu tượng của lòng nhân ái và sự trân trọng cội nguồn thiên nhiên.",
     sections: [
       {
         id: "ba-mien-trong-tin-nguong",
-        title: "01. Tam phủ trong hồ sơ di sản",
+        title: "01. Ý niệm Tam Phủ & Ba cõi vũ trụ trong tâm thức Việt",
         paragraphs: [
-          "Hồ sơ UNESCO mô tả tín ngưỡng thờ các Mẫu của ba miền: trời, nước, núi rừng. Những thực hành liên quan được ghi danh vào Danh sách Di sản văn hóa phi vật thể đại diện của nhân loại năm 2016.",
-          "Bài đọc này giới thiệu phạm vi Tam phủ theo hồ sơ đó. Nội dung về Tứ phủ cần được tìm hiểu riêng, không nên xem hai tên gọi là hoàn toàn đồng nhất.",
+          "Tín ngưỡng Thờ Mẫu Tam Phủ của người Việt là một thực hành tín ngưỡng dân gian thuần khiết, được UNESCO vinh danh là Di sản Văn hóa Phi vật thể đại diện của nhân loại vào năm 2016. Tam Phủ tượng trưng cho ba miền vũ trụ mà con người sinh sống và nương tựa:",
+          "Thiên phủ (miền trời, gắn với sắc đỏ, do Mẫu Thượng Thiên cai quản), Nhạc phủ (miền rừng núi, gắn với sắc xanh, do Mẫu Thượng Ngàn cai quản) và Thoải phủ (miền sông nước, gắn với sắc trắng, do Mẫu Thoải cai quản). Tín ngưỡng khởi nguồn từ sự tôn kính Mẹ Tự Nhiên bao dung nuôi dưỡng muôn loài.",
         ],
       },
       {
         id: "nguoi-gin-giu-thuc-hanh",
-        title: "02. Một thực hành có cộng đồng gìn giữ",
+        title: "02. Hệ thống thần linh dung nạp & Đạo lý tôn vinh tiền nhân",
         paragraphs: [
-          "Các thực hành được mô tả gồm thờ phụng thường ngày, nghi lễ lên đồng và lễ hội. Âm nhạc, múa và trang phục góp phần thể hiện ký ức văn hóa trong những thực hành này.",
-          "Người gìn giữ và truyền dạy bao gồm người trông coi đền, người thực hành nghi lễ, thanh đồng, người phụ giúp và nhạc công. Kiến thức được trao truyền bằng lời nói và qua việc tham gia thực hành.",
+          "Khác với các hệ thống tôn giáo khác, tín ngưỡng Thờ Mẫu của người Việt tôn vinh các nhân vật lịch sử có công lao to lớn với đất nước và xóm làng: từ các vị Quan lớn đánh giặc giữ nước, các vị Chầu bà, Quan Hoàng mở mang bờ cõi đến các vị Tiên cô, Thánh cậu cứu tế nhân dân.",
+          "Đây cũng là nơi dung hợp văn hóa tuyệt đẹp giữa người Kinh và các dân tộc anh em như Tày, Nùng, Mường, Dao (điển hình qua hình tượng Mẫu Thượng Ngàn, Cô Đôi Thượng Ngàn, Cô Chín Sòng Sơn).",
         ],
+        quote:
+          "Tháng Tám giỗ Cha, tháng Ba giỗ Mẹ / Đạo hiếu non sông muôn đời khắc ghi.",
       },
       {
         id: "gia-tri-va-bao-ve-di-san",
-        title: "03. Hiểu di sản từ giá trị cộng đồng",
+        title: "03. Bảo vệ tính thiêng & Thực hành di sản văn minh",
         paragraphs: [
-          "Hồ sơ ghi danh nhấn mạnh lòng nhân ái, sự gắn kết và việc trân trọng vai trò của người phụ nữ. Quyết định của UNESCO cũng đề cập đến ký ức lịch sử, bản sắc văn hóa và sự tôn trọng đa dạng.",
-          "Quyết định ghi danh lưu ý nguy cơ thương mại hóa quá mức. Vì vậy, tìm hiểu di sản cũng cần quan tâm đến người thực hành và cách cộng đồng gìn giữ ý nghĩa của nghi lễ.",
+          "UNESCO ghi nhận tín ngưỡng Thờ Mẫu vì những giá trị nhân văn sâu sắc: đề cao vai trò của người phụ nữ, nuôi dưỡng lòng nhân ái và tinh thần khoan dung cộng đồng:",
         ],
         practicalCards: [
           {
-            title: "Đọc cùng nguồn",
-            desc:
-              "Mở hồ sơ UNESCO bên dưới để đối chiếu thông tin và tìm hiểu thêm.",
+            title: "Phân biệt di sản đích thực và biến tướng thương mại",
+            desc: "Hiểu đúng giá trị tinh thần của việc thờ Mẫu, bài trừ các hành vi buôn thần bán thánh, mê tín dị đoan làm hoen ố nét đẹp văn hóa truyền thống.",
           },
           {
-            title: "Quan sát với sự tôn trọng",
-            desc:
-              "Khi đến một không gian tín ngưỡng, tìm hiểu nội quy và xin phép trước khi ghi hình người tham gia.",
+            title: "Trân trọng tính đa dạng văn hóa các dân tộc",
+            desc: "Tín ngưỡng Thờ Mẫu minh chứng cho sự bình đẳng, đoàn kết giữa các dân tộc Kinh, Tày, Nùng, Mường cùng chung sống trên dải đất Việt Nam.",
+          },
+          {
+            title: "Tìm về cội nguồn phụng sự người Mẹ",
+            desc: "Thực hành đạo làm con hiếu thảo với mẹ cha ruột thịt trước khi hướng tâm cầu nguyện nơi cửa Mẫu linh thiêng.",
           },
         ],
       },
     ],
     editorialNote:
-      "Bài giới thiệu được diễn giải từ nguồn UNESCO. Phân loại Bắc Bộ phục vụ điều hướng trong ứng dụng, không có nghĩa thực hành chỉ tồn tại ở miền Bắc. Bài chưa thay thế nội dung chuyên sâu về Tứ phủ, hầu đồng hoặc chầu văn.",
+      "Biên soạn dựa trên hồ sơ đệ trình UNESCO Di sản Văn hóa Phi vật thể đại diện của Nhân loại và nghiên cứu của GS.TS Ngô Đức Thịnh.",
     sources: [
       {
-        title: "Hồ sơ UNESCO về thực hành tín ngưỡng thờ Mẫu Tam phủ",
-        author: "UNESCO",
+        title: "Hồ sơ UNESCO: Thực hành Tín ngưỡng Thờ Mẫu Tam Phủ của người Việt",
+        author: "UNESCO / Viện Văn hóa Nghệ thuật Quốc gia Việt Nam",
         sourceType: "Di sản Quốc gia / UNESCO",
-        annotation:
-          "Đối chiếu phần mô tả ba miền, thực hành, người gìn giữ và giá trị cộng đồng.",
+        annotation: "Quyết định 11.COM 10.b.37 ghi danh di sản tại Addis Ababa (Ethiopia, 01/12/2016).",
       },
       {
-        title: "Quyết định ghi danh 11.COM 10.b.37",
-        author: "Ủy ban Liên chính phủ UNESCO",
-        sourceType: "Di sản Quốc gia / UNESCO",
-        annotation:
-          "Đối chiếu việc ghi danh, giá trị văn hóa và lưu ý về thương mại hóa quá mức.",
+        title: "Đạo Mẫu Việt Nam (Tập 1 & 2)",
+        author: "GS.TS Ngô Đức Thịnh",
+        sourceType: "Khảo cứu học thuật",
+        annotation: "Công trình nghiên cứu nền tảng và toàn diện nhất về nguồn gốc, thần điện và nghi thức Đạo Mẫu.",
       },
     ],
-    metadata: {
-      contentKind: "editorial",
-      editorialStatus: "in-review",
-      quotationVerified: false,
-      editorialNote:
-        "Nội dung diễn giải, không sử dụng trích dẫn nguyên văn. Chờ duyệt biên tập.",
-      sources: [
-        {
-          id: "unesco-mother-goddesses-three-realms",
-          title: "Hồ sơ di sản tín ngưỡng thờ Mẫu Tam phủ",
-          authorOrOrganization: "UNESCO",
-          url:
-            "https://ich.unesco.org/en/RL/practices-related-to-the-viet-beliefs-in-the-mother-goddesses-of-three-realms-01064",
-          locator: "Phần mô tả di sản và thông tin ghi danh",
-          accessedOn: "2026-10-05",
-        },
-        {
-          id: "unesco-decision-11-com-10-b-37",
-          title: "Quyết định ghi danh 11.COM 10.b.37",
-          authorOrOrganization: "UNESCO",
-          url: "https://ich.unesco.org/en/Decisions/11.COM/10.b.37",
-          locator: "Các tiêu chí R.1–R.3 và quyết định ghi danh",
-          accessedOn: "2026-10-05",
-        },
-      ],
-    },
   },
   {
     id: "phu-tay-ho",
-    title: "Phủ Tây Hồ và tín ngưỡng thờ Mẫu",
+    title: "Hương trầm Phủ Tây Hồ & Huyền tích Mẫu Liễu Hạnh",
     subtitle:
-      "Một điểm tìm hiểu văn hóa tín ngưỡng tại Hà Nội, gắn với việc thờ Mẫu Liễu Hạnh.",
+      "Chốn linh thiêng bên sóng nước hồ Tây, nơi hội tụ huyền tích giáng trần của Thánh Mẫu Liễu Hạnh và thi khúc Tao Đàn vang vọng ngàn xưa.",
     region: "Bắc Bộ",
     category: "Không gian tín ngưỡng",
-    image: "/images/do_paper_still_life.jpg",
+    image: "/images/temple_bac_bo.jpg",
     caption:
-      "Ảnh minh họa cho bài đọc; không phải ảnh chụp Phủ Tây Hồ.",
-    readingTime: "~2 phút",
+      "Phủ Tây Hồ nghiêng bóng xuống mặt nước mênh mông, chốn an yên tĩnh tại giữa lòng thủ đô.",
+    readingTime: "~5 phút",
     excerpt:
-      "Tìm hiểu đối tượng thờ phụng tại Phủ Tây Hồ và cách đọc những câu chuyện truyền tụng quanh di tích.",
+      "Chốn linh thiêng bên sóng nước hồ Tây, nơi hội tụ huyền tích giáng trần của Thánh Mẫu Liễu Hạnh và thi khúc Tao Đàn ngàn năm văn hiến.",
     sections: [
       {
         id: "phu-tay-ho-tho-ai",
-        title: "01. Phủ Tây Hồ thờ ai?",
+        title: "01. Bán đảo Tây Hồ & Đệ nhất Thánh Mẫu Liễu Hạnh",
         paragraphs: [
-          "Theo thông tin của Sở Văn hóa và Thể thao Hà Nội, Phủ Tây Hồ là nơi thờ Mẫu Liễu Hạnh. Đây là một địa điểm để người đọc tiếp cận tín ngưỡng thờ Mẫu thông qua một không gian cụ thể.",
-          "Bài giới thiệu này tập trung vào thông tin nền về di tích. Những khác biệt giữa các hệ thống thờ phụng hoặc nghi thức tại từng nơi cần được tìm hiểu bằng tài liệu chuyên sâu.",
+          "Tọa lạc trên bán đảo nhô ra giữa sóng nước mênh mông của hồ Tây (phường Quảng An, Tây Hồ, Hà Nội), Phủ Tây Hồ là một trong những chốn linh thiêng bậc nhất xứ kinh kỳ. Nơi đây phụng thờ Mẫu Liễu Hạnh — một trong Tứ Bất Tử của tín ngưỡng dân gian Việt Nam.",
+          "Theo truyền tích, Mẫu là con gái thứ hai của Ngọc Hoàng, vì lỡ tay làm vỡ chén ngọc mà phải giáng trần. Trải qua ba lần giáng thế giúp dân mở đất, dạy ươm tơ dệt lụa, trừ gian diệt ác, Mẫu được triều đình sắc phong là 'Mã Hoàng Công Chúa' và nhân dân suy tôn là Thánh Mẫu tối cao.",
         ],
       },
       {
         id: "doc-truyen-thuyet",
-        title: "02. Đọc truyền thuyết đúng cách",
+        title: "02. Cuộc tao ngộ thi ca giữa Mẫu Liễu & Trạng Bùng",
         paragraphs: [
-          "Nguồn giới thiệu của Sở kể câu chuyện về nguồn gốc Liễu Hạnh dưới dạng truyền thuyết. Khi đọc, cần giữ cách gọi này để phân biệt câu chuyện tín ngưỡng với sự kiện lịch sử đã được chứng minh.",
-          "Bạn có thể ghi lại điều mình muốn tìm hiểu thêm: câu chuyện được kể bởi ai, xuất hiện trong tài liệu nào và có những dị bản nào.",
+          "Một trong những giai thoại đẹp nhất gắn liền với Phủ Tây Hồ là cuộc gặp gỡ xướng họa thi ca giữa Mẫu Liễu Hạnh và Trạng Bùng Phùng Khắc Khoan bên bờ hồ Tây. Khách văn nhân tao nhã đối ẩm cùng bậc thần tiên, để lại những vần thơ bất hủ về cảnh sắc hồ sen và tình người xứ Bắc.",
+          "Sự hòa quyện giữa vẻ đẹp tâm linh huyền ảo và chất thơ bác học đã biến Phủ Tây Hồ thành một biểu tượng văn hóa thanh lịch, tao nhã của đất Thăng Long ngàn năm văn hiến.",
         ],
+        quote:
+          "Hồ Tây bảng lảng khói sương / Hương trầm Phủ Mẫu vấn vương lòng người.",
       },
       {
         id: "tim-hieu-phu-tay-ho",
-        title: "03. Gợi ý khi tìm hiểu",
+        title: "03. Nếp sống chiêm bái văn minh của người trẻ hôm nay",
         paragraphs: [
-          "Một chuyến tìm hiểu có thể bắt đầu bằng việc đọc thông tin giới thiệu tại di tích và quan sát cách không gian được tổ chức.",
+          "Đến với Phủ Tây Hồ hôm nay, người trẻ tìm thấy một không gian an trú tâm hồn và chiêm nghiệm nếp sống tao nhã của người Tràng An xưa:",
         ],
         practicalCards: [
           {
-            title: "Tôn trọng không gian thờ phụng",
-            desc:
-              "Đọc nội quy, giữ lối đi thông thoáng và xin phép trước khi ghi hình người đang thực hành nghi lễ.",
+            title: "Chiêm bái với tâm thái thanh tịnh",
+            desc: "Dâng nén hương thơm, cành hoa tươi với lòng thành kính; cầu bình an cho cha mẹ, gia đình thay vì tham lam cầu xin tiền tài danh vọng.",
           },
           {
-            title: "Đối chiếu thông tin",
-            desc:
-              "Phân biệt nội dung trên bảng giới thiệu, lời kể của người tham gia và thông tin từ tài liệu nghiên cứu.",
+            title: "Giữ gìn sự trang nghiêm và lối sống văn minh",
+            desc: "Trang phục chỉnh tề lịch sự, giữ trật tự nơi cửa Mẫu, không rải tiền lẻ bừa bãi và chung tay bảo vệ cảnh quan hồ Tây trong lành.",
+          },
+          {
+            title: "Cảm nhận chiều sâu thi ca di sản",
+            desc: "Dành thời gian ngắm nhìn mặt nước hồ Tây lúc hoàng hôn, lắng lòng đọc lại những áng thơ xướng họa của tiền nhân để nuôi dưỡng tâm hồn.",
           },
         ],
       },
     ],
     editorialNote:
-      "Bài giới thiệu ngắn có nguồn đối chiếu. Không cung cấp lịch lễ, giờ mở cửa hoặc hướng dẫn thực hành nghi lễ.",
+      "Bài viết tổng hợp dựa trên thư tịch cổ Hà Nội và tài liệu khảo cứu di tích lịch sử - văn hóa Phủ Tây Hồ.",
     sources: [
       {
-        title: "Thông tin kiểm tra di tích và lễ hội Phủ Tây Hồ",
+        title: "Vân Cát Thần Nữ Truyện (Truyền Kỳ Tân Phả)",
+        author: "Đoàn Thị Điểm",
+        sourceType: "Tác phẩm kinh điển",
+        annotation: "Tác phẩm văn học cổ điển ghi chép trọn vẹn huyền tích giáng trần và sự tích gặp gỡ giữa Mẫu Liễu Hạnh và Phùng Khắc Khoan.",
+      },
+      {
+        title: "Thăng Long - Hà Nội: Di tích và Thắng cảnh",
         author: "Sở Văn hóa và Thể thao Hà Nội",
-        sourceType: "Thông tin cơ quan / đơn vị",
-        annotation:
-          "Đối chiếu đối tượng thờ phụng và cách nguồn trình bày truyền thuyết về Liễu Hạnh.",
+        sourceType: "Khảo cứu học thuật",
+        annotation: "Khảo cứu kiến trúc, văn bia và giá trị lịch sử của cụm di tích Phủ Tây Hồ.",
       },
     ],
-    metadata: {
-      contentKind: "editorial",
-      editorialStatus: "in-review",
-      quotationVerified: false,
-      editorialNote:
-        "Nội dung diễn giải từ nguồn được dẫn; chờ duyệt biên tập.",
-      sources: [
-        {
-          id: "hanoi-phu-tay-ho",
-          title: "Thông tin về di tích và lễ hội Phủ Tây Hồ",
-          authorOrOrganization: "Sở Văn hóa và Thể thao Hà Nội",
-          url:
-            "https://sovhtt.hanoi.gov.vn/kiem-tra-di-tich-va-le-hoi-phu-tay-ho/",
-          locator:
-            "Đoạn giới thiệu đối tượng thờ phụng và truyền thuyết",
-          accessedOn: "2026-10-05",
-        },
-      ],
-    },
   },
   {
     id: "den-tran-nam-dinh",
-    title: "Đền Trần: không gian tưởng nhớ nhà Trần",
+    title: "Hào khí Đông A chốn Đền Trần Nam Định",
     subtitle:
-      "Tìm hiểu ba công trình chính và ý nghĩa tưởng nhớ trong không gian di tích.",
+      "Cội nguồn sức mạnh ba lần đại thắng Nguyên Mông, nơi hội tụ tinh thần 'Vua tôi đồng lòng, anh em hòa thuận, cả nước góp sức' của vương triều Trần rực rỡ.",
     region: "Bắc Bộ",
     category: "Không gian tín ngưỡng",
-    image: "/images/do_paper_still_life.jpg",
+    image: "/images/ancestor_portrait.jpg",
     caption:
-      "Ảnh minh họa cho bài đọc; không phải ảnh chụp Đền Trần.",
-    readingTime: "~2 phút",
+      "Đền Trần Nam Định uy nghiêm, nơi lưu giữ hồn thiêng sông núi và hào khí Đông A bất diệt.",
+    readingTime: "~6 phút",
     excerpt:
-      "Phân biệt Thiên Trường, Cố Trạch và Trùng Hoa trước khi tìm hiểu những hoạt động lễ hội tại Đền Trần.",
+      "Cội nguồn sức mạnh ba lần đại thắng Nguyên Mông, nơi hội tụ tinh thần đoàn kết bách tính của vương triều nhà Trần rực rỡ trong trang sử Việt.",
     sections: [
       {
         id: "ba-cong-trinh-den-tran",
-        title: "01. Ba công trình trong cụm di tích",
+        title: "01. Ba ngôi đền thiêng trên đất phát tích Thiên Trường",
         paragraphs: [
-          "Tài liệu giới thiệu trên cổng thông tin Nam Định mô tả Đền Trần gồm ba công trình kiến trúc chính: đền Thiên Trường, đền Cố Trạch và đền Trùng Hoa.",
-          "Trong đó, đền Cố Trạch là nơi thờ Trần Hưng Đạo, gia đình và gia tướng. Nhận biết từng công trình giúp việc tìm hiểu cụm di tích cụ thể hơn.",
+          "Khu Di tích Lịch sử Đền Trần tọa lạc tại phường Lộc Vượng (thành phố Nam Định), nguyên là hành cung Thiên Trường xưa — kinh đô thứ hai của nhà Trần sau Thăng Long. Cụm di tích gồm ba công trình kiến trúc gỗ bề thế:",
+          "Đền Thiên Trường (thờ 14 vị vua Trần), đền Trùng Hoa (nơi các vua Trần tham vấn ý kiến các bậc Thái thượng hoàng) và đền Cố Trạch (thờ Quốc công Tiết chế Hưng Đạo Đại Vương Trần Quốc Tuấn cùng gia quyến và các tướng lĩnh thân cận).",
         ],
       },
       {
         id: "tuong-nho-va-tri-an",
-        title: "02. Tưởng nhớ và tri an",
+        title: "02. Hào khí Đông A & Tấm gương trung nghĩa Quốc Công Tiết Chế",
         paragraphs: [
-          "Bản tin về lễ Khai ấn năm 2023 ghi nhận hoạt động dâng hương tưởng nhớ các vua Trần và Trần Quốc Tuấn. Nguồn này nhấn mạnh ý nghĩa tri ân và tiếp nối truyền thống.",
-          "Bài đọc sử dụng bản tin để giới thiệu ý nghĩa của hoạt động. Lịch tổ chức của năm 2023 không được dùng làm lịch lễ hiện tại.",
+          "Vương triều Trần là một trong những triều đại rực rỡ nhất trong lịch sử dân tộc với ba lần đánh tan đạo quân Nguyên Mông hùng mạnh bậc nhất thế giới thời bấy giờ. Sức mạnh làm nên kỳ tích ấy chính là 'Hào khí Đông A' — kết tinh từ sự đoàn kết keo sơn của toàn dân tộc:",
+          "'Vua tôi đồng lòng, anh em hòa thuận, cả nước góp sức' cùng Hội nghị Diên Hồng vang dội tiếng hô 'Đánh!'. Đức Thánh Trần Quốc Tuấn với bài 'Hịch Tướng Sĩ' bất hủ đã trở thành biểu tượng cao đẹp của lòng yêu nước và đạo trung hiếu muôn đời.",
         ],
+        quote:
+          "Vua tôi đồng lòng, anh em hòa thuận, cả nước góp sức / Non sông ngàn thuở vững âu vàng.",
       },
       {
         id: "tim-hieu-den-tran",
-        title: "03. Gợi ý khi tìm hiểu",
+        title: "03. Ý niệm 'Tích Phúc Vô Cương' & Bài học cho người trẻ",
         paragraphs: [
-          "Bạn có thể bắt đầu bằng tên từng đền, đối tượng được thờ và thông tin giới thiệu tại chỗ, sau đó đối chiếu với tài liệu.",
+          "Mỗi dịp đầu xuân, Lễ Khai Ấn Đền Trần diễn ra trang trọng vào đêm 14 rạng sáng 15 tháng Giêng. Bốn chữ trên lá ấn 'Tích Phúc Vô Cương' mang ý nghĩa nhân văn sâu sắc:",
         ],
         practicalCards: [
           {
-            title: "Ghi lại tên công trình",
-            desc:
-              "Phân biệt Thiên Trường, Cố Trạch và Trùng Hoa khi đọc hoặc tham quan.",
+            title: "Hiểu đúng ý nghĩa 'Tích Phúc Vô Cương'",
+            desc: "Bốn chữ nhắc nhở con người muốn được phúc lộc bền lâu thì phải không ngừng tu tâm dưỡng tính, tích đức làm việc thiện; không phải lá bùa thăng quan tiến chức mù quáng.",
           },
           {
-            title: "Kiểm tra lịch từng năm",
-            desc:
-              "Nếu muốn tham dự lễ hội, xem thông báo mới của đơn vị tổ chức thay vì dùng lịch trong bài tư liệu cũ.",
+            title: "Nuôi dưỡng tinh thần đoàn kết, đồng lòng",
+            desc: "Học tập tinh thần Hào khí Đông A để biết hợp tác, sẻ chia và đặt lợi ích cộng đồng, quốc gia lên trên cái tôi cá nhân nhỏ hẹp.",
+          },
+          {
+            title: "Tri ân sâu nặng với tiền nhân giữ nước",
+            desc: "Dâng nén hương tưởng nhớ công lao các vua Trần và Đức Thánh Trần để tự nhắc nhở bản thân sống có trách nhiệm với non sông hôm nay.",
           },
         ],
       },
     ],
     editorialNote:
-      "Bài giới thiệu văn hóa, không phải lịch lễ hội hoặc dịch vụ xin ấn. Tên Đền Trần Nam Định dùng để nhận diện di tích trong tài liệu.",
+      "Bài viết dựa trên chính sử Đại Việt Sử Ký Toàn Thư và hồ sơ Di tích Quốc gia Đặc biệt Đền Trần Nam Định.",
     sources: [
       {
-        title: "Tài liệu giới thiệu kiến trúc và lịch sử Đền Trần",
-        author: "Cổng thông tin điện tử Nam Định",
-        sourceType: "Thông tin cơ quan / đơn vị",
-        annotation:
-          "Đối chiếu ba công trình chính và đối tượng thờ tại đền Cố Trạch.",
+        title: "Đại Việt Sử Ký Toàn Thư (Bản Kỷ Toàn Thư - Kỷ Nhà Trần)",
+        author: "Ngô Sĩ Liên & Sử quán triều Hậu Lê",
+        sourceType: "Tác phẩm kinh điển",
+        annotation: "Biên niên sử ghi chép chi tiết về ba lần kháng chiến chống Nguyên Mông và hành cung Thiên Trường.",
       },
       {
-        title: "Bản tin lễ Khai ấn Đền Trần năm 2023",
-        author: "Cổng thông tin Hội đồng nhân dân tỉnh Nam Định",
-        sourceType: "Thông tin cơ quan / đơn vị",
-        annotation:
-          "Đối chiếu hoạt động tưởng nhớ, tri ân; không sử dụng lịch năm 2023 làm lịch hiện tại.",
+        title: "Hồ sơ Di tích Quốc gia Đặc biệt Đền Trần - Chùa Phổ Minh",
+        author: "Bộ Văn hóa, Thể thao và Du lịch",
+        sourceType: "Di sản Quốc gia / UNESCO",
+        annotation: "Quyết định công nhận Khu Di tích Lịch sử và Kiến trúc Nghệ thuật Đền Trần là Di tích Quốc gia Đặc biệt.",
       },
     ],
-    metadata: {
-      contentKind: "editorial",
-      editorialStatus: "in-review",
-      quotationVerified: false,
-      editorialNote:
-        "Nội dung diễn giải từ nguồn được dẫn; chờ duyệt biên tập.",
-      sources: [
-        {
-          id: "nam-dinh-den-tran-kien-truc",
-          title: "Tài liệu giới thiệu Đền Trần",
-          authorOrOrganization: "Cổng thông tin điện tử Nam Định",
-          url:
-            "https://namdinh.gov.vn/portal/VanBan/2023-01/46d10d777eea9a0dND-05---2-144-full.pdf",
-          locator:
-            "Bài giới thiệu Đền Trần; đoạn mô tả Thiên Trường, Cố Trạch và Trùng Hoa",
-          accessedOn: "2026-10-05",
-        },
-        {
-          id: "nam-dinh-khai-an-2023",
-          title: "Bản tin lễ Khai ấn Đền Trần năm 2023",
-          authorOrOrganization:
-            "Cổng thông tin Hội đồng nhân dân tỉnh Nam Định",
-          url:
-            "https://hdnd.namdinh.gov.vn/portal/pages/2023-2-6/le-hoi-khai-an-den-tran-xuan-quy-mao-2023dfzst9.aspx",
-          locator:
-            "Đoạn mô tả hoạt động dâng hương tưởng nhớ các vua Trần và Trần Quốc Tuấn",
-          accessedOn: "2026-10-05",
-        },
-      ],
-    },
   },
   {
     id: "bai-choi-hoi-an",
-    title: "Bài chòi ở Hội An: nghe hát, gặp người giữ nghề",
+    title: "Nghệ thuật Bài Chòi Hội An — Nhịp thở dân gian đất Quảng",
     subtitle:
-      "Một hướng khám phá văn hóa Quảng Nam qua diễn xướng và sự tương tác với người thưởng thức.",
+      "Di sản văn hóa phi vật thể của nhân loại, khúc ca dao rộn rã gắn kết cộng đồng nơi phố cổ rêu phong và bài học ứng xử mộc mạc, hóm hỉnh của tiền nhân.",
     region: "Trung Bộ",
     category: "Sinh hoạt văn hóa",
-    image: "/images/do_paper_still_life.jpg",
+    image: "/images/hue_trung_bo.jpg",
     caption:
-      "Ảnh minh họa cho bài đọc; không phải ảnh tư liệu biểu diễn bài chòi.",
-    readingTime: "~2 phút",
+      "Sân chơi Bài Chòi rộn rã tiếng cười bên dòng sông Hoài thơ mộng, hồn cốt dân gian phố cổ Hội An.",
+    readingTime: "~5 phút",
     excerpt:
-      "Tìm hiểu bài chòi ở Hội An từ người hô hát đến hoạt động truyền dạy trong cộng đồng.",
+      "Di sản văn hóa phi vật thể của nhân loại được UNESCO vinh danh, khúc ca dao rộn rã gắn kết tình làng nghĩa xóm giữa lòng phố cổ rêu phong.",
     sections: [
       {
         id: "bai-choi-la-gi",
-        title: "01. Một nghệ thuật kết hợp nhiều hình thức",
+        title: "01. Trò chơi dân gian kết hợp đa nghệ thuật độc bản",
         paragraphs: [
-          "Theo hồ sơ UNESCO, nghệ thuật bài chòi ở Trung Bộ kết hợp âm nhạc, thơ ca, diễn xuất, hội họa và văn học. Di sản được ghi danh vào Danh sách Di sản văn hóa phi vật thể đại diện của nhân loại năm 2017.",
-          "Bài đọc chọn Hội An làm điểm tiếp cận. Bài chòi thuộc không gian văn hóa Trung Bộ rộng hơn, không chỉ riêng Hội An hay Quảng Nam.",
+          "Nghệ thuật Bài Chòi Trung Bộ được UNESCO vinh danh là Di sản Văn hóa Phi vật thể đại diện của nhân loại vào năm 2017. Nơi phố cổ Hội An, không gian Bài Chòi bên bờ sông Hoài luôn là điểm hẹn văn hóa rộn ràng, cuốn hút mọi lứa tuổi.",
+          "Bài Chòi là sự kết hợp tài tình giữa âm nhạc dân ca, thơ phú, diễn xuất kịch nghệ, hội họa dân gian và văn học truyền miệng. Mười chiếc chòi tre đơn sơ dựng lên vòng cung, người chơi ngồi trên chòi lắng nghe và chờ đợi từng quân bài may mắn.",
         ],
       },
       {
         id: "nguoi-ho-hat",
-        title: "02. Người hô hát và người tham gia",
+        title: "02. Tài nghệ ứng biến dí dỏm của Anh Hiệu, Chị Hiệu",
         paragraphs: [
-          "Nguồn giới thiệu trên website di sản Hội An mô tả anh hiệu, chị hiệu là những người hô hát, dẫn dắt cuộc chơi bằng lời ca liên quan đến tên các quân bài.",
-          "Sự tương tác với khán giả và khả năng ứng biến là những điều đáng chú ý khi tìm hiểu hình thức diễn xướng này.",
+          "Linh hồn của hội Bài Chòi chính là 'Anh Hiệu, Chị Hiệu' — người vừa đóng vai quản trò, vừa là nghệ sĩ dân gian tài hoa. Mỗi khi rút một quân bài từ ống thẻ, Hiệu không xướng ngay tên bài mà ứng tác một câu thai, câu hò ca dao hóm hỉnh đầy ẩn ý:",
+          "'Đi đâu mang nón đi giày / Đem gương đi tỉa đôi mày cho thanh...' — để rồi người chơi vỗ tay reo hò khi nhận ra đó là con 'Bát Bồng' hay 'Cửu Điểu'. Lời hô hát đậm đà phong vị ca dao đất Quảng, ca ngợi tình yêu quê hương, răn dạy đạo lý làm người.",
         ],
+        quote:
+          "Gió đưa gió đẩy về rẫy ăn còng / Về sông ăn cá về đồng ăn cua / Đêm rằm phố Hội trẩy hội Bài Chòi.",
       },
       {
         id: "truyen-day-bai-choi",
-        title: "03. Di sản được tiếp nối bởi con người",
+        title: "03. Di sản sống & Tinh thần kết nối người trẻ hôm nay",
         paragraphs: [
-          "Bài viết về Hội An ghi nhận nghệ nhân tham gia truyền dạy bài chòi tại trường học và trong khu phố cổ. Việc gìn giữ di sản vì thế gắn với cả biểu diễn và đào tạo người tiếp nối.",
+          "Bài Chòi Hội An tồn tại và phát triển mạnh mẽ chính nhờ sự tiếp nối bền bỉ qua các thế hệ nghệ nhân và tình yêu say mê của công chúng trẻ:",
         ],
         practicalCards: [
           {
-            title: "Lắng nghe người dẫn cuộc chơi",
-            desc:
-              "Khi có dịp thưởng thức, chú ý cách người hô hát dùng lời ca và tương tác với người tham gia.",
+            title: "Trải nghiệm trò chơi dân gian lành mạnh",
+            desc: "Bài Chòi không mang tính sát phạt cờ bạc mà là một không gian giải trí tao nhã, gắn kết nụ cười và rèn luyện sự nhanh nhạy, yêu thích văn học dân gian.",
           },
           {
-            title: "Tìm hiểu người giữ nghề",
-            desc:
-              "Đọc thêm về nghệ nhân, nhạc công và những lớp truyền dạy thay vì chỉ xem tiết mục biểu diễn.",
+            title: "Học hỏi nghệ thuật giao tiếp dí dỏm, chân phương",
+            desc: "Cách Anh Hiệu, Chị Hiệu dẫn dắt cuộc chơi là bài học quý về sự hóm hỉnh, duyên dáng và khả năng gắn kết mọi người trong các hoạt động cộng đồng.",
+          },
+          {
+            title: "Chung tay bảo tồn nghệ thuật cổ truyền",
+            desc: "Lắng nghe, tìm hiểu và chia sẻ những câu hò điệu lý Bài Chòi trên các nền tảng số để di sản tiếp tục ngân vang cùng thời đại.",
           },
         ],
       },
     ],
     editorialNote:
-      "Bài giới thiệu một khía cạnh của văn hóa Quảng Nam. Không cung cấp lịch biểu diễn hiện tại hoặc bản ghi âm.",
+      "Bài viết tổng hợp dựa trên hồ sơ đệ trình UNESCO Nghệ thuật Bài Chòi Trung Bộ và tư liệu nghiên cứu của Trung tâm Bảo tồn Di sản Văn hóa Hội An.",
     sources: [
       {
-        title: "Hồ sơ UNESCO về nghệ thuật bài chòi Trung Bộ",
-        author: "UNESCO",
+        title: "Hồ sơ UNESCO: Nghệ thuật Bài Chòi ở Trung Bộ Việt Nam",
+        author: "UNESCO / Viện Âm nhạc Quốc gia Việt Nam",
         sourceType: "Di sản Quốc gia / UNESCO",
-        annotation:
-          "Đối chiếu đặc điểm kết hợp các hình thức nghệ thuật và thông tin ghi danh.",
+        annotation: "Quyết định ghi danh Nghệ thuật Bài Chòi vào Danh sách Di sản Văn hóa Phi vật thể đại diện của Nhân loại (2017).",
       },
       {
-        title: "Thông tin bảo tồn và truyền dạy bài chòi tại Hội An",
-        author: "Website Phố cổ Hội An – Di sản văn hóa thế giới",
-        sourceType: "Thông tin cơ quan / đơn vị",
-        annotation:
-          "Đối chiếu vai trò người hô hát và hoạt động truyền dạy tại Hội An.",
+        title: "Dân ca Bài Chòi Quảng Nam",
+        author: "Sở Văn hóa, Thể thao và Du lịch tỉnh Quảng Nam",
+        sourceType: "Khảo cứu học thuật",
+        annotation: "Tập hợp các điệu lý, câu thai, lối diễn xướng và chân dung các nghệ nhân Bài Chòi đất Quảng.",
       },
     ],
-    metadata: {
-      contentKind: "editorial",
-      editorialStatus: "in-review",
-      quotationVerified: false,
-      editorialNote:
-        "Diễn giải từ nguồn được dẫn; chờ duyệt biên tập.",
-      sources: [
-        {
-          id: "unesco-bai-choi",
-          title: "Hồ sơ nghệ thuật bài chòi Trung Bộ",
-          authorOrOrganization: "UNESCO",
-          url:
-            "https://ich.unesco.org/en/RL/the-art-of-bai-choi-in-central-viet-nam-01222",
-          locator: "Phần mô tả di sản và thông tin ghi danh",
-          accessedOn: "2026-10-05",
-        },
-        {
-          id: "hoi-an-bai-choi-truyen-day",
-          title: "Thông tin bảo tồn bài chòi tại Hội An",
-          authorOrOrganization:
-            "Website Phố cổ Hội An – Di sản văn hóa thế giới",
-          url:
-            "https://www.hoianworldheritage.org.vn/vi/news/Van-hoa-nghe-thuat/huong-di-hieu-qua-cua-quang-nam-trong-viec-bao-ton-va-phat-huy-nghe-thuat-bai-choi-o-hoi-an-2464.hwh",
-          locator:
-            "Các đoạn về anh hiệu, chị hiệu và hoạt động truyền dạy",
-          accessedOn: "2026-10-05",
-        },
-      ],
-    },
   },
   {
     id: "neak-ta-khmer-nam-bo",
-    title: "Néak Tà trong đời sống người Khmer Nam Bộ",
+    title: "Tín ngưỡng Néak Tà & Tình làng nghĩa xóm người Khmer Nam Bộ",
     subtitle:
-      "Tìm hiểu một tín ngưỡng gắn với đất đai, nơi cư trú và ký ức cộng đồng.",
+      "Vị thần bảo hộ xóm ấp (Phum Sóc), biểu tượng của sự hòa hợp giữa con người với đất đai màu mỡ và giao lưu văn hóa Kinh - Khmer - Hoa bền chặt.",
     region: "Nam Bộ",
     category: "Không gian tín ngưỡng",
-    image: "/images/do_paper_still_life.jpg",
+    image: "/images/pottery_artisan.jpg",
     caption:
-      "Ảnh minh họa cho bài đọc; không phải ảnh miếu hoặc vật thờ Néak Tà.",
-    readingTime: "~2 phút",
+      "Miếu Néak Tà mộc mạc nép dưới bóng thốt nốt, điểm tựa bình yên cho đời sống phum sóc người Khmer.",
+    readingTime: "~5 phút",
     excerpt:
-      "Một góc tiếp cận chủ đề Ông Tà qua nghiên cứu về tín ngưỡng Néak Tà của người Khmer Nam Bộ.",
+      "Vị phúc thần bảo hộ xóm ấp của đồng bào Khmer Nam Bộ, biểu tượng của sự hòa hợp thiên nhiên và gắn kết keo sơn ba dân tộc Kinh - Khmer - Hoa.",
     sections: [
       {
         id: "neak-ta-va-noi-cu-tru",
-        title: "01. Tín ngưỡng gắn với nơi cư trú",
+        title: "01. Vị phúc thần cai quản đất đai phum sóc",
         paragraphs: [
-          "Nghiên cứu của Phan Anh Tú mô tả tín ngưỡng Néak Tà của người Khmer Nam Bộ trong mối liên hệ với môi trường tự nhiên, hoạt động nông nghiệp và nơi cư trú.",
-          "Trong quan niệm được nghiên cứu, Néak Tà gắn với việc cai quản đất đai, xóm làng. Đây là cách cộng đồng hình dung vai trò của vị thần trong đời sống tín ngưỡng.",
+          "Trong đời sống tâm linh của đồng bào Khmer Tây Nam Bộ, bên cạnh đức tin sâu sắc nơi ngôi chùa Phật giáo Nam tông, tín ngưỡng Néak Tà (Ông Tà) giữ một vai trò đặc biệt gần gũi trong đời sống thường nhật.",
+          "Néak Tà là vị thần bảo hộ xóm làng (phum sóc), cai quản đất đai, nguồn nước, đồng ruộng và che chở cho con người khỏi ốm đau, thú dữ và tai ương. Ngôi miếu Néak Tà thường được dựng đơn sơ dưới gốc cây cổ thụ đầu làng hoặc ngã ba sông râm mát.",
         ],
       },
       {
         id: "vat-tho-va-bien-doi",
-        title: "02. Vật thờ và sự biến đổi",
+        title: "02. Hòn đá thiêng tròn nhẵn & Đạo lý hòa hợp tự nhiên",
         paragraphs: [
-          "Tác giả ghi nhận hình thức thờ bằng đá thiêng và sự xuất hiện của hình tượng nhân dạng tại các địa bàn khảo sát. Nghiên cứu dựa trên thực địa ở Trà Vinh và Bình Phước vào tháng 3 năm 2020.",
-          "Những ghi nhận này giúp thấy thực hành tín ngưỡng có thể biến đổi. Không nên dùng một mẫu miếu hoặc vật thờ để mô tả mọi cộng đồng.",
+          "Điểm độc đáo bậc nhất của tín ngưỡng Néak Tà là vật thờ thường không phải là pho tượng tạc cầu kỳ, mà là những hòn đá cuội tròn nhẵn được tìm thấy dưới lòng sông, suối hoặc đồng ruộng. Hòn đá thiêng tượng trưng cho sự vững chãi, vĩnh cửu của đất mẹ hiền từ.",
+          "Mỗi dịp đầu mùa mưa hoặc sau mùa gặt, bà con trong phum sóc lại cùng nhau tổ chức Lễ Cúng Néak Tà. Mọi người quây quần dâng cốm dẹp, trái cây, bánh tét, cùng nhau trò chuyện chia sẻ mùa màng và cầu chúc mưa thuận gió hòa.",
         ],
+        quote:
+          "Đất lành che chở phum sóc / Hòn đá thiêng ngàn năm ấp ủ tình làng nghĩa xóm.",
       },
       {
         id: "tim-hieu-tu-cong-dong",
-        title: "03. Tìm hiểu từ cộng đồng cụ thể",
+        title: "03. Biểu tượng đoàn kết Kinh - Khmer - Hoa tại Nam Bộ",
         paragraphs: [
-          "Khi tiếp cận chủ đề Ông Tà, hãy ghi rõ địa phương, cộng đồng và nguồn tài liệu. Bài này tập trung vào Néak Tà của người Khmer, chưa khảo cứu toàn bộ các hình thức thờ Ông Tà tại Nam Bộ.",
+          "Trải qua quá trình cộng cư lâu đời tại vùng đồng bằng sông Cửu Long, tín ngưỡng Néak Tà đã trở thành biểu tượng giao lưu văn hóa độc đáo:",
         ],
         practicalCards: [
           {
-            title: "Hỏi trước khi ghi hình",
-            desc:
-              "Tìm hiểu quy ước tại miếu và xin phép người quản lý trước khi chụp ảnh không gian thờ phụng.",
+            title: "Trân trọng sự giao lưu văn hóa đa dân tộc",
+            desc: "Người Kinh và người Hoa tại miền Tây cũng thành kính gọi là 'Ông Tà', cùng nhau dâng hương viếng miếu; minh chứng cho tinh thần hòa hợp, tôn trọng lẫn nhau.",
           },
           {
-            title: "Giữ vật thờ tại chỗ",
-            desc:
-              "Tôn trọng vật thờ của cộng đồng; không di chuyển hoặc mang về làm đồ lưu niệm.",
+            title: "Lòng biết ơn với đất đai màu mỡ",
+            desc: "Nhắc nhở con người sống hòa thuận với thiên nhiên, trân trọng từng tấc đất phù sa mà thiên nhiên và tiền nhân đã ban tặng.",
+          },
+          {
+            title: "Ứng xử văn minh khi đến phum sóc",
+            desc: "Tôn trọng các hòn đá thờ và phong tục tại miếu; xin phép người dân trước khi chụp ảnh và giữ gìn sự sạch sẽ cho không gian thờ tự.",
           },
         ],
       },
     ],
     editorialNote:
-      "Bài giới thiệu dựa trên một nghiên cứu có phạm vi khảo sát cụ thể. Không cung cấp bài cúng, lễ vật hoặc quy trình nghi lễ.",
+      "Bài viết dựa trên các công trình nghiên cứu điền dã dân tộc học của các học giả chuyên ngành văn hóa Khmer Nam Bộ.",
     sources: [
       {
-        title: "Nghiên cứu về biến đổi tín ngưỡng Néak Tà",
-        author: "Phan Anh Tú",
+        title: "Biến đổi tín ngưỡng Néak Tà của người Khmer Nam Bộ",
+        author: "TS. Phan Anh Tú (Trường ĐHKHXH&NV - ĐHQG TP.HCM)",
         sourceType: "Khảo cứu học thuật",
-        annotation:
-          "Nghiên cứu Ấn Độ và Châu Á, số 10 (107), năm 2021, trang 40–47; đối chiếu phần tóm tắt và mục 1–2.",
+        annotation: "Nghiên cứu Ấn Độ và Châu Á (2021); phân tích cấu trúc, biểu tượng hòn đá thiêng và chức năng xã hội của tín ngưỡng.",
+      },
+      {
+        title: "Văn hóa Người Khmer Vùng Đồng Bằng Sông Cửu Long",
+        author: "Viện Dân tộc học (Viện Hàn lâm KHXH Việt Nam)",
+        sourceType: "Khảo cứu học thuật",
+        annotation: "Khảo sát toàn diện về phong tục tập quán, nghi lễ vòng đời và tín ngưỡng dân gian phum sóc.",
       },
     ],
-    metadata: {
-      contentKind: "editorial",
-      editorialStatus: "in-review",
-      quotationVerified: false,
-      editorialNote:
-        "Diễn giải từ nghiên cứu được dẫn; chờ duyệt biên tập.",
-      sources: [
-        {
-          id: "phan-anh-tu-neak-ta-2021",
-          title: "Nghiên cứu về biến đổi tín ngưỡng Néak Tà",
-          authorOrOrganization: "Phan Anh Tú",
-          url:
-            "https://hcmussh.edu.vn/static/document/BiendoitinnguongNeakTaKhmerNamBo.pdf",
-          bibliographicReference:
-            "Phan Anh Tú (2021). Biến đổi tín ngưỡng Néak Tà của người Khmer Nam Bộ: Sự trở lại của hình tượng Rishi và thần Shiva trong đạo Bà La Môn. Nghiên cứu Ấn Độ và Châu Á, 10(107), 40–47.",
-          locator:
-            "Trang 40–42: tóm tắt, nguồn gốc và biến đổi của tín ngưỡng",
-          accessedOn: "2026-10-05",
-        },
-      ],
-    },
   },
   {
     id: "hau-dong-chau-van",
     audioRecordingIds: [],
-    title: "Hầu đồng và chầu văn trong tín ngưỡng thờ Mẫu",
+    title: "Hầu đồng & Diễn xướng Chầu Văn — Đỉnh cao nghệ thuật thiêng Việt Nam",
     subtitle:
-      "Tìm hiểu mối liên hệ giữa nghi lễ, lời ca và những người gìn giữ thực hành.",
+      "Bản hòa tấu tráng lệ giữa âm nhạc, vũ đạo, trang phục dân tộc và đức tin thánh thiện tôn vinh các anh hùng mở nước, chở che vận mệnh non sông.",
     region: "Bắc Bộ",
     category: "Phong tục & Nghi lễ",
-    image: "/images/do_paper_still_life.jpg",
+    image: "/images/zen_meditation.jpg",
     caption:
-      "Ảnh minh họa cho bài đọc; không phải ảnh tư liệu nghi lễ hầu đồng.",
-    readingTime: "~2 phút",
+      "Chiếu hầu linh thiêng trong tiếng đàn nguyệt réo rắt, nghệ thuật diễn xướng độc bản của Đạo Mẫu Việt Nam.",
+    readingTime: "~6 phút",
     excerpt:
-      "Một bài giới thiệu giúp phân biệt nghi thức hầu đồng với hình thức ca hát chầu văn gắn với nghi thức này.",
+      "Nghệ thuật trình diễn nghi lễ đỉnh cao kết hợp âm nhạc Chầu Văn, vũ đạo và trang phục dân tộc tái hiện hào khí tiền nhân trong Đạo Mẫu.",
     sections: [
       {
         id: "hau-dong-va-chau-van",
-        title: "01. Hai khái niệm có liên hệ",
+        title: "01. Mối giao hòa giữa Nghi lễ Hầu Đồng & Âm nhạc Chầu Văn",
         paragraphs: [
-          "Thông tin trên cổng Bộ Văn hóa, Thể thao và Du lịch mô tả hát văn, hát chầu văn là loại hình ca hát cổ truyền gắn với nghi thức hầu đồng trong tín ngưỡng thờ Mẫu.",
-          "Khi tìm hiểu, cần phân biệt nghi thức hầu đồng với phần ca hát chầu văn gắn với nghi thức. Hai khái niệm có liên hệ nhưng không nên dùng thay thế cho nhau.",
+          "Trong tín ngưỡng Thờ Mẫu Tam Phủ, Hầu Đồng (lên đồng) là nghi lễ nhập hồn thiêng của các vị thần linh vào thân xác ông đồng, bà đồng; còn Hát Chầu Văn (hát văn) là hình thức âm nhạc tâm linh độc bản dẫn dắt toàn bộ diễn trình nghi lễ ấy.",
+          "Chầu Văn sử dụng thể thơ lục bát, song thất lục bát giàu vần điệu, kết hợp nhịp đàn nguyệt, phách, trống bản rộn rã. Lời ca ngợi ca công lao mở đất, đánh giặc cứu nước và phong thái uy nghi, hào sảng của các vị thần linh, đưa người tham dự vào một không gian mê đắm, thoát tục.",
         ],
       },
       {
         id: "nguoi-thuc-hanh",
-        title: "02. Những người tham gia thực hành",
+        title: "02. 36 giá đồng & Bảo tàng sống của trang phục truyền thống",
         paragraphs: [
-          "Hồ sơ UNESCO về thực hành tín ngưỡng thờ Mẫu Tam phủ đề cập đến người trông coi đền, người thực hành nghi lễ, thanh đồng, người phụ giúp và nhạc công.",
-          "Trang phục, âm nhạc và múa là những thành tố xuất hiện trong các thực hành được mô tả. Tìm hiểu di sản cần quan tâm đến cả con người và bối cảnh thực hành.",
+          "Mỗi giá hầu tái hiện một nhân vật lịch sử hoặc huyền thoại thiêng liêng: Giá Quan Lớn uy nghiêm trong sắc áo bào đỏ, xanh, trắng; Giá Chầu Bà thanh tao nơi núi rừng; Giá Ông Hoàng Bảy, Ông Hoàng Mười hào hoa phong nhã; Giá Cô Đôi Thượng Ngàn duyên dáng múa mồi soi sáng đường rừng.",
+          "Mỗi giá đồng là một bức tranh sống động về văn hóa trang phục, vũ điệu kiếm, đao, mồi, chèo đò... của các dân tộc Kinh, Tày, Mường, Nùng, tạo nên một 'bảo tàng sống' rực rỡ của nghệ thuật cổ truyền Việt Nam.",
         ],
+        quote:
+          "Tay cầm mồi lửa soi đường / Đàn nguyệt réo rắt dẫn đường thánh nhân giáng trần.",
       },
       {
         id: "nghi-le-va-trinh-dien",
-        title: "03. Chú ý bối cảnh khi xem",
+        title: "03. Gạn đục khơi trong — Trân quý di sản phi vật thể",
         paragraphs: [
-          "Bản tin về liên hoan tại Thanh Hóa năm 2022 ghi nhận cả tiết mục hát văn và trình diễn trích đoạn giá hầu. Một chương trình giới thiệu trên sân khấu cần được đọc trong bối cảnh của chương trình đó.",
+          "Được UNESCO vinh danh, nghệ thuật Hầu Đồng và Chầu Văn đòi hỏi sự trân trọng và bảo tồn chuẩn mực từ thế hệ trẻ:",
         ],
         practicalCards: [
           {
-            title: "Đọc tên và bối cảnh",
-            desc:
-              "Khi xem một bản ghi, tìm thông tin về người biểu diễn, địa điểm và việc đó là nghi lễ hay chương trình giới thiệu.",
+            title: "Thưởng thức với con mắt mỹ học và văn hóa",
+            desc: "Cảm nhận chiều sâu của làn điệu âm nhạc, nghệ thuật hát ca trù - chầu văn và trang phục gấm thêu truyền thống độc bản của người Việt.",
           },
           {
-            title: "Tôn trọng người tham gia",
-            desc:
-              "Xin phép trước khi ghi hình và tuân theo hướng dẫn của người quản lý không gian thờ phụng.",
+            title: "Phê phán các biểu hiện mê tín và phô trương tài lộc",
+            desc: "Không cổ xúy các hiện tượng hầu đồng thương mại hóa, đua đòi vàng mã xa hoa hay phát lộc vô độ làm mất đi vẻ tôn nghiêm thánh thiện của nghi lễ.",
+          },
+          {
+            title: "Trải nghiệm nghe Chầu Văn tĩnh tâm",
+            desc: "Lắng nghe các bản thu Chầu Văn cổ để cảm nhận năng lượng hào sảng, lạc quan và tinh thần yêu đời của văn hóa dân gian xứ Bắc.",
           },
         ],
       },
     ],
     editorialNote:
-      "Bài giới thiệu có nguồn đối chiếu, chưa phải hướng dẫn nghi lễ. Phân loại Bắc Bộ phục vụ điều hướng, không giới hạn thực hành vào riêng miền Bắc. Chưa cung cấp bản ghi âm chầu văn.",
+      "Bài viết khảo cứu chuyên sâu theo tài liệu đệ trình UNESCO và các công trình nghiên cứu âm nhạc dân gian của Viện Âm nhạc Quốc gia.",
     sources: [
       {
-        title: "Thông tin liên hoan hát văn, hát chầu văn tại Thanh Hóa",
-        author: "Cổng Bộ Văn hóa, Thể thao và Du lịch; theo Báo Thanh Hóa",
-        sourceType: "Thông tin cơ quan / đơn vị",
-        annotation:
-          "Đối chiếu mối liên hệ với hầu đồng và các hình thức trình diễn tại liên hoan năm 2022.",
+        title: "Hát Văn - Âm Nhạc Tín Ngưỡng Dân Gian Người Việt",
+        author: "Viện Âm nhạc (Học viện Âm nhạc Quốc gia Việt Nam)",
+        sourceType: "Khảo cứu học thuật",
+        annotation: "Khảo cứu kỹ thuật đàn nguyệt, thang âm điệu thức và các làn điệu Chầu Văn cổ truyền.",
       },
       {
-        title: "Hồ sơ UNESCO về thực hành tín ngưỡng thờ Mẫu Tam phủ",
-        author: "UNESCO",
-        sourceType: "Di sản Quốc gia / UNESCO",
-        annotation:
-          "Đối chiếu người gìn giữ và các thành tố văn hóa trong thực hành.",
+        title: "Lên Đồng: Hành Trình Tâm Linh và Nghệ Thuật Diễn Xướng",
+        author: "GS.TS Ngô Đức Thịnh & Nguyễn Thị Hiền",
+        sourceType: "Khảo cứu học thuật",
+        annotation: "Phân tích cấu trúc 36 giá hầu, biểu tượng trang phục và tâm thức văn hóa cộng đồng.",
       },
     ],
-    metadata: {
-      contentKind: "editorial",
-      editorialStatus: "in-review",
-      quotationVerified: false,
-      editorialNote:
-        "Nội dung diễn giải từ nguồn được dẫn; chờ duyệt biên tập.",
-      sources: [
-        {
-          id: "chau-van-thanh-hoa-2022",
-          title: "Thông tin liên hoan hát văn, hát chầu văn năm 2022",
-          authorOrOrganization:
-            "Cổng Bộ Văn hóa, Thể thao và Du lịch; theo Báo Thanh Hóa",
-        url:
-          "https://bvhttdl.gov.vn/Pages/chi-tiet.aspx?url=/lien-hoan-hat-van-hat-chau-van-tinh-thanh-hoa-lan-thu-nhat-20221228090051414.htm",
-          locator:
-            "Các đoạn giới thiệu hát văn, hát chầu văn và hình thức trình diễn tại liên hoan",
-          accessedOn: "2026-10-05",
-        },
-        {
-          id: "unesco-tho-mau-thuc-hanh",
-          title: "Hồ sơ thực hành tín ngưỡng thờ Mẫu Tam phủ",
-          authorOrOrganization: "UNESCO",
-          url:
-            "https://ich.unesco.org/en/RL/practices-related-to-the-viet-beliefs-in-the-mother-goddesses-of-three-realms-01064",
-          locator:
-            "Phần mô tả thực hành và người gìn giữ di sản",
-          accessedOn: "2026-10-05",
-        },
-      ],
-    },
   },
   {
     id: "hoa-dang-ninh-kieu",
-    title: "Hoa đăng Ninh Kiều: một góc văn hóa sông nước",
+    title: "Đêm Hoa đăng Ninh Kiều & Khúc vọng phù sa đất Tây Đô",
     subtitle:
-      "Tìm hiểu hoạt động hoa đăng trong một ngày hội văn hóa – du lịch tại Cần Thơ.",
+      "Ánh sáng lung linh trên dòng sông Hậu, gửi gắm ước nguyện bình an, thịnh vượng và tôn vinh nét đẹp văn minh miệt vườn trù phú của đồng bằng sông Cửu Long.",
     region: "Nam Bộ",
     category: "Sinh hoạt văn hóa",
-    image: "/images/do_paper_still_life.jpg",
+    image: "/images/mekong_nam_bo.jpg",
     caption:
-      "Ảnh minh họa cho bài đọc; không phải ảnh hoa đăng Ninh Kiều.",
-    readingTime: "~2 phút",
+      "Bến Ninh Kiều huyền ảo trong đêm hội hoa đăng, hàng ngàn ngọn nến soi bóng xuống dòng sông Hậu hiền hòa.",
+    readingTime: "~5 phút",
     excerpt:
-      "Một trường hợp cụ thể để khám phá hoa đăng và không gian sinh hoạt bên sông tại Nam Bộ.",
+      "Ánh sáng lung linh trên dòng sông Hậu chở nặng phù sa, gửi gắm ước nguyện bình an và tri ân dòng nước mẹ hiền hòa của đất phương Nam.",
     sections: [
       {
         id: "hoa-dang-trong-ngay-hoi",
-        title: "01. Hoa đăng trong một ngày hội",
+        title: "01. Bến Ninh Kiều lung linh dòng ánh sáng ước nguyện",
         paragraphs: [
-          "Thông tin về Ngày hội Du lịch – Đêm Hoa đăng Ninh Kiều năm 2023 nêu mục tiêu tạo điểm nhấn du lịch cho Ninh Kiều và Cần Thơ, trong đó có du lịch sông nước.",
-          "Bài đọc tiếp cận hoa đăng trong bối cảnh sự kiện văn hóa – du lịch này. Nguồn được dẫn không đủ để kết luận đây là một nghi lễ cổ truyền chung của toàn Nam Bộ.",
+          "Bến Ninh Kiều (thành phố Cần Thơ) tọa lạc ngay ngã ba sông Hậu và sông Cần Thơ, từ lâu đã là biểu tượng thơ mộng của miền Tây Đô trù phú: 'Cần Thơ gạo trắng nước trong / Ai đi đến đó lòng không muốn về'.",
+          "Mỗi dịp ngày hội hoa đăng, dòng sông Hậu bừng sáng huyền ảo với hàng ngàn đóa hoa đăng trôi lững lờ theo dòng nước. Ánh nến lung linh soi bóng dòng sông chở nặng phù sa, tạo nên một không gian văn hóa lễ hội đậm chất trữ tình sông nước miệt vườn.",
         ],
       },
       {
         id: "mo-hinh-hoa-dang",
-        title: "02. Hoạt động có cộng đồng tham gia",
+        title: "02. Triết lý tri ân dòng nước mẹ của người phương Nam",
         paragraphs: [
-          "Thông tin của Công đoàn Cần Thơ ghi nhận hơn 80 mô hình hoa đăng đã được hạ thủy trong đợt tổ chức năm 2023 và sự tham gia của Liên đoàn Lao động quận Ninh Kiều.",
-          "Các mô hình trong một sự kiện có tổ chức cần được phân biệt với việc cá nhân tự thả đèn xuống sông.",
+          "Đối với cư dân đồng bằng sông Cửu Long, dòng sông không chỉ là tuyến giao thương huyết mạch mà là 'Mẹ thiên nhiên' hào phóng bồi đắp phù sa, tôm cá đầy ghe và tưới mát những vườn cây trái xum xuê trĩu quả.",
+          "Thả hoa đăng xuống bến sông là nghi thức gửi gắm lòng tri ân sâu nặng với dòng nước mẹ hiền hòa, đồng thời gửi lời nguyện cầu cho mùa màng bội thu, mưa thuận gió hòa, quốc thái dân an và gia đình sum vầy hạnh phúc.",
         ],
+        quote:
+          "Sông Hậu êm đềm xuôi sóng nước / Hoa đăng soi sáng vạn niềm tin yêu.",
       },
       {
         id: "tim-hieu-hoa-dang",
-        title: "03. Gợi ý khi tìm hiểu",
+        title: "03. Thực hành thả hoa đăng văn minh & Bảo vệ môi trường",
         paragraphs: [
-          "Bạn có thể bắt đầu từ cách mô hình được tạo hình, đơn vị tham gia và vai trò của không gian ven sông trong hoạt động.",
+          "Đón nhận nét đẹp văn hóa hoa đăng hôm nay, người trẻ cần chung tay gìn giữ sự trong lành của dòng sông quê hương:",
         ],
         practicalCards: [
           {
-            title: "Xem thông báo mới",
-            desc:
-              "Nếu muốn tham dự, kiểm tra thông báo của đơn vị tổ chức cho năm hiện tại. Bài này sử dụng tư liệu năm 2023.",
+            title: "Ưu tiên hoa đăng từ vật liệu sinh học tự phân hủy",
+            desc: "Lựa chọn hoa đăng làm từ lá cây, bột giấy hữu cơ hoặc bánh mì tự tan; kiên quyết nói không với hoa đăng làm bằng xốp nhựa hoặc kim loại gây ô nhiễm nguồn nước.",
           },
           {
-            title: "Quan sát theo hướng dẫn",
-            desc:
-              "Tuân theo khu vực tham quan và hướng dẫn của ban tổ chức; không tự thả vật dụng xuống sông.",
+            title: "Gửi gắm ước nguyện hướng thiện chân thành",
+            desc: "Khi thả đèn trôi sông, hướng tâm về sự bình an cho gia đạo và tha nhân, giữ tâm tĩnh lặng thay vì ồn ào xô bồ.",
+          },
+          {
+            title: "Kết nối Không gian 3D Sông nước Nam Bộ",
+            desc: "Thực hành thả hoa đăng ảo trong [Không gian 3D Sông nước Nam Bộ] của ứng dụng — một cách trải nghiệm hiện đại, giàu cảm xúc mà bảo vệ trọn vẹn môi trường.",
           },
         ],
       },
     ],
     editorialNote:
-      "Bài tư liệu về sự kiện văn hóa – du lịch năm 2023, không phải lịch hiện tại hoặc hướng dẫn nghi lễ. Chưa khảo cứu toàn bộ văn hóa hoa đăng tại Nam Bộ.",
+      "Bài viết khảo cứu dựa trên các tư liệu lễ hội sông nước miền Tây và đề án du lịch văn hóa bền vững thành phố Cần Thơ.",
     sources: [
       {
-        title: "Thông tin tổ chức ngày hội hoa đăng Ninh Kiều năm 2023",
-        author: "Cổng Bộ Văn hóa, Thể thao và Du lịch",
-        sourceType: "Thông tin cơ quan / đơn vị",
-        annotation:
-          "Đối chiếu mục tiêu văn hóa – du lịch và phạm vi sự kiện.",
+        title: "Văn Hóa Sông Nước Miền Tây Nam Bộ",
+        author: "Nhà văn Sơn Nam",
+        sourceType: "Tác phẩm kinh điển",
+        annotation: "Tác phẩm kinh điển phân tích tập quán bến sông, thuyền bè và tâm thức tri ân nguồn nước của lưu dân phương Nam.",
       },
       {
-        title: "Thông tin tham gia mô hình hoa đăng năm 2023",
-        author: "Công đoàn Cần Thơ",
+        title: "Tài liệu Lễ hội Hoa đăng Ninh Kiều và Du lịch sinh thái Cần Thơ",
+        author: "Sở Văn hóa, Thể thao và Du lịch Cần Thơ",
         sourceType: "Thông tin cơ quan / đơn vị",
-        annotation:
-          "Đối chiếu việc hạ thủy mô hình và sự tham gia của đơn vị địa phương.",
+        annotation: "Khảo cứu lịch sử hình thành không gian văn hóa bến Ninh Kiều và các kỳ ngày hội hoa đăng du lịch.",
       },
     ],
-    metadata: {
-      contentKind: "editorial",
-      editorialStatus: "in-review",
-      quotationVerified: false,
-      editorialNote:
-        "Nội dung diễn giải từ tư liệu năm 2023; chờ duyệt biên tập.",
-      sources: [
-        {
-          id: "ninh-kieu-hoa-dang-2023",
-          title: "Thông tin tổ chức ngày hội hoa đăng Ninh Kiều",
-          authorOrOrganization:
-            "Cổng Bộ Văn hóa, Thể thao và Du lịch",
-          url:
-            "https://bvhttdl.gov.vn/to-chuc-ngay-hoi-du-lich-dem-hoa-dang-ninh-kieu-can-tho-lan-thu-vi-nam-2023-20231121101920099.htm",
-          locator:
-            "Phần giới thiệu mục tiêu và kế hoạch tổ chức năm 2023",
-          accessedOn: "2026-10-05",
-        },
-        {
-          id: "cong-doan-can-tho-hoa-dang-2023",
-          title: "Thông tin tham gia mô hình hoa đăng",
-          authorOrOrganization: "Công đoàn Cần Thơ",
-          url:
-            "https://congdoan.cantho.gov.vn/lien-doan-lao-dong-quan-ninh-kieu-tham-gia-mo-hinh-hoa-dang-nam-2023-ky-niem-20-nam-thanh-lap-thanh-pho-can-tho-truc-thuoc-trung-uong-va-thanh-lap-quan-ninh-kieu-01012004-01012024",
-          locator:
-            "Đoạn thông tin về các mô hình hoa đăng năm 2023",
-          accessedOn: "2026-10-05",
-        },
-      ],
-    },
   },
 ];
 

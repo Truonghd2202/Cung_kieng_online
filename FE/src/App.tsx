@@ -5,6 +5,7 @@ import { ScreenFocus } from "./components/ScreenFocus";
 import { SavedSignalDialog } from "./components/SavedSignalDialog";
 import { useTheme } from "./hooks/useTheme";
 import { useLocalDay } from "./hooks/useLocalDay";
+import { useGlobalScrollReveal } from "./hooks/useGlobalScrollReveal";
 import type { MemorialRecord } from "./screens/MemorialSpaceScreen";
 import type { CultureRegionSlug } from "./screens/CulturalMapScreen";
 import type { RegionalExperienceKind } from "./screens/RegionalExperienceScreen";
@@ -791,7 +792,11 @@ export default function App() {
   const initialUrlCalendarEventId = new URLSearchParams(window.location.search).get("eventId") || "le-soc-vong-ngay-ram";
 
   const [screen, setScreen] = useState<NavScreen>(getInitialScreen);
+
+  // Kích hoạt hiệu ứng Scroll Reveal tự động trên toàn bộ các màn hình
+  useGlobalScrollReveal(screen);
   const [selectedArticleId, setSelectedArticleId] = useState<string>(initialUrlArticleId);
+  const [returnArticleId, setReturnArticleId] = useState<string | null>(null);
   const [selectedCultureRegion, setSelectedCultureRegion] =
     useState<CultureRegionSlug>(
       getCultureRegionFromLocation
@@ -1534,6 +1539,9 @@ export default function App() {
       targetScreen === "sea-prayer" ||
       targetScreen === "southern-culture"
     ) {
+      if (screen === "culture-detail") {
+        setReturnArticleId(selectedArticleId);
+      }
       const region: CultureRegionSlug =
         targetScreen === "chau-van"
           ? "north"
@@ -2428,8 +2436,8 @@ export default function App() {
 
   return (
     <div className={`app-shell ${dark ? "dark" : ""} ${["login", "register", "forgot"].includes(screen) ? "lg:h-screen lg:max-h-screen lg:overflow-hidden" : ""}`}>
-      {/* Universal Header - tự động ẩn khi ấn đăng nhập tại LoginScreen */}
-      {!isLoginImmersive && (
+      {/* Universal Header - tự động ẩn trên màn hình xác thực auth */}
+      {!isLoginImmersive && !["login", "register", "forgot"].includes(screen) && (
         <AppHeader
           currentScreen={screen}
           onNavigate={navigateTo}
@@ -2669,6 +2677,13 @@ export default function App() {
             currentUserEmail={currentUser?.email}
             kind={screen as RegionalExperienceKind}
             onBack={() => {
+              if (returnArticleId) {
+                const prevArticleId = returnArticleId;
+                setReturnArticleId(null);
+                navigateTo("culture-detail", prevArticleId);
+                return;
+              }
+
               const region: CultureRegionSlug =
                 screen === "chau-van"
                   ? "north"
@@ -2698,6 +2713,11 @@ export default function App() {
               navigateTo("culture-detail", id);
             }}
             onGoToExperience={() => navigateTo("experience")}
+            onGoToRegionalExperience={(kind) => {
+              setReturnArticleId(selectedArticleId);
+              navigateTo(kind);
+            }}
+            onGoToRituals={() => navigateTo("rituals")}
             onGoToMood={() => navigateTo("mood")}
           />
         )}
@@ -2863,6 +2883,13 @@ export default function App() {
               setSelectedRitualId(id);
               navigateTo("ritual-detail", id);
             }}
+            onGoToExperience={() => navigateTo("experience")}
+            onGoToRegionalExperience={(kind) => {
+              navigateTo(kind);
+            }}
+            onGoToAncestorAltar={() => navigateTo("ancestor-altar")}
+            onGoToGoodDay={() => navigateTo("good-days")}
+            onGoToZen={() => navigateTo("zen")}
           />
         )}
 
@@ -2932,6 +2959,7 @@ export default function App() {
         {screen === "forgot" && (
           <ForgotPasswordScreen
             onBackToLogin={() => navigateTo("login")}
+            onImmersiveChange={setIsLoginImmersive}
           />
         )}
 
@@ -3021,10 +3049,11 @@ export default function App() {
           <RegisterScreen
             onBack={() => navigateTo("login")}
             onSuccess={() => {
-              // Đăng ký thành công -> tự chuyển qua trang Đăng nhập (không cắm nhang)
+              // Đăng ký thành công -> tự chuyển qua trang Đăng nhập
               navigateTo("login");
             }}
             onGoToLogin={() => navigateTo("login")}
+            onImmersiveChange={setIsLoginImmersive}
             pendingSignalMood={
               pendingSave?.type === "signal"
                 ? `Tín hiệu "${pendingSave.item.mood}"`

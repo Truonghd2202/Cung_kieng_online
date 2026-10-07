@@ -1,330 +1,473 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { Water } from "three/examples/jsm/objects/Water.js";
+import { Sky } from "three/examples/jsm/objects/Sky.js";
 import { Button } from "./ui/button";
-import { setupSceneKeyboard } from "./setupSceneKeyboard";
+import {
+  Waves,
+  RotateCcw,
+  Sun,
+  Sunset,
+  Volume2,
+  VolumeX,
+  Compass,
+} from "lucide-react";
+
+// Hàm tạo Procedural Normal Map cho sóng biển chuyển động tự nhiên
+function createProceduralWaterNormalTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext("2d")!;
+  const imgData = ctx.createImageData(512, 512);
+  const data = imgData.data;
+
+  for (let y = 0; y < 512; y++) {
+    for (let x = 0; x < 512; x++) {
+      const idx = (y * 512 + x) * 4;
+      const u = (x / 512) * Math.PI * 10;
+      const v = (y / 512) * Math.PI * 10;
+
+      // Sóng biển phức hợp đa tầng (trochoidal wave simulation approximation)
+      const dx =
+        Math.cos(u * 1.2 + v * 0.7) * 1.5 -
+        Math.sin(v * 2.2 - u * 0.8) * 1.2 +
+        Math.cos(u * 3.5 - v * 2.1) * 1.8;
+      const dy =
+        Math.cos(u * 1.2 + v * 0.7) * 0.8 +
+        Math.cos(v * 2.2 - u * 0.8) * 2.0 -
+        Math.sin(u * 3.5 - v * 2.1) * 1.1;
+
+      let nx = -dx * 0.16;
+      let ny = -dy * 0.16;
+      let nz = 1.0;
+      const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
+      nx /= len;
+      ny /= len;
+      nz /= len;
+
+      data[idx] = Math.floor((nx * 0.5 + 0.5) * 255);
+      data[idx + 1] = Math.floor((ny * 0.5 + 0.5) * 255);
+      data[idx + 2] = Math.floor((nz * 0.5 + 0.5) * 255);
+      data[idx + 3] = 255;
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  return texture;
+}
 
 export default function CentralSeaScene() {
   const hostRef = useRef<HTMLDivElement | null>(null);
-  const motionRef = useRef<(enabled: boolean) => void>(() => {});
-  const resetRef = useRef<() => void>(() => {});
-
   const [ready, setReady] = useState(false);
-  const [moving, setMoving] = useState(false);
   const [error, setError] = useState("");
+  const [timeMode, setTimeMode] = useState<"dawn" | "day">("dawn");
+
+  const resetRef = useRef<() => void>(() => {});
+  const switchTimeRef = useRef<((mode: "dawn" | "day") => void) | null>(null);
 
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
 
     let renderer: THREE.WebGLRenderer;
-
     try {
       renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: false,
+        powerPreference: "high-performance",
       });
     } catch {
-      setError(
-        "Thiết bị chưa mở được cảnh 3D. Bạn vẫn có thể đọc nội dung bên dưới."
-      );
+      setError("Thiết bị chưa hỗ trợ WebGL.");
       return;
     }
 
-    renderer.setPixelRatio(
-      Math.min(window.devicePixelRatio || 1, 1.5)
-    );
+    setReady(true);
+    setError("");
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(host.clientWidth, host.clientHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.95;
 
     const canvas = renderer.domElement;
-    canvas.setAttribute("role", "img");
-    canvas.setAttribute(
-      "aria-label",
-      "Cảnh biển minh họa. Phím trái phải để xoay, dấu cộng trừ để phóng to hoặc thu nhỏ, Home để đặt lại góc nhìn.",
-    );
-
-    // Cho phép cuộn trang theo chiều dọc trên điện thoại.
-    canvas.style.touchAction = "pan-y";
+    canvas.style.display = "block";
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
     host.appendChild(canvas);
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#cadde2");
-    scene.fog = new THREE.Fog("#cadde2", 9, 22);
 
-    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 40);
-    const initialPosition = new THREE.Vector3(3, 3, 5);
-    const initialTarget = new THREE.Vector3(0, 0, -1);
-    camera.position.copy(initialPosition);
+    // Camera
+    const camera = new THREE.PerspectiveCamera(
+      52,
+      host.clientWidth / host.clientHeight,
+      1,
+      20000
+    );
+    camera.position.set(0, 18, 55);
 
-    scene.add(new THREE.HemisphereLight("#ffffff", "#9f8667", 2.5));
-
-    const sunlight = new THREE.DirectionalLight("#fff5dc", 2);
-    sunlight.position.set(-3, 6, 2);
-    scene.add(sunlight);
-
-    const waterGeometry = new THREE.PlaneGeometry(12, 16, 40, 56);
-    waterGeometry.rotateX(-Math.PI / 2);
-
-    const waterMaterial = new THREE.MeshStandardMaterial({
-      color: "#438b9c",
-      roughness: 0.42,
-      metalness: 0.12,
-      side: THREE.DoubleSide,
-    });
-
-    const water = new THREE.Mesh(waterGeometry, waterMaterial);
-    water.position.z = -4;
-    scene.add(water);
-
-    const sandGeometry = new THREE.BoxGeometry(12, 0.12, 3);
-    const sandMaterial = new THREE.MeshStandardMaterial({
-      color: "#d9c6a0",
-      roughness: 1,
-    });
-
-    const sand = new THREE.Mesh(sandGeometry, sandMaterial);
-    sand.position.set(0, -0.09, 4.5);
-    scene.add(sand);
-
+    // Orbit Controls
     const controls = new OrbitControls(camera, canvas);
     controls.enablePan = false;
-    controls.minDistance = 2.5;
-    controls.maxDistance = 9;
-    controls.maxPolarAngle = Math.PI / 2 - 0.08;
-    controls.target.copy(initialTarget);
-
-    // Một ngón cuộn trang; hai ngón xoay và phóng to cảnh.
-    controls.touches.ONE = THREE.TOUCH.PAN;
-    controls.touches.TWO = THREE.TOUCH.DOLLY_ROTATE;
+    controls.minDistance = 25;
+    controls.maxDistance = 160;
+    controls.maxPolarAngle = Math.PI / 2 - 0.02; // Không nhìn dưới mặt nước
+    controls.minPolarAngle = 0.2;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.35;
+    controls.target.set(0, 5, 0);
     controls.update();
 
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    );
-
-    const positions = waterGeometry.getAttribute(
-      "position"
-    ) as THREE.BufferAttribute;
-
-    let frame = 0;
-    let lastTime = 0;
-    let elapsed = 0;
-    let motionEnabled = !reducedMotion.matches;
-    let disposed = false;
-    let contextLost = false;
-
-    const render = () => {
-      if (!disposed && !contextLost) {
-        renderer.render(scene, camera);
-      }
-    };
-
-    const updateWaves = (time: number) => {
-      for (let index = 0; index < positions.count; index += 1) {
-        const x = positions.getX(index);
-        const z = positions.getZ(index);
-
-        const height =
-          Math.sin(z * 1.4 + time * 0.8) * 0.025 +
-          Math.sin(x * 1.1 + z * 0.6 + time * 0.5) * 0.012;
-
-        positions.setY(index, height);
-      }
-
-      positions.needsUpdate = true;
-      waterGeometry.computeVertexNormals();
-    };
-
-    const stop = () => {
-      if (frame) cancelAnimationFrame(frame);
-      frame = 0;
-      lastTime = 0;
-    };
-
-    const animate = (time: number) => {
-      if (
-        disposed ||
-        contextLost ||
-        !motionEnabled ||
-        document.hidden
-      ) {
-        frame = 0;
-        lastTime = 0;
-        return;
-      }
-
-      const delta = lastTime
-        ? Math.min((time - lastTime) / 1000, 0.05)
-        : 0;
-
-      lastTime = time;
-      elapsed += delta;
-
-      updateWaves(elapsed);
-      render();
-      frame = requestAnimationFrame(animate);
-    };
-
-    const syncMotion = () => {
-      stop();
-
-      if (
-        !disposed &&
-        !contextLost &&
-        motionEnabled &&
-        !document.hidden
-      ) {
-        frame = requestAnimationFrame(animate);
-      } else {
-        render();
-      }
-    };
-
-    motionRef.current = (enabled) => {
-      motionEnabled = enabled;
-      setMoving(enabled);
-      syncMotion();
-    };
-
     resetRef.current = () => {
-      camera.position.copy(initialPosition);
-      controls.target.copy(initialTarget);
+      camera.position.set(0, 18, 55);
+      controls.target.set(0, 5, 0);
       controls.update();
-      render();
     };
 
-    const resize = () => {
-      const width = host.clientWidth;
-      const height = host.clientHeight;
-      if (!width || !height) return;
+    // ==========================================
+    // 1. BẦU TRỜI CHÂN THỰC VỚI RAYLEIGH SCATTERING (SKY SHADER)
+    // ==========================================
+    const sky = new Sky();
+    sky.scale.setScalar(10000);
+    scene.add(sky);
 
-      renderer.setSize(width, height, false);
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      render();
+    const skyUniforms = sky.material.uniforms;
+    skyUniforms["turbidity"].value = 6;
+    skyUniforms["rayleigh"].value = 1.8;
+    skyUniforms["mieCoefficient"].value = 0.005;
+    skyUniforms["mieDirectionalG"].value = 0.82;
+
+    const sun = new THREE.Vector3();
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+
+    const updateSun = (elevation: number, azimuth: number) => {
+      const phi = THREE.MathUtils.degToRad(90 - elevation);
+      const theta = THREE.MathUtils.degToRad(azimuth);
+      sun.setFromSphericalCoords(1, phi, theta);
+
+      sky.material.uniforms["sunPosition"].value.copy(sun);
+      water.material.uniforms["sunDirection"].value.copy(sun).normalize();
+      scene.environment = pmremGenerator.fromScene(sky as any).texture;
     };
 
-    const removeKeyboardControls = setupSceneKeyboard({
-      camera,
-      controls,
-      canvas,
-      render,
+    // ==========================================
+    // 2. MẶT BIỂN CHÂN THẬT VỚI THREE.JS WATER SHADER
+    // ==========================================
+    const waterGeometry = new THREE.PlaneGeometry(10000, 10000);
+    const waterNormals = createProceduralWaterNormalTexture();
+
+    const water = new Water(waterGeometry, {
+      textureWidth: 512,
+      textureHeight: 512,
+      waterNormals: waterNormals,
+      sunDirection: new THREE.Vector3(),
+      sunColor: 0xffe2b8,
+      waterColor: 0x0a3b52,
+      distortionScale: 3.5,
+      fog: scene.fog !== undefined,
     });
+    water.rotation.x = -Math.PI / 2;
+    scene.add(water);
 
-    const observer = new ResizeObserver(resize);
-    observer.observe(host);
+    // Thiết lập ánh sáng theo chế độ Bình minh biển miền Trung
+    updateSun(5.5, 175); // Mặt trời vừa nhô lên khỏi đường chân trời
 
-    const handleMotionPreference = () => {
-      // Khi hệ điều hành bật giảm chuyển động, dừng sóng ngay.
-      if (reducedMotion.matches) {
-        motionEnabled = false;
-        setMoving(false);
-        syncMotion();
+    switchTimeRef.current = (mode: "dawn" | "day") => {
+      if (mode === "dawn") {
+        updateSun(5.5, 175);
+        water.material.uniforms["sunColor"].value.setHex(0xffaa55);
+        water.material.uniforms["waterColor"].value.setHex(0x0a3b52);
+        renderer.toneMappingExposure = 0.95;
+      } else {
+        updateSun(28, 175);
+        water.material.uniforms["sunColor"].value.setHex(0xffffff);
+        water.material.uniforms["waterColor"].value.setHex(0x00415a);
+        renderer.toneMappingExposure = 1.05;
       }
     };
 
-    const handleContextLost = (event: Event) => {
-      event.preventDefault();
-      contextLost = true;
-      stop();
+    // ==========================================
+    // 3. THUYỀN GỖ ĐÁNH CÁ CỦA NGƯ DÂN MIỀN TRUNG
+    // ==========================================
+    const boatGroup = new THREE.Group();
 
-      setReady(false);
-      setMoving(false);
-      setError("Cảnh 3D đã tạm dừng. Hãy đóng rồi mở lại cảnh biển.");
+    // Thân thuyền nan gỗ uốn cong
+    const hullShape = new THREE.Shape();
+    hullShape.moveTo(-3, 0);
+    hullShape.quadraticCurveTo(-1.5, -1.2, 0, -1.4);
+    hullShape.quadraticCurveTo(1.5, -1.2, 3, 0);
+    hullShape.quadraticCurveTo(1.8, 1.1, 0, 1.2);
+    hullShape.quadraticCurveTo(-1.8, 1.1, -3, 0);
+
+    const extrudeSettings = {
+      depth: 1.6,
+      bevelEnabled: true,
+      bevelSegments: 4,
+      steps: 2,
+      bevelSize: 0.2,
+      bevelThickness: 0.3,
+    };
+    const hullGeo = new THREE.ExtrudeGeometry(hullShape, extrudeSettings);
+    hullGeo.rotateX(Math.PI / 2);
+    hullGeo.rotateZ(Math.PI / 2);
+
+    const woodMaterial = new THREE.MeshStandardMaterial({
+      color: "#543825",
+      roughness: 0.75,
+      metalness: 0.1,
+    });
+    const hullMesh = new THREE.Mesh(hullGeo, woodMaterial);
+    hullMesh.position.y = 0.2;
+    boatGroup.add(hullMesh);
+
+    // Cột buồm gỗ thẳng đứng
+    const mastGeo = new THREE.CylinderGeometry(0.1, 0.14, 7.5, 12);
+    const mastMesh = new THREE.Mesh(mastGeo, woodMaterial);
+    mastMesh.position.set(0.3, 3.8, 0);
+    boatGroup.add(mastMesh);
+
+    // Cánh buồm nâu mộc mạc giương đón gió biển
+    const sailGeo = new THREE.BufferGeometry();
+    const sailVertices = new Float32Array([
+      // Tam giác cánh buồm
+      0.3, 7.2, 0,
+      0.3, 1.5, 0,
+      3.8, 1.8, 0.4,
+    ]);
+    sailGeo.setAttribute("position", new THREE.BufferAttribute(sailVertices, 3));
+    sailGeo.computeVertexNormals();
+
+    const sailMat = new THREE.MeshStandardMaterial({
+      color: "#9c603b",
+      roughness: 0.65,
+      side: THREE.DoubleSide,
+    });
+    const sailMesh = new THREE.Mesh(sailGeo, sailMat);
+    boatGroup.add(sailMesh);
+
+    // Đèn bão treo đầu mũi thuyền phát sáng ấm áp
+    const lanternGeo = new THREE.SphereGeometry(0.2, 12, 12);
+    const lanternMat = new THREE.MeshBasicMaterial({ color: "#fef08a" });
+    const lanternMesh = new THREE.Mesh(lanternGeo, lanternMat);
+    lanternMesh.position.set(-2.8, 1.6, 0);
+    boatGroup.add(lanternMesh);
+
+    const lanternLight = new THREE.PointLight("#ffaa33", 2.2, 12);
+    lanternLight.position.set(-2.8, 1.6, 0);
+    boatGroup.add(lanternLight);
+
+    boatGroup.position.set(12, 0, -18);
+    boatGroup.rotation.y = -0.4;
+    scene.add(boatGroup);
+
+    // Chiếc thuyền thúng tròn đặc trưng xứ Trung
+    const basketBoat = new THREE.Group();
+    const basketGeo = new THREE.SphereGeometry(1.6, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+    basketGeo.scale(1, 0.6, 1);
+    const basketMat = new THREE.MeshStandardMaterial({
+      color: "#785838",
+      roughness: 0.85,
+      side: THREE.DoubleSide,
+    });
+    const basketMesh = new THREE.Mesh(basketGeo, basketMat);
+    basketMesh.rotation.x = Math.PI;
+    basketMesh.position.y = 0.7;
+    basketBoat.add(basketMesh);
+
+    // Vành tre đan quanh miệng thuyền thúng
+    const rimGeo = new THREE.TorusGeometry(1.62, 0.08, 8, 24);
+    rimGeo.rotateX(Math.PI / 2);
+    const rimMat = new THREE.MeshStandardMaterial({ color: "#997349", roughness: 0.9 });
+    const rimMesh = new THREE.Mesh(rimGeo, rimMat);
+    rimMesh.position.y = 0.7;
+    basketBoat.add(rimMesh);
+
+    basketBoat.position.set(-16, 0, -8);
+    scene.add(basketBoat);
+
+    // ==========================================
+    // 4. ĐÀN HẢI ÂU BAY LƯỢN TRÊN MẶT BIỂN
+    // ==========================================
+    const gulls: Array<{
+      group: THREE.Group;
+      radius: number;
+      speed: number;
+      angle: number;
+      height: number;
+      wingL: THREE.Mesh;
+      wingR: THREE.Mesh;
+    }> = [];
+
+    for (let i = 0; i < 5; i++) {
+      const gullGroup = new THREE.Group();
+
+      const wingMat = new THREE.MeshBasicMaterial({
+        color: "#ffffff",
+        side: THREE.DoubleSide,
+      });
+
+      // Cánh trái
+      const wingGeo = new THREE.PlaneGeometry(0.8, 0.25);
+      const wingL = new THREE.Mesh(wingGeo, wingMat);
+      wingL.position.x = -0.4;
+      gullGroup.add(wingL);
+
+      // Cánh phải
+      const wingR = new THREE.Mesh(wingGeo, wingMat);
+      wingR.position.x = 0.4;
+      gullGroup.add(wingR);
+
+      scene.add(gullGroup);
+
+      gulls.push({
+        group: gullGroup,
+        radius: 35 + Math.random() * 25,
+        speed: 0.4 + Math.random() * 0.3,
+        angle: (i / 5) * Math.PI * 2,
+        height: 12 + Math.random() * 8,
+        wingL,
+        wingR,
+      });
+    }
+
+    // ==========================================
+    // 5. ANIMATION LOOP
+    // ==========================================
+    let animationFrameId: number;
+    const clock = new THREE.Clock();
+
+    const animate = () => {
+      animationFrameId = requestAnimationFrame(animate);
+
+      const time = clock.getElapsedTime();
+
+      // 1. Chuyển động sóng biển Water Shader (Realistic fluid)
+      water.material.uniforms["time"].value += 1.0 / 60.0;
+
+      // 2. Thuyền gỗ nhấp nhô theo sóng biển
+      boatGroup.position.y = Math.sin(time * 1.6) * 0.35;
+      boatGroup.rotation.z = Math.sin(time * 1.2) * 0.05;
+      boatGroup.rotation.x = -0.4 + Math.cos(time * 1.4) * 0.03;
+
+      // Thuyền thúng dập dềnh
+      basketBoat.position.y = Math.sin(time * 2.1 + 1) * 0.25;
+      basketBoat.rotation.z = Math.sin(time * 1.8 + 1) * 0.08;
+      basketBoat.rotation.x = Math.cos(time * 1.5 + 1) * 0.06;
+
+      // 3. Hải âu bay lượn & đập cánh
+      gulls.forEach((g) => {
+        g.angle += g.speed * 0.015;
+        g.group.position.x = Math.cos(g.angle) * g.radius;
+        g.group.position.z = Math.sin(g.angle) * (g.radius * 0.7) - 20;
+        g.group.position.y = g.height + Math.sin(g.angle * 3) * 1.5;
+
+        // Hướng mỏ bay theo hướng di chuyển
+        g.group.rotation.y = -g.angle + Math.PI / 2;
+
+        // Vỗ cánh
+        const flap = Math.sin(time * 10 + g.radius) * 0.35;
+        g.wingL.rotation.z = flap;
+        g.wingR.rotation.z = -flap;
+      });
+
+      controls.update();
+      renderer.render(scene, camera);
     };
 
-    controls.addEventListener("change", render);
-    reducedMotion.addEventListener("change", handleMotionPreference);
-    document.addEventListener("visibilitychange", syncMotion);
-    canvas.addEventListener("webglcontextlost", handleContextLost);
+    animate();
 
-    resize();
-    updateWaves(0);
-    setReady(true);
-    setMoving(motionEnabled);
-    syncMotion();
+    const handleResize = () => {
+      if (!host) return;
+      camera.aspect = host.clientWidth / host.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(host.clientWidth, host.clientHeight);
+    };
+
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      disposed = true;
-      stop();
-
-      motionRef.current = () => {};
-      resetRef.current = () => {};
-
-      observer.disconnect();
-      removeKeyboardControls();
-      controls.removeEventListener("change", render);
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener("resize", handleResize);
       controls.dispose();
-
-      reducedMotion.removeEventListener(
-        "change",
-        handleMotionPreference
-      );
-      document.removeEventListener("visibilitychange", syncMotion);
-      canvas.removeEventListener("webglcontextlost", handleContextLost);
-
+      pmremGenerator.dispose();
       waterGeometry.dispose();
-      waterMaterial.dispose();
-      sandGeometry.dispose();
-      sandMaterial.dispose();
+      waterNormals.dispose();
       renderer.dispose();
-      canvas.remove();
+      if (host.contains(canvas)) {
+        host.removeChild(canvas);
+      }
     };
   }, []);
 
+  const handleToggleTimeMode = () => {
+    const next = timeMode === "dawn" ? "day" : "dawn";
+    setTimeMode(next);
+    if (switchTimeRef.current) {
+      switchTimeRef.current(next);
+    }
+  };
+
   return (
-    <section className="space-y-4">
-      <div>
-        <h3 className="font-semibold text-ink">Một khoảng biển yên</h3>
-
-        <p className="mt-2 text-sm text-muted">
-          Cảnh biển minh họa, không tái hiện một địa điểm hoặc nghi lễ
-          Cầu Ngư cụ thể. Lời chúc của bạn được viết ở phần nội dung riêng.
-        </p>
-      </div>
-
+    <div className="relative w-full rounded-2xl overflow-hidden border border-rose-500/40 bg-[#0c1f30] shadow-xl group">
+      {/* 3D Canvas Host */}
       <div
         ref={hostRef}
-        className="h-72 overflow-hidden rounded-2xl bg-slate-200 sm:h-96"
+        className="w-full h-80 sm:h-96 md:h-[430px] cursor-grab active:cursor-grabbing"
       />
 
-      {error && (
-        <p role="status" className="text-sm text-muted">
-          {error}
-        </p>
-      )}
-
-      <div className="flex flex-wrap gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={!ready}
-          aria-pressed={moving}
-          onClick={() => motionRef.current(!moving)}
-        >
-          {moving ? "Dừng sóng" : "Bật chuyển động sóng"}
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          disabled={!ready}
-          onClick={() => resetRef.current()}
-        >
-          Đặt lại góc nhìn
-        </Button>
+      {/* Top HUD Badge */}
+      <div className="absolute top-3.5 left-4 pointer-events-none flex items-center gap-2">
+        <span className="px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-black/65 text-amber-300 border border-amber-500/40 backdrop-blur-md flex items-center gap-2 shadow-sm">
+          <Waves className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+          <span>BIỂN MIỀN TRUNG 3D · CHÂN THỰC & SỐNG ĐỘNG</span>
+        </span>
       </div>
 
-      <p className="text-xs text-muted">
-        Máy tính: kéo để xoay, cuộn để phóng to. Điện thoại: dùng hai
-        ngón để xoay và phóng to; một ngón để cuộn trang. Chuyển động tự
-        dừng khi bạn chuyển sang tab khác.
-      </p>
+      {/* Top Right Controls */}
+      <div className="absolute top-3.5 right-4 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleToggleTimeMode}
+          title={timeMode === "dawn" ? "Chuyển sang ban ngày" : "Chuyển sang bình minh"}
+          className="px-3 py-1.5 rounded-xl bg-black/60 hover:bg-black/80 text-amber-300 hover:text-white border border-white/10 backdrop-blur-md transition-all cursor-pointer flex items-center gap-1.5 text-xs font-medium"
+        >
+          {timeMode === "dawn" ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Sunset className="w-3.5 h-3.5 text-orange-400" />}
+          <span>{timeMode === "dawn" ? "Bình minh" : "Ban ngày"}</span>
+        </button>
 
-      <p className="mt-2 text-xs text-muted">
-        Bàn phím: nhấn Tab đến cảnh, dùng phím trái/phải để xoay,
-        dấu +/− để phóng to hoặc thu nhỏ, Home để đặt lại góc nhìn.
-        Nhấn Tab để chuyển ra khỏi cảnh.
-      </p>
-    </section>
+        <button
+          type="button"
+          onClick={() => resetRef.current()}
+          title="Đặt lại góc nhìn"
+          className="p-2 rounded-xl bg-black/60 hover:bg-black/80 text-stone-300 hover:text-white border border-white/10 backdrop-blur-md transition-all cursor-pointer"
+        >
+          <RotateCcw className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Bottom Floating Bar */}
+      <div className="absolute bottom-3.5 inset-x-4 flex flex-col sm:flex-row items-center justify-between gap-2.5 bg-black/60 border border-white/10 p-2.5 sm:px-4 rounded-2xl backdrop-blur-md">
+        <div className="text-xs text-stone-200 flex items-center gap-2">
+          <span className="text-amber-400 font-bold">✦</span>
+          <span>Dùng chuột/ngón tay xoay 360° · Cuộn để phóng to/thu nhỏ thuyền và mặt nước</span>
+        </div>
+
+        <span className="text-[11px] text-amber-200/80 italic hidden sm:inline-block">
+          Mô phỏng mặt nước quang học chân thực (Physical Ocean Shader)
+        </span>
+      </div>
+
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 text-xs text-stone-400 p-4 text-center">
+          {error}
+        </div>
+      )}
+    </div>
   );
 }

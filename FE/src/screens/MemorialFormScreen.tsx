@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ArrowLeft, CalendarDays, Check, Heart } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { Textarea } from "@/src/components/ui/textarea";
 import type { MemorialRecord } from "./MemorialSpaceScreen";
@@ -120,19 +121,51 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
   return (
     <div className="screen-shell">
       <main className="page-container max-w-3xl">
-        <button onClick={onBack} className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-accent transition-colors mb-7"><ArrowLeft className="w-3.5 h-3.5" /> Quay lại góc tưởng niệm</button>
-        <div className="mb-8"><span className="text-xs font-semibold uppercase tracking-widest text-accent">Một điều muốn giữ</span><h1 className="page-title mt-2 mb-3">{initialValue ? "Chỉnh sửa góc tưởng niệm" : "Tạo một góc tưởng niệm"}</h1><p className="text-sm text-muted leading-relaxed">Thông tin này chỉ dùng để tạo không gian riêng trên thiết bị của bạn.</p></div>
+        {/* Top Breadcrumb */}
+        <div className="flex items-center justify-between gap-3 mb-6 text-xs text-stone-600 dark:text-stone-400">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 hover:text-accent transition-colors font-medium cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Quay lại góc tưởng niệm</span>
+          </button>
+          <Badge
+            variant="outline"
+            className="text-xs px-2.5 py-0.5 font-medium border-rose-400/40 text-rose-800 dark:text-rose-300 bg-rose-500/10"
+          >
+            {initialValue ? "Chỉnh sửa hồ sơ" : "Tạo hồ sơ mới"}
+          </Badge>
+        </div>
 
-        <Card className="p-6 sm:p-8 border-line mb-10">
+        {/* Page Header */}
+        <header className="mb-8 max-w-2xl">
+          <span className="text-xs font-bold uppercase tracking-widest text-rose-800 dark:text-rose-400">
+            GIỮ MỘT ĐIỀU THÂN THƯƠNG
+          </span>
+          <h1
+            tabIndex={-1}
+            className="page-title mt-1.5 mb-2.5 font-display text-3xl sm:text-4xl font-bold text-ink outline-none focus:outline-none focus-visible:outline-none focus:ring-0 border-0"
+          >
+            {initialValue ? "Chỉnh sửa góc tưởng niệm" : "Tạo góc tưởng niệm"}
+          </h1>
+          <p className="text-sm sm:text-base text-stone-700 dark:text-stone-300 leading-relaxed">
+            Thông tin này được lưu giữ an toàn, bảo mật trên thiết bị của bạn để tạo nên không gian hoài niệm riêng tư.
+          </p>
+        </header>
+
+        <Card className="p-6 sm:p-9 rounded-2xl border-line bg-surface/95 mb-10 shadow-xs backdrop-blur-sm">
           <form
             onSubmit={(event) => {
               event.preventDefault();
               handleSave();
             }}
           >
-            <div className="space-y-5">
+            <div className="space-y-6">
               <label className="block">
-                <span className="block text-sm font-semibold text-ink mb-2">Tên người được tưởng nhớ</span>
+                <span className="block text-sm font-semibold text-ink mb-2">
+                  Tên người được tưởng nhớ <span className="text-rose-500">*</span>
+                </span>
                 <input
                   value={name}
                   maxLength={MAX_MEMORIAL_NAME_LENGTH}
@@ -140,12 +173,15 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
                     setName(event.target.value);
                     setError("");
                   }}
-                  placeholder="Ví dụ: Bà Ngoại"
-                  className="w-full min-h-11 rounded-control border border-line bg-surface px-4 text-base text-ink outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/20"
+                  placeholder="Ví dụ: Bà Ngoại, Ông Nội, Cha, Mẹ..."
+                  className="w-full min-h-12 rounded-xl border border-line bg-surface-soft/60 focus:bg-surface px-4 text-base text-ink outline-none transition-all focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                 />
               </label>
+
               <label className="block">
-                <span className="block text-sm font-semibold text-ink mb-2">Mối quan hệ</span>
+                <span className="block text-sm font-semibold text-ink mb-2">
+                  Mối quan hệ gia đình <span className="text-rose-500">*</span>
+                </span>
                 <input
                   value={relation}
                   maxLength={MAX_MEMORIAL_RELATION_LENGTH}
@@ -153,14 +189,17 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
                     setRelation(event.target.value);
                     setError("");
                   }}
-                  placeholder="Ví dụ: Người thân trong gia đình"
-                  className="w-full min-h-11 rounded-control border border-line bg-surface px-4 text-base text-ink outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/20"
+                  placeholder="Ví dụ: Đấng sinh thành, Người thân yêu..."
+                  className="w-full min-h-12 rounded-xl border border-line bg-surface-soft/60 focus:bg-surface px-4 text-base text-ink outline-none transition-all focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                 />
               </label>
+
               <label className="block">
-                <span className="block text-sm font-semibold text-ink mb-2">Ngày muốn ghi nhớ — dương lịch</span>
-                <span className="relative block">
-                  <CalendarDays className="absolute left-3 top-3.5 w-4 h-4 text-muted pointer-events-none" />
+                <span className="block text-sm font-semibold text-ink mb-2">
+                  Ngày muốn ghi nhớ — dương lịch <span className="text-rose-500">*</span>
+                </span>
+                <div className="relative">
+                  <CalendarDays className="absolute left-3.5 top-3.5 w-5 h-5 text-stone-500 pointer-events-none" />
                   <input
                     type="date"
                     min="0001-01-01"
@@ -170,16 +209,18 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
                       setDate(event.target.value);
                       setError("");
                     }}
-                    className="w-full min-h-11 rounded-control border border-line bg-surface pl-10 pr-4 text-base text-ink outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/20"
+                    className="w-full min-h-12 rounded-xl border border-line bg-surface-soft/60 focus:bg-surface pl-11 pr-4 text-base text-ink outline-none transition-all focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                   />
-                </span>
-                <p className="mt-2 text-sm text-muted leading-relaxed">
-                  Đây là một ngày cụ thể, chưa phải lịch giỗ âm lịch
-                  hoặc lời nhắc lặp lại hằng năm.
+                </div>
+                <p className="mt-2 text-xs sm:text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+                  Đây là mốc ngày dương lịch bạn muốn nhớ về. Bạn cũng có thể cài thêm lịch nhắc ngày giỗ âm lịch ở mục Quản lý nhắc lịch.
                 </p>
               </label>
+
               <label className="block">
-                <span className="block text-sm font-semibold text-ink mb-2">Lời tri ân <span className="font-normal text-muted">(tùy chọn)</span></span>
+                <span className="block text-sm font-semibold text-ink mb-2">
+                  Lời tri ân gửi gắm <span className="font-normal text-stone-500 text-xs">(tùy chọn)</span>
+                </span>
                 <Textarea
                   value={note}
                   maxLength={MAX_MEMORIAL_NOTE_LENGTH}
@@ -187,31 +228,41 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
                     setNote(event.target.value);
                     setError("");
                   }}
-                  placeholder="Một câu bạn muốn giữ lại…"
-                  className="min-h-28"
+                  placeholder="Những lời tâm sự, nỗi nhớ thương hoặc bài học quý giá bạn muốn giữ mãi trong tim…"
+                  className="min-h-32 p-4 text-sm sm:text-base leading-relaxed rounded-xl border border-line bg-surface-soft/60 focus:bg-surface text-ink placeholder:text-stone-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                 />
-                <p className="mt-2 text-xs text-muted">
-                  {note.length}/{MAX_MEMORIAL_NOTE_LENGTH} ký tự
-                </p>
+                <div className="mt-2 flex justify-end text-xs text-stone-500">
+                  <span>{note.length}/{MAX_MEMORIAL_NOTE_LENGTH} ký tự</span>
+                </div>
               </label>
             </div>
-            {error && <p className="mt-4 text-sm text-danger flex items-center gap-2" role="alert"><Heart className="w-4 h-4" /> {error}</p>}
-            <div className="mt-7 flex flex-col-reverse gap-3 border-t border-line pt-5 sm:flex-row sm:justify-end">
+
+            {error && (
+              <div
+                role="alert"
+                className="mt-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-700 dark:text-red-300 text-sm font-medium flex items-center gap-2.5 animate-fadeIn"
+              >
+                <Heart className="w-4 h-4 text-red-500 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <div className="mt-8 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 pt-6 border-t border-line">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onBack}
-                className="min-h-11"
+                className="min-h-11 px-5 rounded-xl border-line text-ink hover:text-accent cursor-pointer"
               >
-                Hủy
+                Hủy bỏ
               </Button>
 
               <Button
                 type="submit"
-                className="min-h-11 gap-2"
+                className="min-h-11 px-6 rounded-xl bg-gradient-to-r from-red-800 via-amber-700 to-amber-900 hover:from-red-700 hover:to-amber-800 text-white font-semibold shadow-md cursor-pointer gap-2"
               >
                 <Check aria-hidden="true" className="h-4 w-4" />
-                Lưu góc tưởng niệm
+                <span>{initialValue ? "Lưu thay đổi" : "Lưu góc tưởng niệm"}</span>
               </Button>
             </div>
           </form>

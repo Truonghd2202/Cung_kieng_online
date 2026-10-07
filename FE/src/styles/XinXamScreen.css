@@ -1,0 +1,489 @@
+/* ==========================================================================
+   TIN LẮM TÂM LINH — XIN XĂM SCREEN & TRADITIONAL XAM 10/10 STYLES
+   Ống Xăm Cổ Phong, Bức Trướng Thẻ Tre & Xăm Truyền Thống Quan Âm / Quan Thánh
+   ========================================================================== */
+
+/* 1. DẤU TRIỆN SON "XĂM" (籤) & TIÊU ĐỀ */
+.xinxam-seal-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #8b1e28 0%, #68131b 100%);
+  border: 1.5px solid rgba(245, 195, 110, 0.7);
+  box-shadow: 0 3px 10px rgba(139, 30, 40, 0.32);
+  color: #fde8c4;
+  font-family: "Noto Serif", Georgia, serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+  margin-right: 12px;
+  vertical-align: middle;
+  user-select: none;
+}
+
+/* Triệt tiêu hoàn toàn viền focus outline đỏ bao quanh tiêu đề */
+h1.xinxam-page-title,
+.xinxam-page-title,
+.xinxam-page-title:focus,
+.xinxam-page-title:focus-visible,
+.xinxam-page-title:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* 2. THANH TIẾN TRÌNH CỔ PHONG (STEP BAR) */
+.xinxam-step-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  border: 1px solid rgba(185, 145, 95, 0.4);
+  background: rgba(255, 252, 247, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-size: 12px;
+  font-weight: 600;
+  color: #7b593f;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.xinxam-step-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8b1e28;
+  box-shadow: 0 0 6px rgba(139, 30, 40, 0.4);
+}
+
+/* 3. THẺ CHỌN VÙNG MIỀN & CHỦ ĐỀ (STEP 1) */
+.xinxam-region-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1.5px solid rgba(215, 185, 150, 0.45);
+  background: rgba(255, 252, 247, 0.85);
+  cursor: pointer;
+  transition: all 220ms ease;
+  user-select: none;
+}
+
+.xinxam-region-card:hover {
+  background: #ffffff;
+  border-color: rgba(185, 135, 75, 0.75);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(60, 30, 15, 0.06);
+}
+
+.xinxam-region-card--active {
+  background: linear-gradient(145deg, rgba(255, 250, 245, 0.98) 0%, rgba(253, 242, 235, 0.95) 100%);
+  border-color: #8b1e28;
+  box-shadow: 0 4px 16px rgba(139, 30, 40, 0.12);
+  transform: translateY(-1px);
+}
+
+.xinxam-topic-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(215, 185, 150, 0.45);
+  background: rgba(255, 252, 247, 0.8);
+  color: #4a382c;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+  user-select: none;
+}
+
+.xinxam-topic-pill:hover {
+  background: #ffffff;
+  border-color: rgba(185, 135, 75, 0.7);
+  color: #8b1e28;
+  transform: translateY(-1px);
+}
+
+.xinxam-topic-pill--active {
+  background: linear-gradient(135deg, #8b1e28 0%, #71151f 100%);
+  border-color: #dfbd7d;
+  color: #fff6ed;
+  font-weight: 600;
+  box-shadow: 0 3px 12px rgba(139, 30, 40, 0.25);
+  transform: translateY(-1px);
+}
+
+/* 4. SÂN KHẤU LẮC ỐNG XĂM THIÊNG LIÊNG (STEP 2) */
+.xinxam-tube-stage {
+  position: relative;
+  isolation: isolate;
+  border-radius: 24px;
+  border: 1px solid rgba(215, 185, 140, 0.55);
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    rgba(255, 252, 246, 0.98) 0%,
+    rgba(250, 243, 230, 0.92) 100%
+  );
+  box-shadow:
+    0 8px 32px rgba(45, 25, 15, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  padding: clamp(2rem, 5vw, 3.5rem);
+  text-align: center;
+  overflow: hidden;
+}
+
+.xinxam-tube-stage-rim {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(215, 175, 75, 0.4) 15%,
+    rgba(235, 195, 105, 1) 50%,
+    rgba(215, 175, 75, 0.4) 85%,
+    transparent 100%
+  );
+  box-shadow: 0 1px 8px rgba(212, 175, 55, 0.45);
+}
+
+/* Hoạt ảnh lắc ống xăm */
+.xinxam-tube-shaking {
+  animation: tubeRattle 0.35s ease-in-out infinite alternate;
+}
+
+@keyframes tubeRattle {
+  0% { transform: rotate(-3deg) translateY(-2px); }
+  50% { transform: rotate(0deg) translateY(3px); }
+  100% { transform: rotate(3deg) translateY(-2px); }
+}
+
+/* Nút Lắc ống xăm đỏ trầm son ánh kim */
+.xinxam-draw-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 32px;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(135, 28, 20, 0.95);
+  background:
+    radial-gradient(120% 140% at 50% 0%, rgba(255, 140, 110, 0.25), transparent 55%),
+    linear-gradient(180deg, #b3342a 0%, #9a2219 55%, #841812 100%);
+  box-shadow:
+    0 4px 18px rgba(130, 30, 20, 0.35),
+    inset 0 1px 0 rgba(255, 215, 180, 0.35);
+  color: #fff6ed;
+  font-family: var(--font-display, "Fraunces", serif);
+  font-size: 16.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 220ms ease;
+}
+
+.xinxam-draw-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 24px rgba(130, 30, 20, 0.45);
+  transform: translateY(-2px);
+}
+
+.xinxam-draw-btn:disabled {
+  opacity: 0.85;
+  cursor: wait;
+}
+
+.xinxam-btn-sheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  pointer-events: none;
+  transform: translateX(-110%);
+  transition: transform 700ms ease;
+}
+
+.xinxam-draw-btn:hover .xinxam-btn-sheen {
+  transform: translateX(110%);
+}
+
+/* 5. BỨC TRƯỚNG THẺ XĂM KẾT QUẢ (STEP 3) */
+.xinxam-result-scroll {
+  position: relative;
+  isolation: isolate;
+  border-radius: 22px;
+  border: 1px solid rgba(215, 185, 140, 0.55);
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(255, 252, 246, 0.98) 0%,
+    rgba(250, 243, 230, 0.94) 100%
+  );
+  box-shadow:
+    0 8px 32px rgba(45, 25, 15, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  padding: clamp(1.75rem, 4vw, 2.75rem);
+  overflow: hidden;
+}
+
+.xinxam-scroll-golden-rim {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(215, 175, 75, 0.4) 15%,
+    rgba(235, 195, 105, 1) 50%,
+    rgba(215, 175, 75, 0.4) 85%,
+    transparent 100%
+  );
+  box-shadow: 0 1px 8px rgba(212, 175, 55, 0.45);
+}
+
+.xinxam-scroll-corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  color: rgba(195, 155, 110, 0.35);
+  pointer-events: none;
+  transition: color 220ms ease;
+}
+
+.xinxam-result-scroll:hover .xinxam-scroll-corner {
+  color: rgba(185, 125, 55, 0.75);
+}
+
+.xinxam-scroll-corner--tl { top: 8px; left: 8px; }
+.xinxam-scroll-corner--br { bottom: 8px; right: 8px; transform: rotate(180deg); }
+
+/* Câu thơ thẻ xăm chữ lớn */
+.xinxam-poem-lines {
+  font-family: "Cormorant Garamond", "Noto Serif", Georgia, serif;
+  font-size: clamp(1.5rem, 2.4vw, 2.1rem);
+  font-weight: 600;
+  color: #24140b;
+  line-height: 1.5;
+  margin: 1.25rem 0 1rem;
+  text-wrap: balance;
+  position: relative;
+}
+
+.xinxam-poem-lines::before {
+  content: "“";
+  font-family: Georgia, serif;
+  color: rgba(139, 30, 40, 0.22);
+  font-size: 3.2rem;
+  line-height: 0;
+  position: absolute;
+  left: -1.6rem;
+  top: 1.2rem;
+}
+
+/* 6. BỘ XĂM TRUYỀN THỐNG QUAN ÂM / QUAN THÁNH (TRADITIONAL XAM STYLES) */
+.traditional-xam-panel {
+  border-radius: 20px;
+  border: 1.5px solid rgba(215, 175, 110, 0.55);
+  background: linear-gradient(
+    145deg,
+    rgba(255, 252, 246, 0.98) 0%,
+    rgba(252, 244, 230, 0.92) 100%
+  );
+  box-shadow: 0 6px 26px rgba(45, 25, 15, 0.06);
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  overflow: hidden;
+  position: relative;
+}
+
+.traditional-collection-pill {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(215, 185, 150, 0.45);
+  background: rgba(255, 252, 247, 0.85);
+  cursor: pointer;
+  transition: all 220ms ease;
+  user-select: none;
+}
+
+.traditional-collection-pill:hover {
+  background: #ffffff;
+  border-color: rgba(185, 135, 75, 0.8);
+  transform: translateY(-1px);
+}
+
+.traditional-collection-pill--active {
+  background: linear-gradient(135deg, #8b1e28 0%, #71151f 100%);
+  border-color: #dfbd7d;
+  color: #fff6ed;
+  box-shadow: 0 4px 16px rgba(139, 30, 40, 0.25);
+}
+
+.traditional-stick-card {
+  position: relative;
+  border-radius: 18px;
+  border: 1px solid rgba(215, 185, 140, 0.55);
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(255, 253, 248, 0.98) 0%,
+    rgba(252, 245, 235, 0.94) 100%
+  );
+  box-shadow: 0 6px 22px rgba(45, 25, 15, 0.05);
+  padding: clamp(1.5rem, 3.5vw, 2rem);
+}
+
+/* Khối chữ Hán nguyên văn phồn thể */
+.traditional-chinese-block {
+  font-family: "Noto Serif TC", "KaiTi", "SongTi", serif;
+  font-size: clamp(1.3rem, 2vw, 1.65rem);
+  line-height: 1.65;
+  color: #8b1e28;
+  letter-spacing: 0.12em;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(139, 30, 40, 0.2);
+  background: rgba(139, 30, 40, 0.04);
+  text-align: center;
+}
+
+/* ==========================================================================
+   DARK MODE ADAPTATIONS
+   ========================================================================== */
+.dark .xinxam-step-indicator {
+  background: rgba(45, 36, 38, 0.85);
+  border-color: rgba(95, 65, 70, 0.7);
+  color: #dfbd7d;
+}
+
+.dark .xinxam-region-card {
+  background: rgba(33, 27, 29, 0.92);
+  border-color: rgba(95, 65, 70, 0.55);
+}
+
+.dark .xinxam-region-card:hover {
+  background: rgba(45, 36, 38, 0.96);
+  border-color: rgba(223, 189, 125, 0.6);
+}
+
+.dark .xinxam-region-card--active {
+  background: linear-gradient(145deg, rgba(55, 35, 40, 0.98) 0%, rgba(42, 26, 30, 0.95) 100%);
+  border-color: #f18a83;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+}
+
+.dark .xinxam-topic-pill {
+  background: rgba(33, 27, 29, 0.85);
+  border-color: rgba(95, 65, 70, 0.55);
+  color: var(--ui-ink);
+}
+
+.dark .xinxam-topic-pill:hover {
+  background: rgba(45, 36, 38, 0.95);
+  border-color: rgba(223, 189, 125, 0.6);
+  color: #dfbd7d;
+}
+
+.dark .xinxam-topic-pill--active {
+  background: linear-gradient(135deg, #ad3545 0%, #881e28 100%);
+  border-color: #dfbd7d;
+  color: #fffaf5;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.45);
+}
+
+.dark .xinxam-tube-stage {
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    rgba(38, 29, 32, 0.98) 0%,
+    rgba(28, 22, 24, 0.92) 100%
+  );
+  border-color: rgba(95, 65, 70, 0.6);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.dark .xinxam-result-scroll {
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(38, 29, 32, 0.98) 0%,
+    rgba(28, 22, 24, 0.94) 100%
+  );
+  border-color: rgba(95, 65, 70, 0.6);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.dark .xinxam-scroll-corner {
+  color: rgba(223, 189, 125, 0.35);
+}
+
+.dark .xinxam-result-scroll:hover .xinxam-scroll-corner {
+  color: rgba(223, 189, 125, 0.8);
+}
+
+.dark .xinxam-poem-lines {
+  color: #f7f0e9;
+}
+
+.dark .xinxam-poem-lines::before {
+  color: rgba(241, 138, 131, 0.35);
+}
+
+.dark .traditional-xam-panel {
+  background: linear-gradient(
+    145deg,
+    rgba(38, 29, 32, 0.98) 0%,
+    rgba(28, 22, 24, 0.92) 100%
+  );
+  border-color: rgba(95, 65, 70, 0.6);
+  box-shadow: 0 6px 26px rgba(0, 0, 0, 0.4);
+}
+
+.dark .traditional-collection-pill {
+  background: rgba(33, 27, 29, 0.85);
+  border-color: rgba(95, 65, 70, 0.55);
+  color: var(--ui-ink);
+}
+
+.dark .traditional-collection-pill:hover {
+  background: rgba(45, 36, 38, 0.95);
+  border-color: rgba(223, 189, 125, 0.6);
+}
+
+.dark .traditional-collection-pill--active {
+  background: linear-gradient(135deg, #ad3545 0%, #881e28 100%);
+  border-color: #dfbd7d;
+  color: #fffaf5;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+}
+
+.dark .traditional-stick-card {
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(38, 29, 32, 0.98) 0%,
+    rgba(28, 22, 24, 0.94) 100%
+  );
+  border-color: rgba(95, 65, 70, 0.6);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.4);
+}
+
+.dark .traditional-chinese-block {
+  color: #f18a83;
+  background: rgba(241, 138, 131, 0.08);
+  border-color: rgba(241, 138, 131, 0.25);
+}

@@ -5,12 +5,30 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { ArrowLeft, BookOpen, Check, Compass, Heart, Play, Waves } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  Check,
+  Compass,
+  Heart,
+  Play,
+  Pause,
+  Waves,
+  Volume2,
+  VolumeX,
+  Sparkles,
+  Flame,
+  Send,
+  Anchor,
+  ShieldCheck,
+  Music,
+  Share2,
+  RotateCcw,
+} from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { Textarea } from "@/src/components/ui/textarea";
-import { ChauVanAudioLibrary } from "../components/ChauVanAudioLibrary";
 import { SceneErrorBoundary } from "../components/SceneErrorBoundary";
 
 export type RegionalExperienceKind = "chau-van" | "sea-prayer" | "southern-culture";
@@ -35,485 +53,1100 @@ interface RegionalExperienceScreenProps {
   onGoToMemorial: () => void;
 }
 
-const CONTENT: Record<RegionalExperienceKind, {
-  region: string;
-  eyebrow: string;
-  title: string;
-  description: string;
-  image: string;
-  icon: React.ElementType;
-}> = {
-  "chau-van": {
-    region: "Bắc Bộ",
-    eyebrow: "Lời ca nghi lễ · Tự soi chiếu",
-    title: "Một nhịp chầu văn thật chậm",
-    description: "Lắng nghe câu chuyện về chầu văn, đạo Mẫu và không gian đình làng bằng một nhịp đọc tĩnh tại, tôn trọng di sản và người thực hành.",
-    image: "/images/temple_bac_bo.jpg",
-    icon: BookOpen,
+// Danh sách các bản văn Chầu Văn kinh điển mẫu mực
+interface ChauVanVerse {
+  id: string;
+  deity: string;
+  domain: string;
+  tempo: string;
+  lyrics: string[];
+  meaning: string;
+}
+
+const CHAU_VAN_VERSES: ChauVanVerse[] = [
+  {
+    id: "co-bo",
+    deity: "Văn Cô Bơ Thoải Phủ",
+    domain: "Đệ Tam Thoải Phủ · Ba Bông Thác Hàn",
+    tempo: "Nhịp Phú Bình · Thanh thoát êm ả",
+    lyrics: [
+      "Thuyền rồng lướt nhẹ dòng sông Mã,",
+      "Bóng Cô Bơ thoắt ẩn thoắt hiện bờ hoa.",
+      "Cung thoái ba đào tay chèo bẻ lái,",
+      "Cứu độ người hiền vượt ải trần gian.",
+    ],
+    meaning:
+      "Tôn vinh lòng từ bi của Cô Bơ Thoải Phủ ngự chốn sông Hàn thác Bông, vị thánh cô độ trì cho người đi sông nước bình an, ban thuốc tiên cứu chữa bệnh tật.",
   },
-  "sea-prayer": {
-    region: "Trung Bộ",
-    eyebrow: "Cầu Ngư · Biển nhớ",
-    title: "Gửi lời cầu bình an ra biển",
-    description: "Một khoảng dừng lấy cảm hứng từ đời sống vạn chài: nhớ ơn biển, giữ sự tỉnh táo và gửi một lời chúc lành đến người đang lên đường.",
-    image: "/images/hue_trung_bo.jpg",
-    icon: Waves,
+  {
+    id: "quan-de-tam",
+    deity: "Văn Quan Lớn Đệ Tam",
+    domain: "Đệ Tam Thoải Cung · Xích Tướng Đại Vương",
+    tempo: "Nhịp Cờ Mở · Uy nghi dõng dạc",
+    lyrics: [
+      "Lệnh truyền xích tướng uy nghi,",
+      "Cầm gươm thần hộ quốc uy danh ngút trời.",
+      "Chốn đền Hàn sóng xô nghìn trượng,",
+      "Trừ tà diệt ác độ khắp muôn dân.",
+    ],
+    meaning:
+      "Biểu trưng cho tinh thần quả cảm, chính trực của vị tướng thủy quân hộ quốc an dân, gạt bỏ điều xấu ác, chở che công lý.",
   },
-  "southern-culture": {
-    region: "Nam Bộ",
-    eyebrow: "Phù sa · Nghĩa tình",
-    title: "Dòng sông kể chuyện nhà",
-    description: "Khám phá nếp sống rộng rãi, nghĩa tình của miền sông nước qua ký ức gia đình, mâm cơm và những mùa hoa đăng.",
-    image: "/images/mekong_nam_bo.jpg",
+  {
+    id: "chua-thac-bo",
+    deity: "Văn Chúa Thác Bờ",
+    domain: "Chúa Mường Hòa Bình · Sông Đà Linh Ứng",
+    tempo: "Nhịp Sa Mạc · Trầm bổng ngút ngàn",
+    lyrics: [
+      "Núi non xanh ngát dòng Đà giang,",
+      "Thác gập ghềnh Chúa ngự trên ngàn mây bay.",
+      "Gạo bè buôn chuyến xuôi ngược,",
+      "Nhờ ơn Chúa độ thuận buồm chở che.",
+    ],
+    meaning:
+      "Gợi nhớ công đức hai vị nữ anh hùng dân tộc Mường giúp vua Lê Lợi dẹp loạn, bảo hộ cho bè mảng giao thương vượt ghềnh thác hiểm trở trên dòng sông Đà.",
+  },
+  {
+    id: "co-chin",
+    deity: "Văn Cô Chín Sòng Sơn",
+    domain: "Thượng Ngàn Đền Sòng · Cung Kiếm Quạt Hoa",
+    tempo: "Nhịp Dồn Phách · Tươi vui rộn rã",
+    lyrics: [
+      "Quạt hoa quẩy lẵng hái trà,",
+      "Hầu Mẫu Liễu Hạnh thướt tha cõi thiêng.",
+      "Lòng thành ai dâng một nén tâm hương,",
+      "Cô ban tài tiếp lộc trăm đường bình yên.",
+    ],
+    meaning:
+      "Thánh cô đệ cửu cai quản cõi thượng ngàn, thưởng phạt phân minh, ban lộc ban duyên lành cho những ai sống trọn đạo nghĩa.",
+  },
+];
+
+// Các ý niệm cầu nguyện biển cả
+const SEA_PRAYER_INTENTS = [
+  {
+    id: "distant-love",
+    title: "Cầu cho người thân nơi xa",
+    tagline: "Dặm trường cách trở, mong bước chân luôn vững vàng, an khang trọn vẹn.",
     icon: Heart,
   },
-};
+  {
+    id: "fishermen",
+    title: "Cầu cho ngư dân & người ra khơi",
+    tagline: "Thuận buồm xuôi gió, biển lặng sóng êm, chuyến đi bình yên cá nặng khoang thuyền.",
+    icon: Anchor,
+  },
+  {
+    id: "inner-peace",
+    title: "Cầu tâm an tĩnh tại",
+    tagline: "Gửi muộn phiền theo sóng trôi xa, giữ lại trong lòng sự bao dung rộng lớn của biển trời.",
+    icon: Waves,
+  },
+];
 
 export const RegionalExperienceScreen: React.FC<RegionalExperienceScreenProps> = ({
-  kind,
+  kind: initialKind,
   currentUserEmail,
   onBack,
   onGoToWish,
   onGoToMemorial,
 }) => {
-  const accountId =
-    currentUserEmail?.trim().toLowerCase() ||
-    "guest";
+  const [activeKind, setActiveKind] = useState<RegionalExperienceKind>(initialKind);
 
-  const noteStorageKey =
-    `tltl-regional-note-${accountId}-${kind}`;
+  const accountId = currentUserEmail?.trim().toLowerCase() || "guest";
+  const noteStorageKey = `tltl-regional-note-${accountId}-${activeKind}`;
 
+  // State cho ghi chép
   const [note, setNote] = useState("");
   const [savedNote, setSavedNote] = useState("");
-  const [noteError, setNoteError] = useState("");
-  const [started, setStarted] = useState(false);
-  const [showRiver, setShowRiver] = useState(false);
-  const [showSea, setShowSea] = useState(false);
-  const [showNorthernShrine, setShowNorthernShrine] =
-    useState(false);
+  const [noteSavedSuccess, setNoteSavedSuccess] = useState(false);
 
-  const readingSectionRef =
-    useRef<HTMLElement | null>(null);
+  // State tương tác Chầu Văn
+  const [activeVerseIndex, setActiveVerseIndex] = useState(0);
+  const [isPlayingChauVanAudio, setIsPlayingChauVanAudio] = useState(false);
+  const [showNorthernShrine, setShowNorthernShrine] = useState(false);
+  const [hasIncenseLit, setHasIncenseLit] = useState(false);
 
-  const readingButtonRef =
-    useRef<HTMLButtonElement | null>(null);
+  // State tương tác Lời cầu biển
+  const [selectedSeaIntent, setSelectedSeaIntent] = useState(SEA_PRAYER_INTENTS[0].id);
+  const [seaPrayerWish, setSeaPrayerWish] = useState("");
+  const [hasOfferedSeaPrayer, setHasOfferedSeaPrayer] = useState(false);
+  const [isPlayingSeaSound, setIsPlayingSeaSound] = useState(false);
+  const [showSeaScene, setShowSeaScene] = useState(false);
 
-  const handleStartReading = () => {
-    if (started) {
-      readingSectionRef.current?.focus();
-      return;
-    }
+  // Web Audio Context Refs
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const soundIntervalRef = useRef<any>(null);
 
-    setStarted(true);
-  };
-
-  const handleCloseReading = () => {
-    setStarted(false);
-
-    readingButtonRef.current?.focus({
-      preventScroll: true,
-    });
-  };
-
+  // Khởi tạo note từ session storage khi đổi tab
   useEffect(() => {
-    if (!started || kind !== "chau-van") return;
-
-    const section = readingSectionRef.current;
-
-    if (!section) return;
-
-    section.focus({
-      preventScroll: true,
-    });
-
-    section.scrollIntoView({
-      behavior: "auto",
-      block: "start",
-    });
-  }, [started, kind]);
-
-  const noteSaved =
-    note.trim().length > 0 &&
-    note.trim() === savedNote;
-
-  useEffect(() => {
-    setNoteError("");
-    setStarted(false);
-    setShowRiver(false);
-
     try {
-      const stored =
-        sessionStorage.getItem(noteStorageKey) || "";
-
+      const stored = sessionStorage.getItem(noteStorageKey) || "";
       setNote(stored);
       setSavedNote(stored);
+      setNoteSavedSuccess(false);
     } catch {
       setNote("");
       setSavedNote("");
-      setNoteError(
-        "Chưa đọc được cảm nhận trong tab này."
-      );
     }
-  }, [noteStorageKey]);
+  }, [noteStorageKey, activeKind]);
 
+  // Cleanup âm thanh khi unmount
   useEffect(() => {
-    setShowSea(false);
-  }, [kind, accountId]);
+    return () => {
+      stopAudioSynthesizer();
+    };
+  }, []);
 
-  useEffect(() => {
-    setShowNorthernShrine(false);
-  }, [kind, accountId]);
-
-  const handleSaveNote = () => {
-    const cleanNote = note.trim();
-
-    setNoteError("");
-
-    if (!cleanNote) {
-      setNoteError(
-        "Bạn hãy viết một vài dòng trước khi lưu."
-      );
-      return;
+  // Web Audio Synthesizer: Tạo tiếng gõ phách gỗ / tiếng sóng biển thiền định
+  const stopAudioSynthesizer = () => {
+    if (soundIntervalRef.current) {
+      clearInterval(soundIntervalRef.current);
+      soundIntervalRef.current = null;
     }
-
-    if (cleanNote.length > 1000) {
-      setNoteError(
-        "Cảm nhận tối đa 1.000 ký tự."
-      );
-      return;
+    if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
+      try {
+        audioCtxRef.current.close();
+      } catch {}
+      audioCtxRef.current = null;
     }
-
-    try {
-      sessionStorage.setItem(
-        noteStorageKey,
-        cleanNote
-      );
-    } catch {
-      setNoteError(
-        "Chưa lưu được cảm nhận. Nội dung đang viết vẫn được giữ; hãy thử lại."
-      );
-      return;
-    }
-
-    setNote(cleanNote);
-    setSavedNote(cleanNote);
+    setIsPlayingChauVanAudio(false);
+    setIsPlayingSeaSound(false);
   };
 
-  const content = CONTENT[kind];
-  const Icon = content.icon;
+  const playWoodenClapperSound = (ctx: AudioContext, time: number, pitch = 880) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(pitch, time);
+    osc.frequency.exponentialRampToValueAtTime(pitch * 0.4, time + 0.08);
+
+    gain.gain.setValueAtTime(0.35, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(time);
+    osc.stop(time + 0.12);
+  };
+
+  const playBellSound = (ctx: AudioContext, time: number) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(528, time); // 528Hz Solfeggio Love frequency
+
+    gain.gain.setValueAtTime(0.2, time);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + 2.2);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(time);
+    osc.stop(time + 2.2);
+  };
+
+  const toggleChauVanAudio = () => {
+    if (isPlayingChauVanAudio) {
+      stopAudioSynthesizer();
+      return;
+    }
+
+    stopAudioSynthesizer();
+
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new AudioCtx();
+      audioCtxRef.current = ctx;
+
+      setIsPlayingChauVanAudio(true);
+
+      // Nhịp phách Chầu Văn: Cắc... Tùng cắc...
+      let beat = 0;
+      playBellSound(ctx, ctx.currentTime);
+
+      soundIntervalRef.current = setInterval(() => {
+        if (!audioCtxRef.current || audioCtxRef.current.state === "closed") return;
+        const now = audioCtxRef.current.currentTime;
+
+        if (beat % 8 === 0) {
+          playBellSound(audioCtxRef.current, now); // Chuông ngân ở đầu chu kỳ
+        }
+
+        if (beat % 2 === 0) {
+          playWoodenClapperSound(audioCtxRef.current, now, 820); // Phách đanh
+        } else {
+          playWoodenClapperSound(audioCtxRef.current, now, 640); // Phách trầm
+        }
+
+        beat = (beat + 1) % 16;
+      }, 550);
+    } catch {
+      setIsPlayingChauVanAudio(false);
+    }
+  };
+
+  const toggleSeaSound = () => {
+    if (isPlayingSeaSound) {
+      stopAudioSynthesizer();
+      return;
+    }
+
+    stopAudioSynthesizer();
+
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new AudioCtx();
+      audioCtxRef.current = ctx;
+
+      setIsPlayingSeaSound(true);
+
+      // Mô phỏng tiếng sóng biển rì rào với white noise buffer & lowpass filter
+      const bufferSize = ctx.sampleRate * 2;
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+
+      const whiteNoise = ctx.createBufferSource();
+      whiteNoise.buffer = noiseBuffer;
+      whiteNoise.loop = true;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(320, ctx.currentTime);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+
+      whiteNoise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      whiteNoise.start();
+
+      // Hiệu ứng sóng dâng và rút nhịp nhàng
+      let waveUp = true;
+      soundIntervalRef.current = setInterval(() => {
+        if (!audioCtxRef.current || audioCtxRef.current.state === "closed") return;
+        const now = audioCtxRef.current.currentTime;
+        if (waveUp) {
+          filter.frequency.exponentialRampToValueAtTime(750, now + 3);
+          gain.gain.linearRampToValueAtTime(0.3, now + 3);
+        } else {
+          filter.frequency.exponentialRampToValueAtTime(260, now + 3.5);
+          gain.gain.linearRampToValueAtTime(0.12, now + 3.5);
+        }
+        waveUp = !waveUp;
+      }, 3500);
+    } catch {
+      setIsPlayingSeaSound(false);
+    }
+  };
+
+  // Lưu cảm nhận
+  const handleSaveNote = () => {
+    const cleanNote = note.trim();
+    if (!cleanNote) return;
+
+    try {
+      sessionStorage.setItem(noteStorageKey, cleanNote);
+      setSavedNote(cleanNote);
+      setNoteSavedSuccess(true);
+      setTimeout(() => setNoteSavedSuccess(false), 3000);
+    } catch {}
+  };
+
+  // Thả lời cầu ra biển
+  const handleOfferSeaPrayer = () => {
+    if (!seaPrayerWish.trim()) return;
+    setHasOfferedSeaPrayer(true);
+    // Tự động lưu lời cầu vào ghi chú
+    const updatedNote = note ? `${note}\n\n[Lời cầu ra biển mẹ]: ${seaPrayerWish}` : `[Lời cầu ra biển mẹ]: ${seaPrayerWish}`;
+    setNote(updatedNote);
+    try {
+      sessionStorage.setItem(noteStorageKey, updatedNote);
+      setSavedNote(updatedNote);
+    } catch {}
+  };
+
+  const activeVerse = CHAU_VAN_VERSES[activeVerseIndex];
 
   return (
     <div className="screen-shell">
-      <main className="page-container max-w-5xl">
-        <div className="flex items-center justify-between gap-3 mb-6 text-xs text-muted">
-          <button type="button" onClick={onBack} className="inline-flex items-center gap-1.5 hover:text-accent transition-colors"><ArrowLeft className="w-3.5 h-3.5" /> Vùng văn hóa</button>
-          <Badge variant="outline">Trải nghiệm {content.region}</Badge>
+      <main className="page-container max-w-7xl">
+        {/* Top Breadcrumb Nav */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 text-xs text-stone-600 dark:text-stone-400">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 hover:text-accent transition-colors font-medium cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Quay lại chuyên đề vùng miền</span>
+          </button>
+
+          <Badge
+            variant="outline"
+            className="text-xs px-3 py-0.5 border-amber-400/40 text-amber-800 dark:text-amber-300 bg-amber-500/10 font-medium"
+          >
+            ✦ KHÔNG GIAN THỰC HÀNH TÂM LINH
+          </Badge>
         </div>
 
-        <section className="grid lg:grid-cols-[1fr_0.8fr] gap-8 items-center mb-10">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-accent mb-3"><Icon className="w-4 h-4" /> {content.eyebrow}</div>
-            <h1 className="page-title mb-4">{content.title}</h1>
-            <p className="text-sm sm:text-base text-muted leading-relaxed mb-6">{content.description}</p>
-            <div className="flex flex-wrap gap-3">
-              {kind === "chau-van" && (
-                <Button
-                  ref={readingButtonRef}
-                  type="button"
-                  onClick={handleStartReading}
-                  aria-expanded={started}
-                  aria-controls="regional-reading-panel"
-                  className="gap-2"
-                >
-                  <BookOpen
-                    className="h-4 w-4"
-                    aria-hidden="true"
+        {/* Regional Experience Switcher Tabs */}
+        <div className="flex items-center gap-2.5 mb-8 overflow-x-auto pb-1">
+          <button
+            type="button"
+            onClick={() => {
+              stopAudioSynthesizer();
+              setActiveKind("chau-van");
+            }}
+            className={`min-h-11 px-5 rounded-xl text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
+              activeKind === "chau-van"
+                ? "bg-gradient-to-r from-red-800 via-amber-700 to-amber-900 text-white shadow-md ring-2 ring-amber-500/30"
+                : "bg-surface text-stone-700 dark:text-stone-300 border border-line hover:border-amber-500/40 hover:text-amber-800"
+            }`}
+          >
+            <span>⛩️</span>
+            <span>Nhịp Chầu Văn (Bắc Bộ)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              stopAudioSynthesizer();
+              setActiveKind("sea-prayer");
+            }}
+            className={`min-h-11 px-5 rounded-xl text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
+              activeKind === "sea-prayer"
+                ? "bg-gradient-to-r from-rose-800 via-rose-700 to-rose-950 text-white shadow-md ring-2 ring-rose-500/30"
+                : "bg-surface text-stone-700 dark:text-stone-300 border border-line hover:border-rose-500/40 hover:text-rose-800"
+            }`}
+          >
+            <span>🌊</span>
+            <span>Lời Cầu Bình An Ra Biển (Trung Bộ)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              stopAudioSynthesizer();
+              setActiveKind("southern-culture");
+            }}
+            className={`min-h-11 px-5 rounded-xl text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
+              activeKind === "southern-culture"
+                ? "bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-950 text-white shadow-md ring-2 ring-emerald-500/30"
+                : "bg-surface text-stone-700 dark:text-stone-300 border border-line hover:border-emerald-500/40 hover:text-emerald-800"
+            }`}
+          >
+            <span>🚣</span>
+            <span>Sông Nước Nghĩa Tình (Nam Bộ)</span>
+          </button>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* ================= 1. TRẢI NGHIỆM CHẦU VĂN BẮC BỘ ======================== */}
+        {/* ========================================================================= */}
+        {activeKind === "chau-van" && (
+          <div className="space-y-12">
+            {/* Hero Magazine Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+              <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-widest text-amber-800 dark:text-amber-400">
+                      DI SẢN DIỄN XƯỚNG TÂM LINH
+                    </span>
+                    <span className="text-xs text-stone-500">·</span>
+                    <span className="text-xs text-stone-500">Bắc Bộ</span>
+                  </div>
+
+                  <h1
+                    tabIndex={-1}
+                    className="page-title font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-ink outline-none border-0 leading-tight"
+                  >
+                    Một nhịp chầu văn thật chậm
+                  </h1>
+
+                  <p className="font-display text-base sm:text-lg text-amber-800 dark:text-amber-400 font-medium leading-relaxed">
+                    Lời ca nghi lễ, đàn nguyệt thong dong và cõi thiêng Tứ Phủ huyền diệu
+                  </p>
+
+                  <div className="p-4 rounded-xl border-l-2 border-amber-600 bg-amber-500/5 dark:bg-amber-500/10 border border-line/60">
+                    <p className="font-display italic text-xs sm:text-sm text-ink leading-relaxed">
+                      “Thánh giá hồi loan muôn thuở rạng — Đàn gảy năm cung vọng đất trời.”
+                    </p>
+                  </div>
+
+                  <p className="text-sm sm:text-base text-stone-700 dark:text-stone-300 leading-relaxed">
+                    Chầu văn không chỉ là nghi thức hầu thánh linh thiêng của tín ngưỡng thờ Mẫu Tam phủ,
+                    mà còn là viên ngọc quý của văn hóa dân gian Việt Nam. Từng nhịp phách, cung đàn nguyệt
+                    và lời thơ lục bát đưa con người vào trạng thái an tĩnh, hòa mình cùng linh khí non sông.
+                  </p>
+                </div>
+
+                {/* Sound & Sensory Controls Bar */}
+                <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={toggleChauVanAudio}
+                      className="w-12 h-12 rounded-xl bg-gradient-to-r from-red-800 to-amber-700 text-white flex items-center justify-center shadow-md hover:scale-105 transition-all cursor-pointer"
+                    >
+                      {isPlayingChauVanAudio ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                    </button>
+                    <div>
+                      <h4 className="font-display text-sm font-bold text-ink">
+                        {isPlayingChauVanAudio ? "Đang phát âm hưởng Chầu Văn & Chuông thiền" : "Bật thanh âm nhịp phách & chuông đồng"}
+                      </h4>
+                      <p className="text-xs text-stone-500">
+                        Âm thanh gõ phách mộc mạc và chuông ngân 528Hz giúp tĩnh tâm sâu
+                      </p>
+                    </div>
+                  </div>
+
+                  <Badge
+                    variant="outline"
+                    className={`text-xs px-3 py-1 ${
+                      isPlayingChauVanAudio ? "border-amber-500 text-amber-700 bg-amber-500/20 animate-pulse" : "text-stone-500"
+                    }`}
+                  >
+                    {isPlayingChauVanAudio ? "✦ Đang ngân vang" : "Tĩnh lặng"}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Right Column: Visual Artwork */}
+              <div className="lg:col-span-5 relative flex flex-col justify-center">
+                <div className="relative overflow-hidden rounded-2xl shadow-md border border-line bg-surface-soft h-72 sm:h-80 lg:h-full min-h-[340px]">
+                  <img
+                    src="/images/temple_bac_bo.jpg"
+                    alt="Đình làng và không gian thờ Mẫu Bắc Bộ"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none" />
+
+                  <div className="absolute top-4 left-4">
+                    <Badge className="bg-surface/90 text-amber-800 border-amber-400/40 text-xs font-bold px-3 py-1 backdrop-blur-md">
+                      ✦ DI SẢN PHI VẬT THỂ UNESCO
+                    </Badge>
+                  </div>
+
+                  <div className="absolute bottom-4 left-4 right-4 text-white">
+                    <span className="text-[11px] uppercase tracking-wider text-amber-300 font-semibold block mb-1">
+                      KHÔNG GIAN ĐỀN PHỦ
+                    </span>
+                    <p className="font-display text-xs sm:text-sm font-medium leading-snug drop-shadow-sm text-stone-100">
+                      Mùi hương trầm thoảng nhẹ, bóng áo thụng khăn xếp hòa nhịp phách tiền tao nhã
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Trình Diễn & Thưởng Thức Văn Ca Cổ Truyền */}
+            <section className="p-6 sm:p-8 rounded-2xl border border-line bg-surface/95 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-line">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-widest text-amber-800 dark:text-amber-400 block mb-1">
+                    BÀI BẢN VĂN CA KINH ĐIỂN
+                  </span>
+                  <h3 className="font-display text-xl sm:text-2xl font-bold text-ink">
+                    Lắng đọng qua từng áng văn cổ
+                  </h3>
+                </div>
+
+                {/* Tab chọn bài văn */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                  {CHAU_VAN_VERSES.map((v, i) => (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setActiveVerseIndex(i)}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 ${
+                        activeVerseIndex === i
+                          ? "bg-amber-600 text-white shadow-xs"
+                          : "bg-surface-soft text-stone-600 hover:bg-amber-500/10"
+                      }`}
+                    >
+                      {v.deity.replace("Văn ", "")}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Display Active Verse */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <div className="lg:col-span-7 space-y-5">
+                  <div className="flex items-center gap-2.5">
+                    <Music className="w-5 h-5 text-amber-700 dark:text-amber-400" />
+                    <h4 className="font-display text-lg sm:text-xl font-bold text-ink">
+                      {activeVerse.deity}
+                    </h4>
+                    <Badge variant="outline" className="text-xs border-amber-400/30 text-amber-800 bg-amber-500/10">
+                      {activeVerse.tempo}
+                    </Badge>
+                  </div>
+
+                  {/* Khung lời văn ca cổ truyền */}
+                  <div className="p-6 rounded-2xl border border-amber-500/20 bg-amber-500/5 font-display space-y-2 text-base sm:text-lg text-ink leading-relaxed">
+                    {activeVerse.lyrics.map((line, idx) => (
+                      <p key={idx} className="italic hover:text-amber-800 transition-colors">
+                        {line}
+                      </p>
+                    ))}
+                  </div>
+
+                  <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+                    <strong>Ý nghĩa tâm linh:</strong> {activeVerse.meaning}
+                  </p>
+                </div>
+
+                <div className="lg:col-span-5 space-y-4">
+                  <Card className="p-5 rounded-xl border border-line bg-surface-soft/60 space-y-3">
+                    <h5 className="font-display text-sm font-bold text-ink">
+                      Căn cốt của một buổi hầu văn
+                    </h5>
+                    <p className="text-xs text-stone-600 leading-relaxed">
+                      Một canh đàn gồm các cung văn kỳ cựu tấu đàn nguyệt, gõ phách tre, trống con, cảnh đồng.
+                      Lời văn ca ngợi công đức thánh thần, nhắc nhở con người nhớ về nguồn cội núi sông.
+                    </p>
+                    <div className="pt-2 border-t border-line/60 flex items-center justify-between text-xs text-amber-800 font-semibold">
+                      <span>✦ Đạo Mẫu Tam Phủ</span>
+                      <span>✦ Đàn Nguyệt Cổ</span>
+                    </div>
+                  </Card>
+
+                  {/* Toggle 3D Northern Shrine */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowNorthernShrine(!showNorthernShrine)}
+                    className="w-full min-h-11 rounded-xl border-amber-500/40 text-amber-800 dark:text-amber-300 hover:bg-amber-500/10 font-semibold cursor-pointer gap-2"
+                  >
+                    <Flame className="w-4 h-4 text-amber-600" />
+                    <span>{showNorthernShrine ? "Thu gọn không gian 3D" : "Mở không gian Phủ Điện 3D & Thắp nhang"}</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* 3D Shrine Canvas */}
+              {showNorthernShrine && (
+                <div className="mt-6 pt-6 border-t border-line">
+                  <SceneErrorBoundary onClose={() => setShowNorthernShrine(false)}>
+                    <Suspense fallback={<p className="text-xs text-stone-500 text-center py-6">Đang tải cảnh Phủ Điện 3D...</p>}>
+                      <NorthernShrineScene />
+                    </Suspense>
+                  </SceneErrorBoundary>
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* ================= 2. TRẢI NGHIỆM LỜI CẦU BÌNH AN RA BIỂN ================ */}
+        {/* ========================================================================= */}
+        {activeKind === "sea-prayer" && (
+          <div className="space-y-12">
+            {/* Hero Magazine Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+              <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-widest text-rose-800 dark:text-rose-400">
+                      TÍN NGƯỠNG CẦU NGƯ & BIỂN NHỚ
+                    </span>
+                    <span className="text-xs text-stone-500">·</span>
+                    <span className="text-xs text-stone-500">Trung Bộ</span>
+                  </div>
+
+                  <h1
+                    tabIndex={-1}
+                    className="page-title font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-ink outline-none border-0 leading-tight"
+                  >
+                    Gửi lời cầu bình an ra biển
+                  </h1>
+
+                  <p className="font-display text-base sm:text-lg text-rose-800 dark:text-rose-400 font-medium leading-relaxed">
+                    Một khoảng dừng lấy cảm hứng từ đời sống vạn chài miền Trung duyên hải
+                  </p>
+
+                  <div className="p-4 rounded-xl border-l-2 border-rose-600 bg-rose-500/5 dark:bg-rose-500/10 border border-line/60">
+                    <p className="font-display italic text-xs sm:text-sm text-ink leading-relaxed">
+                      “Biển rộng trời cao ơn trời bể — Sóng yên gió lặng khách bình an.”
+                    </p>
+                  </div>
+
+                  <p className="text-sm sm:text-base text-stone-700 dark:text-stone-300 leading-relaxed">
+                    Người miền duyên hải gánh hai đầu đất nước, sinh mệnh gắn liền với ngọn sóng ngọn gió.
+                    Tín ngưỡng thờ Cá Ông (Nam Hải Đại Tướng Quân) và Lễ hội Cầu Ngư là nơi con người thể hiện
+                    lòng biết ơn biển mẹ, gửi gắm lời cầu chúc thuận buồm xuôi gió cho những chuyến ra khơi.
+                  </p>
+                </div>
+
+                {/* Ocean Sound Controls */}
+                <div className="p-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={toggleSeaSound}
+                      className="w-12 h-12 rounded-xl bg-gradient-to-r from-rose-800 to-rose-700 text-white flex items-center justify-center shadow-md hover:scale-105 transition-all cursor-pointer"
+                    >
+                      {isPlayingSeaSound ? <VolumeX className="w-5 h-5" /> : <Waves className="w-5 h-5" />}
+                    </button>
+                    <div>
+                      <h4 className="font-display text-sm font-bold text-ink">
+                        {isPlayingSeaSound ? "Đang lắng nghe tiếng sóng biển vỗ rì rào" : "Bật thanh âm sóng biển thư thái"}
+                      </h4>
+                      <p className="text-xs text-stone-500">
+                        Âm hưởng tiếng sóng vỗ bờ cát giúp xoa dịu âu lo, mở rộng tâm hồn
+                      </p>
+                    </div>
+                  </div>
+
+                  <Badge
+                    variant="outline"
+                    className={`text-xs px-3 py-1 ${
+                      isPlayingSeaSound ? "border-rose-500 text-rose-700 bg-rose-500/20 animate-pulse" : "text-stone-500"
+                    }`}
+                  >
+                    {isPlayingSeaSound ? "✦ Sóng biển đang dâng" : "Tĩnh lặng"}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Right Column: Visual Artwork */}
+              <div className="lg:col-span-5 relative flex flex-col justify-center">
+                <div className="relative overflow-hidden rounded-2xl shadow-md border border-line bg-surface-soft h-72 sm:h-80 lg:h-full min-h-[340px]">
+                  <img
+                    src="/images/hue_trung_bo.jpg"
+                    alt="Biển miền Trung và lăng tẩm Cố đô"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none" />
+
+                  <div className="absolute top-4 left-4">
+                    <Badge className="bg-surface/90 text-rose-800 border-rose-400/40 text-xs font-bold px-3 py-1 backdrop-blur-md">
+                      ✦ LỄ CẦU NGƯ DUYÊN HẢI
+                    </Badge>
+                  </div>
+
+                  <div className="absolute bottom-4 left-4 right-4 text-white">
+                    <span className="text-[11px] uppercase tracking-wider text-rose-300 font-semibold block mb-1">
+                      BIỂN MẸ BAO DUNG
+                    </span>
+                    <p className="font-display text-xs sm:text-sm font-medium leading-snug drop-shadow-sm text-stone-100">
+                      Gửi muộn phiền theo ngọn sóng xa, đón nhận lòng kiên cường và bao dung từ biển cả
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Nghi thức Tương Tác: Thả Lời Cầu Bình An Ra Biển */}
+            <section className="p-6 sm:p-8 rounded-2xl border border-line bg-surface/95 shadow-xs">
+              <div className="max-w-3xl mx-auto text-center mb-8">
+                <span className="text-xs font-bold uppercase tracking-widest text-rose-800 dark:text-rose-400 block mb-1">
+                  NGHI THỨC TÂM NIỆM TRỰC TUYẾN
+                </span>
+                <h3 className="font-display text-2xl sm:text-3xl font-bold text-ink mb-2">
+                  Thả một lời chúc lành vào lòng biển mẹ
+                </h3>
+                <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+                  Chọn một đối tượng bạn muốn gửi gắm lời cầu bình an, viết đôi dòng chân thành
+                  và thả ngọn nến nguyện ước trôi êm đềm trên làn sóng xanh.
+                </p>
+              </div>
+
+              {/* 3 Lựa chọn đối tượng cầu nguyện */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {SEA_PRAYER_INTENTS.map((intent) => {
+                  const Icon = intent.icon;
+                  const isSelected = selectedSeaIntent === intent.id;
+                  return (
+                    <div
+                      key={intent.id}
+                      onClick={() => setSelectedSeaIntent(intent.id)}
+                      className={`p-4 rounded-xl border text-left cursor-pointer transition-all ${
+                        isSelected
+                          ? "bg-rose-500/10 border-rose-500/60 ring-1 ring-rose-500/30"
+                          : "bg-surface-soft hover:bg-surface border-line"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon className={`w-4 h-4 ${isSelected ? "text-rose-700" : "text-stone-400"}`} />
+                        <h4 className="font-display text-sm font-bold text-ink">
+                          {intent.title}
+                        </h4>
+                      </div>
+                      <p className="text-xs text-stone-500 leading-relaxed">
+                        {intent.tagline}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Form viết lời cầu */}
+              {!hasOfferedSeaPrayer ? (
+                <div className="max-w-2xl mx-auto space-y-4">
+                  <Textarea
+                    value={seaPrayerWish}
+                    onChange={(e) => setSeaPrayerWish(e.target.value)}
+                    placeholder="Viết lời chúc lành, lời cầu mong bình an cho người thân, cho chuyến đi, hoặc cho chính mình…"
+                    className="min-h-28 rounded-xl border-line text-sm"
                   />
 
-                  {started
-                    ? "Trở lại phần đọc"
-                    : "Mở một nhịp đọc"}
-                </Button>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-stone-500 italic">
+                      * Lời cầu nguyện sẽ được lưu vào sổ nhật ký chiêm nghiệm của bạn
+                    </span>
+                    <Button
+                      type="button"
+                      disabled={!seaPrayerWish.trim()}
+                      onClick={handleOfferSeaPrayer}
+                      className="min-h-11 px-6 rounded-xl bg-gradient-to-r from-rose-800 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white font-semibold cursor-pointer gap-2 shadow-md"
+                    >
+                      <Send className="w-4 h-4" />
+                      <span>Thả lời cầu ra biển</span>
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="max-w-xl mx-auto p-6 rounded-2xl border border-rose-500/40 bg-rose-500/10 text-center space-y-4 animate-fade-in">
+                  <div className="w-12 h-12 mx-auto rounded-full bg-rose-500/20 flex items-center justify-center text-rose-700">
+                    <Sparkles className="w-6 h-6 animate-pulse" />
+                  </div>
+                  <div>
+                    <h4 className="font-display text-lg font-bold text-ink">
+                      Lời nguyện ước đã hòa vào biển khơi bao la
+                    </h4>
+                    <p className="text-xs sm:text-sm text-stone-600 mt-1 italic">
+                      “{seaPrayerWish}”
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setHasOfferedSeaPrayer(false);
+                      setSeaPrayerWish("");
+                    }}
+                    className="text-xs rounded-xl"
+                  >
+                    Gửi thêm một lời chúc lành khác
+                  </Button>
+                </div>
               )}
-              {kind === "sea-prayer" && (
-                <Button
-                  type="button"
-                  onClick={onGoToWish}
-                  className="gap-2"
-                >
-                  <Waves
-                    className="h-4 w-4"
-                    aria-hidden="true"
-                  />
-                  Viết lời cầu bình an
-                </Button>
-              )}
-              {kind === "southern-culture" && <Button className="gap-2" onClick={onGoToMemorial}><Heart className="w-4 h-4" /> Nhớ về người thân</Button>}
-              {kind !== "sea-prayer" && (
+
+              {/* Toggle 3D Central Sea Scene */}
+              <div className="mt-8 pt-6 border-t border-line text-center">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={onGoToWish}
+                  onClick={() => setShowSeaScene(!showSeaScene)}
+                  className="rounded-xl border-rose-500/40 text-rose-800 dark:text-rose-300 hover:bg-rose-500/10 font-semibold cursor-pointer gap-2"
                 >
-                  Gửi gắm một điều ước
+                  <Waves className="w-4 h-4 text-rose-600" />
+                  <span>{showSeaScene ? "Thu gọn cảnh biển 3D" : "Mở không gian biển 3D quan sát sóng nước"}</span>
                 </Button>
-              )}
-            </div>
-          </div>
-          <div className="relative h-64 rounded-card overflow-hidden border border-line"><img src={content.image} alt={content.region} className="h-full w-full object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-canvas/90 to-transparent" /><span className="absolute bottom-5 left-5 text-ink font-display text-lg">Một lát cắt văn hóa để lắng lại</span></div>
-        </section>
 
-        {kind === "chau-van" && <ChauVanAudioLibrary />}
-
-        {kind === "sea-prayer" && (
-          <section className="mt-6 rounded-2xl border border-line bg-surface p-5">
-            <h2 className="text-lg font-semibold text-ink">
-              Không gian biển 3D
-            </h2>
-
-            <p className="mt-2 text-sm text-muted">
-              Mở một cảnh biển minh họa để quan sát và nghỉ một nhịp.
-              Bạn có thể tiếp tục đọc và viết lời chúc bên dưới.
-            </p>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-4"
-              aria-expanded={showSea}
-              aria-controls="central-sea-panel"
-              onClick={() => setShowSea((previous) => !previous)}
-            >
-              {showSea ? "Đóng cảnh biển" : "Mở cảnh biển 3D"}
-            </Button>
-
-            {showSea && (
-              <div id="central-sea-panel" className="mt-5">
-                <SceneErrorBoundary
-                  onClose={() => setShowSea(false)}
-                >
-                  <Suspense
-                    fallback={
-                      <p role="status" className="text-sm text-muted">
-                        Đang tải cảnh biển…
-                      </p>
-                    }
-                  >
-                    <CentralSeaScene />
-                  </Suspense>
-                </SceneErrorBoundary>
+                {showSeaScene && (
+                  <div className="mt-5 text-left">
+                    <SceneErrorBoundary onClose={() => setShowSeaScene(false)}>
+                      <Suspense fallback={<p className="text-xs text-stone-500 text-center py-6">Đang tải cảnh biển 3D...</p>}>
+                        <CentralSeaScene />
+                      </Suspense>
+                    </SceneErrorBoundary>
+                  </div>
+                )}
               </div>
-            )}
-          </section>
+            </section>
+          </div>
         )}
 
-        {kind === "southern-culture" && (
-          <section className="mb-8">
-            <Button
-              type="button"
-              variant="outline"
-              aria-expanded={showRiver}
-              aria-controls="southern-river-panel"
-              onClick={() => setShowRiver((value) => !value)}
-            >
-              {showRiver
-                ? "Đóng cảnh sông nước"
-                : "Mở cảnh sông nước 3D"}
-            </Button>
+        {/* ========================================================================= */}
+        {/* ================= 3. TRẢI NGHIỆM SÔNG NƯỚC NAM BỘ ======================= */}
+        {/* ========================================================================= */}
+        {activeKind === "southern-culture" && (
+          <div className="space-y-12">
+            {/* Hero Magazine Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+              <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-widest text-emerald-800 dark:text-emerald-400">
+                      PHÙ SA & ÂN TÌNH SÔNG NƯỚC
+                    </span>
+                    <span className="text-xs text-stone-500">·</span>
+                    <span className="text-xs text-stone-500">Nam Bộ</span>
+                  </div>
 
-            {showRiver && (
-              <div id="southern-river-panel" className="mt-4">
-                <SceneErrorBoundary
-                  onClose={() => setShowRiver(false)}
-                >
-                  <Suspense
-                    fallback={
-                      <p role="status" className="py-6 text-sm text-muted">
-                        Đang tải cảnh sông nước…
-                      </p>
-                    }
+                  <h1
+                    tabIndex={-1}
+                    className="page-title font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-ink outline-none border-0 leading-tight"
                   >
+                    Dòng sông kể chuyện nhà
+                  </h1>
+
+                  <p className="font-display text-base sm:text-lg text-emerald-800 dark:text-emerald-400 font-medium leading-relaxed">
+                    Khám phá nếp sống rộng rãi, nghĩa tình của miền sông nước Cửu Long
+                  </p>
+
+                  <div className="p-4 rounded-xl border-l-2 border-emerald-600 bg-emerald-500/5 dark:bg-emerald-500/10 border border-line/60">
+                    <p className="font-display italic text-xs sm:text-sm text-ink leading-relaxed">
+                      “Gió đưa bông sậy về trời — Người thương ở lại trọn đời nhớ ơn.”
+                    </p>
+                  </div>
+
+                  <p className="text-sm sm:text-base text-stone-700 dark:text-stone-300 leading-relaxed">
+                    Nếp sống nương theo con nước lớn ròng tạo nên tính cách phóng khoáng, trọng nghĩa khinh tài.
+                    Những đêm hội hoa đăng bên bến Ninh Kiều, miếu Bà Chúa Xứ Núi Sam hay mâm cơm đầm ấm miệt vườn
+                    chở nặng ân tình sâu sắc của đất phù sa phương Nam bao dung mở cõi.
+                  </p>
+                </div>
+
+                {/* River Sound & Sensory Controls Bar */}
+                <div className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={toggleSeaSound}
+                      className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-800 to-emerald-700 text-white flex items-center justify-center shadow-md hover:scale-105 transition-all cursor-pointer"
+                    >
+                      {isPlayingSeaSound ? <VolumeX className="w-5 h-5" /> : <Waves className="w-5 h-5" />}
+                    </button>
+                    <div>
+                      <h4 className="font-display text-sm font-bold text-ink">
+                        {isPlayingSeaSound ? "Đang lắng nghe tiếng sóng nước vỗ mạn thuyền" : "Bật thanh âm sông nước & mái chèo khua"}
+                      </h4>
+                      <p className="text-xs text-stone-500">
+                        Thanh âm sóng nước dập dềnh êm dịu gợi nhớ khúc sông quê thanh bình
+                      </p>
+                    </div>
+                  </div>
+
+                  <Badge
+                    variant="outline"
+                    className={`text-xs px-3 py-1 ${
+                      isPlayingSeaSound ? "border-emerald-500 text-emerald-700 bg-emerald-500/20 animate-pulse" : "text-stone-500"
+                    }`}
+                  >
+                    {isPlayingSeaSound ? "✦ Dòng nước đang trôi" : "Tĩnh lặng"}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Right Column: Visual Artwork */}
+              <div className="lg:col-span-5 relative flex flex-col justify-center">
+                <div className="relative overflow-hidden rounded-2xl shadow-md border border-line bg-surface-soft h-72 sm:h-80 lg:h-full min-h-[340px]">
+                  <img
+                    src="/images/mekong_nam_bo.jpg"
+                    alt="Sông nước miền Tây Nam Bộ"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none" />
+
+                  <div className="absolute top-4 left-4">
+                    <Badge className="bg-surface/90 text-emerald-800 border-emerald-400/40 text-xs font-bold px-3 py-1 backdrop-blur-md">
+                      ✦ PHÙ SA MIỆT VƯỜN
+                    </Badge>
+                  </div>
+
+                  <div className="absolute bottom-4 left-4 right-4 text-white">
+                    <span className="text-[11px] uppercase tracking-wider text-emerald-300 font-semibold block mb-1">
+                      BẾN NƯỚC NGHĨA TÌNH
+                    </span>
+                    <p className="font-display text-xs sm:text-sm font-medium leading-snug drop-shadow-sm text-stone-100">
+                      Hoa đăng bồng bềnh trôi theo dòng Cửu Long, chở nặng tấm lòng tri ân tiền nhân khai khẩn
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3 Nét Đẹp Tâm Linh Đất Phương Nam */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <Card className="p-5 sm:p-6 rounded-2xl border-line bg-surface/95 shadow-xs flex flex-col justify-between">
+                <div>
+                  <span className="text-3xl block mb-3">🌺</span>
+                  <h4 className="font-display text-base font-bold text-ink mb-2">
+                    Vía Bà Chúa Xứ Núi Sam
+                  </h4>
+                  <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+                    Trung tâm hành hương tâm linh tầm vóc quy tụ hàng triệu người mỗi độ tháng tư âm lịch,
+                    thể hiện ước nguyện cầu bình an, may mắn và che chở của Thánh Mẫu.
+                  </p>
+                </div>
+                <div className="mt-4 pt-3 border-t border-line text-[11px] font-semibold text-emerald-700">
+                  ✦ Di sản Phi vật thể Quốc gia
+                </div>
+              </Card>
+
+              <Card className="p-5 sm:p-6 rounded-2xl border-line bg-surface/95 shadow-xs flex flex-col justify-between">
+                <div>
+                  <span className="text-3xl block mb-3">🛶</span>
+                  <h4 className="font-display text-base font-bold text-ink mb-2">
+                    Lễ Thả Hoa Đăng Bến Ninh Kiều
+                  </h4>
+                  <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+                    Hàng ngàn ngọn hoa đăng lung linh thả trôi theo dòng sông Hậu, gửi gắm lời tạ ơn đất trời
+                    ban mùa màng tươi tốt và cầu nguyện cho người thân yêu luôn an hòa.
+                  </p>
+                </div>
+                <div className="mt-4 pt-3 border-t border-line text-[11px] font-semibold text-emerald-700">
+                  ✦ Văn hóa Sông nước Cần Thơ
+                </div>
+              </Card>
+
+              <Card className="p-5 sm:p-6 rounded-2xl border-line bg-surface/95 shadow-xs flex flex-col justify-between">
+                <div>
+                  <span className="text-3xl block mb-3">🌕</span>
+                  <h4 className="font-display text-base font-bold text-ink mb-2">
+                    Lễ Hội Cúng Trăng Ok Om Bok
+                  </h4>
+                  <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+                    Lễ hội tạ ơn thần Mặt Trăng của đồng bào Khmer Nam Bộ vào rằm tháng mười,
+                    dâng cốm dẹp và thả đèn gió, đèn nước thắt chặt tình đoàn kết keo sơn Kinh - Khmer - Hoa.
+                  </p>
+                </div>
+                <div className="mt-4 pt-3 border-t border-line text-[11px] font-semibold text-emerald-700">
+                  ✦ Giao lưu văn hóa đa dân tộc
+                </div>
+              </Card>
+            </div>
+
+            {/* 3D River Scene Section */}
+            <section className="p-6 sm:p-8 rounded-2xl border border-line bg-surface/95 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-widest text-emerald-800 dark:text-emerald-400 block mb-1">
+                    KHÔNG GIAN TRỰC QUAN TƯƠNG TÁC
+                  </span>
+                  <h3 className="font-display text-xl sm:text-2xl font-bold text-ink">
+                    Cảnh sông nước 3D & Thả hoa đăng tâm nguyện
+                  </h3>
+                  <p className="text-xs text-stone-500 mt-1">
+                    Quan sát thuyền nan và hoa đăng trôi trên làn nước chở theo tâm nguyện an lành
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    onClick={onGoToMemorial}
+                    className="gap-2 rounded-xl bg-gradient-to-r from-emerald-800 to-emerald-700 text-white font-semibold shadow-md min-h-11 px-5"
+                  >
+                    <Heart className="w-4 h-4" />
+                    <span>Tưởng nhớ tổ tiên</span>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="rounded-xl overflow-hidden border border-line">
+                <SceneErrorBoundary onClose={() => {}}>
+                  <Suspense fallback={<p className="text-xs text-stone-500 py-10 text-center">Đang tải cảnh sông nước 3D...</p>}>
                     <SouthernRiverScene wishText={note} />
                   </Suspense>
                 </SceneErrorBoundary>
               </div>
-            )}
-          </section>
+            </section>
+          </div>
         )}
 
-        {kind === "chau-van" && (
-          <section className="mt-6 rounded-2xl border border-line bg-surface p-5">
-            <h2 className="text-lg font-semibold text-ink">
-              Không gian Bắc Bộ 3D
-            </h2>
-
-            <p className="mt-2 text-sm text-muted">
-              Quan sát mô hình minh họa và thử thao tác thắp nhang.
-              Nội dung về đạo Mẫu và chầu văn được trình bày riêng
-              trong phần bài đọc và thư viện âm thanh.
-            </p>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-4"
-              aria-expanded={showNorthernShrine}
-              aria-controls="northern-shrine-panel"
-              onClick={() =>
-                setShowNorthernShrine((previous) => !previous)
-              }
-            >
-              {showNorthernShrine
-                ? "Đóng không gian 3D"
-                : "Mở không gian Bắc Bộ 3D"}
-            </Button>
-
-            {showNorthernShrine && (
-              <div id="northern-shrine-panel" className="mt-5">
-                <SceneErrorBoundary
-                  onClose={() => setShowNorthernShrine(false)}
-                >
-                  <Suspense
-                    fallback={
-                      <p role="status" className="text-sm text-muted">
-                        Đang tải không gian Bắc Bộ…
-                      </p>
-                    }
-                  >
-                    <NorthernShrineScene />
-                  </Suspense>
-                </SceneErrorBoundary>
+        {/* ========================================================================= */}
+        {/* ================= SỔ CHIÊM NGHIỆM VĂN HÓA (ZEN JOURNAL) ================= */}
+        {/* ========================================================================= */}
+        <section className="mt-14 pt-8 border-t border-line">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+            <div className="md:col-span-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <Compass className="w-5 h-5 text-amber-700 dark:text-amber-400" />
+                <h3 className="font-display text-xl font-bold text-ink">
+                  Gợi ý tự soi chiếu
+                </h3>
               </div>
-            )}
-          </section>
-        )}
-
-        {kind === "chau-van" && started && (
-          <section
-            ref={readingSectionRef}
-            id="regional-reading-panel"
-            tabIndex={-1}
-            aria-labelledby="regional-reading-title"
-            className="mb-8 scroll-mt-28 rounded-card border border-line bg-surface p-5 sm:p-8"
-          >
-            <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-accent">
-                  Một khoảng đọc và tự suy ngẫm
-                </p>
-
-                <h2
-                  id="regional-reading-title"
-                  className="font-display text-2xl font-semibold text-ink"
-                >
-                  Đọc chậm, giữ lại một điều
-                </h2>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCloseReading}
-              >
-                Đóng phần đọc
-              </Button>
-            </div>
-
-            <p className="text-base leading-relaxed text-ink">
-              {content.description}
-            </p>
-
-            <ol className="mt-6 list-decimal space-y-5 pl-5 text-sm leading-relaxed text-ink">
-              <li>
-                <strong>Dừng lại một chút.</strong>{" "}
-                Đọc lại đoạn giới thiệu phía trên. Bạn không cần
-                thực hành một nghi thức để bắt đầu tìm hiểu.
-              </li>
-
-              <li>
-                <strong>Chọn điều bạn muốn hiểu thêm.</strong>{" "}
-                Có thể là lời ca, nhạc cụ, không gian biểu diễn
-                hoặc ý nghĩa của trải nghiệm đối với người thực hành.
-                Ghi lại một câu hỏi thay vì vội kết luận.
-              </li>
-
-              <li>
-                <strong>Giữ lại cảm nhận của mình.</strong>{" "}
-                Điều gì khiến bạn thấy gần gũi hoặc tò mò?
-                Bạn có thể viết vào ô “Ghi lại cảm nhận” bên dưới.
-              </li>
-            </ol>
-
-            <p className="mt-6 rounded-panel bg-surface-soft p-4 text-sm leading-relaxed text-muted">
-              Đây là gợi ý đọc và suy ngẫm do dự án biên soạn.
-              Các bản thu sẵn sàng, nếu có, được trình bày riêng
-              trong mục “Nghe chầu văn” cùng thông tin nguồn.
-            </p>
-          </section>
-        )}
-
-        <div className="grid md:grid-cols-2 gap-5 mb-10">
-          <Card className="p-6 bg-surface-soft border-line"><h2 className="font-display text-xl font-bold mb-3">Gợi ý chiêm nghiệm</h2><p className="text-sm text-muted leading-relaxed">Hãy đọc chậm, đặt điện thoại xuống một lúc và giữ lại điều khiến bạn thấy gần gũi nhất. Đây là nội dung văn hóa, không phải lời phán định.</p></Card>
-          <Card className="min-w-0 border-line p-6">
-            <h2 className="mb-3 font-display text-xl font-bold">
-              Ghi lại cảm nhận
-            </h2>
-
-            <Textarea
-              id="regional-note"
-              value={note}
-              maxLength={1000}
-              aria-label="Cảm nhận về trải nghiệm văn hóa"
-              onChange={(event) => {
-                setNote(event.target.value);
-                setNoteError("");
-              }}
-              placeholder="Một hình ảnh, một câu chuyện, một điều muốn giữ lại…"
-              className="min-h-32"
-            />
-
-            <p className="mt-2 text-xs text-muted">
-              {note.length}/1.000 ký tự
-            </p>
-
-            <p className="mt-3 text-sm leading-relaxed text-muted">
-              Cảm nhận được lưu trong tab này, riêng theo hồ sơ
-              và vùng văn hóa. Chưa được đồng bộ sang thiết bị khác.
-            </p>
-
-            {noteError && (
-              <p
-                role="alert"
-                className="mt-3 text-sm leading-relaxed text-danger"
-              >
-                {noteError}
+              <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+                Đọc chậm lại, đặt những xao động thường nhật xuống và giữ lại một điều khiến bạn rung động nhất.
+                Văn hóa dân gian là tấm gương soi chiếu đạo lý làm người: biết ơn cội nguồn, thương quý xóm giềng và sống hướng thiện.
               </p>
-            )}
-
-            <div className="mt-4 flex justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleSaveNote}
-                disabled={!note.trim() || noteSaved}
-                className="min-h-11 gap-2"
-              >
-                {noteSaved && (
-                  <Check
-                    className="h-4 w-4"
-                    aria-hidden="true"
-                  />
-                )}
-
-                {noteSaved
-                  ? "Đã lưu trong tab này"
-                  : "Lưu cảm nhận"}
-              </Button>
+              <div className="p-4 rounded-xl border border-line bg-surface-soft/60 space-y-2 text-xs text-stone-500">
+                <p>✦ <strong>Chầu văn:</strong> Nhắc nhở lòng hiếu kính Mẫu và tiền nhân bảo hộ bờ cõi.</p>
+                <p>✦ <strong>Cầu Ngư:</strong> Dạy con người biết ơn biển cả, sống nghĩa tình đùm bọc.</p>
+                <p>✦ <strong>Sông nước:</strong> Nuôi dưỡng tấm lòng thơm thảo, hào sảng bao dung.</p>
+              </div>
             </div>
-          </Card>
-        </div>
 
-        <Card className="p-6 sm:p-8 bg-surface-soft border-line mb-12"><div className="flex items-start gap-3"><Compass className="w-5 h-5 text-accent shrink-0 mt-0.5" /><p className="text-sm text-muted leading-relaxed">Tin Lắm Tâm Linh chỉ mở ra một không gian học hỏi và tự soi chiếu. Khi có tư liệu âm thanh phù hợp bản quyền, trải nghiệm này có thể được bổ sung thêm lớp nghe.</p></div></Card>
+            <div className="md:col-span-7">
+              <Card className="p-6 rounded-2xl border-line bg-surface/95 shadow-xs space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-display text-base font-bold text-ink">
+                    Ghi lại cảm nhận & Tâm nguyện
+                  </h4>
+                  <span className="text-xs text-stone-400">
+                    {note.length}/1.000 ký tự
+                  </span>
+                </div>
+
+                <Textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  maxLength={1000}
+                  placeholder="Một hình ảnh, một câu ca, một điều bạn muốn giữ lại trong lòng hôm nay…"
+                  className="min-h-32 rounded-xl text-sm border-line"
+                />
+
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-line/60">
+                  <span className="text-[11px] text-stone-500 italic">
+                    {noteSavedSuccess ? "✓ Đã lưu cảm nhận an toàn vào phiên này" : "Cảm nhận được lưu riêng theo hồ sơ và vùng văn hóa"}
+                  </span>
+
+                  <Button
+                    type="button"
+                    onClick={handleSaveNote}
+                    disabled={!note.trim() || (note.trim() === savedNote && !noteSavedSuccess)}
+                    className="w-full sm:w-auto min-h-10 px-5 rounded-xl bg-gradient-to-r from-red-800 via-amber-700 to-amber-900 text-white font-semibold cursor-pointer gap-2"
+                  >
+                    {noteSavedSuccess ? <Check className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
+                    <span>{noteSavedSuccess ? "Đã lưu thành công" : "Lưu cảm nhận"}</span>
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Footnote Philosophy */}
+        <Card className="mt-14 p-6 sm:p-8 rounded-2xl border-line bg-surface/90 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-xs backdrop-blur-sm">
+          <div className="flex items-start gap-4">
+            <div className="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-400/30 flex items-center justify-center text-amber-700 dark:text-amber-400 shrink-0">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400 block mb-1">
+                TÔN KÍNH VĂN HÓA CỘNG ĐỒNG
+              </span>
+              <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed max-w-2xl">
+                Không gian thực hành tâm linh mở ra cơ hội tự soi chiếu và nuôi dưỡng lòng trắc ẩn.
+                Mọi thực hành đều tôn trọng nguyên bản di sản và đức tin truyền thống của nhân dân.
+              </p>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onBack}
+            className="rounded-xl border-line text-ink hover:text-accent font-semibold shrink-0 cursor-pointer self-start sm:self-auto min-h-11 px-5"
+          >
+            Quay lại chuyên đề vùng
+          </Button>
+        </Card>
       </main>
     </div>
   );

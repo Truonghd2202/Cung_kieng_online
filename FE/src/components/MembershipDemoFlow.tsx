@@ -205,23 +205,27 @@ export function MembershipDemoFlow({
   return (
     <section
       aria-labelledby="membership-demo-title"
-      className="mb-8 rounded-card border border-line bg-surface p-5 sm:p-8"
+      className="mb-8 rounded-3xl border border-amber-500/30 bg-surface p-6 sm:p-8 shadow-xs"
     >
-      <header className="mb-5">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-accent">
-          Trải nghiệm thử
-        </p>
+      <header className="mb-6">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-amber-800 dark:text-amber-300">
+            NỘI DUNG CHUYÊN SÂU
+          </span>
+          <span className="text-xs text-stone-400">·</span>
+          <span className="text-xs text-stone-500">Đặc Quyền Hội Viên Tâm An</span>
+        </div>
 
         <h2
           id="membership-demo-title"
-          className="font-display text-2xl font-semibold text-ink"
+          className="font-display text-xl sm:text-2xl font-bold text-ink"
         >
-          Đăng ký Tâm An mô phỏng
+          Trải Nghiệm Nội Dung Chuyên Khảo Mẫu
         </h2>
 
-        <p className="mt-3 text-sm leading-relaxed text-muted">
-          Thử chọn chu kỳ, quản lý đăng ký và mở nội dung Premium mẫu.
-          Chưa thanh toán, chưa tự gia hạn và chưa cấp quyền hội viên thật.
+        <p className="mt-2 text-xs sm:text-sm leading-relaxed text-stone-600 dark:text-stone-400 max-w-2xl">
+          Khám phá không gian đọc chuyên khảo dành cho hội viên đồng hành: các tài liệu khảo cứu di sản,
+          nghi thức cổ truyền và phân tích văn hóa dân gian chuyên sâu.
         </p>
       </header>
 

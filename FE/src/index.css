@@ -151,6 +151,21 @@ button {
   outline-offset: 3px;
 }
 
+h1, h2, h3, h4, h5, h6, [tabindex="-1"], .page-title {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+h1:focus, h1:focus-visible,
+h2:focus, h2:focus-visible,
+h3:focus, h3:focus-visible,
+h4:focus, h4:focus-visible,
+.page-title:focus, .page-title:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
 #root {
   min-height: 100vh;
 }
@@ -1669,15 +1684,83 @@ button {
   }
 }
 
+.culture-masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.95fr);
+  align-items: stretch;
+  gap: clamp(1.5rem, 3.5vw, 3rem);
+  margin-bottom: 2.5rem;
+  padding-block: 0.5rem 2rem;
+  border-bottom: 1px solid var(--ui-line);
+}
+
+@media (max-width: 1023px) {
+  .culture-masthead {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
 @media (max-width: 639px) {
   .culture-masthead {
-    gap: 1rem;
+    gap: 1.5rem;
     margin-bottom: 1.5rem;
     padding-block: 0 1rem;
   }
 
   .culture-masthead .discovery-masthead__image {
-    height: 8rem;
+    height: 12rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCROLL REVEAL / SCROLL-DRIVEN ENTRANCE ANIMATIONS
+   Hiệu ứng lướt tới đâu hiển thị mượt mà tới đó
+   ═══════════════════════════════════════════════════════ */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal.reveal-scale {
+  transform: scale(0.96) translateY(20px);
+}
+
+.scroll-reveal.reveal-fade {
+  transform: none;
+}
+
+.scroll-reveal.reveal-left {
+  transform: translateX(-32px);
+}
+
+.scroll-reveal.reveal-right {
+  transform: translateX(32px);
+}
+
+.scroll-reveal.is-revealed {
+  opacity: 1 !important;
+  transform: translateY(0) translateX(0) scale(1) !important;
+}
+
+/* Stagger transition delays */
+.delay-75 { transition-delay: 75ms; }
+.delay-100 { transition-delay: 100ms; }
+.delay-150 { transition-delay: 150ms; }
+.delay-200 { transition-delay: 200ms; }
+.delay-250 { transition-delay: 250ms; }
+.delay-300 { transition-delay: 300ms; }
+.delay-400 { transition-delay: 400ms; }
+.delay-500 { transition-delay: 500ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }
 

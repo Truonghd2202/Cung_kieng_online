@@ -1,0 +1,347 @@
+/* ==========================================================================
+   TIN LẮM TÂM LINH — XIN KEO ÂM DƯƠNG 10/10 STYLES
+   Sân Khấu Gieo Keo Cổ Phong, Bức Trướng Âm Dương & Đồng Bộ Dark Mode
+   ========================================================================== */
+
+/* 1. DẤU TRIỆN SON "KEO / BỐI" (筶) & TIÊU ĐỀ */
+.xinkeo-seal-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #8b1e28 0%, #68131b 100%);
+  border: 1.5px solid rgba(245, 195, 110, 0.7);
+  box-shadow: 0 3px 10px rgba(139, 30, 40, 0.32);
+  color: #fde8c4;
+  font-family: "Noto Serif", Georgia, serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+  margin-right: 12px;
+  vertical-align: middle;
+  user-select: none;
+}
+
+/* Triệt tiêu hoàn toàn viền focus outline đỏ bao quanh tiêu đề */
+h1.xinkeo-page-title,
+.xinkeo-page-title,
+.xinkeo-page-title:focus,
+.xinkeo-page-title:focus-visible,
+.xinkeo-page-title:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* 2. THẺ CHỌN CHỦ ĐỀ CHIÊM NGHIỆM */
+.xinkeo-topic-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(215, 185, 150, 0.45);
+  background: rgba(255, 252, 247, 0.85);
+  color: #4a382c;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 220ms ease;
+  user-select: none;
+}
+
+.xinkeo-topic-card:hover {
+  background: #ffffff;
+  border-color: rgba(185, 135, 75, 0.75);
+  color: #8b1e28;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(60, 30, 15, 0.05);
+}
+
+.xinkeo-topic-card--active {
+  background: linear-gradient(145deg, rgba(255, 250, 245, 0.98) 0%, rgba(253, 242, 235, 0.95) 100%);
+  border-color: #8b1e28;
+  color: #8b1e28;
+  box-shadow: 0 4px 14px rgba(139, 30, 40, 0.12);
+  transform: translateY(-1px);
+}
+
+/* 3. SÂN KHẤU GIEO KEO LINH THIÊNG (ALTAR STAGE) */
+.xinkeo-altar-stage {
+  position: relative;
+  isolation: isolate;
+  border-radius: 24px;
+  border: 1px solid rgba(215, 185, 140, 0.55);
+  background: radial-gradient(
+    ellipse at 50% 25%,
+    rgba(255, 252, 246, 0.98) 0%,
+    rgba(250, 243, 230, 0.94) 100%
+  );
+  box-shadow:
+    0 8px 32px rgba(45, 25, 15, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  padding: clamp(1.75rem, 4vw, 2.75rem);
+  text-align: center;
+  overflow: hidden;
+}
+
+.xinkeo-altar-stage-rim {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(215, 175, 75, 0.4) 15%,
+    rgba(235, 195, 105, 1) 50%,
+    rgba(215, 175, 75, 0.4) 85%,
+    transparent 100%
+  );
+  box-shadow: 0 1px 8px rgba(212, 175, 55, 0.45);
+}
+
+/* Đĩa gốm men rạn / Mâm đồng cổ khảm hoàng kim */
+.xinkeo-dish-platform {
+  position: relative;
+  margin: 0 auto;
+  max-width: 520px;
+  width: 100%;
+  border-radius: 36px;
+  border: 2px solid rgba(212, 175, 55, 0.6);
+  background: radial-gradient(
+    circle at 50% 50%,
+    #fefbf3 0%,
+    #f7eedb 60%,
+    #e8d8be 100%
+  );
+  box-shadow:
+    0 20px 50px rgba(45, 20, 10, 0.15),
+    inset 0 0 40px rgba(180, 120, 60, 0.15),
+    inset 0 2px 4px rgba(255, 255, 255, 0.9);
+  padding: 2rem 1.5rem;
+  overflow: hidden;
+}
+
+.dark .xinkeo-dish-platform {
+  border-color: rgba(225, 185, 95, 0.5);
+  background: radial-gradient(
+    circle at 50% 50%,
+    #2a221d 0%,
+    #1f1814 65%,
+    #140f0c 100%
+  );
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.6),
+    inset 0 0 40px rgba(0, 0, 0, 0.5),
+    inset 0 1px 2px rgba(255, 235, 200, 0.1);
+}
+
+/* Biểu tượng Thái Cực Âm Dương mờ ẩn dưới lòng đĩa */
+.xinkeo-taiji-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 240px;
+  height: 240px;
+  opacity: 0.06;
+  pointer-events: none;
+  background: radial-gradient(circle, #b45309 30%, transparent 70%);
+}
+
+.dark .xinkeo-taiji-watermark {
+  opacity: 0.08;
+}
+
+/* Làn khói trầm hương bay lượn trên mâm */
+.xinkeo-incense-smoke {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 0%, rgba(254, 240, 138, 0.2) 0%, transparent 70%);
+  animation: smokeDrift 6s infinite alternate ease-in-out;
+}
+
+@keyframes smokeDrift {
+  0% { transform: translateY(0) scaleX(1); opacity: 0.5; }
+  50% { transform: translateY(8px) scaleX(1.08); opacity: 0.8; }
+  100% { transform: translateY(-4px) scaleX(0.95); opacity: 0.6; }
+}
+
+/* Sóng chấn động hào quang khi keo chạm đất */
+.xinkeo-landing-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid rgba(245, 158, 11, 0.7);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+  animation: rippleOut 1.2s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes rippleOut {
+  0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2.8); opacity: 0; }
+}
+
+
+
+/* 4. NÚT GIEO KEO CHU SA ÁNH KIM */
+.xinkeo-cast-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 34px;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(135, 28, 20, 0.95);
+  background:
+    radial-gradient(120% 140% at 50% 0%, rgba(255, 140, 110, 0.25), transparent 55%),
+    linear-gradient(180deg, #b3342a 0%, #9a2219 55%, #841812 100%);
+  box-shadow:
+    0 4px 18px rgba(130, 30, 20, 0.35),
+    inset 0 1px 0 rgba(255, 215, 180, 0.35);
+  color: #fff6ed;
+  font-family: var(--font-display, "Fraunces", serif);
+  font-size: 16.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 220ms ease;
+  user-select: none;
+}
+
+.xinkeo-cast-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 24px rgba(130, 30, 20, 0.45);
+  transform: translateY(-2px);
+}
+
+.xinkeo-cast-btn:disabled {
+  opacity: 0.85;
+  cursor: wait;
+}
+
+.xinkeo-btn-sheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  pointer-events: none;
+  transform: translateX(-110%);
+  transition: transform 700ms ease;
+}
+
+.xinkeo-cast-btn:hover .xinkeo-btn-sheen {
+  transform: translateX(110%);
+}
+
+/* 5. BỨC TRƯỚNG KẾT QUẢ GIEO KEO (KEO OUTCOME SCROLL) */
+.xinkeo-result-card {
+  position: relative;
+  isolation: isolate;
+  border-radius: 20px;
+  border: 1.5px solid rgba(212, 175, 55, 0.55);
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(255, 252, 246, 0.98) 0%,
+    rgba(250, 243, 230, 0.95) 100%
+  );
+  box-shadow:
+    0 6px 24px rgba(45, 25, 15, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  text-align: left;
+  overflow: hidden;
+  transition: all 300ms ease;
+}
+
+/* 6. ĐỒNG BỘ DARK MODE CHO XIN KEO */
+.dark .xinkeo-seal-badge {
+  background: linear-gradient(135deg, #8a242c 0%, #5c141a 100%);
+  border-color: rgba(225, 175, 95, 0.65);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+  color: #fae4c3;
+}
+
+.dark .xinkeo-topic-card {
+  background: rgba(32, 27, 24, 0.75);
+  border-color: rgba(90, 75, 65, 0.5);
+  color: #dfd3c5;
+}
+
+.dark .xinkeo-topic-card:hover {
+  background: rgba(42, 34, 30, 0.95);
+  border-color: rgba(200, 150, 85, 0.6);
+  color: #f7a8b0;
+}
+
+.dark .xinkeo-topic-card--active {
+  background: linear-gradient(145deg, rgba(58, 28, 30, 0.9) 0%, rgba(42, 20, 22, 0.95) 100%);
+  border-color: #c94a53;
+  color: #ffd8dc;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.dark .xinkeo-altar-stage {
+  border-color: rgba(140, 110, 75, 0.4);
+  background: radial-gradient(
+    ellipse at 50% 25%,
+    rgba(34, 28, 25, 0.98) 0%,
+    rgba(22, 18, 16, 0.95) 100%
+  );
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.dark .xinkeo-altar-stage-rim {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(185, 140, 55, 0.35) 15%,
+    rgba(225, 175, 75, 0.85) 50%,
+    rgba(185, 140, 55, 0.35) 85%,
+    transparent 100%
+  );
+  box-shadow: 0 1px 10px rgba(212, 175, 55, 0.25);
+}
+
+
+
+.dark .xinkeo-cast-btn {
+  border-color: rgba(180, 45, 35, 0.95);
+  background:
+    radial-gradient(120% 140% at 50% 0%, rgba(255, 140, 110, 0.2), transparent 55%),
+    linear-gradient(180deg, #99241b 0%, #7e1912 55%, #63120c 100%);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 195, 160, 0.25);
+  color: #fff2e5;
+}
+
+.dark .xinkeo-result-card {
+  border-color: rgba(185, 145, 75, 0.45);
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(36, 29, 25, 0.98) 0%,
+    rgba(24, 20, 18, 0.95) 100%
+  );
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}

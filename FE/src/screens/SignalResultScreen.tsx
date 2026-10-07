@@ -5,9 +5,14 @@ import {
   Check,
   ChevronDown,
   Clock3,
+  Compass,
   Flower2,
+  Heart,
   RotateCw,
   Share2,
+  Sparkles,
+  BookOpen,
+  Sparkle,
 } from "lucide-react";
 
 import {
@@ -18,10 +23,10 @@ import {
   type SignalData,
 } from "../data/demoSignals";
 
-import { getCultureArticleById } from
-  "../data/cultureData";
+import { getCultureArticleById } from "../data/cultureData";
 import { Button } from "@/src/components/ui/button";
 import { ContentProvenance } from "../components/ContentProvenance";
+import "../styles/SignalResultScreen.css";
 
 interface SignalResultScreenProps {
   journalText?: string;
@@ -38,9 +43,16 @@ interface SignalResultScreenProps {
   onOpenCultureArticle: (articleId: string) => void;
 }
 
-export const SignalResultScreen: React.FC<
-  SignalResultScreenProps
-> = ({
+// Icon tương ứng từng hoàn cảnh
+const CONTEXT_ICONS: Record<MoodContextKey, string> = {
+  general: "🌱",
+  study: "📖",
+  work: "💼",
+  family: "🏡",
+  relationship: "💖",
+};
+
+export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
   journalText = "",
   signal,
   isActionDone,
@@ -66,14 +78,13 @@ export const SignalResultScreen: React.FC<
 
   const handleCopyLink = async () => {
     setCopyState("copying");
-
     try {
       if (!navigator.clipboard?.writeText) {
         throw new Error("Clipboard unavailable");
       }
-
       await navigator.clipboard.writeText(shareUrl.toString());
       setCopyState("success");
+      setTimeout(() => setCopyState("idle"), 3000);
     } catch {
       setCopyState("error");
     }
@@ -88,13 +99,10 @@ export const SignalResultScreen: React.FC<
   const contextKey = signal.contextKey ?? "general";
 
   const contextLabel =
-    MOOD_CONTEXTS.find(
-      (context) => context.key === contextKey
-    )?.label ?? "Chưa muốn chọn";
+    MOOD_CONTEXTS.find((context) => context.key === contextKey)?.label ??
+    "Chưa muốn chọn";
 
-  const availableSignals = getSignalsByMood(
-    signal.mood
-  ).filter(
+  const availableSignals = getSignalsByMood(signal.mood).filter(
     (item) => item.contextKey === signal.contextKey
   );
 
@@ -109,13 +117,11 @@ export const SignalResultScreen: React.FC<
   > = {
     general: {
       articleId: "dinh-lang-bac-bo",
-      reason:
-        "Một hướng tìm hiểu không gian sinh hoạt và ký ức cộng đồng.",
+      reason: "Một hướng tìm hiểu không gian sinh hoạt và ký ức cộng đồng.",
     },
     study: {
       articleId: "bai-choi-hoi-an",
-      reason:
-        "Tìm hiểu cách nghệ thuật dân gian được truyền dạy và tiếp nối.",
+      reason: "Tìm hiểu cách nghệ thuật dân gian được truyền dạy và tiếp nối.",
     },
     work: {
       articleId: "le-hoi-cau-ngu",
@@ -124,352 +130,371 @@ export const SignalResultScreen: React.FC<
     },
     family: {
       articleId: "dinh-lang-bac-bo",
-      reason:
-        "Tìm hiểu ký ức cộng đồng và sự kết nối giữa các thế hệ.",
+      reason: "Tìm hiểu ký ức cộng đồng và sự kết nối giữa các thế hệ.",
     },
     relationship: {
       articleId: "tien-dung-chu-dong-tu",
-
       reason:
-        "Đọc cách bản thử nghiệm giới thiệu truyện Tiên Dung – Chử Đồng Tử, rồi tự suy ngẫm về sự kết nối. Bài đọc không dùng để dự đoán chuyện tình cảm của bạn.",
+        "Đọc cách bản thử nghiệm giới thiệu truyện Tiên Dung – Chử Đồng Tử, rồi tự suy ngẫm về sự kết nối.",
     },
   };
 
   const readingSuggestion = suggestedReading[contextKey];
-
-  const suggestedArticle = getCultureArticleById(
-    readingSuggestion.articleId
-  );
+  const suggestedArticle = getCultureArticleById(readingSuggestion.articleId);
 
   return (
-    <div className="screen-shell">
-      <main className="page-container max-w-5xl">
+    <div className="screen-shell relative overflow-hidden">
+      {/* Vầng sáng nền cổ phong ấm áp */}
+      <div
+        className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[42rem] sm:w-[54rem] h-[26rem] rounded-full bg-gradient-to-b from-accent/10 via-gold/5 to-transparent blur-3xl"
+        aria-hidden="true"
+      />
+
+      <main className="page-container max-w-5xl relative z-10 py-6 sm:py-10">
+        {/* ========================================================= */}
+        {/* 1. HEADER KHỞI TÂM & TRIỆN SON "KHẢI" (啓)                */}
+        {/* ========================================================= */}
         <header className="mb-6 sm:mb-8">
-          <div className="flex items-center gap-2 text-sm text-accent mb-3">
-            <Flower2 className="w-4 h-4" aria-hidden="true" />
-            <span>Lời chiêm nghiệm hôm nay</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-accent/8 border border-accent/20 text-accent font-medium text-xs sm:text-sm tracking-wide shadow-xs backdrop-blur-xs mb-4">
+            <Sparkles className="w-4 h-4 text-accent" aria-hidden="true" />
+            <span>Lời chiêm nghiệm hôm nay · Khơi nguồn an yên</span>
           </div>
 
-          <h1 className="page-title mb-3">
-            Một lời gợi mở dành cho bạn
+          <h1
+            tabIndex={-1}
+            className="signal-page-title font-display text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink leading-tight tracking-tight mb-3 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 border-0"
+          >
+            <span className="signal-seal-badge" title="Dấu triện Khải (Khai sáng tâm trí)">
+              啓
+            </span>
+            <span>Một lời gợi mở dành cho bạn</span>
           </h1>
 
-          <p className="text-base text-muted leading-relaxed">
-            Bạn đang cảm thấy{" "}
-            <strong className="font-semibold text-ink">
+          <p className="text-base sm:text-lg text-muted leading-relaxed max-w-2xl">
+            Khi tâm trạng đang{" "}
+            <span className="font-semibold text-accent underline decoration-accent/40 underline-offset-4">
               {signal.mood.toLowerCase()}
-            </strong>
-            . Hãy đọc chậm và giữ lại điều phù hợp với mình.
+            </span>
+            , hãy đọc chậm rãi, thở êm và giữ lại điều chạm tới lòng mình.
           </p>
+
+          {/* Dải phân cách hoa văn thanh mảnh */}
+          <div className="flex items-center gap-3 my-4" aria-hidden="true">
+            <div className="h-px w-14 bg-gradient-to-r from-transparent to-accent/40" />
+            <div className="w-1.5 h-1.5 rotate-45 bg-accent/70" />
+            <div className="h-px w-28 bg-accent/30" />
+            <div className="w-1.5 h-1.5 rotate-45 bg-accent/70" />
+            <div className="h-px w-14 bg-gradient-to-l from-transparent to-accent/40" />
+          </div>
         </header>
 
-        <section
-          aria-labelledby="result-context-title"
-          className="mb-6 rounded-card border border-line bg-surface p-5"
-        >
-          <h2
-            id="result-context-title"
-            className="font-display text-lg font-semibold text-ink"
-          >
-            Hoàn cảnh bạn đang chọn
-          </h2>
-
-          <p className="mt-2 text-sm leading-relaxed text-muted">
-            {contextKey === "general"
-              ? "Bạn đang đọc lời gợi mở chung theo tâm trạng."
-              : `Lời gợi mở hướng đến ${contextLabel.toLowerCase()}.`}
-            {" "}
-            Bạn có thể đổi lựa chọn bên dưới.
-          </p>
-
-          <fieldset className="mt-4">
-            <legend className="sr-only">
-              Đổi hoàn cảnh cho lời gợi mở
-            </legend>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              {MOOD_CONTEXTS.map((context) => (
-                <label
-                  key={context.key}
-                  className="flex min-h-12 cursor-pointer items-center gap-3 rounded-control border border-line p-3"
-                >
-                  <input
-                    type="radio"
-                    name="result-context"
-                    value={context.key}
-                    checked={contextKey === context.key}
-                    onChange={() =>
-                      onChangeContext(context.key)
-                    }
-                    className="h-4 w-4 accent-action"
-                  />
-
-                  <span className="text-sm font-semibold text-ink">
-                    {context.label}
-                  </span>
-                </label>
-              ))}
+        {/* ========================================================= */}
+        {/* 2. DẢI LỤA CHỌN HOÀN CẢNH (CONTEXT PILLS 10/10)           */}
+        {/* ========================================================= */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent">
+              <Compass className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Gắn với hoàn cảnh của bạn</span>
             </div>
-          </fieldset>
+            <span className="text-xs text-muted">
+              Đang xem: <strong className="text-ink">{contextLabel}</strong>
+            </span>
+          </div>
 
-          <p className="mt-3 text-xs leading-relaxed text-muted">
-            Đổi hoàn cảnh sẽ mở một kết quả mới và giữ ghi chép
-            của lượt này. Nội dung đã lưu trước đó không bị sửa.
-          </p>
-        </section>
+          <div className="signal-context-bar" role="tablist" aria-label="Chọn hoàn cảnh">
+            {MOOD_CONTEXTS.map((context) => {
+              const isSelected = contextKey === context.key;
+              return (
+                <button
+                  key={context.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={isSelected}
+                  onClick={() => onChangeContext(context.key)}
+                  className={`signal-context-pill ${
+                    isSelected ? "signal-context-pill--active" : ""
+                  }`}
+                >
+                  <span aria-hidden="true">{CONTEXT_ICONS[context.key]}</span>
+                  <span>{context.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
+        {/* ========================================================= */}
+        {/* 3. KHỐI NHẬT KÝ ĐÃ GHI CHÉP (NẾU CÓ)                      */}
+        {/* ========================================================= */}
         {journalText.trim() && (
-          <details className="group mb-6 rounded-card border border-line bg-surface">
-            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-control p-4 text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
-              <span>Đọc lại ghi chép của bạn trong lượt này</span>
-
+          <details className="group mb-8 signal-journal-box">
+            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-semibold text-ink focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+              <div className="flex items-center gap-2">
+                <Heart className="w-4 h-4 text-accent" />
+                <span>Ghi chép tâm sự của bạn trong lượt này</span>
+              </div>
               <ChevronDown
                 aria-hidden="true"
-                className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-180 motion-reduce:transition-none"
+                className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-180"
               />
             </summary>
 
-            <div className="px-4 pb-5">
-              <p className="whitespace-pre-wrap text-sm sm:text-base text-ink leading-relaxed [overflow-wrap:anywhere]">
-                {journalText}
+            <div className="px-5 pb-5 pt-1 border-t border-line/50">
+              <p className="whitespace-pre-wrap text-sm sm:text-base text-ink leading-relaxed italic border-l-2 border-accent/40 pl-4 my-2">
+                “{journalText}”
               </p>
-
-              <p className="mt-4 text-sm text-muted leading-relaxed">
-                Khi đọc lời chiêm nghiệm bên dưới, bạn có thể tự hỏi:
-                điều nào phù hợp với chuyện mình vừa ghi lại?
-              </p>
-
               <p className="mt-3 text-xs text-muted leading-relaxed">
-                Lời chiêm nghiệm được chọn theo tâm trạng, chưa được
-                tạo từ nội dung ghi chép. Ghi chép không được đưa vào
-                liên kết chia sẻ.
+                Lời chiêm nghiệm được chọn theo tâm trạng để bạn tự soi chiếu.
+                Ghi chép này hoàn toàn riêng tư và không đưa vào liên kết chia sẻ.
               </p>
             </div>
           </details>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* ========================================================= */}
+        {/* 4. CỤM TRUNG TÂM: BỨC TRƯỚNG THƯ PHÁP & PHIẾN NGỌC HÀNH ĐỘNG */}
+        {/* ========================================================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+          {/* CỘT TRÁI (7 cols): BỨC TRƯỚNG CA DAO & TRANH DI SẢN */}
           <section
-            aria-labelledby="reflection-poem-title"
-            className="lg:col-span-7 rounded-2xl border border-line bg-surface p-6 sm:p-8"
+            aria-labelledby="reflection-scroll-title"
+            className="lg:col-span-7 signal-scroll-card group"
           >
-            <h2
-              id="reflection-poem-title"
-              className="text-sm font-semibold text-accent mb-5"
-            >
-              Dừng lại một chút
-            </h2>
+            <div className="signal-scroll-golden-rim" />
+            <CornerOrnament className="signal-scroll-corner signal-scroll-corner--tl" />
+            <CornerOrnament className="signal-scroll-corner signal-scroll-corner--br" />
 
-            <blockquote className="font-display text-2xl sm:text-3xl font-semibold text-ink leading-relaxed">
-              <p>{signal.poem.line1}</p>
-              <p>{signal.poem.line2}</p>
-            </blockquote>
+            <div>
+              {/* Header bức trướng: Badge triện & Kiểm định */}
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-accent bg-accent/8 px-3 py-1 rounded-full border border-accent/15">
+                  <Flower2 className="w-3.5 h-3.5" />
+                  <span>{signal.badge || "Chiêm nghiệm tâm an"}</span>
+                </span>
 
-            <div className="mt-4 space-y-2">
-              <p className="text-sm text-muted">
+                <span className="text-[11px] font-medium text-muted bg-surface-soft px-2.5 py-1 rounded-md border border-line/60">
+                  {quotationLabel}
+                </span>
+              </div>
+
+              {/* Hai câu ca dao thư pháp */}
+              <blockquote className="signal-poem-quote">
+                <p className="m-0">{signal.poem.line1}</p>
+                <p className="m-0 mt-1">{signal.poem.line2}</p>
+              </blockquote>
+
+              {/* Giải nghĩa văn học dân gian */}
+              <p className="text-sm text-muted leading-relaxed mt-2 mb-5">
                 {signal.poem.subtext}
               </p>
 
-              <span className="inline-flex rounded-full border border-line bg-canvas px-3 py-1 text-xs font-medium text-muted">
-                {quotationLabel}
-              </span>
+              {/* Khung tranh di sản nghệ thuật (Artwork) - Chú thích tách biệt nằm dưới ảnh, KHÔNG ĐÈ LÊN ẢNH */}
+              {signal.artwork?.image && (
+                <figure className="signal-artwork-frame my-5">
+                  <div className="signal-artwork-img-box">
+                    <img
+                      src={signal.artwork.image}
+                      alt={signal.artwork.caption || "Minh họa di sản văn hóa"}
+                      loading="lazy"
+                      decoding="async"
+                      className="signal-artwork-img"
+                    />
+                  </div>
+                  <figcaption className="signal-artwork-caption">
+                    <span className="flex items-center gap-1.5">
+                      <Sparkle className="w-3 h-3 text-accent shrink-0" />
+                      <span>{signal.artwork.caption}</span>
+                    </span>
+                    {signal.research?.region && (
+                      <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-accent/10 border border-accent/20 text-accent shrink-0">
+                        {signal.research.region}
+                      </span>
+                    )}
+                  </figcaption>
+                </figure>
+              )}
+
+              {/* Lời khuyên ấm áp & chiêm nghiệm thực tế */}
+              <div className="signal-advice-box">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent mb-2">
+                  <Sparkle className="w-3.5 h-3.5" />
+                  <span>Lời gửi gắm cho ngày hôm nay</span>
+                </div>
+                <p className="text-sm sm:text-base text-ink leading-relaxed m-0">
+                  {signal.reflection.advice}
+                </p>
+              </div>
             </div>
 
-            <div className="mt-6 pt-5 border-t border-line">
-              <p className="text-base text-ink leading-relaxed">
-                {signal.reflection.advice}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2 mt-6">
-              <Button
+            {/* Các nút hành động bức trướng */}
+            <div className="flex flex-wrap items-center gap-3 mt-7 pt-5 border-t border-line/60">
+              <button
                 type="button"
-                variant="outline"
                 disabled={!canRefresh}
                 onClick={onRefreshSignal}
+                className="signal-secondary-btn group"
+                title="Đổi một lời gợi mở khác cho tâm trạng này"
               >
-                <RotateCw className="w-4 h-4" aria-hidden="true" />
+                <RotateCw className="w-4 h-4 text-accent transition-transform duration-500 group-hover:rotate-180" />
                 <span>
                   {canRefresh
-                    ? "Đọc lời gợi mở khác"
+                    ? "Đổi lời gợi mở khác"
                     : "Hiện có một lời gợi mở"}
                 </span>
-              </Button>
+              </button>
 
-              <Button
+              <button
                 type="button"
-                variant="ghost"
                 onClick={handleCopyLink}
                 disabled={copyState === "copying"}
+                className="signal-secondary-btn"
+                title="Sao chép liên kết để lưu lại hoặc gửi bạn bè"
               >
-                <Share2 className="w-4 h-4" aria-hidden="true" />
-                <span>
-                  {copyState === "copying"
-                    ? "Đang sao chép..."
-                    : "Sao chép liên kết"}
-                </span>
-              </Button>
-            </div>
-
-            <div aria-live="polite" aria-atomic="true">
-              {copyState === "success" && (
-                <p className="mt-3 text-sm text-success">
-                  Đã sao chép liên kết của lời chiêm nghiệm này.
-                </p>
-              )}
-
-              {copyState === "error" && (
-                <div className="mt-3">
-                  <label
-                    htmlFor="signal-share-link"
-                    className="block text-sm text-muted mb-2"
-                  >
-                    Chưa sao chép được. Bạn có thể chọn và sao chép
-                    liên kết bên dưới:
-                  </label>
-
-                  <input
-                    id="signal-share-link"
-                    type="text"
-                    readOnly
-                    value={shareUrl.toString()}
-                    onFocus={(event) => event.currentTarget.select()}
-                    className="w-full rounded-control border border-line bg-canvas px-3 py-2 text-base text-ink"
-                  />
-                </div>
-              )}
+                {copyState === "success" ? (
+                  <>
+                    <Check className="w-4 h-4 text-success" />
+                    <span className="text-success">Đã sao chép liên kết</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-4 h-4 text-accent" />
+                    <span>
+                      {copyState === "copying"
+                        ? "Đang sao chép..."
+                        : "Sao chép liên kết"}
+                    </span>
+                  </>
+                )}
+              </button>
             </div>
           </section>
 
+          {/* CỘT PHẢI (5 cols): PHIẾN NGỌC GIEO DUYÊN (HÀNH ĐỘNG NHỎ) */}
           <section
-            aria-labelledby="small-action-title"
-            className="lg:col-span-5 rounded-2xl border border-line bg-surface p-6 sm:p-8"
+            aria-labelledby="action-card-title"
+            className="lg:col-span-5 signal-action-card"
           >
-            <div className="flex items-center justify-between gap-3 mb-4">
+            <div className="signal-action-rim" />
+
+            <div>
+              {/* Header thẻ việc nhỏ */}
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-success">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Một việc nhỏ an yên</span>
+                </div>
+
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-muted bg-surface-soft px-2.5 py-1 rounded-full border border-line/60">
+                  <Clock3 className="w-3.5 h-3.5 text-accent" />
+                  <span>{signal.action.duration}</span>
+                </span>
+              </div>
+
               <h2
-                id="small-action-title"
-                className="text-sm font-semibold text-accent"
+                id="action-card-title"
+                className="font-display font-semibold text-xl sm:text-2xl text-ink leading-snug mb-3"
               >
-                Một việc nhỏ bạn có thể làm
+                {signal.action.title}
               </h2>
 
-              <span className="inline-flex items-center gap-1.5 text-sm text-muted shrink-0">
-                <Clock3 className="w-4 h-4" aria-hidden="true" />
-                {signal.action.duration}
-              </span>
+              <p className="text-sm sm:text-base text-muted leading-relaxed mb-6">
+                {signal.action.description}
+              </p>
+
+              {/* Nút hành động "Tôi đã thực hiện" */}
+              <button
+                type="button"
+                onClick={() => onToggleAction(!isActionDone)}
+                aria-pressed={isActionDone}
+                className={`signal-action-btn ${
+                  isActionDone ? "signal-action-btn--done" : ""
+                }`}
+              >
+                <span className="signal-action-sheen" />
+                <Check className="w-4 h-4 shrink-0" />
+                <span>
+                  {isActionDone ? "Đã thực hiện xong ✓" : "Tôi đã thực hiện"}
+                </span>
+              </button>
+
+              {isActionDone && (
+                <p className="mt-2.5 text-xs text-center text-success font-medium">
+                  Tâm an thì vạn sự an. Bạn có thể bấm lần nữa để bỏ đánh dấu.
+                </p>
+              )}
+
+              {/* Nút "Hoàn tất lượt chiêm nghiệm" */}
+              {isActionDone && onGoToCompletion && (
+                <Button
+                  type="button"
+                  onClick={onGoToCompletion}
+                  className="w-full mt-3 h-11 text-sm font-semibold"
+                >
+                  <span>Hoàn tất lượt chiêm nghiệm</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              )}
             </div>
 
-            <h3 className="font-display font-semibold text-xl text-ink mb-3">
-              {signal.action.title}
-            </h3>
-
-            <p className="text-base text-muted leading-relaxed mb-6">
-              {signal.action.description}
-            </p>
-
-            <Button
-              type="button"
-              variant={isActionDone ? "secondary" : "default"}
-              onClick={() => onToggleAction(!isActionDone)}
-              aria-pressed={isActionDone}
-              className="w-full"
-            >
-              <Check className="w-4 h-4" aria-hidden="true" />
-              <span>
-                {isActionDone ? "Đã thực hiện" : "Tôi đã thực hiện"}
-              </span>
-            </Button>
-
-            {isActionDone && onGoToCompletion && (
-              <Button
-                type="button"
-                onClick={onGoToCompletion}
-                className="w-full mt-3"
-              >
-                <span>Hoàn tất lượt chiêm nghiệm</span>
-                <ArrowRight
-                  className="w-4 h-4"
-                  aria-hidden="true"
-                />
-              </Button>
-            )}
-
-            {isActionDone && (
-              <p role="status" className="mt-3 text-sm text-muted">
-                Đã ghi nhận hành động của bạn. Bạn có thể bấm
-                “Đã thực hiện” lần nữa để bỏ đánh dấu.
-              </p>
-            )}
-
-            <div className="mt-6 pt-5 border-t border-line">
+            {/* Khối lưu vào Góc của tôi */}
+            <div className="mt-6 pt-5 border-t border-line/60">
               <Button
                 type="button"
                 variant="outline"
                 onClick={isSaved ? onGoToDiary : onSaveToAccount}
-                className="w-full"
+                className="w-full h-11 text-sm font-semibold flex items-center justify-center gap-2"
               >
                 <Bookmark
-                  className="w-4 h-4"
-                  aria-hidden="true"
+                  className={`w-4 h-4 ${isSaved ? "fill-accent text-accent" : ""}`}
                 />
                 <span>
                   {isSaved
-                    ? "Đã lưu — xem trong Góc của tôi"
+                    ? "Đã lưu — Xem trong Góc của tôi"
                     : "Lưu vào Góc của tôi"}
                 </span>
               </Button>
 
-              <p className="mt-3 text-sm text-muted leading-relaxed">
-                Bạn có thể lưu lời chiêm nghiệm mà không cần
-                đánh dấu đã thực hiện.
+              <p className="mt-2.5 text-xs text-center text-muted leading-relaxed">
+                Bạn có thể lưu giữ lời chiêm nghiệm này vào sổ tay bất cứ lúc nào.
               </p>
             </div>
           </section>
         </div>
 
-        <div className="mt-6 space-y-3">
-          <details className="group rounded-xl border border-line bg-surface">
-            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 p-4 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
-              <span className="font-semibold text-sm text-ink">
-                Đọc thêm về lời chiêm nghiệm
-              </span>
-              <ChevronDown
-                className="w-4 h-4 text-muted shrink-0 transition-transform group-open:rotate-180"
-                aria-hidden="true"
-              />
-            </summary>
+        {/* ========================================================= */}
+        {/* 5. ĐỌC THÊM & NGUỒN KHẢO CỨU (RESEARCH DETAILS)          */}
+        {/* ========================================================= */}
+        <div className="mt-8 space-y-3">
+          {signal.reflection?.content && (
+            <details className="group rounded-2xl border border-line bg-surface overflow-hidden shadow-2xs">
+              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-semibold text-ink focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+                <span className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-accent" />
+                  <span>Đọc thêm góc nhìn chiêm nghiệm sâu sắc</span>
+                </span>
+                <ChevronDown
+                  className="w-4 h-4 text-muted shrink-0 transition-transform group-open:rotate-180"
+                  aria-hidden="true"
+                />
+              </summary>
 
-            <div className="px-4 pb-5 sm:px-5">
-              <div className="space-y-3">
-                <p className="text-sm text-muted leading-relaxed">
-                  Lời gợi mở do sản phẩm biên soạn. Bạn có thể giữ lại
-                  điều phù hợp với trải nghiệm của mình.
+              <div className="px-5 pb-5 pt-1 border-t border-line/50">
+                <p className="text-sm text-muted leading-relaxed mb-3">
+                  Lời gợi mở do sản phẩm biên soạn dựa trên triết lý nhân sinh dân gian:
                 </p>
-
                 <p className="text-base text-ink leading-relaxed">
                   {signal.reflection.content}
                 </p>
               </div>
+            </details>
+          )}
 
-              <figure className="mt-5">
-                <img
-                  src={signal.artwork.image}
-                  alt={signal.artwork.caption}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-48 sm:h-64 object-cover rounded-xl"
-                />
-                <figcaption className="mt-2 text-sm text-muted">
-                  {signal.artwork.caption}
-                </figcaption>
-              </figure>
-            </div>
-          </details>
-
-          <details className="group rounded-xl border border-line bg-surface">
-            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 p-4 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
-              <span className="font-semibold text-sm text-ink">
-                Nguồn và ghi chú nội dung
+          <details className="group rounded-2xl border border-line bg-surface overflow-hidden shadow-2xs">
+            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-semibold text-ink focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+              <span className="flex items-center gap-2">
+                <Compass className="w-4 h-4 text-gold" />
+                <span>Nguồn gốc khảo cứu & Xuất xứ di sản</span>
               </span>
               <ChevronDown
                 className="w-4 h-4 text-muted shrink-0 transition-transform group-open:rotate-180"
@@ -477,63 +502,101 @@ export const SignalResultScreen: React.FC<
               />
             </summary>
 
-            <div className="px-4 pb-5 sm:px-5">
+            <div className="px-5 pb-5 pt-2 border-t border-line/50">
               <ContentProvenance metadata={signal.metadata} />
 
-              <div className="mt-4 space-y-2 border-t border-line pt-4 text-sm leading-relaxed text-muted">
-                <p>{signal.research.region}</p>
-                <p>{signal.research.note}</p>
+              <div className="mt-4 pt-4 border-t border-line/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs sm:text-sm text-muted">
+                <span>
+                  <strong className="text-ink">Vùng miền:</strong>{" "}
+                  {signal.research.region}
+                </span>
+                <span>
+                  <strong className="text-ink">Ghi chú:</strong>{" "}
+                  {signal.research.note}
+                </span>
               </div>
             </div>
           </details>
         </div>
 
+        {/* ========================================================= */}
+        {/* 6. THẺ BÀI KHÁM PHÁ VĂN HÓA LIÊN KẾT (SUGGESTED ARTICLE)  */}
+        {/* ========================================================= */}
         {suggestedArticle && (
           <section
             aria-labelledby="result-reading-title"
-            className="mt-8 rounded-card border border-line bg-surface p-5 sm:p-6"
+            className="mt-10 signal-culture-card"
           >
-            <h2
-              id="result-reading-title"
-              className="font-display text-xl font-semibold text-ink"
-            >
-              Khám phá thêm một câu chuyện văn hóa
-            </h2>
+            <div>
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent mb-2">
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Cội nguồn câu chuyện · Di sản liên kết</span>
+              </div>
 
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              {readingSuggestion.reason}
-            </p>
+              <h2
+                id="result-reading-title"
+                className="font-display text-xl sm:text-2xl font-semibold text-ink leading-snug mb-2"
+              >
+                {suggestedArticle.title}
+              </h2>
 
-            <h3 className="mt-5 font-display text-lg font-semibold text-ink">
-              {suggestedArticle.title}
-            </h3>
+              <p className="text-xs sm:text-sm text-muted mb-3 italic">
+                {readingSuggestion.reason}
+              </p>
 
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              {suggestedArticle.excerpt}
-            </p>
+              <p className="text-sm text-muted line-clamp-2 leading-relaxed mb-5">
+                {suggestedArticle.excerpt}
+              </p>
 
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-5 w-full sm:w-auto"
-              onClick={() =>
-                onOpenCultureArticle(suggestedArticle.id)
-              }
-            >
-              Đọc bài văn hóa
-              <ArrowRight
-                className="h-4 w-4"
-                aria-hidden="true"
-              />
-            </Button>
+              <button
+                type="button"
+                onClick={() => onOpenCultureArticle(suggestedArticle.id)}
+                className="guest-secondary-btn text-xs sm:text-sm h-10 px-4 group"
+              >
+                <span>Đọc bài văn hóa</span>
+                <ArrowRight className="w-4 h-4 text-accent transition-transform duration-300 group-hover:translate-x-1" />
+              </button>
+            </div>
+
+            {suggestedArticle.image && (
+              <figure className="m-0">
+                <img
+                  src={suggestedArticle.image}
+                  alt={suggestedArticle.title}
+                  loading="lazy"
+                  decoding="async"
+                  className="signal-culture-thumb"
+                />
+              </figure>
+            )}
           </section>
         )}
 
-        <p className="mt-6 text-sm text-muted leading-relaxed">
-          Nội dung dành cho chiêm nghiệm và khám phá văn hóa,
-          không phải dự báo điều sẽ xảy ra với bạn.
+        {/* ========================================================= */}
+        {/* 7. DÒNG CAM KẾT VĂN HÓA PHI MÊ TÍN                        */}
+        {/* ========================================================= */}
+        <p className="mt-8 text-xs sm:text-sm text-center text-muted leading-relaxed">
+          Nội dung hướng đến chiêm nghiệm tâm hồn và khám phá vẻ đẹp văn hóa dân tộc,
+          không mang tính chất bói toán hay dự báo tương lai.
         </p>
       </main>
     </div>
   );
 };
+
+/** Hoa văn góc cổ phong đồng bộ với toàn hệ thống */
+const CornerOrnament: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M4 20V8a4 4 0 0 1 4-4h12" />
+    <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+  </svg>
+);

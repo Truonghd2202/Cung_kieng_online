@@ -184,28 +184,28 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     <div className="screen-shell">
       <main className="page-container max-w-6xl">
         {/* Top Breadcrumb */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 text-xs text-muted">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 text-xs text-stone-600 dark:text-stone-400">
           <div className="flex items-center gap-2">
             <button
               onClick={onGoToHome}
-              className="hover:text-accent cursor-pointer transition-colors"
+              className="hover:text-amber-800 dark:hover:text-amber-300 cursor-pointer transition-colors"
             >
               Hôm nay
             </button>
-            <span>/</span>
+            <span className="text-stone-400">/</span>
             <button
               onClick={onBackToAccount}
-              className="hover:text-accent cursor-pointer transition-colors"
+              className="hover:text-amber-800 dark:hover:text-amber-300 cursor-pointer transition-colors"
             >
               Góc của tôi
             </button>
-            <span>/</span>
-            <span className="text-accent font-semibold">Cài đặt & Tùy chọn</span>
+            <span className="text-stone-400">/</span>
+            <span className="text-amber-800 dark:text-amber-300 font-semibold">Cài đặt & Tùy chọn</span>
           </div>
 
           <button
             onClick={onBackToAccount}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-accent transition-colors cursor-pointer self-start sm:self-auto"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-600 dark:text-stone-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors cursor-pointer self-start sm:self-auto"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Về Góc của tôi</span>
@@ -213,85 +213,95 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </div>
 
         {/* Header Title Section */}
-        <div className="mb-8">
-          <span className="text-xs font-bold uppercase tracking-wider text-accent mb-1 block">
-            TÙY BIẾN KHÔNG GIAN
-          </span>
-          <h1 className="page-title mb-2">
-            Cài đặt & Tùy chọn cá nhân
-          </h1>
-          <p className="text-sm sm:text-base text-ink leading-relaxed max-w-3xl">
-            Điều chỉnh không gian tĩnh tại, nhịp trải nghiệm văn hóa và quản lý dữ liệu lưu trữ trên
-            thiết bị của bạn.
-          </p>
-        </div>
+        <section className="mb-8 p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-surface via-surface to-amber-500/[0.04] shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-amber-500/10 to-transparent pointer-events-none rounded-bl-full" />
+
+          <div className="relative z-10 space-y-2.5 max-w-2xl">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-amber-800 dark:text-amber-300">
+                TÙY BIẾN KHÔNG GIAN TĨNH TẠI
+              </span>
+              <span className="text-xs text-stone-400">·</span>
+              <span className="text-xs text-stone-500">Cá Nhân Hóa</span>
+            </div>
+
+            <h1 className="page-title font-display text-2xl sm:text-3xl font-bold text-ink">
+              Cài Đặt & Tùy Chọn Cá Nhân
+            </h1>
+
+            <p className="text-xs sm:text-sm text-stone-700 dark:text-stone-300 leading-relaxed">
+              Điều chỉnh không gian tĩnh tại, nhịp trải nghiệm văn hóa và quản lý dữ liệu lưu trữ
+              trên thiết bị của bạn.
+            </p>
+          </div>
+        </section>
 
         {/* 2-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column (4 cols): User Profile Card & Navigation Menu */}
-          <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left Column (3 cols): User Profile Card & Navigation Menu */}
+          <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-24">
             {/* User Badge Card */}
-            <Card className="p-5 rounded-card bg-surface border border-line shadow-xs">
+            <Card className="p-5 rounded-3xl bg-surface border border-line shadow-xs">
               <div className="flex items-center gap-3.5">
                 <ProfileAvatar
                   email={user?.email}
                   name={displayName}
-                  className="h-12 w-12 border border-line text-xl"
+                  className="h-12 w-12 border-2 border-amber-500/40 text-xl shadow-xs"
                 />
-                <div>
-                  <h3 className="font-display font-bold text-base text-ink">
+                <div className="min-w-0">
+                  <h3 className="font-display font-bold text-base text-ink truncate">
                     {displayName}
                   </h3>
-                  <p className="text-sm text-muted">Tâm thức an hòa • Bản demo</p>
+                  <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">Tâm thức an hòa · Bản demo</p>
                 </div>
               </div>
             </Card>
 
             {/* Navigation Menu Links */}
-            <Card className="p-3 rounded-card bg-surface border border-line shadow-xs space-y-1 text-xs font-semibold text-ink">
+            <Card className="p-2.5 rounded-3xl bg-surface border border-line shadow-xs space-y-1 text-xs font-semibold text-ink">
               <button
                 type="button"
                 onClick={() => goToSection("profile")}
-                className={`w-full text-left px-4 py-2.5 rounded-panel flex items-center justify-between transition-all cursor-pointer ${
+                className={`w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center justify-between transition-all cursor-pointer ${
                   activeSection === "profile"
-                    ? "bg-accent-soft text-accent"
+                    ? "bg-amber-500/15 text-amber-900 dark:text-amber-200"
                     : "hover:bg-surface-soft text-ink"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <User className="w-4 h-4" />
+                  <User className="w-4 h-4 text-amber-700" />
                   <span>Hồ sơ cá nhân</span>
                 </div>
-                {activeSection === "profile" && <span className="w-1.5 h-1.5 rounded-full bg-action" />}
+                {activeSection === "profile" && <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />}
               </button>
 
               <button
                 type="button"
                 onClick={() => goToSection("experience")}
-                className={`w-full text-left px-4 py-2.5 rounded-panel flex items-center justify-between transition-all cursor-pointer ${
+                className={`w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center justify-between transition-all cursor-pointer ${
                   activeSection === "experience"
-                    ? "bg-accent-soft text-accent"
+                    ? "bg-amber-500/15 text-amber-900 dark:text-amber-200"
                     : "hover:bg-surface-soft text-ink"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Sparkles className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4 text-amber-700" />
                   <span>Tùy biến trải nghiệm</span>
                 </div>
-                {activeSection === "experience" && <span className="w-1.5 h-1.5 rounded-full bg-action" />}
+                {activeSection === "experience" && <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />}
               </button>
 
               <button
                 type="button"
                 onClick={() => goToSection("notifications")}
-                className={`w-full text-left px-4 py-2.5 rounded-panel flex items-center justify-between transition-all cursor-pointer ${
+                className={`w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center justify-between transition-all cursor-pointer ${
                   activeSection === "notifications"
-                    ? "bg-accent-soft text-accent"
+                    ? "bg-amber-500/15 text-amber-900 dark:text-amber-200"
                     : "hover:bg-surface-soft text-ink"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Bell className="w-4 h-4" />
+                  <Bell className="w-4 h-4 text-amber-700" />
                   <span>Thông báo & Nhắc lịch</span>
                 </div>
               </button>
@@ -299,17 +309,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               <button
                 type="button"
                 onClick={() => goToSection("data")}
-                className={`w-full text-left px-4 py-2.5 rounded-panel flex items-center justify-between transition-all cursor-pointer ${
+                className={`w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center justify-between transition-all cursor-pointer ${
                   activeSection === "data"
-                    ? "bg-accent-soft text-accent"
+                    ? "bg-amber-500/15 text-amber-900 dark:text-amber-200"
                     : "hover:bg-surface-soft text-ink"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <ShieldCheck className="w-4 h-4" />
+                  <ShieldCheck className="w-4 h-4 text-amber-700" />
                   <span>Dữ liệu bản demo</span>
                 </div>
-                {activeSection === "data" && <span className="w-1.5 h-1.5 rounded-full bg-action" />}
+                {activeSection === "data" && <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />}
               </button>
 
               {onLogout && (
@@ -317,7 +327,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   <button
                     type="button"
                     onClick={onLogout}
-                    className="w-full text-left px-4 py-2.5 rounded-panel flex items-center gap-2.5 text-danger hover:bg-danger-soft transition-all cursor-pointer"
+                    className="w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center gap-2.5 text-red-700 dark:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Đăng xuất khỏi thiết bị này</span>
@@ -326,14 +336,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               )}
             </Card>
 
-            <div className="p-4 rounded-panel bg-surface border border-line text-xs text-muted italic leading-relaxed">
-              Bản thử nghiệm lưu dữ liệu trên trình duyệt này.
-              Một số chức năng mở rộng chưa được triển khai.
+            <div className="p-3.5 rounded-2xl bg-amber-500/[0.06] border border-amber-500/20 text-xs text-stone-600 dark:text-stone-400 italic leading-relaxed">
+              * Dữ liệu được lưu trữ an toàn và bảo mật trên trình duyệt này.
             </div>
           </div>
 
           {/* Right Column (8 cols): Setting Blocks */}
-          <div className="lg:col-span-9 space-y-6">
+          <div className="lg:col-span-8 space-y-6">
             {/* Block 1: Hồ sơ cá nhân */}
             <section
               id="settings-profile"

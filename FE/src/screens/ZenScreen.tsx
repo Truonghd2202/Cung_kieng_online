@@ -18,6 +18,7 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
+import "@/src/styles/ZenScreen.css";
 
 const SESSION_SECONDS = 180;
 
@@ -34,7 +35,6 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
   const [zenState, setZenState] = useState<"ready" | "active" | "completed">("ready");
 
   // Display & Ambient options
-  const [viewMode, setViewMode] = useState<"2D" | "3D">("2D");
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [isLampLit, setIsLampLit] = useState(false);
@@ -239,9 +239,9 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
     };
   }, [zenState, isPaused, isPageVisible]);
 
-  // 3D Canvas Rendering Engine (Perspective Projection with 3D Particles & Golden Bell)
+  // Canvas Floating Particles Engine (Light golden particles dancing in transparent atmosphere)
   useEffect(() => {
-    if (viewMode !== "3D" || !isPageVisible) return;
+    if (!isPageVisible) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -252,13 +252,13 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
     const width = (canvas.width = canvas.offsetWidth || 800);
     const height = (canvas.height = canvas.offsetHeight || 450);
 
-    // Generate 3D floating particles
-    const particleCount = reducedMotion ? 25 : 65;
+    // Generate floating golden spiritual particles
+    const particleCount = reducedMotion ? 25 : 60;
     const particles = Array.from({ length: particleCount }, () => ({
       x: (Math.random() - 0.5) * 600,
       y: (Math.random() - 0.5) * 400,
       z: Math.random() * 800 + 100,
-      speedZ: Math.random() * 0.8 + 0.3,
+      speedZ: Math.random() * 0.7 + 0.25,
       radius: Math.random() * 2 + 1.2,
       opacity: Math.random() * 0.7 + 0.3,
     }));
@@ -266,21 +266,8 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
     let angle = 0;
 
     const render = () => {
+      // Clear transparently so landscape photo behind remains crystal clear
       ctx.clearRect(0, 0, width, height);
-
-      // Radial dark background with atmospheric mist
-      const grad = ctx.createRadialGradient(
-        width / 2,
-        height / 2,
-        40,
-        width / 2,
-        height / 2,
-        width / 1.4
-      );
-      grad.addColorStop(0, isLampLit ? "#2f1e16" : "#1c1715");
-      grad.addColorStop(1, "#0f0c0b");
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, width, height);
 
       const fov = 350;
       const centerX = width / 2;
@@ -360,7 +347,6 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
   }, [
-    viewMode,
     breathPhase,
     isLampLit,
     reducedMotion,
@@ -436,8 +422,9 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="page-title mb-2.5">
-                Một khoảng nghỉ ba phút
+              <h1 tabIndex={-1} className="zen-page-title mb-2.5 outline-none focus:outline-none flex items-center">
+                <span className="zen-seal-badge" aria-hidden="true">靜</span>
+                <span>Một khoảng nghỉ ba phút</span>
               </h1>
               <p className="text-sm sm:text-base text-ink leading-relaxed max-w-3xl">
                 Một khoảng lặng tương tác tượng trưng lấy cảm hứng từ mỹ thuật và kiến trúc dân
@@ -458,34 +445,10 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
 
         {/* Interactive Controls Bar */}
         <div className="p-3 sm:p-4 rounded-panel bg-surface/50 border border-line mb-6 flex flex-wrap items-center justify-between gap-3 text-xs">
-          {/* Mode Switcher */}
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-ink">HIỂN THỊ:</span>
-            <button
-              type="button"
-              aria-pressed={viewMode === "2D"}
-              onClick={() => setViewMode("2D")}
-              className={`px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-                viewMode === "2D"
-                  ? "bg-action text-white shadow-2xs font-semibold"
-                  : "bg-surface border border-line text-ink hover:border-line"
-              }`}
-            >
-              <span>Chế độ 2D hiên nhà</span>
-            </button>
-            <button
-              type="button"
-              aria-pressed={viewMode === "3D"}
-              onClick={() => setViewMode("3D")}
-              className={`px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-                viewMode === "3D"
-                  ? "bg-action text-white shadow-2xs font-semibold"
-                  : "bg-surface border border-line text-ink hover:border-line"
-              }`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>Hiệu ứng chiều sâu 2D</span>
-            </button>
+          <div className="flex items-center gap-2 text-muted">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-semibold text-ink">KHÔNG GIAN:</span>
+            <span>Hiên chùa ven hồ mộc mạc • Tĩnh tâm chánh niệm</span>
           </div>
 
           {/* Sound & Motion toggles */}
@@ -494,21 +457,19 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
               type="button"
               aria-pressed={soundEnabled}
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className={`px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 cursor-pointer ${
-                soundEnabled
-                  ? "bg-action text-white border-accent font-semibold shadow-2xs"
-                  : "bg-surface border-line text-ink hover:border-line"
+              className={`zen-pill-btn ${
+                soundEnabled ? "zen-pill-btn--active" : ""
               }`}
             >
               {soundEnabled ? (
                 <>
                   <Volume2 className="w-3.5 h-3.5 text-amber-200" />
-                  <span>Âm thanh tự nhiên: Bật</span>
+                  <span>Chuông thiền & Gió: Bật</span>
                 </>
               ) : (
                 <>
                   <VolumeX className="w-3.5 h-3.5 text-muted" />
-                  <span>Âm thanh tự nhiên: Tắt</span>
+                  <span>Chuông thiền & Gió: Tắt</span>
                 </>
               )}
             </button>
@@ -517,7 +478,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
               type="button"
               aria-pressed={reducedMotion}
               onClick={() => setReducedMotion(!reducedMotion)}
-              className="px-3 py-1.5 rounded-full bg-surface border border-line text-ink hover:border-line flex items-center gap-1.5 cursor-pointer"
+              className="zen-pill-btn"
             >
               <Wind className="w-3.5 h-3.5 text-accent" />
               <span>Chuyển động: {reducedMotion ? "Tối thiểu" : "Mặc định"}</span>
@@ -526,35 +487,53 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
         </div>
 
         {/* 16:9 Cinematic Canvas Scene */}
-        <div className="relative h-[560px] sm:h-[600px] lg:h-auto lg:aspect-[16/9] w-full rounded-card overflow-hidden border border-line shadow-md bg-surface-soft mb-8 select-none">
-          {viewMode === "2D" ? (
-            <>
-              {/* Background Visual (Vietnamese Courtyard Veranda) */}
-              <img
-                src="/images/temple_bac_bo.jpg"
-                alt="Hiên nhà Việt tĩnh lặng"
-                className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
-                  zenState === "active" ? "scale-105 filter blur-xs brightness-75" : "brightness-90"
-                }`}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/40" />
-            </>
-          ) : (
-            /* Real 3D Perspective Canvas */
-            <canvas
-              ref={canvasRef}
-              className="w-full h-full block absolute inset-0 z-0"
-            />
+        <div className="relative h-[560px] sm:h-[600px] lg:h-auto lg:aspect-[16/9] w-full rounded-card overflow-hidden border border-line shadow-md bg-stone-950 mb-8 select-none">
+          {/* Bức ảnh hiên chùa Bắc Bộ luôn luôn hiện rõ ràng, sắc nét */}
+          <img
+            src="/images/temple_bac_bo.jpg"
+            alt="Hiên nhà Việt tĩnh lặng"
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
+              isLampLit
+                ? "brightness-105 saturate-110 contrast-105"
+                : zenState === "active"
+                ? "scale-105 filter blur-[1px] brightness-85"
+                : "brightness-95"
+            }`}
+          />
+
+          {/* Lớp phủ chuyển sắc dịu nhẹ */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/35 pointer-events-none" />
+
+          {/* Hiệu ứng Hào quang đèn hoa đăng khi được thắp */}
+          {isLampLit && (
+            <div className="zen-lamp-glow-overlay" />
+          )}
+
+          {/* Canvas hạt bụi vàng / đom đóm thiền định bay lơ lửng trên nền trong suốt */}
+          <canvas
+            ref={canvasRef}
+            className="w-full h-full block absolute inset-0 z-2 pointer-events-none"
+          />
+
+          {/* Ngọn đèn hoa đăng góc dưới khi thắp sáng */}
+          {isLampLit && (
+            <div className="zen-floating-lantern" aria-label="Ngọn đèn hoa đăng thắp sáng">
+              <div className="w-8 h-8 rounded-full bg-amber-400/30 blur-md absolute -top-1" />
+              <span className="text-2xl filter drop-shadow">🪔</span>
+              <span className="text-[10px] font-semibold text-amber-200 bg-black/60 px-2 py-0.5 rounded-full border border-amber-400/40 mt-1">
+                Tâm đăng chiếu rạng
+              </span>
+            </div>
           )}
 
           {/* Top-Right: Light Oil Lamp Button */}
           <div className="absolute top-4 right-4 z-20">
             <button
               onClick={() => setIsLampLit(!isLampLit)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold backdrop-blur-md border transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold backdrop-blur-md border transition-all flex items-center gap-1.5 cursor-pointer shadow-md ${
                 isLampLit
-                  ? "bg-amber-500/90 text-white border-gold/40 shadow-md shadow-amber-500/30"
-                  : "bg-black/50 text-white/90 border-white/20 hover:bg-black/70"
+                  ? "bg-amber-500 text-white border-amber-300 shadow-amber-500/40 ring-2 ring-amber-400/40"
+                  : "bg-black/60 text-white/90 border-white/20 hover:bg-black/80 hover:border-amber-400/50"
               }`}
             >
               <Flame
@@ -562,7 +541,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
                   isLampLit ? "text-amber-200 animate-pulse fill-current" : "text-amber-400"
                 }`}
               />
-              <span>{isLampLit ? "Ánh sáng đã thắp 🕯️" : "Thắp ánh sáng biểu tượng 🕯️"}</span>
+              <span>{isLampLit ? "Ngọn đèn đang sáng rạng 🕯️" : "Thắp ánh sáng biểu tượng 🕯️"}</span>
             </button>
           </div>
 
@@ -570,48 +549,48 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
           <div className="absolute inset-0 z-10 flex items-center justify-center p-4">
             {/* ================= STATE 1: READY ================= */}
             {zenState === "ready" && (
-              <div className="max-w-md w-full p-6 sm:p-8 rounded-card bg-surface/95 backdrop-blur-md border border-line shadow-xl text-center">
-                <div className="w-12 h-12 rounded-full bg-surface border border-line mx-auto mb-3 flex items-center justify-center text-accent">
+              <div className="zen-state-card max-w-md w-full relative">
+                <div className="w-12 h-12 rounded-full bg-amber-400/15 border border-amber-300/30 mx-auto mb-3 flex items-center justify-center text-amber-300 shadow-[0_0_16px_rgba(251,191,36,0.2)]">
                   <Flower2 className="w-6 h-6" />
                 </div>
 
-                <div className="text-xs uppercase font-bold tracking-widest text-accent mb-1.5">
-                  KHOẢNH KHẮC AN TRÚ
+                <div className="text-xs uppercase font-bold tracking-widest text-amber-300 mb-1.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                  KHOẢNG KHẮC AN TRÚ
                 </div>
 
-                <h2 className="section-title text-xl sm:text-2xl mb-3">
+                <h2 className="section-title text-xl sm:text-2xl mb-3 font-display font-bold text-white tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
                   Bạn đã sẵn sàng cho 3 phút an trú?
                 </h2>
 
-                <p className="text-sm text-ink leading-relaxed mb-6">
+                <p className="text-sm text-stone-200 leading-relaxed mb-6 font-normal drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
                   Thả lỏng đôi vai, nới lỏng cơ mặt và để nhịp thở diễn ra tự nhiên. Hãy cho phép
                   bản thân tạm gác lại mọi âu lo.
                 </p>
 
-                <Button
-                  variant="default"
-                  size="lg"
+                <button
+                  type="button"
                   onClick={handleStartZen}
-                  className="w-full py-3.5 text-sm font-semibold gap-2 shadow-sm rounded-panel"
+                  className="zen-action-btn w-full text-sm font-semibold"
                 >
+                  <span className="zen-btn-sheen" />
                   <span>Bắt đầu 3 phút tĩnh tâm</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </button>
               </div>
             )}
 
             {/* ================= STATE 2: ACTIVE (BREATHING & COUNTDOWN) ================= */}
             {zenState === "active" && (
-              <div className="max-w-md w-full p-6 sm:p-8 rounded-card bg-inverse/95 backdrop-blur-md border border-white/10 shadow-2xl text-center text-white">
+              <div className="zen-active-card max-w-md w-full relative">
                 {/* Breathing Ring Visualizer */}
                 <div className="relative w-36 h-36 mx-auto mb-6 flex items-center justify-center">
                   <div
                     className={`absolute inset-0 rounded-full border-2 transition-all duration-1000 ${
                       breathPhase === "inhale"
-                        ? "border-accent scale-110 shadow-lg shadow-card"
+                        ? "zen-breath-ring-inhale scale-110"
                         : breathPhase === "hold"
-                        ? "border-gold/40 scale-105 shadow-md shadow-amber-400/30"
-                        : "border-success scale-95 shadow-sm"
+                        ? "zen-breath-ring-hold scale-105"
+                        : "zen-breath-ring-exhale scale-95"
                     }`}
                   />
                   <div className="text-center z-10">
@@ -661,7 +640,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
                   </button>
                 </div>
 
-                <p className="mt-3 text-xs leading-relaxed text-muted">
+                <p className="mt-3 text-xs leading-relaxed text-white/60">
                   Phiên tự tạm dừng khi bạn chuyển sang tab khác.
                   Khi quay lại, bấm Tiếp tục để tiếp tục phiên.
                 </p>
@@ -670,42 +649,42 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
 
             {/* ================= STATE 3: COMPLETED ================= */}
             {zenState === "completed" && (
-              <div className="max-w-md w-full p-6 sm:p-8 rounded-card bg-surface/95 backdrop-blur-md border border-line shadow-xl text-center">
-                <div className="w-14 h-14 rounded-full bg-surface border border-line mx-auto mb-3 flex items-center justify-center text-accent shadow-2xs">
+              <div className="zen-state-card max-w-md w-full relative">
+                <div className="w-14 h-14 rounded-full bg-amber-400/15 border border-amber-300/30 mx-auto mb-3 flex items-center justify-center text-amber-300 shadow-[0_0_16px_rgba(251,191,36,0.2)]">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
 
-                <div className="text-xs uppercase font-bold tracking-widest text-accent mb-1.5">
+                <div className="text-xs uppercase font-bold tracking-widest text-amber-300 mb-1.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
                   PHIÊN THIỀN ĐÃ KẾT THÚC
                 </div>
 
-                <h2 className="section-title text-xl sm:text-2xl mb-2.5">
+                <h2 className="section-title text-xl sm:text-2xl mb-2.5 font-display font-bold text-white tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
                   {completedFullSession
                     ? "Bạn đã dành ba phút cho mình"
                     : "Bạn đã kết thúc phiên"}
                 </h2>
 
-                <p className="text-sm text-ink leading-relaxed mb-6">
+                <p className="text-sm text-stone-200 leading-relaxed mb-6 font-normal drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
                   Bạn đã dành {formatTime(elapsedSeconds)} cho phiên này.
                   <br className="hidden sm:inline" /> Bạn có thể trở về ngày của mình hoặc bắt đầu một phiên mới.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
-                  <Button
-                    variant="default"
-                    size="sm"
+                  <button
+                    type="button"
                     onClick={onGoToHome}
-                    className="w-full sm:w-auto px-5 py-2.5 text-xs font-semibold gap-1.5"
+                    className="zen-action-btn w-full sm:w-auto text-xs px-5 py-2.5 font-semibold"
                   >
+                    <span className="zen-btn-sheen" />
                     <span>Trở về Hôm nay</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Button>
+                    <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  </button>
 
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleReset}
-                    className="w-full sm:w-auto px-4 py-2.5 text-xs font-semibold gap-1.5"
+                    className="w-full sm:w-auto px-4 py-2.5 text-xs font-semibold gap-1.5 border-amber-400/40 text-amber-100 hover:bg-white/10 hover:text-white bg-black/30 backdrop-blur-xs cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Chuẩn bị phiên mới</span>

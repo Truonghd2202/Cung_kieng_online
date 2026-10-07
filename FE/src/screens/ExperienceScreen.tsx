@@ -9,10 +9,11 @@ import {
   ScrollText,
   Sparkles,
   Wind,
+  BookOpen,
+  Sparkle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-
-import { Button } from "@/src/components/ui/button";
+import "../styles/ExperienceScreen.css";
 
 interface ExperienceScreenProps {
   onGoToXinXam: () => void;
@@ -31,6 +32,9 @@ interface ExperienceItem {
   description: string;
   label: string;
   icon: LucideIcon;
+  image: string;
+  badge: string;
+  tag: string;
   onClick: () => void;
 }
 
@@ -41,9 +45,7 @@ interface ExperienceGroup {
   items: ExperienceItem[];
 }
 
-export const ExperienceScreen: React.FC<
-  ExperienceScreenProps
-> = ({
+export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
   onGoToXinXam,
   onGoToWish,
   onGoToZen,
@@ -58,33 +60,42 @@ export const ExperienceScreen: React.FC<
       id: "quiet-moments",
       title: "Một khoảng nghỉ cho mình",
       description:
-        "Chọn một thực hành nhẹ nhàng, theo cách bạn thấy thoải mái.",
+        "Thực hành tĩnh tâm nhẹ nhàng, tìm lại điểm tựa an lành giữa nhịp sống bận rộn.",
       items: [
         {
           id: "zen",
-          title: "Thiền ngắn",
+          title: "Thiền ngắn an tịnh",
           description:
-            "Dành vài phút chú ý đến hơi thở trong một không gian yên tĩnh.",
+            "Dành vài phút chú ý đến hơi thở bên tiếng chuông xoay Tây Tạng và không gian tĩnh mặc.",
           label: "Mở phiên thiền",
           icon: Wind,
+          image: "/images/zen_meditation.jpg",
+          badge: "Tĩnh tâm 3 phút",
+          tag: "Chuông xoay · Hơi thở",
           onClick: onGoToZen,
         },
         {
           id: "wish",
-          title: "Lời nguyện",
+          title: "Lời nguyện hoa đăng",
           description:
-            "Viết điều bạn đang mong mỏi và chọn giữ lại hoặc để nó đi.",
-          label: "Viết lời nguyện",
+            "Viết điều bạn đang mong mỏi lên cánh hoa đăng số và thả trôi gửi gắm điều thiện lành.",
+          label: "Thả hoa đăng nguyện ước",
           icon: PenLine,
+          image: "/images/do_paper_still_life.jpg",
+          badge: "Hoa đăng số",
+          tag: "Giấy dó · Nguyện ước",
           onClick: onGoToWish,
         },
         {
           id: "gratitude",
           title: "Một lời biết ơn",
           description:
-            "Dành một lời tri ân cho người hoặc điều bạn trân quý.",
+            "Gửi gắm lời tri ân chân thành tới bậc sinh thành, người đồng hành hoặc điều nhỏ bé bạn trân quý.",
           label: "Gửi lời tri ân",
           icon: Heart,
+          image: "/images/tea_bowl.jpg",
+          badge: "Nuôi dưỡng tâm từ",
+          tag: "Tri ân · Chân thành",
           onClick: onGoToGratitude,
         },
       ],
@@ -93,50 +104,62 @@ export const ExperienceScreen: React.FC<
       id: "cultural-reflection",
       title: "Chiêm nghiệm qua văn hóa",
       description:
-        "Tiếp cận những biểu tượng dân gian như một lời gợi mở để tự suy ngẫm.",
+        "Tiếp cận những phong tục và biểu tượng dân gian như một lời gợi mở để tự soi chiếu lòng mình.",
       items: [
         {
           id: "xinxam",
-          title: "Xin xăm văn hóa",
+          title: "Xin xăm văn hóa truyền thống",
           description:
-            "Chọn vùng và chủ đề, nhận một thẻ lời cùng gợi ý thực hành.",
+            "Xin xăm Quan Âm hoặc Quan Thánh theo nghi thức cổ truyền, đón nhận quẻ thơ đối chiếu nguồn cội.",
           label: "Bắt đầu xin xăm",
           icon: ScrollText,
+          image: "/images/temple_bac_bo.jpg",
+          badge: "Phổ biến nhất",
+          tag: "Quan Âm · Quan Thánh",
           onClick: onGoToXinXam,
         },
         {
           id: "xinkeo",
-          title: "Xin keo",
+          title: "Xin keo âm dương",
           description:
-            "Khám phá một tương tác mô phỏng dân gian và đọc lời chiêm nghiệm.",
-          label: "Trải nghiệm xin keo",
+            "Trải nghiệm phong tục gieo quẻ keo dân gian cổ xưa, chiêm nghiệm sự thuận hòa của nhân duyên.",
+          label: "Trải nghiệm gieo keo",
           icon: Compass,
+          image: "/images/pottery_artisan.jpg",
+          badge: "Dân gian cổ phong",
+          tag: "Quẻ keo Âm Dương",
           onClick: onGoToXinKeo,
         },
       ],
     },
     {
       id: "spaces-and-symbols",
-      title: "Không gian và biểu tượng",
+      title: "Không gian và biểu tượng cội nguồn",
       description:
-        "Khám phá theo sở thích; bạn không cần thực hành tín ngưỡng để sử dụng sản phẩm.",
+        "Dạo bước qua không gian tâm linh số kết nối đạo lý uống nước nhớ nguồn và triết học phương Đông.",
       items: [
         {
           id: "sanctuary",
-          title: "Không gian gia tiên và tưởng niệm",
+          title: "Không gian gia tiên & Tưởng niệm",
           description:
-            "Mở các không gian hướng về cội nguồn và người bạn muốn nhớ.",
-          label: "Xem các không gian",
+            "Thắp nén nhang lòng, dâng trà nước tri ân ông bà tổ tiên và những người thân yêu đã đi xa.",
+          label: "Vào không gian gia tiên",
           icon: Landmark,
+          image: "/images/ancestor_portrait.jpg",
+          badge: "Cội nguồn gia tiên",
+          tag: "Lòng hiếu kính · Ký ức",
           onClick: onGoToSanctuary,
         },
         {
           id: "astrology",
-          title: "Biểu tượng ngày sinh",
+          title: "Biểu tượng ngày sinh & Ngũ hành",
           description:
-            "Đối chiếu ngày sinh với lịch âm, can chi và ngũ hành để đọc một lời chiêm nghiệm.",
-          label: "Khám phá ngày sinh",
+            "Đối chiếu ngày sinh với lịch âm, thiên can địa chi và ngũ hành tương sinh để hiểu thêm về chính mình.",
+          label: "Khám phá can chi ngũ hành",
           icon: Sparkles,
+          image: "/images/hue_trung_bo.jpg",
+          badge: "Can chi & Ngũ hành",
+          tag: "Lịch âm · Minh triết xưa",
           onClick: onGoToAstrology,
         },
       ],
@@ -144,87 +167,135 @@ export const ExperienceScreen: React.FC<
   ];
 
   return (
-    <div className="screen-shell">
-      <main className="page-container max-w-6xl">
-        <header className="mb-8 sm:mb-10 max-w-3xl">
-          <div className="flex items-center gap-2 text-sm text-accent mb-3">
-            <Flower2 className="w-4 h-4" aria-hidden="true" />
-            <span>Chọn một trải nghiệm</span>
+    <div className="screen-shell relative overflow-hidden">
+      {/* Vầng sáng nền mang sắc ấm mỹ học truyền thống */}
+      <div
+        className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[42rem] sm:w-[56rem] h-[28rem] rounded-full bg-gradient-to-b from-accent/10 via-gold/5 to-transparent blur-3xl"
+        aria-hidden="true"
+      />
+
+      <main className="page-container max-w-6xl relative z-10 py-6 sm:py-10">
+        {/* ========================================================= */}
+        {/* 1. HEADER KHÁM PHÁ TRẢI NGHIỆM & TRIỆN SON "NGHIỆM" (驗)   */}
+        {/* ========================================================= */}
+        <header className="mb-10 sm:mb-14 max-w-3xl">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-accent/8 border border-accent/20 text-accent font-medium text-xs sm:text-sm tracking-wide shadow-xs backdrop-blur-xs mb-4">
+            <Sparkles className="w-4 h-4 text-accent" aria-hidden="true" />
+            <span>Không gian thực hành số · Điểm tựa tĩnh tại</span>
           </div>
 
-          <h1 className="page-title mb-3">
-            Dành thời gian cho điều bạn cần
+          <h1
+            tabIndex={-1}
+            className="experience-page-title font-display text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink leading-tight tracking-tight mb-3 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 border-0"
+          >
+            <span className="experience-seal-badge" title="Dấu triện Nghiệm (Chiêm nghiệm thực hành)">
+              驗
+            </span>
+            <span>Khám phá không gian trải nghiệm</span>
           </h1>
 
-          <p className="text-base text-muted leading-relaxed">
-            Một khoảng nghỉ, một lời gửi gắm hay một góc nhìn
-            văn hóa. Bạn có thể bắt đầu ngay, không cần chọn
-            tâm trạng trước.
+          <p className="text-base sm:text-lg text-muted leading-relaxed">
+            Một khoảng dừng an yên, một cánh hoa đăng gửi gắm ước nguyện hay
+            dạo bước qua những nghi thức cổ phong. Bạn hoàn toàn tự do lựa chọn
+            theo cảm xúc của mình.
           </p>
+
+          {/* Dải phân cách hoa văn cổ phong */}
+          <div className="flex items-center gap-3 my-4" aria-hidden="true">
+            <div className="h-px w-14 bg-gradient-to-r from-transparent to-accent/40" />
+            <div className="w-1.5 h-1.5 rotate-45 bg-accent/70" />
+            <div className="h-px w-28 bg-accent/30" />
+            <div className="w-1.5 h-1.5 rotate-45 bg-accent/70" />
+            <div className="h-px w-14 bg-gradient-to-l from-transparent to-accent/40" />
+          </div>
         </header>
 
-        <div className="space-y-9 sm:space-y-12">
+        {/* ========================================================= */}
+        {/* 2. CÁC NHÓM TRẢI NGHIỆM THỰC HÀNH 10/10                  */}
+        {/* ========================================================= */}
+        <div className="space-y-12 sm:space-y-16">
           {groups.map((group) => (
-            <section
-              key={group.id}
-              aria-labelledby={`${group.id}-title`}
-            >
-              <div className="mb-4">
-                <h2
-                  id={`${group.id}-title`}
-                  className="font-display text-xl sm:text-2xl font-semibold text-ink mb-2"
-                >
-                  {group.title}
-                </h2>
+            <section key={group.id} aria-labelledby={`${group.id}-title`}>
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent mb-1.5">
+                    <Flower2 className="w-3.5 h-3.5" />
+                    <span>Không gian chủ đề</span>
+                  </div>
+                  <h2
+                    id={`${group.id}-title`}
+                    className="font-display text-2xl sm:text-3xl font-semibold text-ink tracking-tight"
+                  >
+                    {group.title}
+                  </h2>
+                </div>
 
-                <p className="text-sm sm:text-base text-muted leading-relaxed max-w-3xl">
+                <p className="text-sm sm:text-base text-muted max-w-xl">
                   {group.description}
                 </p>
               </div>
 
               <div
                 className={[
-                  "grid grid-cols-1 sm:grid-cols-2 gap-4",
-                  group.items.length === 3
-                    ? "lg:grid-cols-3"
-                    : "",
+                  "grid grid-cols-1 sm:grid-cols-2 gap-6",
+                  group.items.length === 3 ? "lg:grid-cols-3" : "",
                 ].join(" ")}
               >
                 {group.items.map((item) => {
                   const Icon = item.icon;
 
                   return (
-                    <article
-                      key={item.id}
-                      className="flex flex-col rounded-xl border border-line bg-surface p-5 sm:p-6"
-                    >
-                      <div
-                        aria-hidden="true"
-                        className="w-11 h-11 rounded-xl bg-accent-soft text-accent flex items-center justify-center mb-4"
-                      >
-                        <Icon className="w-5 h-5" />
+                    <article key={item.id} className="experience-card group">
+                      <div className="experience-card-golden-rim" />
+                      <CornerOrnament className="experience-card-corner experience-card-corner--tl" />
+                      <CornerOrnament className="experience-card-corner experience-card-corner--br" />
+
+                      {/* Khung ảnh đại diện chân thực */}
+                      <div className="experience-card-image-box">
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          loading="lazy"
+                          decoding="async"
+                          className="experience-card-img"
+                        />
+                        <span className="experience-card-badge">
+                          <Sparkle className="w-3 h-3 text-gold" />
+                          <span>{item.badge}</span>
+                        </span>
                       </div>
 
-                      <h3 className="font-display text-xl font-semibold text-ink mb-2">
-                        {item.title}
-                      </h3>
+                      {/* Nội dung chi tiết */}
+                      <div className="experience-card-body">
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="experience-card-icon-wrap">
+                              <Icon className="w-5 h-5" />
+                            </div>
+                            <span className="text-[11px] font-medium text-muted bg-surface-soft px-2.5 py-1 rounded-md border border-line/60">
+                              {item.tag}
+                            </span>
+                          </div>
 
-                      <p className="text-sm sm:text-base text-muted leading-relaxed mb-5">
-                        {item.description}
-                      </p>
+                          <h3 className="experience-card-title">
+                            {item.title}
+                          </h3>
 
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={item.onClick}
-                        className="mt-auto w-full justify-between"
-                      >
-                        <span>{item.label}</span>
-                        <ArrowRight
-                          className="w-4 h-4"
-                          aria-hidden="true"
-                        />
-                      </Button>
+                          <p className="experience-card-desc">
+                            {item.description}
+                          </p>
+                        </div>
+
+                        {/* Nút mở trải nghiệm */}
+                        <button
+                          type="button"
+                          onClick={item.onClick}
+                          className="experience-card-btn group/btn"
+                        >
+                          <span>{item.label}</span>
+                          <ArrowRight className="w-4 h-4 text-accent transition-transform duration-300 group-hover/btn:translate-x-1" />
+                        </button>
+                      </div>
                     </article>
                   );
                 })}
@@ -233,42 +304,71 @@ export const ExperienceScreen: React.FC<
           ))}
         </div>
 
+        {/* ========================================================= */}
+        {/* 3. BANNER CẦU NỐI VĂN HÓA (BOTTOM CULTURE BRIDGE)         */}
+        {/* ========================================================= */}
         <section
           aria-labelledby="experience-culture-title"
-          className="mt-9 sm:mt-12 rounded-xl border border-line bg-surface p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-5"
+          className="mt-14 sm:mt-20 experience-culture-bridge"
         >
-          <div className="max-w-2xl">
-            <h2
-              id="experience-culture-title"
-              className="font-display text-xl font-semibold text-ink mb-2"
+          <div className="experience-bridge-rim" />
+
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+            <div className="max-w-2xl">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent mb-2">
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Kho tàng cội nguồn</span>
+              </div>
+
+              <h2
+                id="experience-culture-title"
+                className="font-display text-2xl sm:text-3xl font-semibold text-ink leading-snug mb-2"
+              >
+                Muốn hiểu thêm câu chuyện phía sau mỗi nghi thức?
+              </h2>
+
+              <p className="text-sm sm:text-base text-muted leading-relaxed">
+                Khám phá các bài khảo cứu sống động về phong tục thờ cúng, tín
+                ngưỡng dân gian và di sản ba miền Bắc - Trung - Nam trước hoặc
+                sau khi trải nghiệm.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={onGoToCulture}
+              className="experience-primary-btn group shrink-0"
             >
-              Muốn hiểu thêm câu chuyện phía sau?
-            </h2>
-
-            <p className="text-sm sm:text-base text-muted leading-relaxed">
-              Khám phá bài viết về phong tục, nghi lễ và văn
-              hóa ba miền trước hoặc sau khi trải nghiệm.
-            </p>
+              <span className="experience-btn-sheen" />
+              <span>Khám phá kho tàng văn hóa</span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </button>
           </div>
-
-          <Button
-            type="button"
-            onClick={onGoToCulture}
-            className="w-full sm:w-auto shrink-0"
-          >
-            <span>Khám phá văn hóa</span>
-            <ArrowRight
-              className="w-4 h-4"
-              aria-hidden="true"
-            />
-          </Button>
         </section>
 
-        <p className="mt-5 text-sm text-muted leading-relaxed">
-          Các trải nghiệm chiêm nghiệm không dự báo tương lai
-          hay quyết định thay bạn.
+        {/* Cam kết văn hóa */}
+        <p className="mt-8 text-xs sm:text-sm text-center text-muted leading-relaxed">
+          Tất cả các không gian thực hành mang tính chất chiêm nghiệm thư thái
+          và nuôi dưỡng tâm hồn, không mang tính mê tín dị đoan hay quyết định thay bạn.
         </p>
       </main>
     </div>
   );
 };
+
+/** Hoa văn góc cổ phong đồng bộ toàn hệ thống */
+const CornerOrnament: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M4 20V8a4 4 0 0 1 4-4h12" />
+    <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+  </svg>
+);

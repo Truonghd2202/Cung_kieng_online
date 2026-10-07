@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -7,14 +7,20 @@ import {
   Printer,
   Bookmark,
   ShieldCheck,
-  AlertTriangle,
   Clock,
   Home,
   Sparkles,
   Flower2,
   Info,
   Flame,
-  ChevronDown,
+  CheckCircle2,
+  RotateCcw,
+  Landmark,
+  Compass,
+  Calendar,
+  Waves,
+  Heart,
+  Volume2,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -28,59 +34,66 @@ import {
 import { ContentProvenance } from "../components/ContentProvenance";
 import { RitualPrayerSection } from "../components/RitualPrayerSection";
 import { getRitualMetadata } from "../data/readingMetadata";
+import { ScrollReveal } from "../components/ScrollReveal";
 
 interface RitualDetailScreenProps {
   ritualId?: string;
   currentUserEmail?: string;
   onBackToRitualList: () => void;
   onSelectRelatedRitual: (id: string) => void;
+  onGoToExperience?: () => void;
+  onGoToRegionalExperience?: (
+    kind: "chau-van" | "sea-prayer" | "southern-culture"
+  ) => void;
+  onGoToAncestorAltar?: () => void;
+  onGoToGoodDay?: () => void;
+  onGoToZen?: () => void;
 }
 
-const RitualDetailContent: React.FC<
-  RitualDetailScreenProps
-> = ({
+type TextSize = "normal" | "medium" | "large";
+
+const RitualDetailContent: React.FC<RitualDetailScreenProps> = ({
   ritualId = "chuan-bi-ngay-ram",
   currentUserEmail,
   onBackToRitualList,
   onSelectRelatedRitual,
+  onGoToExperience,
+  onGoToRegionalExperience,
+  onGoToAncestorAltar,
+  onGoToGoodDay,
+  onGoToZen,
 }) => {
   const ritual = getRitualById(ritualId)!;
   const detail = ritual.detail!;
 
-  const accountId =
-    currentUserEmail?.trim().toLowerCase() ||
-    "guest";
+  const accountId = currentUserEmail?.trim().toLowerCase() || "guest";
+  const checklistStorageKey = `tltl-ritual-checklist-${accountId}-${ritual.id}`;
 
-  const checklistStorageKey =
-    `tltl-ritual-checklist-${accountId}-${ritual.id}`;
-
-  const validChecklistIds = new Set(
-    detail.checklists.map((item) => item.id)
+  const validChecklistIds = useMemo(
+    () => new Set(detail.checklists.map((item) => item.id)),
+    [detail.checklists]
   );
 
   const readChecklist = (key: string): string[] => {
     try {
       const raw = localStorage.getItem(key);
-
       if (!raw) return [];
-
       const parsed: unknown = JSON.parse(raw);
-
       if (!Array.isArray(parsed)) return [];
-
-      return parsed.filter(
-        (value): value is string =>
-          typeof value === "string"
-      );
+      return parsed.filter((value): value is string => typeof value === "string");
     } catch {
       return [];
     }
   };
 
-  const [checkedIds, setCheckedIds] =
-    useState<string[]>(() =>
-      readChecklist(checklistStorageKey)
-    );
+  const [checkedIds, setCheckedIds] = useState<string[]>(() =>
+    readChecklist(checklistStorageKey)
+  );
+
+  const [readingProgress, setReadingProgress] = useState(0);
+  const [textSize, setTextSize] = useState<TextSize>("normal");
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [ritualSaveError, setRitualSaveError] = useState("");
 
   const isBookmarked = useReadingBookmark(
     "ritual",
@@ -88,55 +101,56 @@ const RitualDetailContent: React.FC<
     currentUserEmail
   );
 
-  const [
-    showShareNotification,
-    setShowShareNotification,
-  ] = useState(false);
-
-  const [ritualSaveError, setRitualSaveError] =
-    useState("");
-
-  const completedChecklistCount =
-    checkedIds.filter(
-      (id) => validChecklistIds.has(id)
-    ).length;
-
-  // Nạp lại dữ liệu khi đổi nghi lễ hoặc hồ sơ.
+  // Reading progress scroll tracking
   useEffect(() => {
-    setCheckedIds(
-      readChecklist(checklistStorageKey)
-    );
+    const handleScroll = () => {
+      const totalHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
+      if (totalHeight > 0) {
+        const progress = Math.min(
+          100,
+          Math.max(0, (window.scrollY / totalHeight) * 100)
+        );
+        setReadingProgress(progress);
+      }
+    };
 
-    setShowShareNotification(false);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Reload checklist when key changes
+  useEffect(() => {
+    setCheckedIds(readChecklist(checklistStorageKey));
     setRitualSaveError("");
-  }, [
-    checklistStorageKey,
-  ]);
+  }, [checklistStorageKey]);
+
+  const completedChecklistCount = checkedIds.filter((id) =>
+    validChecklistIds.has(id)
+  ).length;
+
+  const isAllChecklistDone =
+    detail.checklists.length > 0 &&
+    completedChecklistCount === detail.checklists.length;
 
   const toggleCheck = (id: string) => {
     if (!validChecklistIds.has(id)) return;
-
     setRitualSaveError("");
 
-    const currentValidIds = checkedIds.filter(
-      (checkedId) =>
-        validChecklistIds.has(checkedId)
+    const currentValidIds = checkedIds.filter((checkedId) =>
+      validChecklistIds.has(checkedId)
     );
 
     const updatedIds = currentValidIds.includes(id)
-      ? currentValidIds.filter(
-          (checkedId) => checkedId !== id
-        )
+      ? currentValidIds.filter((checkedId) => checkedId !== id)
       : [...currentValidIds, id];
 
     try {
-      localStorage.setItem(
-        checklistStorageKey,
-        JSON.stringify(updatedIds)
-      );
+      localStorage.setItem(checklistStorageKey, JSON.stringify(updatedIds));
     } catch {
       setRitualSaveError(
-        "Chưa lưu được checklist. Các đánh dấu trước đó vẫn được giữ nguyên; hãy thử lại."
+        "Chưa lưu được tiến trình checklist trên thiết bị này. Vui lòng thử lại."
       );
       return;
     }
@@ -144,9 +158,17 @@ const RitualDetailContent: React.FC<
     setCheckedIds(updatedIds);
   };
 
+  const handleResetChecklist = () => {
+    setCheckedIds([]);
+    try {
+      localStorage.removeItem(checklistStorageKey);
+    } catch {
+      // ignore
+    }
+  };
+
   const handleToggleBookmark = () => {
     setRitualSaveError("");
-
     const saved = setReadingBookmark(
       "ritual",
       ritual.id,
@@ -155,37 +177,141 @@ const RitualDetailContent: React.FC<
     );
 
     if (!saved) {
-      setRitualSaveError(
-        "Chưa cập nhật được dấu lưu bài. Bạn hãy thử lại."
-      );
+      setRitualSaveError("Chưa cập nhật được dấu lưu bài. Hãy thử lại.");
     }
   };
 
   const handleShare = async () => {
-    setShowShareNotification(false);
-
     try {
-      if (!navigator.clipboard?.writeText) {
-        throw new Error("Clipboard unavailable");
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(window.location.href);
       }
-
-      await navigator.clipboard.writeText(
-        window.location.href
-      );
-
-      setShowShareNotification(true);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
     } catch {
-      window.alert(
-        "Chưa sao chép được. Bạn có thể sao chép địa chỉ bài từ thanh địa chỉ."
-      );
+      window.alert("Bạn có thể sao chép liên kết từ thanh địa chỉ trình duyệt.");
     }
   };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const textSizeClass = useMemo(() => {
+    switch (textSize) {
+      case "medium":
+        return "text-[18px] sm:text-[19px] leading-[2.0]";
+      case "large":
+        return "text-[20px] sm:text-[21px] leading-[2.1]";
+      default:
+        return "text-[16px] sm:text-[17px] leading-[1.85]";
+    }
+  }, [textSize]);
+
+  // Contextual Bridge: Thẻ hành động chuyển tiếp thông minh theo từng nghi lễ
+  const contextBridge = useMemo(() => {
+    if (
+      ritual.id === "chuan-bi-ngay-ram" ||
+      ritual.id === "mung-mot-thanh-tinh" ||
+      ritual.id === "tuong-nho-gia-dinh"
+    ) {
+      return {
+        tag: "KHÔNG GIAN TÂM LINH 3D",
+        title: "Bước vào Không gian Bàn thờ Gia Tiên 3D & Thắp nén tâm hương",
+        desc: "Dâng nén hương mộc thanh tịnh, nghe chuông gió ngân nga và cảm nhận sự an trú thiêng liêng ngay tại màn hình của bạn.",
+        actionLabel: "Khám phá Bàn thờ 3D",
+        icon: <Sparkles className="w-5 h-5 text-amber-500" />,
+        badgeStyle: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30",
+        btnStyle: "bg-amber-600 hover:bg-amber-700 text-white",
+        action: () => {
+          if (onGoToAncestorAltar) onGoToAncestorAltar();
+          else if (onGoToExperience) onGoToExperience();
+        },
+      };
+    }
+
+    if (ritual.id === "cung-gio-mien-nam") {
+      return {
+        tag: "KHÔNG GIAN THỰC TẾ ẢO NAM BỘ",
+        title: "Bước vào Không gian 3D Sông nước Nam Bộ & Thả hoa đăng",
+        desc: "Lắng nghe điệu đờn ca tài tử bảng lảng trên bến sông, thả hoa đăng trôi theo dòng phù sa và nguyện ước bình an cho tổ tiên.",
+        actionLabel: "Khám phá không gian Nam Bộ 3D",
+        icon: <Compass className="w-5 h-5 text-emerald-500" />,
+        badgeStyle: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+        btnStyle: "bg-emerald-600 hover:bg-emerald-700 text-white",
+        action: () => {
+          if (onGoToRegionalExperience) onGoToRegionalExperience("southern-culture");
+          else if (onGoToExperience) onGoToExperience();
+        },
+      };
+    }
+
+    if (ritual.id === "phong-tuc-dau-nam") {
+      return {
+        tag: "KHÔNG GIAN TẾT CỔ TRUYỀN BẮC BỘ",
+        title: "Bước vào Không gian 3D Đình làng & Tết cổ truyền xứ Bắc",
+        desc: "Chiêm ngưỡng kiến trúc đình làng Đại Bái mùa lễ hội, tiếng đàn nguyệt réo rắt và bầu không khí hân hoan đón xuân.",
+        actionLabel: "Khám phá không gian Bắc Bộ 3D",
+        icon: <Landmark className="w-5 h-5 text-amber-600" />,
+        badgeStyle: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30",
+        btnStyle: "bg-amber-700 hover:bg-amber-800 text-white",
+        action: () => {
+          if (onGoToRegionalExperience) onGoToRegionalExperience("chau-van");
+          else if (onGoToExperience) onGoToExperience();
+        },
+      };
+    }
+
+    if (ritual.id === "chuan-bi-dong-tho" || ritual.id === "ta-on-nha-moi") {
+      return {
+        tag: "TRA CỨU NGÀY LÀNH & CÁT KHÁNH",
+        title: "Tra cứu Ngày lành tháng tốt & Giờ hoàng đạo khởi sự",
+        desc: "Xem lịch vạn niên âm dương, trực ngày, sao cát tường và giờ hoàng đạo hợp tuổi gia chủ để tiến hành đại sự vẹn toàn.",
+        actionLabel: "Tra cứu Ngày lành",
+        icon: <Calendar className="w-5 h-5 text-amber-600" />,
+        badgeStyle: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30",
+        btnStyle: "bg-amber-600 hover:bg-amber-700 text-white",
+        action: () => {
+          if (onGoToGoodDay) onGoToGoodDay();
+          else if (onGoToExperience) onGoToExperience();
+        },
+      };
+    }
+
+    return {
+      tag: "KHOẢNG LẶNG TĨNH TÂM",
+      title: "Ghé thăm Góc Thiền định & Lắng đọng tâm tư",
+      desc: "Dành vài phút buông bỏ mọi bộn bề, lắng nghe tiếng chuông xoay Tây Tạng và tìm lại sự bình yên nội tại.",
+      actionLabel: "Ghé thăm góc tĩnh tâm",
+      icon: <Sparkles className="w-5 h-5 text-accent" />,
+      badgeStyle: "bg-accent/10 text-accent border-accent/30",
+      btnStyle: "bg-accent hover:bg-accent/90 text-white",
+      action: () => {
+        if (onGoToZen) onGoToZen();
+        else if (onGoToExperience) onGoToExperience();
+      },
+    };
+  }, [
+    ritual.id,
+    onGoToAncestorAltar,
+    onGoToRegionalExperience,
+    onGoToGoodDay,
+    onGoToZen,
+    onGoToExperience,
+  ]);
 
   const relatedRituals = RITUAL_GUIDES.filter((item) => item.id !== ritual.id).slice(0, 3);
 
   return (
-    <div className="screen-shell">
-      <main className="page-container max-w-6xl">
+    <div className="screen-shell relative">
+      {/* Top Gold Reading Progress Bar */}
+      <div
+        className="fixed top-0 left-0 h-1 bg-gradient-to-r from-amber-600 via-yellow-400 to-amber-600 z-50 transition-all duration-150 shadow-[0_0_8px_rgba(234,179,8,0.6)]"
+        style={{ width: `${readingProgress}%` }}
+        aria-hidden="true"
+      />
+
+      <main className="page-container max-w-6xl pt-4 pb-20">
         {ritualSaveError && (
           <p
             role="alert"
@@ -194,83 +320,148 @@ const RitualDetailContent: React.FC<
             {ritualSaveError}
           </p>
         )}
-        {/* Top Breadcrumb & Tag */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-muted">
-          <div className="flex items-center gap-2 flex-wrap">
+
+        {/* Top Breadcrumb & Reading Accessibility Toolbar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted mb-6 pb-3 border-b border-line/40">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={onBackToRitualList}
-              className="min-h-11 text-left hover:text-accent cursor-pointer transition-colors"
+              className="hover:text-accent cursor-pointer transition-colors flex items-center gap-1 font-medium"
             >
-              Khám phá
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Khám phá</span>
             </button>
-            <span>/</span>
+            <span className="text-muted/60">›</span>
             <button
               type="button"
               onClick={onBackToRitualList}
-              className="min-h-11 text-left hover:text-accent cursor-pointer transition-colors"
+              className="hover:text-accent cursor-pointer transition-colors font-medium"
             >
               Cẩm nang nghi lễ
             </button>
-            <span>/</span>
-            <span className="text-accent font-semibold">{ritual.title}</span>
+            <span className="text-muted/60">›</span>
+            <span className="text-accent font-semibold truncate max-w-[240px] sm:max-w-md">
+              {ritual.title}
+            </span>
           </div>
 
-          <div className="flex items-center gap-1.5 uppercase font-semibold text-xs text-muted">
-            <span className="w-2 h-2 rounded-full bg-action inline-block"></span>
-            <span>HƯỚNG DẪN NGHI LỄ THÍCH ỨNG</span>
+          {/* Reading Accessibility Toolbar */}
+          <div className="flex items-center gap-2">
+            {/* Font Size Adjuster */}
+            <div className="flex items-center bg-surface border border-line rounded-lg p-0.5 text-xs">
+              <button
+                type="button"
+                title="Cỡ chữ chuẩn"
+                onClick={() => setTextSize("normal")}
+                className={`px-2 py-1 rounded transition-colors cursor-pointer ${
+                  textSize === "normal"
+                    ? "bg-accent/15 text-accent font-bold"
+                    : "text-muted hover:text-ink"
+                }`}
+              >
+                A
+              </button>
+              <button
+                type="button"
+                title="Cỡ chữ vừa"
+                onClick={() => setTextSize("medium")}
+                className={`px-2 py-1 rounded transition-colors cursor-pointer ${
+                  textSize === "medium"
+                    ? "bg-accent/15 text-accent font-bold"
+                    : "text-muted hover:text-ink"
+                }`}
+              >
+                A+
+              </button>
+              <button
+                type="button"
+                title="Cỡ chữ lớn"
+                onClick={() => setTextSize("large")}
+                className={`px-2 py-1 rounded transition-colors cursor-pointer ${
+                  textSize === "large"
+                    ? "bg-accent/15 text-accent font-bold"
+                    : "text-muted hover:text-ink"
+                }`}
+              >
+                A++
+              </button>
+            </div>
+
+            {/* Print Button */}
+            <button
+              type="button"
+              onClick={handlePrint}
+              title="In hướng dẫn nghi lễ"
+              className="p-1.5 rounded-lg border border-line bg-surface hover:border-accent hover:text-accent transition-colors flex items-center gap-1 text-xs text-muted cursor-pointer"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">In</span>
+            </button>
+
+            {/* Bookmark Button */}
+            <button
+              type="button"
+              onClick={handleToggleBookmark}
+              title={isBookmarked ? "Bỏ đánh dấu" : "Đánh dấu cẩm nang"}
+              className={`p-1.5 rounded-lg border transition-colors flex items-center gap-1 text-xs cursor-pointer ${
+                isBookmarked
+                  ? "border-accent bg-accent/10 text-accent font-semibold"
+                  : "border-line bg-surface text-muted hover:border-accent hover:text-accent"
+              }`}
+            >
+              <Bookmark
+                className={`w-3.5 h-3.5 ${isBookmarked ? "fill-current" : ""}`}
+              />
+              <span className="hidden sm:inline">
+                {isBookmarked ? "Đã lưu" : "Lưu"}
+              </span>
+            </button>
+
+            {/* Share / Copy Link */}
+            <button
+              type="button"
+              onClick={handleShare}
+              title="Sao chép liên kết chia sẻ"
+              className="p-1.5 rounded-lg border border-line bg-surface hover:border-accent hover:text-accent transition-colors flex items-center gap-1 text-xs text-muted cursor-pointer"
+            >
+              {copiedLink ? (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <span className="text-emerald-600 font-semibold">Đã chép</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Chia sẻ</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
-        {/* Sub-badge & Title Section */}
+        {/* Hero Title & Sub-badge Section */}
         <div className="mb-6">
           <Badge
-            variant="terracotta"
-            className="mb-3 px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-surface text-accent border-line"
+            variant="outline"
+            className="mb-3 px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30"
           >
-            Hướng dẫn tham khảo · Điều chỉnh theo nếp nhà
+            ✦ NẾP SỐNG GIA ĐÌNH & ĐẠO HIẾU VIỆT NAM
           </Badge>
 
-          <h1 className="page-title mb-3">
+          <h1 className="font-display text-2xl sm:text-4xl font-bold tracking-tight text-ink mb-3 leading-snug">
             {detail.fullTitle}
           </h1>
 
-          <p className="text-sm sm:text-base text-ink leading-relaxed max-w-3xl mb-4">
+          <p className="text-base sm:text-lg text-ink/80 leading-relaxed max-w-3xl mb-5 font-serif">
             {detail.subtitle}
           </p>
-
-          <div className="flex flex-wrap gap-2 mb-5">
-            <Button
-              type="button"
-              variant={isBookmarked ? "default" : "outline"}
-              aria-pressed={isBookmarked}
-              onClick={handleToggleBookmark}
-              className="min-h-11 gap-2 text-sm"
-            >
-              <Bookmark
-                aria-hidden="true"
-                className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`}
-              />
-
-              {isBookmarked ? "Đã đánh dấu" : "Đánh dấu hướng dẫn"}
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onBackToRitualList}
-              className="min-h-11 gap-2 text-sm"
-            >
-              <ArrowLeft aria-hidden="true" className="h-4 w-4" />
-              Về danh sách
-            </Button>
-          </div>
 
           {/* 4 Metadata Pills */}
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="px-3 py-1.5 rounded-full bg-surface border border-line text-ink font-medium flex items-center gap-1.5">
               <Check className="w-3.5 h-3.5 text-accent" />
-              <span>{detail.steps.length} bước gợi ý</span>
+              <span>{detail.steps.length} bước chuẩn mực</span>
             </span>
             <span className="px-3 py-1.5 rounded-full bg-surface border border-line text-ink font-medium flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-accent" />
@@ -280,81 +471,105 @@ const RitualDetailContent: React.FC<
               <Home className="w-3.5 h-3.5 text-accent" />
               <span>{ritual.region}</span>
             </span>
-            <span className="px-3 py-1.5 rounded-full bg-surface border border-line text-accent font-semibold flex items-center gap-1.5">
+            <span className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 font-semibold flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Điểm an yên: Lắng đọng tâm</span>
+              <span>Điểm an yên: Lắng đọng thân tâm</span>
             </span>
           </div>
         </div>
 
         {/* Hero Artwork Banner */}
-        <div className="mb-6 sm:mb-8 rounded-card overflow-hidden border border-line bg-surface shadow-2xs">
-          <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden bg-surface">
-            <img
-              src={detail.heroImage}
-              alt={detail.fullTitle}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="p-3.5 bg-surface border-t border-line flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-muted">
-            <span className="italic">{detail.heroCaption}</span>
-            <span className="font-medium text-muted">{detail.heroArtCredit}</span>
-          </div>
-        </div>
-
-        {/* Two Columns Layout: Left Content, Right Sticky Sidebar */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
-          {/* Main Left Content (8 cols) */}
-          <div className="order-2 lg:order-1 lg:col-span-8 space-y-6 sm:space-y-8">
-            {/* Ý nghĩa — phần đọc thêm */}
-            <details className="group rounded-card border border-line bg-surface p-4 sm:p-5">
-              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-control text-base sm:text-lg font-display font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
-                <span>{detail.meaningTitle}</span>
-
-                <ChevronDown
-                  aria-hidden="true"
-                  className="h-5 w-5 shrink-0 text-muted transition-transform group-open:rotate-180 motion-reduce:transition-none"
-                />
-              </summary>
-
-              <div className="mt-4 space-y-4 text-sm sm:text-base text-ink leading-relaxed">
-                {detail.meaningParagraphs.map((paragraph, index) => (
-                  <p key={index}>{paragraph}</p>
-                ))}
-
-                {detail.meaningQuote.trim() && (
-                  <blockquote className="border-l-2 border-accent pl-4 font-display italic text-accent">
-                    {detail.meaningQuote}
-                  </blockquote>
-                )}
+        <ScrollReveal variant="scale" className="mb-8">
+          <div className="rounded-3xl overflow-hidden border border-amber-500/30 bg-surface shadow-md">
+            <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden bg-surface">
+              <img
+                src={detail.heroImage}
+                alt={detail.fullTitle}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute bottom-3 left-4 right-4 text-white/90 text-xs sm:text-sm font-medium drop-shadow-md">
+                {detail.heroCaption}
               </div>
-            </details>
+            </div>
+            <div className="p-3 bg-surface border-t border-line/60 flex items-center justify-between text-xs text-muted">
+              <span className="italic">Nếp nhà thuần phong mỹ tục Việt Nam</span>
+              <span>{detail.heroArtCredit}</span>
+            </div>
+          </div>
+        </ScrollReveal>
 
-            {/* Section 2: Danh sách vật phẩm tinh gọn */}
-            <section>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-1.5 h-4 rounded-full bg-action"></span>
-                <h2 className="section-title text-xl sm:text-2xl">
-                  {detail.offeringsTitle || "Lễ vật và cách chuẩn bị"}
+        {/* Two Columns Layout: Main Guide (8 cols) & Sticky Checklist (4 cols) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
+          {/* Main Left Content */}
+          <div className="order-2 lg:order-1 lg:col-span-8 space-y-10">
+            {/* Section 01: Ý nghĩa nếp nhà & Điểm tựa đức tin */}
+            <ScrollReveal variant="up" as="section" className="space-y-4">
+              <div className="flex items-center gap-2 mb-2 pb-2 border-b border-line/50">
+                <span className="w-2 h-5 rounded-full bg-amber-600"></span>
+                <h2 className="font-display font-bold text-xl sm:text-2xl text-ink">
+                  {detail.meaningTitle}
                 </h2>
               </div>
 
-              {/* Advice Alert Banner */}
-              <div className="p-4 rounded-panel bg-surface border border-line mb-6 flex items-start gap-3">
-                <Info className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                <p className="text-sm text-muted leading-relaxed">
+              <div className={`space-y-4 text-ink ${textSizeClass}`}>
+                {detail.meaningParagraphs.map((paragraph, index) => {
+                  if (index === 0) {
+                    const firstChar = paragraph.charAt(0);
+                    const rest = paragraph.slice(1);
+                    return (
+                      <p key={index} className="text-justify">
+                        <span className="float-left text-4xl sm:text-5xl font-serif font-bold text-accent mr-3 px-3 py-1 bg-amber-500/10 border border-amber-500/25 rounded-2xl shadow-xs leading-none">
+                          {firstChar}
+                        </span>
+                        {rest}
+                      </p>
+                    );
+                  }
+                  return (
+                    <p key={index} className="text-justify leading-relaxed">
+                      {paragraph}
+                    </p>
+                  );
+                })}
+              </div>
+
+              {/* Callout Quote Ca Dao nếp nhà */}
+              {detail.meaningQuote && (
+                <div className="my-6 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/[0.04] to-transparent border-l-4 border-amber-600 shadow-xs relative">
+                  <Flower2 className="w-6 h-6 text-amber-600/40 absolute top-4 right-4 pointer-events-none" />
+                  <blockquote className="font-serif italic font-semibold text-base sm:text-lg text-amber-900 dark:text-amber-200 leading-relaxed pr-6">
+                    “{detail.meaningQuote}”
+                  </blockquote>
+                </div>
+              )}
+            </ScrollReveal>
+
+            {/* Section 02: Lễ vật thanh khiết & Bày biện */}
+            <ScrollReveal variant="up" as="section" className="space-y-4">
+              <div className="flex items-center gap-2 mb-2 pb-2 border-b border-line/50">
+                <span className="w-2 h-5 rounded-full bg-amber-600"></span>
+                <h2 className="font-display font-bold text-xl sm:text-2xl text-ink">
+                  {detail.offeringsTitle || "Lễ vật thanh tịnh & Cách chuẩn bị"}
+                </h2>
+              </div>
+
+              {/* Lời khuyên hiền triết */}
+              <div className="p-4 rounded-2xl bg-amber-500/[0.05] border border-amber-500/25 flex items-start gap-3">
+                <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-sm text-ink leading-relaxed">
                   {detail.offeringAdvice}
                 </p>
               </div>
 
-              {/* 5 Offering Items */}
-              <div className="space-y-3">
+              {/* Offerings Grid Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
                 {detail.offerings.map((offering) => (
                   <div
                     key={offering.id}
-                    className="py-4 border-b border-line flex items-start gap-3.5"
+                    className="p-4 rounded-2xl bg-surface border border-line/80 hover:border-amber-500/40 hover:shadow-sm transition-all flex items-start gap-3.5"
                   >
-                    <div className="w-6 h-6 rounded-lg bg-surface text-accent flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5 border border-amber-500/20">
                       <Check className="w-4 h-4 stroke-[2.5]" />
                     </div>
                     <div>
@@ -368,217 +583,253 @@ const RitualDetailContent: React.FC<
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-ink leading-relaxed">
+                      <p className="text-xs sm:text-sm text-ink/80 leading-relaxed">
                         {offering.desc}
                       </p>
                     </div>
                   </div>
                 ))}
               </div>
-            </section>
+            </ScrollReveal>
 
-            {/* Section 3: Các bước thực hành gợi ý */}
-            <section>
-              <div className="flex items-center gap-2 mb-6">
-                <span className="w-1.5 h-4 rounded-full bg-action"></span>
-                <h2 className="section-title text-xl sm:text-2xl">
-                  Các bước thực hành gợi ý
+            {/* Section 03: Diễn trình các bước thực hành gợi ý */}
+            <ScrollReveal variant="up" as="section" className="space-y-5">
+              <div className="flex items-center gap-2 mb-2 pb-2 border-b border-line/50">
+                <span className="w-2 h-5 rounded-full bg-amber-600"></span>
+                <h2 className="font-display font-bold text-xl sm:text-2xl text-ink">
+                  Diễn trình các bước thực hành gợi ý
                 </h2>
               </div>
 
-              <div className="space-y-5">
-                {detail.steps.map((st) => (
+              <div className="space-y-4">
+                {detail.steps.map((st, idx) => (
                   <div
                     key={st.stepNumber}
-                    className="py-5 border-b border-line relative flex flex-col justify-between"
+                    className="p-5 rounded-2xl bg-surface border border-line/80 hover:border-amber-500/30 transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-4 shadow-2xs"
                   >
-                    <div className="flex items-start justify-between gap-4 mb-3">
-                      <div className="flex items-center gap-3">
-                        <span className="w-8 h-8 rounded-full bg-action text-white font-bold font-serif text-sm flex items-center justify-center shrink-0">
-                          {parseInt(st.stepNumber, 10)}
-                        </span>
-                        <h3 className="font-display font-bold text-base sm:text-lg text-ink">
+                    <div className="flex items-start gap-3.5">
+                      <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-600 to-amber-700 text-white font-bold font-serif text-sm flex items-center justify-center shrink-0 shadow-xs">
+                        {idx + 1}
+                      </div>
+                      <div>
+                        <h3 className="font-display font-bold text-base sm:text-lg text-ink mb-1.5">
                           {st.title}
                         </h3>
+                        <p className={`text-ink/85 leading-relaxed ${textSizeClass}`}>
+                          {st.desc}
+                        </p>
                       </div>
-                      <span className="font-serif font-bold text-3xl sm:text-4xl text-subtle select-none">
-                        {st.stepNumber}
-                      </span>
                     </div>
-
-                    <p className="text-sm text-ink leading-relaxed pl-11">
-                      {st.desc}
-                    </p>
+                    <span className="font-serif font-bold text-2xl sm:text-3xl text-amber-500/20 select-none self-end sm:self-start">
+                      {st.stepNumber}
+                    </span>
                   </div>
                 ))}
               </div>
-            </section>
+            </ScrollReveal>
 
-            {/* Section 4: Khác biệt phong tục 3 miền & An toàn khói lửa */}
-            <section className="space-y-6">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="w-1.5 h-4 rounded-full bg-action"></span>
-                <h2 className="section-title text-xl sm:text-2xl">
-                  Nếp nhà, vùng miền & lưu ý an toàn
+            {/* Section 04: Sắc thái văn hóa 3 miền */}
+            <ScrollReveal variant="up" as="section" className="space-y-4">
+              <div className="flex items-center gap-2 mb-2 pb-2 border-b border-line/50">
+                <span className="w-2 h-5 rounded-full bg-amber-600"></span>
+                <h2 className="font-display font-bold text-xl sm:text-2xl text-ink">
+                  Sắc thái nếp nhà 3 miền (Bắc - Trung - Nam)
                 </h2>
               </div>
 
-              {/* Khác biệt vùng miền — phần đọc thêm */}
-              <details className="group rounded-card border border-line bg-surface p-4 sm:p-5">
-                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-control text-base font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
-                  <span>Tham khảo khác biệt giữa các vùng miền</span>
-
-                  <ChevronDown
-                    aria-hidden="true"
-                    className="h-5 w-5 shrink-0 text-muted transition-transform group-open:rotate-180 motion-reduce:transition-none"
-                  />
-                </summary>
-
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {detail.regionalDetails.map((item) => (
-                    <div
-                      key={item.region}
-                      className="rounded-panel border border-line p-4"
-                    >
-                      <h3 className="mb-2 text-sm font-semibold text-accent">
-                        {item.region}
-                      </h3>
-
-                      <p className="text-sm text-ink leading-relaxed">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {detail.regionalDetails.map((item) => (
+                  <div
+                    key={item.region}
+                    className="p-5 rounded-2xl border border-amber-500/20 bg-gradient-to-b from-amber-500/[0.03] to-surface flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-base">
+                          {item.region.includes("Bắc")
+                            ? "⛩️"
+                            : item.region.includes("Trung")
+                            ? "🌊"
+                            : "🚣"}
+                        </span>
+                        <h3 className="font-display font-bold text-sm sm:text-base text-amber-900 dark:text-amber-200">
+                          {item.region}
+                        </h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-ink leading-relaxed">
                         {item.desc}
                       </p>
                     </div>
-                  ))}
-                </div>
-              </details>
-
-              {/* PCCC Fire Safety Box */}
-              <div className="p-5 rounded-panel bg-surface border border-line space-y-3">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent">
-                  <Flame className="w-4 h-4" />
-                  <span>Nguyên tắc vàng an toàn PCCC tại chung cư & nhà phố</span>
-                </div>
-                <ul className="space-y-2 text-xs sm:text-sm text-ink pl-5 list-disc leading-relaxed">
-                  {detail.fireSafetyRules.map((rule, idx) => (
-                    <li key={idx}>{rule}</li>
-                  ))}
-                </ul>
-                <p className="mt-3 text-xs leading-relaxed text-muted">
-                  Tham khảo hướng dẫn về thiết bị báo khói và sử dụng nến của{" "}
-                  <a
-                    href="https://www.usfa.fema.gov/prevention/home-fires/prepare-for-fire/smoke-alarms/index.html"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-accent underline underline-offset-4"
-                  >
-                    U.S. Fire Administration — báo khói
-                  </a>
-                  {" và "}
-                  <a
-                    href="https://www.usfa.fema.gov/prevention/home-fires/prevent-fires/candle/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-accent underline underline-offset-4"
-                  >
-                    sử dụng nến
-                  </a>
-                  . Tuân thủ quy định tại nơi ở của bạn.
-                </p>
+                  </div>
+                ))}
               </div>
+            </ScrollReveal>
 
+            {/* Section 05: An toàn PCCC & Khói lửa nếp nhà */}
+            <ScrollReveal variant="up" as="section" className="p-5 sm:p-6 rounded-3xl bg-surface border border-rose-500/30 shadow-xs space-y-3">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300">
+                <Flame className="w-5 h-5 text-rose-600 animate-pulse" />
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <span>Nguyên tắc vàng an toàn PCCC tại chung cư & nhà phố</span>
+              </div>
+              <ul className="space-y-2 text-xs sm:text-sm text-ink pl-5 list-disc leading-relaxed">
+                {detail.fireSafetyRules.map((rule, idx) => (
+                  <li key={idx}>{rule}</li>
+                ))}
+              </ul>
+              <p className="mt-2 text-xs leading-relaxed text-muted pt-2 border-t border-line/50">
+                Tuân thủ quy định PCCC và giữ thiết bị báo khói hoạt động bình thường.
+                Thắp tâm hương an lành, phòng ngừa rủi ro cháy nổ cho tổ ấm.
+              </p>
+            </ScrollReveal>
+
+            {/* Section 06: Văn khấn Nôm tham khảo */}
+            <ScrollReveal variant="up">
               <RitualPrayerSection
                 key={`${accountId}-${ritual.id}`}
                 prayers={detail.prayers}
               />
+            </ScrollReveal>
 
-              {/* Classical Excerpt Quote */}
-              {detail.closingQuote.trim() && (
-                <div className="p-4 rounded-panel bg-surface/70 border border-line text-center">
-                  <p className="font-display italic font-semibold text-sm sm:text-base text-accent">
-                    {detail.closingQuote}
+            {/* Section 07: Thẻ triết lý đúc kết */}
+            {detail.closingQuote && (
+              <ScrollReveal variant="scale">
+                <div className="p-6 rounded-3xl bg-gradient-to-r from-amber-500/10 via-amber-500/[0.04] to-transparent border border-amber-500/30 text-center">
+                  <p className="font-serif italic font-bold text-base sm:text-lg text-amber-900 dark:text-amber-200">
+                    “{detail.closingQuote}”
                   </p>
                 </div>
-              )}
+              </ScrollReveal>
+            )}
 
-              {/* Bottom Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-line ">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onBackToRitualList}
-                  className="w-full sm:w-auto text-xs font-semibold gap-1.5"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Quay lại: Cẩm nang nghi lễ</span>
-                </Button>
-
-                <Button
-                  variant={isBookmarked ? "default" : "outline"}
-                  size="sm"
-                  aria-pressed={isBookmarked}
-                  onClick={handleToggleBookmark}
-                  className="w-full sm:w-auto text-xs font-semibold gap-1.5"
-                >
-                  <Bookmark className={`w-4 h-4 ${isBookmarked ? "fill-current" : ""}`} />
-                  <span>
-                    {isBookmarked
-                      ? "Đã đánh dấu trên trình duyệt này"
-                      : "Đánh dấu hướng dẫn"}
-                  </span>
-                </Button>
+            {/* Section 08: Contextual Bridge Card */}
+            <ScrollReveal variant="scale">
+              <div className="p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/[0.08] via-surface to-surface shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-2">
+                    <Badge
+                      variant="outline"
+                      className={`text-xs px-3 py-0.5 font-bold uppercase ${contextBridge.badgeStyle}`}
+                    >
+                      {contextBridge.tag}
+                    </Badge>
+                    <h3 className="font-display font-bold text-lg sm:text-xl text-ink">
+                      {contextBridge.title}
+                    </h3>
+                    <p className="text-sm text-muted max-w-xl leading-relaxed">
+                      {contextBridge.desc}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={contextBridge.action}
+                    className={`shrink-0 font-semibold cursor-pointer shadow-sm min-h-11 px-5 ${contextBridge.btnStyle}`}
+                  >
+                    <span className="flex items-center gap-2">
+                      {contextBridge.icon}
+                      <span>{contextBridge.actionLabel}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </span>
+                  </Button>
+                </div>
               </div>
-            </section>
+            </ScrollReveal>
+
+            {/* Provenance & Nguồn tham khảo */}
+            <ScrollReveal variant="up" as="section" aria-labelledby="ritual-sources-title" className="rounded-3xl border border-line bg-surface p-6">
+              <h2
+                id="ritual-sources-title"
+                className="mb-4 font-display text-lg sm:text-xl font-bold text-ink flex items-center gap-2"
+              >
+                <span>Nguồn khảo cứu & Hội đồng biên tập</span>
+              </h2>
+              <ContentProvenance metadata={getRitualMetadata(ritual)} />
+            </ScrollReveal>
           </div>
 
-          {/* Right Sidebar: Sticky Checklist & Safety Controls (4 cols) */}
+          {/* Right Sticky Sidebar: Checklist & Safety */}
           <div className="order-1 lg:order-2 lg:col-span-4">
             <div className="lg:sticky lg:top-24 space-y-6">
-              {/* Checklist Card */}
-              <Card className="p-5 rounded-card bg-surface border-line shadow-xs">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="font-display font-bold text-lg text-ink">
-                    Tiến trình chuẩn bị
+              <ScrollReveal variant="fade" delay={100}>
+                {/* Interactive Checklist Card */}
+                <Card className="p-6 rounded-3xl bg-surface border-amber-500/30 shadow-sm relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="font-display font-bold text-lg text-ink flex items-center gap-2">
+                    <span>Sổ tay chuẩn bị</span>
                   </div>
-                  <Badge variant="outline" className="text-xs text-accent border-line">
+                  <Badge
+                    variant="outline"
+                    className="text-xs text-amber-800 dark:text-amber-300 border-amber-500/30 bg-amber-500/10 font-bold"
+                  >
                     Tự do
                   </Badge>
                 </div>
 
-                <p className="text-sm text-muted leading-relaxed mb-4">
-                  Đánh dấu từng việc để kiểm tra không gian thờ an yên mà không áp lực.
+                <p className="text-xs text-muted leading-relaxed mb-4">
+                  Đánh dấu từng việc để kiểm tra không gian thờ an yên mà không áp lực gánh nặng nghi lễ.
                 </p>
 
-                {/* Counter */}
-                <div className="p-3 rounded-panel bg-surface/70 border border-line text-xs font-semibold text-accent mb-4 flex items-center justify-between">
-                  <span>Tiến độ thực hiện:</span>
-                  <span className="font-sans tabular-nums text-sm">
-                    {completedChecklistCount} / {detail.checklists.length} việc hoàn thành
-                  </span>
+                {/* Progress Bar */}
+                <div className="space-y-2 mb-5">
+                  <div className="flex items-center justify-between text-xs font-semibold text-ink">
+                    <span>Tiến độ thực hiện:</span>
+                    <span className="tabular-nums text-amber-600 font-bold">
+                      {completedChecklistCount} / {detail.checklists.length} việc (
+                      {Math.round(
+                        (completedChecklistCount /
+                          Math.max(1, detail.checklists.length)) *
+                          100
+                      )}
+                      %)
+                    </span>
+                  </div>
+                  <div className="h-2 w-full bg-line/60 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-600 to-yellow-500 transition-all duration-300 rounded-full"
+                      style={{
+                        width: `${
+                          (completedChecklistCount /
+                            Math.max(1, detail.checklists.length)) *
+                          100
+                        }%`,
+                      }}
+                    />
+                  </div>
                 </div>
 
+                {/* Completion Congratulation Banner */}
+                {isAllChecklistDone && (
+                  <div className="mb-4 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs font-semibold flex items-center gap-2.5 animate-fade-in">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <span>
+                      ✦ Tâm thành viên mãn! Bạn đã chuẩn bị chu toàn cho buổi lễ an lành.
+                    </span>
+                  </div>
+                )}
+
                 {/* Checkboxes List */}
-                <div className="space-y-2.5 mb-6">
+                <div className="space-y-2.5 mb-5 max-h-[380px] overflow-y-auto pr-1">
                   {detail.checklists.map((chk) => {
                     const isDone = checkedIds.includes(chk.id);
                     return (
                       <label
                         key={chk.id}
-                        className={[
-                          "flex min-h-11 items-start gap-3 rounded-xl border p-3",
-                          "cursor-pointer text-sm",
+                        className={`flex min-h-11 items-start gap-3 rounded-2xl border p-3 cursor-pointer text-xs sm:text-sm transition-all select-none ${
                           isDone
-                            ? "bg-accent-soft border-accent/40"
-                            : "bg-surface border-line",
-                        ].join(" ")}
+                            ? "bg-amber-500/10 border-amber-500/40 text-amber-900 dark:text-amber-200"
+                            : "bg-surface border-line/70 hover:border-accent/40 text-ink"
+                        }`}
                       >
                         <input
                           type="checkbox"
                           checked={isDone}
                           onChange={() => toggleCheck(chk.id)}
-                          className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-action)]"
+                          className="mt-0.5 h-4 w-4 shrink-0 rounded accent-amber-600 cursor-pointer"
                         />
-
-                        <span className={isDone ? "text-muted" : "text-ink"}>
+                        <span
+                          className={`leading-relaxed ${
+                            isDone ? "line-through opacity-80" : ""
+                          }`}
+                        >
                           {chk.label}
                         </span>
                       </label>
@@ -586,59 +837,46 @@ const RitualDetailContent: React.FC<
                   })}
                 </div>
 
-                {/* Safety Tip in sidebar */}
-                <div className="p-3.5 rounded-panel bg-surface border border-line mb-5 text-xs text-muted space-y-1">
-                  <div className="font-bold text-accent flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>Lưu ý an toàn lửa & chung cư</span>
-                  </div>
-                  <p className="leading-relaxed">{detail.safetyTip}</p>
-                </div>
-
-                {/* Print & Share actions */}
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.print()}
-                    className="text-xs font-medium gap-1 text-ink"
+                {/* Reset Checklist Button */}
+                {checkedIds.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleResetChecklist}
+                    className="w-full py-2 text-xs font-semibold text-muted hover:text-ink flex items-center justify-center gap-1.5 transition-colors cursor-pointer border-t border-line/40 pt-3"
                   >
-                    <Printer className="w-3.5 h-3.5" />
-                    <span>In lưu trữ</span>
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleShare}
-                    className="text-xs font-medium gap-1 text-ink"
-                  >
-                    <Share2 className="w-3.5 h-3.5" />
-                    <span>Chia sẻ</span>
-                  </Button>
-                </div>
-
-                {showShareNotification && (
-                  <div className="mt-2 text-center text-xs text-accent font-medium">
-                    ✓ Đã sao chép liên kết cẩm nang!
-                  </div>
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Đặt lại danh sách từ đầu</span>
+                  </button>
                 )}
               </Card>
-            </div>
+
+              {/* Serene Tips Box */}
+              <div className="p-5 rounded-3xl bg-amber-500/[0.04] border border-amber-500/25 space-y-2 text-xs text-muted">
+                <div className="font-display font-bold text-amber-900 dark:text-amber-200 text-sm flex items-center gap-1.5">
+                  <Heart className="w-4 h-4 text-amber-600" />
+                  <span>Lời dặn dò nếp nhà</span>
+                </div>
+                <p className="leading-relaxed">
+                  Lễ cúng không cốt ở mâm cao cỗ đầy hay vàng mã xa hoa. Điều quý nhất là tấc lòng hiếu kính, sự sum họp hòa thuận và khoảng an trú trong lành của cả gia đình.
+                </p>
+              </div>
+            </ScrollReveal>
           </div>
         </div>
+      </div>
 
-        {/* Section: Cẩm nang nghi lễ liên quan */}
-        <div className="pt-10 border-t border-line mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="section-title text-xl sm:text-2xl">
+      {/* Section: Cẩm nang nghi lễ liên quan */}
+      <ScrollReveal variant="up" className="pt-10 border-t border-line/60 mb-12">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="font-display font-bold text-xl sm:text-2xl text-ink">
               Cẩm nang nghi lễ liên quan dành cho bạn
             </h2>
             <button
               onClick={onBackToRitualList}
-              className="text-xs text-accent font-semibold hover:underline cursor-pointer"
+              className="text-xs text-accent font-semibold hover:underline cursor-pointer flex items-center gap-1"
             >
-              Xem tất cả cẩm nang →
+              <span>Xem tất cả cẩm nang</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
@@ -647,14 +885,14 @@ const RitualDetailContent: React.FC<
               <Card
                 key={item.id}
                 onClick={() => onSelectRelatedRitual(item.id)}
-                className="rounded-card overflow-hidden bg-surface border-line hover:border-line transition-all hover:shadow-card cursor-pointer flex flex-col justify-between"
+                className="rounded-3xl overflow-hidden bg-surface border-line hover:border-amber-500/40 transition-all hover:shadow-md cursor-pointer flex flex-col justify-between group"
               >
                 <div>
                   <div className="relative h-44 w-full overflow-hidden bg-surface">
                     <img
                       src={item.image}
                       alt={item.title}
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute top-3 left-3">
                       <span className="px-2.5 py-1 rounded-full text-xs font-bold tracking-wide uppercase bg-black/60 text-white backdrop-blur-xs">
@@ -663,54 +901,37 @@ const RitualDetailContent: React.FC<
                     </div>
                   </div>
 
-                  <div className="p-4">
-                    <h3 className="font-display font-bold text-base text-ink leading-snug mb-1 hover:text-accent transition-colors">
+                  <div className="p-5">
+                    <h3 className="font-display font-bold text-base text-ink leading-snug mb-2 group-hover:text-accent transition-colors">
                       {item.title}
                     </h3>
-                    <p className="text-sm text-ink line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-muted line-clamp-2 leading-relaxed">
                       {item.desc}
                     </p>
                   </div>
                 </div>
 
-                <div className="p-4 pt-0 text-xs font-semibold text-accent flex items-center justify-end">
-                  <span>Xem hướng dẫn →</span>
+                <div className="p-5 pt-0 text-xs font-semibold text-accent flex items-center justify-end gap-1">
+                  <span>Xem hướng dẫn</span>
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                 </div>
               </Card>
             ))}
           </div>
-        </div>
+        </ScrollReveal>
 
-        {/* Footer Quote */}
-        <div className="text-center pt-6 border-t border-line">
+        {/* Footer */}
+        <div className="text-center pt-6 border-t border-line/50">
           <div className="text-xs uppercase tracking-widest text-muted font-medium">
-            © {new Date().getFullYear()} Tin Lắm Tâm Linh • Chiêm nghiệm dân gian đương đại
+            © {new Date().getFullYear()} Thích Cúng Kiếng • Di sản nếp nhà & Chiêm nghiệm đương đại
           </div>
         </div>
-
-        <section
-          aria-labelledby="ritual-sources-title"
-          className="mt-6 rounded-card border border-line bg-surface p-6"
-        >
-          <h2
-            id="ritual-sources-title"
-            className="mb-4 font-display text-xl font-bold text-ink"
-          >
-            Nguồn và biên tập
-          </h2>
-
-          <ContentProvenance
-            metadata={getRitualMetadata(ritual)}
-          />
-        </section>
       </main>
     </div>
   );
 };
 
-export const RitualDetailScreen: React.FC<
-  RitualDetailScreenProps
-> = (props) => {
+export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = (props) => {
   const ritualId = props.ritualId ?? "chuan-bi-ngay-ram";
   const ritual = getRitualById(ritualId);
 
@@ -728,11 +949,5 @@ export const RitualDetailScreen: React.FC<
     );
   }
 
-  return (
-    <RitualDetailContent
-      {...props}
-      ritualId={ritualId}
-      key={ritualId}
-    />
-  );
+  return <RitualDetailContent {...props} ritualId={ritualId} key={ritualId} />;
 };

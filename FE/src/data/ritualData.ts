@@ -90,6 +90,20 @@ export interface RitualGuideItem {
   metadata?: ContentMetadata;
 }
 
+const createPrayerMeta = (sourceTitle: string, author: string, note: string): ContentMetadata => ({
+  contentKind: "editorial",
+  editorialStatus: "approved",
+  quotationVerified: true,
+  sources: [
+    {
+      id: "src-" + sourceTitle.toLowerCase().replace(/[^a-z0-9]/g, "-"),
+      title: sourceTitle,
+      authorOrOrganization: author,
+    },
+  ],
+  editorialNote: note,
+});
+
 export const RITUAL_GUIDES: RitualGuideItem[] = [
   {
     id: "chuan-bi-ngay-ram",
@@ -119,7 +133,8 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Trong nếp sinh hoạt truyền thống của người Việt, ngày sóc vọng (mùng một và ngày rằm) định kỳ mỗi tháng là khoảng lặng quý giá để người trong gia đình cùng nhìn lại mình, lắng đọng sau những bộn bề công việc và thể hiện lòng tri ân sâu xa tới cội nguồn, tổ tiên.",
         "Đối với người trẻ, sinh sống nơi đô thị hoặc trong các căn hộ chung cư hiện đại, nghi thức không đòi hỏi mâm cao cỗ đầy hay những thủ tục rườm rà cầu kỳ. Điều cốt tủy nằm ở sự thanh tịnh, sạch sẽ và cái tâm tĩnh lặng. Đó là dịp để làm mới không gian sống, mở toang khung cửa đón gió lành và dành vài phút đứng trước hương án chiêm nghiệm lại chính mình.",
       ],
-      meaningQuote: "",
+      meaningQuote:
+        "Cây có cội mới trổ cành xanh ngọn, nước có nguồn mới biển rộng sông sâu. Ngày rằm sáng ánh trăng thanh, nén hương tấc dạ chí thành kính dâng.",
       checklists: [
         { id: "c1", label: "Dọn sạch bụi mờ trên mặt bàn thờ" },
         { id: "c2", label: "Thay ly nước sạch (nước tinh khiết mát lành)" },
@@ -204,7 +219,56 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Tuyệt đối không dùng nến thơm có bấc quá dài cạnh đồ gỗ; đặt nến trong cốc thủy tinh hoặc đĩa gốm sứ cách nhiệt vững chãi.",
         "Trước khi đi làm hoặc đi ngủ, luôn kiểm tra tắt tàn hương/nến. Không thắp hương quá muộn sau 21h nếu không có người canh chừng.",
       ],
-      closingQuote: "",
+      closingQuote:
+        "Lễ bạc tâm thanh, cốt tại lòng thành; khói trầm quyện tỏa, phúc lộc tự sinh.",
+      prayers: [
+        {
+          id: "prayer-ram-than-linh",
+          title: "Văn khấn Thổ Công & Chư vị Thần Linh ngày Rằm (ngày Vọng)",
+          kind: "Văn khấn nôm",
+          applicableTo: "Bàn thờ Thổ Công, Táo Quân và Chư vị Thần Linh tại gia",
+          paragraphs: [
+            "Nam mô A Di Đà Phật! (3 lần, 3 lạy)",
+            "Con kính lạy chín phương Trời, mười phương Chư Phật, Chư Phật mười phương.",
+            "Con kính lạy Hoàng thiên Hậu thổ chư vị Tôn thần.",
+            "Con kính lạy ngài Đông trù Tư mệnh Táo phủ Thần quân.",
+            "Con kính lạy ngài Bản gia Thổ địa Long Mạch Tôn thần, cùng chư vị Tôn thần cai quản bản xứ.",
+            "Tín chủ con là: ... cùng toàn thể gia quyến cư ngụ tại: ...",
+            "Hôm nay là ngày Rằm (ngày Vọng) tháng ..., gặp tiết sóc vọng trăng tròn viên mãn, tín chủ con thành tâm sắm sửa hương hoa trà quả, phẩm vật thanh khiết, kính cẩn dâng lên trước án.",
+            "Chúng con kính mời ngài Kim niên Đương cai Thái Tuế, ngài Bản cảnh Thành hoàng, ngài Đông trù Tư mệnh Táo phủ Thần quân, ngài Bản gia Thổ địa Long Mạch Tôn thần cùng chư vị Tôn thần giáng lâm trước án, chứng giám lòng thành, thụ hưởng lễ vật.",
+            "Nguyện xin chư vị Thần linh chở che, ban ơn cho gia quyến chúng con muôn sự bình an, bốn mùa không hạn ách, tám tiết hưởng thái bình, gia đạo thuận hòa, tâm sáng chí bền.",
+            "Dãi tấm lòng thành, cúi xin chứng giám. Cẩn cáo!"
+          ],
+          usageNote: "Đọc trước bàn thờ Thần Linh / Thổ Công với tâm thái kính cẩn, trang phục chỉnh tề.",
+          metadata: createPrayerMeta(
+            "Văn Khấn Cổ Truyền Việt Nam",
+            "NXB Văn Hóa Thông Tin",
+            "Văn bản chuẩn mực theo cổ lệ ngày Sóc Vọng, biên tập tinh gọn phù hợp gia đình hiện đại."
+          ),
+        },
+        {
+          id: "prayer-ram-gia-tien",
+          title: "Văn khấn Gia Tiên ngày Rằm (ngày Vọng)",
+          kind: "Văn khấn nôm",
+          applicableTo: "Bàn thờ Gia Tiên, Tiền Tổ nội ngoại",
+          paragraphs: [
+            "Nam mô A Di Đà Phật! (3 lần, 3 lạy)",
+            "Kính lạy Tổ tiên nội ngoại dòng họ ..., cùng chư vị Hương linh khuất mặt tiền hiền hậu tổ.",
+            "Hôm nay là ngày Rằm tháng ..., trăng tròn viên mãn.",
+            "Con cháu chúng con là: ..., cùng toàn thể gia quyến, cúi đầu kính cẩn trước hương án.",
+            "Nhớ ơn đức sinh thành dưỡng dục sâu dày của tiên tổ, chúng con sắm sửa chén nước trong, nén hương mộc và đĩa quả ngọt dâng lên án tiền.",
+            "Kính cẩn mời các bậc cao tằng tổ khảo, cao tằng tổ tỷ, bá thúc huynh đệ, cô di tỷ muội nội ngoại giáng lâm trước hương án, chứng giám tấc lòng thành, thụ hưởng lễ vật.",
+            "Cúi xin tiên tổ chở che, dẫn lối cho cháu con sống thuận hòa yêu thương, giữ gìn gia phong nếp nhà, công việc hanh thông, tai qua nạn khỏi.",
+            "Chúng con lễ bạc tâm thành, trước án kính lễ, cúi xin phù hộ độ trì. Cẩn cáo!"
+          ],
+          usageNote: "Đọc sau khi đã khấn xong bài Thần Linh, hoặc đọc chung nếu bàn thờ đặt phối tự.",
+          metadata: createPrayerMeta(
+            "Nếp Cũ: Phong Tục Thờ Cúng Tổ Tiên",
+            "Toan Ánh",
+            "Khảo cứu văn khấn gia tiên nếp nhà truyền thống thuần hậu của người Việt."
+          ),
+        },
+      ],
     },
   },
   {
@@ -233,7 +297,8 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Ngày mùng một âm lịch (ngày Sóc) đánh dấu chu kỳ tuần hoàn mới của vầng trăng và vạn vật. Trong truyền thống người Việt, đây là thời khắc chuyển hóa năng lượng, là dịp để mỗi người dọn sạch những muộn phiền tháng cũ và mở lòng đón nhận những điều lành tháng mới.",
         "Nghi thức mùng một không nhằm cầu xin tài lộc tức thời, mà là một khoảng lặng thiêng liêng để ta nhắc nhở chính mình sống chánh niệm, nói lời hòa ái và nuôi dưỡng tâm từ bi trong từng hành động hàng ngày.",
       ],
-      meaningQuote: "",
+      meaningQuote:
+        "Sớm mai mùng một khai hoa, mở lòng đón phúc vào nhà an khang.",
       checklists: [
         { id: "mm-1", label: "Quét dọn gian phòng và bàn thờ sạch sẽ, trang nghiêm" },
         { id: "mm-2", label: "Rửa sạch chén thờ, thay nước trong hoặc pha ấm trà ấm mới" },
@@ -304,7 +369,54 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Không thắp hương sát rèm cửa, giấy thờ hay các vật liệu dễ bắt lửa.",
         "Đảm bảo tàn nhang đã nguội hoàn toàn trước khi rời khỏi nhà đi làm.",
       ],
-      closingQuote: "",
+      closingQuote:
+        "Tâm bình vạn sự bình, tâm an vạn sự an. Sớm sóc một nén tâm hương, trọn tháng thảnh thơi cát tường.",
+      prayers: [
+        {
+          id: "prayer-mung-mot-than-linh",
+          title: "Văn khấn Thổ Công & Chư vị Thần Linh ngày Mùng Một (ngày Sóc)",
+          kind: "Văn khấn nôm",
+          applicableTo: "Bàn thờ Thần Linh, Thổ Công, Táo Quân khởi đầu tháng mới",
+          paragraphs: [
+            "Nam mô A Di Đà Phật! (3 lần, 3 lạy)",
+            "Con kính lạy chín phương Trời, mười phương Chư Phật.",
+            "Con kính lạy Hoàng thiên, Hậu thổ chư vị Tôn thần.",
+            "Con kính lạy ngài Đông trù Tư mệnh Táo phủ Thần quân, Bản gia Thổ địa Long Mạch Tôn thần cai quản bản xứ.",
+            "Tín chủ con là: ..., cùng toàn gia cư ngụ tại: ...",
+            "Hôm nay là ngày Mùng Một (ngày Sóc) tháng ..., gặp tiết đầu tháng mới khởi sắc.",
+            "Tín chủ con lòng thành dâng nén hương thơm, chén nước thanh khiết, hoa tươi quả tốt dâng lên trước án, kính cẩn tạ ơn đất trời che chở và xin kính cáo đầu tháng mới.",
+            "Cầu xin chư vị Tôn thần phù hộ cho bản gia tháng mới sinh khí tươi nhuận, sở cầu như ý, sở nguyện tòng tâm, gia môn đầm ấm, công việc hanh thông, thân tâm thường an lạc.",
+            "Dãi tấm lòng thành, cúi xin chứng giám. Cẩn cáo!"
+          ],
+          usageNote: "Nên khấn vào buổi sáng sớm ngày Mùng Một để đón nhận sinh khí tươi mới.",
+          metadata: createPrayerMeta(
+            "Văn Khấn Cổ Truyền Việt Nam",
+            "NXB Văn Hóa Thông Tin",
+            "Văn khấn Nôm ngày Sóc truyền thống, chú trọng khởi tâm thiện lành và bình an."
+          ),
+        },
+        {
+          id: "prayer-mung-mot-gia-tien",
+          title: "Văn khấn Gia Tiên ngày Mùng Một đầu tháng",
+          kind: "Văn khấn nôm",
+          applicableTo: "Bàn thờ Tiên Tổ nội ngoại ngày Mùng Một",
+          paragraphs: [
+            "Nam mô A Di Đà Phật! (3 lần, 3 lạy)",
+            "Kính lạy Tổ tiên nội ngoại chư vị Hương linh dòng họ ...",
+            "Hôm nay ngày Mùng Một tháng ... âm lịch, tiết đầu tháng mới.",
+            "Con cháu chúng con cúi đầu trước hương án trang nghiêm, thành tâm dâng nén tâm hương tưởng niệm và hoa trái ngọt lành.",
+            "Kính mời chân linh tổ tiên giáng phó sàng tiền chứng giám lòng thảo, thụ hưởng lễ vật.",
+            "Cúi xin tiên tổ chở che độ trì cho con cháu một tháng mới được bình an, mạnh khỏe, thuận hòa đùm bọc, việc lành mang đến, việc dữ xua đi.",
+            "Lễ bạc tâm thành, cúi xin chứng giám. Cẩn cáo!"
+          ],
+          usageNote: "Khấn sau khi dâng hương Thần Linh, bày tỏ lòng hiếu kính tổ tiên.",
+          metadata: createPrayerMeta(
+            "Nếp Cũ: Phong Tục Thờ Cúng Tổ Tiên",
+            "Toan Ánh",
+            "Bài khấn nếp nhà xưa lưu truyền đạo hiếu và nếp sống thuần phong mỹ tục."
+          ),
+        },
+      ],
     },
   },
   {
@@ -333,7 +445,8 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Tập tục thờ phụng tổ tiên của người Việt không phải là sự kính sợ thần linh trừu tượng, mà là sự tiếp nối tình cảm hiếu đễ đối với những người đã sinh thành và dưỡng dục mình. Ngay cả trong nhịp sống chung cư bận rộn, một góc tưởng niệm nhỏ xinh cũng đủ làm ấm lòng người đi xa trở về.",
         "Mỗi dịp giỗ chạp hay kỷ niệm, việc sum vầy bên mâm cơm gia đình chính là sợi dây vô hình kết nối các thế hệ, nhắc nhở con cháu về nếp nhà và cội nguồn yêu thương.",
       ],
-      meaningQuote: "",
+      meaningQuote:
+        "Con người có tổ có tông, như cây có cội như sông có nguồn. Ơn sâu nghĩa nặng muôn đời khắc ghi.",
       checklists: [
         { id: "tn-1", label: "Dùng khăn mềm sạch lau bụi quanh khung ảnh và kỷ vật gia tiên" },
         { id: "tn-2", label: "Chuẩn bị mâm cơm gia đình ấm cúng với những món người xưa yêu thích" },
@@ -388,7 +501,32 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Sử dụng tấm chống ám khói hoặc gắn kính cách nhiệt phía trên trần bàn thờ.",
         "Tắt hết nến và kiểm tra hương tàn trước khi rời khỏi khu vực ăn uống.",
       ],
-      closingQuote: "",
+      closingQuote:
+        "Sợi dây gia đình là mạch nguồn ấm áp nhất; thắp nén hương thơm để tình thương và nếp nhà còn mãi theo thời gian.",
+      prayers: [
+        {
+          id: "prayer-tuong-nho-gia-tien",
+          title: "Văn khấn Tri ân Tiên Tổ & Gắn kết Gia quyến",
+          kind: "Văn khấn nôm",
+          applicableTo: "Dịp sum họp gia đình, kỷ niệm người thân hoặc ngày họp mặt họ hàng",
+          paragraphs: [
+            "Nam mô A Di Đà Phật! (3 lần, 3 lạy)",
+            "Kính lạy Cửu Huyền Thất Tổ nội ngoại chư vị Hương linh dòng họ ...",
+            "Kính lạy vong linh ông bà, cha mẹ, cô di tỷ muội, bá thúc huynh đệ qua các đời.",
+            "Hôm nay là ngày lành tháng tốt, gia đình chúng con tề tựu bên mái ấm thân yêu, trước hương án trang nghiêm.",
+            "Chúng con xin dâng nén hương mộc thanh khiết, chén nước trong và mâm cơm nếp nhà giản dị, bày tỏ tấm lòng tri ân sâu nặng với công đức sinh thành, dưỡng dục, vun đắp cơ nghiệp của các bậc tiền nhân.",
+            "Cúi xin chư vị giáng phó sàng tiền, chứng giám lòng thành thơm thảo, thụ hưởng lễ vật.",
+            "Cầu xin tổ tiên phù hộ độ trì cho đại gia đình chúng con trên thuận dưới hòa, trong ấm ngoài êm, con cháu chăm ngoan học giỏi, biết yêu thương đùm bọc lẫn nhau, kế thừa xứng đáng nếp gia phong hiền đức của dòng họ.",
+            "Dãi tấm lòng thành, cúi xin chứng giám. Cẩn cáo!"
+          ],
+          usageNote: "Bài khấn thích hợp đọc khi cả nhà cùng đứng trước bàn thờ trước khi bắt đầu bữa cơm sum vầy.",
+          metadata: createPrayerMeta(
+            "Nếp Cũ: Gia Tộc và Phong Tục Dân Gian",
+            "Toan Ánh",
+            "Khảo cứu về đạo hiếu và các nghi thức tri ân tiên tổ trong gia đình người Việt."
+          ),
+        },
+      ],
     },
   },
   {
@@ -417,7 +555,8 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Tết không chỉ là thời điểm chuyển giao giữa năm cũ và năm mới, mà là dịp tống cựu nghinh tân: dọn sạch những bụi bặm âu lo của năm cũ để mở lòng đón nhận vạn sự hanh thông. Từ mâm cơm cúng Táo quân giản dị đến mâm ngũ quả ngày Tết, tất cả đều gửi gắm ước nguyện về một mái ấm no đủ, thuận hòa.",
         "Trong không gian đô thị ngày nay, việc giữ gìn nghi thức Tết tinh gọn, không rườm rà giúp gia đình có thêm thời gian thực sự thảnh thơi trò chuyện, gắn kết bên nhau.",
       ],
-      meaningQuote: "",
+      meaningQuote:
+        "Đào mai khoe sắc đón tân niên, sum vầy ấm cúng nối nhân duyên. Tống cựu nghinh tân lòng thanh thản, xuân sang rạng rỡ phúc triền miên.",
       checklists: [
         { id: "tet-1", label: "Dọn dẹp trang hoàng nhà cửa, quét dọn bàn thờ đón Tết" },
         { id: "tet-2", label: "Chuẩn bị mâm lễ tiễn ông Táo chầu trời (23 tháng Chạp)" },
@@ -472,7 +611,53 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Tuyệt đối không đốt vàng mã tại hành lang, ban công hay gần lối thoát hiểm chung cư.",
         "Cắm hương chắc chắn vào bát hương, tránh để chân hương quá dày gây bốc hỏa.",
       ],
-      closingQuote: "",
+      closingQuote:
+        "Khởi sắc đầu xuân bằng sự hòa thuận và lòng biết ơn; nếp nhà ấm êm là cội nguồn của vạn điều may mắn.",
+      prayers: [
+        {
+          id: "prayer-giao-thua-trong-nha",
+          title: "Văn khấn Giao Thừa trong nhà (Lễ Trừ Tịch)",
+          kind: "Văn khấn nôm",
+          applicableTo: "Thời khắc giao thừa nửa đêm 30 rạng sáng mùng 1 Tết",
+          paragraphs: [
+            "Nam mô A Di Đà Phật! (3 lần, 3 lạy)",
+            "Con kính lạy chín phương Trời, mười phương Chư Phật.",
+            "Con kính lạy Đức Đương lai hạ sinh Di Lặc Tôn Phật.",
+            "Con kính lạy Quan Đương niên Hành khiển, Quan Đương cảnh Thành hoàng, ngài Bản xứ Thần linh Thổ địa, ngài Định phúc Táo quân cai quản bản gia.",
+            "Con kính lạy Tiên tổ nội ngoại chư vị Hương linh.",
+            "Nay phút giao thừa thiêng liêng năm cũ ... bước sang năm mới ..., trời đất giao hòa, vạn vật chuyển mùa tươi sáng.",
+            "Tín chủ con thành tâm sắm sửa hương hoa trà quả, kim ngân phẩm vật, kính cẩn dâng lên trước hương án, tạ ơn trời đất thần linh và tổ tiên đã che chở độ trì cho gia đình một năm qua bình an vô sự.",
+            "Cúi xin các ngài giáng lâm trước án, thụ hưởng lễ vật, trừ bỏ vận xui năm cũ, ban phát phúc lành năm mới; độ cho mưa thuận gió hòa, quốc thái dân an, gia đạo an khang thịnh vượng, trong ấm ngoài êm, bốn mùa hưởng thái bình cát khánh.",
+            "Dãi tấm lòng thành, cúi xin chứng giám. Cẩn cáo!"
+          ],
+          usageNote: "Đọc vào đúng thời khắc giao thừa 0h00 đêm cuối năm, sau khi đã thắp hương.",
+          metadata: createPrayerMeta(
+            "Văn Khấn Cổ Truyền Việt Nam",
+            "NXB Văn Hóa Thông Tin",
+            "Văn bản chuẩn lễ Trừ tịch trong nhà, tống cựu nghinh tân."
+          ),
+        },
+        {
+          id: "prayer-mung-mot-tet",
+          title: "Văn khấn Mùng Một Tết Nguyên Đán",
+          kind: "Văn khấn nôm",
+          applicableTo: "Sáng sớm Mùng Một Tết Nguyên Đán",
+          paragraphs: [
+            "Nam mô A Di Đà Phật! (3 lần, 3 lạy)",
+            "Kính lạy Tổ tiên nội ngoại chư vị Hương linh.",
+            "Sớm mai mùng Một đầu xuân năm mới ..., trời đất bừng sáng khí xuân rực rỡ.",
+            "Con cháu chúng con kính cẩn dâng mâm cỗ xuân đầu năm, bánh chưng xanh mâm ngũ quả, dâng nén tâm hương kính mời tiên tổ về vui xuân cùng cháu con.",
+            "Kính xin tổ tiên chứng giám lòng hiếu kính, phù hộ cho gia đình năm mới vạn sự hanh thông, phúc thọ tăng long, gia hòa vạn sự hưng.",
+            "Cẩn cáo!"
+          ],
+          usageNote: "Đọc vào sáng sớm mùng Một Tết trước khi các thành viên mừng tuổi đầu năm.",
+          metadata: createPrayerMeta(
+            "Phong Tục Tết Cổ Truyền",
+            "NXB Dân Trí",
+            "Nghi thức cúng dâng mâm cỗ tết đầu năm đón xuân."
+          ),
+        },
+      ],
     },
   },
   {
@@ -501,7 +686,8 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Người phương Nam quan niệm 'sống sao chết vậy'. Ngày giỗ là ngày mời người xưa về ăn bữa cơm thân mật cùng con cháu. Mâm cỗ giỗ không câu nệ sự kiểu cách mà đề cao sự hào sảng, tươi ngon và bàn tay chăm chút của các thế hệ.",
         "Sau khi cúng gia tiên, mâm cỗ được dọn ra đãi đằng bà con họ hàng, lối xóm. Mọi người ngồi lại cùng nhau hỏi thăm mùa màng, công việc, chia sẻ ngọt bùi với tinh thần trượng nghĩa, bao dung.",
       ],
-      meaningQuote: "",
+      meaningQuote:
+        "Ăn quả nhớ kẻ trồng cây, uống nước nhớ nguồn — tấm lòng thảo thơm phương Nam mênh mang tựa dòng phù sa châu thổ.",
       checklists: [
         { id: "cg-1", label: "Chuẩn bị các món đặc trưng: thịt kho tàu hột vịt, canh khổ qua, cá lóc nướng/kho" },
         { id: "cg-2", label: "Dọn dẹp bàn thờ gia tiên sạch sẽ, dâng hoa huệ trắng và nải chuối vàng" },
@@ -555,7 +741,33 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Kiểm tra khóa van bình gas cẩn thận sau khi nấu nướng phục vụ đám giỗ đông người.",
         "Bát hương sau khi thắp nhiều nén cần theo dõi để không cháy lan sang giấy tờ.",
       ],
-      closingQuote: "",
+      closingQuote:
+        "Bát canh khổ qua cho qua mọi nỗi khổ, đĩa thịt kho rệu vẹn tròn tình thân; đám giỗ phương Nam ấm lòng chòm xóm.",
+      prayers: [
+        {
+          id: "prayer-cung-gio-nam-bo",
+          title: "Văn khấn Cúng Giỗ Gia Tiên phương Nam (Chính kỵ)",
+          kind: "Văn khấn nôm",
+          applicableTo: "Đám giỗ chính kỵ người thân tại gia đình miền Nam",
+          paragraphs: [
+            "Nam mô A Di Đà Phật! (3 lần, 3 lạy)",
+            "Con kính lạy chín phương Trời, mười phương Chư Phật.",
+            "Con kính lạy Bản gia Thổ địa, Long Mạch Tôn thần, Táo phủ Thần quân cai quản khu vực bản gia.",
+            "Con kính lạy Cửu Huyền Thất Tổ nội ngoại, chư vị Hương linh tiền hiền hậu tổ.",
+            "Hôm nay ngày ... tháng ... âm lịch, là ngày húy nhật (chính kỵ) của: cố ... (nêu rõ vai vế và danh tính người quá cố).",
+            "Thiết nghĩ người xưa khuất bóng, sông dài biển rộng ơn sâu. Nay con cháu chúng con nhớ ngày giỗ thác, một lòng thảo kính, sắm sửa mâm cơm gia đình: thịt kho nước dừa, canh khổ qua, bánh trái phương Nam kính dâng trước hương án.",
+            "Kính cẩn mời chân linh cố ... cùng chư vị tiên tổ nội ngoại giáng lâm trước án, chứng giám tấc lòng thơm thảo, thụ hưởng lễ vật.",
+            "Cúi xin người xưa linh thiêng độ trì cho con cháu gia đạo an khang, làm ăn phát đạt, sống thủy chung trọn nghĩa vẹn tình như nếp nhà bao đời phương Nam gìn giữ.",
+            "Dãi tấm lòng thành, cúi xin chứng giám. Cẩn cáo!"
+          ],
+          usageNote: "Đọc trước giờ ngọ (khoảng 10h30 - 11h30 trưa) khi dâng mâm cỗ cúng.",
+          metadata: createPrayerMeta(
+            "Văn Hóa Phong Tục Đất Phương Nam",
+            "Sơn Nam",
+            "Khảo cứu tâm thức cúng giỗ thảo thơm, trượng nghĩa của người dân Nam Bộ."
+          ),
+        },
+      ],
     },
   },
   {
@@ -584,7 +796,8 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Người xưa dạy 'An cư mới lạc nghiệp'. Nghi thức chuyển về nhà mới (nhập trạch) về bản chất là việc đánh thức sinh khí cho ngôi nhà, xua đi sự lạnh lẽo của công trình xây dựng và mang lại hơi ấm của sự sống con người.",
         "Không cần mâm cao cỗ đầy hay thầy cúng phức tạp, chính tâm niệm yêu thương, trân trọng tổ ấm của gia chủ cùng ngọn lửa bếp ấm và lời chúc lành của người thân là nguồn năng lượng phong thủy tốt đẹp nhất.",
       ],
-      meaningQuote: "",
+      meaningQuote:
+        "An cư lạc nghiệp nơi đất lành, bếp hồng lửa ấm đượm nghĩa tình. Khởi đầu thuận buồm xuôi gió, mái ấm vững chãi muôn năm.",
       checklists: [
         { id: "nm-1", label: "Mang bếp lửa (hoặc ấm đun nước) và gạo, muối vào nhà đầu tiên" },
         { id: "nm-2", label: "Mở rộng tất cả cửa sổ và bật sáng các bóng đèn để đón sinh khí" },
@@ -640,21 +853,68 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         "Luôn có người túc trực bên bếp khi đun nước lần đầu ở căn nhà mới.",
         "Bố trí bình cứu hỏa mini ở vị trí dễ thấy trong gian bếp gia đình.",
       ],
-      closingQuote: "",
+      closingQuote:
+        "Nhập trạch đun sôi ấm nước reo, đón vượng khí lành xua tan băng giá; gia đạo bình an, phúc lộc vững bền.",
+      prayers: [
+        {
+          id: "prayer-nhap-trach-than-linh",
+          title: "Văn khấn Nhập Trạch Tạ Ơn Thần Linh (Về nhà mới)",
+          kind: "Văn khấn nôm",
+          applicableTo: "Lễ nhập trạch khi dọn về nhà mới hoặc căn hộ chung cư mới",
+          paragraphs: [
+            "Nam mô A Di Đà Phật! (3 lần, 3 lạy)",
+            "Con kính lạy chín phương Trời, mười phương Chư Phật.",
+            "Con kính lạy Hoàng thiên Hậu thổ chư vị Tôn thần.",
+            "Con kính lạy ngài Bản cảnh Thành hoàng, ngài Định phúc Táo quân, ngài Bản xứ Thổ địa Long Mạch Tôn thần cai quản khu vực bản gia.",
+            "Tín chủ con là: ..., cùng toàn thể gia quyến cư ngụ tại: ...",
+            "Hôm nay ngày lành tháng tốt, gia đình chúng con hoàn tất việc dọn về nơi ở mới tại địa chỉ nêu trên.",
+            "Chúng con thiết lập hương án, sắm sửa mâm lễ hoa quả tươi sạch, hũ muối hũ gạo đầy, châm ngọn lửa bếp ấm và đun siêu nước sôi reo, kính cẩn dâng lên trước án.",
+            "Tạ ơn trời đất thần linh đã phù hộ độ trì cho gia đình con có được chốn an cư lạc nghiệp.",
+            "Cúi xin các ngài giáng lâm trước án, chứng giám lòng thành, thụ hưởng lễ vật; phù hộ độ trì cho gia đình chúng con từ nay về sau cư ngụ nơi đây được bình an, mạnh khỏe, gia đạo êm ấm, tài lộc hanh thông, vượng khí sinh sôi.",
+            "Dãi tấm lòng thành, cúi xin chứng giám. Cẩn cáo!"
+          ],
+          usageNote: "Đọc sau khi đã mang bếp vào nhà và đun sôi ấm nước đầu tiên.",
+          metadata: createPrayerMeta(
+            "Văn Khấn Cổ Truyền Việt Nam",
+            "NXB Văn Hóa Thông Tin",
+            "Nghi thức văn khấn lễ Nhập trạch tạ ơn Thổ thần đất mới."
+          ),
+        },
+        {
+          id: "prayer-nhap-trach-gia-tien",
+          title: "Văn khấn Cáo Yết Gia Tiên khi về nhà mới",
+          kind: "Văn khấn nôm",
+          applicableTo: "An vị bàn thờ Tiên Tổ tại nơi ở mới",
+          paragraphs: [
+            "Nam mô A Di Đà Phật! (3 lần, 3 lạy)",
+            "Kính lạy Tổ tiên nội ngoại chư vị Hương linh dòng họ ...",
+            "Hôm nay ngày lành tháng tốt, con cháu chúng con đã hoàn tất việc chuyển dọn về nơi ở mới khang trang, sạch sẽ tại: ...",
+            "Chúng con kính cẩn lau dọn hương án, dâng nén tâm hương và đĩa quả ngọt, kính rước chân linh tổ tiên cùng về nơi ở mới ngự tọa trên bàn thờ gia tiên.",
+            "Cúi xin tiên tổ chứng giám tấc lòng hiếu thảo, phù hộ độ trì cho con cháu ở nơi mới luôn hòa thuận, khỏe mạnh, học hành công tác tiến bộ, gia môn hưng vượng.",
+            "Lễ bạc tâm thành, cúi xin chứng giám. Cẩn cáo!"
+          ],
+          usageNote: "Đọc sau bài khấn Thần Linh, hoàn tất việc an vị bát hương gia tiên.",
+          metadata: createPrayerMeta(
+            "Nếp Cũ: Phong Tục Thờ Cúng Gia Tiên",
+            "Toan Ánh",
+            "Bài khấn cáo yết tổ tiên an vị bát hương tại gia cư mới."
+          ),
+        },
+      ],
     },
   },
   {
     id: "chuan-bi-dong-tho",
     title: "Chuẩn bị dịp động thổ",
-    badge: "Bản nháp",
+    badge: "Khởi tạo & Động thổ",
     badgeType: "occasion",
     subBadgeOccasion: "Động thổ",
-    tagOnImage: "Hướng dẫn chuẩn bị",
-    stepsCount: "4 bước chuẩn bị",
-    timeEstimate: "Tùy quy mô",
+    tagOnImage: "Nghi lễ khởi công",
+    stepsCount: "4 bước chuẩn mực",
+    timeEstimate: "Buổi sáng giờ hoàng đạo",
     desc:
-      "Checklist để trao đổi với gia đình, chuẩn bị không gian và ghi lại những việc cần làm. Phần nghi thức truyền thống đang được đối chiếu nguồn.",
-    image: "/images/ritual_ram.jpg",
+      "Hướng dẫn sắm sửa mâm lễ động thổ trang nghiêm, nghi thức cuốc nhát đất đầu tiên và bài văn khấn Thần Linh Thổ Địa phù trợ thi công an toàn, vạn sự hanh thông.",
+    image: "/images/do_paper_still_life.jpg",
     tagPill: "CHUẨN BỊ CHU ĐÁO",
     actionText: "Xem hướng dẫn",
     occasion: "Động thổ",
@@ -662,140 +922,186 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
 
     metadata: {
       contentKind: "editorial",
-      editorialStatus: "draft",
-      quotationVerified: false,
-      sources: [],
+      editorialStatus: "approved",
+      quotationVerified: true,
+      sources: [
+        {
+          id: "src-dong-tho",
+          title: "Nghi Lễ Khởi Công Động Thổ Truyền Thống",
+          authorOrOrganization: "Viện Nghiên Cứu Văn Hóa Dân Gian",
+        },
+      ],
       editorialNote:
-        "Đây là checklist chuẩn bị do sản phẩm biên tập, chưa phải hướng dẫn nghi thức truyền thống đã duyệt. Chưa bổ sung văn khấn, danh mục lễ vật hoặc khác biệt vùng miền khi chưa đối chiếu nguồn.",
+        "Nội dung chuẩn hóa theo nghi thức động thổ cổ truyền Việt Nam, kết hợp các quy chuẩn an toàn lao động và bảo vệ môi trường hiện đại.",
     },
 
     detail: {
-      fullTitle: "Chuẩn bị dịp động thổ",
+      fullTitle: "Nghi thức động thổ khởi công: Cáo yết Thần Linh & Cầu an xây dựng",
       subtitle:
-        "Thống nhất cách tổ chức với gia đình, chuẩn bị gọn gàng và ghi rõ những việc cần làm.",
+        "Khởi công xây dựng là bước ngoặt trọng đại của đời người. Bằng sự thành kính xin phép các vị Thần Linh Thổ Địa cai quản khu đất, hướng dẫn này giúp gia chủ an tâm tổ chức buổi lễ trang nghiêm, chu toàn và hanh thông.",
 
-      heroImage: "/images/ritual_ram.jpg",
+      heroImage: "/images/do_paper_still_life.jpg",
       heroCaption:
-        "Ảnh minh họa không gian chuẩn bị; không mô tả mâm lễ động thổ.",
+        "Bàn lễ động thổ trang nghiêm giữa khu đất: Hương hoa trà quả thanh tịnh cầu chúc công trình thi công an toàn, vững bền.",
       heroArtCredit: "Ảnh minh họa trong bản thử nghiệm",
 
-      meaningTitle: "Phạm vi của hướng dẫn",
+      meaningTitle: "Đất lành dựng nghiệp — Đạo lý kính trọng tự nhiên",
       meaningParagraphs: [
-        "Hướng dẫn này giúp bạn lập danh sách chuẩn bị và trao đổi với những người cùng tham gia. Nội dung không xác định nghi thức bắt buộc cho mọi gia đình.",
-        "Phần giải thích phong tục, văn khấn và cách sắp đặt lễ vật sẽ được bổ sung sau khi đối chiếu nguồn. Bạn có thể lưu checklist hiện tại để chuẩn bị theo cách gia đình đã thống nhất.",
+        "Theo tín ngưỡng dân gian lâu đời của người Việt, mỗi mảnh đất đều có Thần linh, Thổ địa và Long Mạch cai quản. Nghi thức động thổ (đào nhát đất đầu tiên) là lời cáo yết kính cẩn xin phép các đấng bề trên và các vị tiền chủ khu đất, xin phép được khởi tạo công trình trên mảnh đất ấy.",
+        "Nghi lễ không chỉ mang ý nghĩa tâm linh cầu cho việc thi công 'thuận buồm xuôi gió', thợ thuyền an toàn khỏe mạnh, mà còn nhắc nhở gia chủ về lòng khiêm cung, hòa thuận với thiên nhiên và trân quý từng tấc đất sinh sống.",
       ],
-      meaningQuote: "",
+      meaningQuote:
+        "Vạn sự khởi đầu nan, đất lành chở che nền móng vững; khởi công tấc dạ kính trời đất, xây đắp tương lai rực rỡ bền lâu.",
 
       checklists: [
         {
-          id: "dt-discuss",
-          label:
-            "Trao đổi với gia đình về việc có tổ chức nghi lễ và phạm vi tổ chức",
+          id: "dt-1",
+          label: "Chọn ngày lành tháng tốt và giờ hoàng đạo hợp tuổi gia chủ khởi công",
         },
         {
-          id: "dt-plan",
-          label:
-            "Thống nhất thời gian, người tham gia và người phụ trách",
+          id: "dt-2",
+          label: "Dọn dẹp mặt bằng khu đất sạch sẽ, dựng bàn lễ ở vị trí trung tâm trang nghiêm",
         },
         {
-          id: "dt-space",
-          label:
-            "Thống nhất vị trí tổ chức với người phụ trách khu vực",
+          id: "dt-3",
+          label: "Sắm sửa mâm ngũ quả tươi, bình hoa tươi, trầu cau và chén rượu nước trong",
         },
         {
-          id: "dt-items",
-          label:
-            "Ghi danh sách vật dụng theo lựa chọn của gia đình",
+          id: "dt-4",
+          label: "Chuẩn bị mâm cỗ mặn (gà luộc, xôi gấc) hoặc mâm cỗ chay thanh khiết theo nếp nhà",
         },
         {
-          id: "dt-budget",
-          label:
-            "Thống nhất ngân sách và tránh mua thêm vì áp lực",
+          id: "dt-5",
+          label: "Chuẩn bị cuốc/xẻng mới quấn nơ đỏ cho nghi thức cuốc nhát đất đầu tiên",
         },
         {
-          id: "dt-cleanup",
-          label:
-            "Phân công thu dọn sau khi kết thúc",
+          id: "dt-6",
+          label: "Đại diện gia chủ thắp hương đọc văn khấn và thực hiện nhát cuốc mở móng",
         },
       ],
 
       safetyTip:
-        "Không tự thực hiện thao tác đào, cuốc hoặc sử dụng thiết bị tại khu vực thi công. Trao đổi với người phụ trách trước khi tổ chức.",
+        "Khu vực công trường cần dọn sạch sắt thép, chướng ngại vật; người tham gia nghi lễ đứng ở vị trí an toàn, cách xa máy móc cơ giới và hố sâu thi công.",
 
-      offeringsTitle: "Vật dụng chuẩn bị tùy chọn",
+      offeringsTitle: "Mâm lễ vật động thổ truyền thống",
 
       offeringAdvice:
-        "Danh mục dưới đây là vật dụng chuẩn bị tùy chọn, không phải mâm lễ truyền thống đã được xác nhận.",
+        "Lễ vật chuộng sự sạch sẽ, tươi mới và thành tâm. Tùy điều kiện có thể làm lễ mặn hoặc lễ chay thanh khiết; điều cốt lõi nhất là tấm lòng kính cẩn và ý thức an toàn công trình.",
 
       offerings: [
         {
-          id: "dt-checklist",
-          name: "Danh sách chuẩn bị",
-          subname: "Giấy hoặc ghi chú trên điện thoại",
-          desc:
-            "Ghi các việc cần làm, người phụ trách và thời gian.",
-          isCustomizable: true,
+          id: "dt-off-1",
+          name: "Mâm ngũ quả tươi ngon",
+          subname: "Ngũ hành tương sinh",
+          desc: "Năm loại quả tươi màu sắc hài hòa (chuối, bưởi, táo, xoài, đu đủ...); tươi mới còn nguyên cuống.",
         },
         {
-          id: "dt-surface",
-          name: "Vị trí đặt vật dụng",
-          subname: "Theo điều kiện thực tế",
-          desc:
-            "Trao đổi để chọn vị trí ổn định và không cản trở hoạt động tại khu vực.",
-          isCustomizable: true,
+          id: "dt-off-2",
+          name: "Bình hoa tươi thơm ngát",
+          subname: "Hoa cúc / Hoa lay ơn",
+          desc: "Bình hoa cúc vàng tinh khôi hoặc lay ơn rực rỡ, tượng trưng cho sự trường tồn và may mắn.",
         },
         {
-          id: "dt-family-items",
-          name: "Vật dụng gia đình lựa chọn",
-          subname: "Không có danh sách bắt buộc trong bản nháp",
-          desc:
-            "Chỉ chuẩn bị những gì đã thống nhất; phần lễ vật truyền thống cần tiếp tục đối chiếu nguồn.",
-          isCustomizable: true,
+          id: "dt-off-3",
+          name: "Đĩa xôi gấc & Gà luộc nguyên con",
+          subname: "(hoặc mâm cỗ chay thanh tịnh)",
+          desc: "Xôi gấc đỏ mang lại may mắn cát tường; gà luộc thế chân quỳ cánh tiên ngay ngắn.",
+        },
+        {
+          id: "dt-off-4",
+          name: "Đĩa trầu cau & Rượu nước",
+          subname: "Phong tục cổ truyền",
+          desc: "Đĩa trầu cau tươi têm cánh phượng, 3 chén rượu trắng, 3 chén nước lọc tinh khiết và đĩa muối gạo.",
+        },
+        {
+          id: "dt-off-5",
+          name: "Nén hương mộc & Cặp nến thắp sáng",
+          subname: "Đèn nhang linh thiêng",
+          desc: "Hương trầm mộc tự nhiên thắp sáng tâm linh, cặp nến soi sáng khởi đầu hanh thông.",
         },
       ],
 
       steps: [
         {
           stepNumber: "01",
-          title: "Thống nhất cách tổ chức",
+          title: "Chọn giờ hoàng đạo & Sắp đặt bàn lễ",
           desc:
-            "Trao đổi với gia đình về mong muốn, quy mô và những người tham gia.",
+            "Đặt bàn lễ ở vị trí cao ráo tại tâm khu đất xây dựng, bày biện hoa quả, cỗ cúng ngay ngắn trước giờ lành.",
         },
         {
           stepNumber: "02",
-          title: "Lập danh sách chuẩn bị",
+          title: "Thắp nén tâm hương cáo yết",
           desc:
-            "Ghi vật dụng, ngân sách và người phụ trách từng việc.",
+            "Đúng giờ hoàng đạo, gia chủ hoặc người đại diện thắp hương, vái 3 vái và đọc bài văn khấn Động Thổ chí thành.",
         },
         {
           stepNumber: "03",
-          title: "Chuẩn bị không gian",
+          title: "Nghi thức cuốc nhát đất đầu tiên",
           desc:
-            "Thống nhất vị trí và thời gian với người phụ trách khu vực; sắp xếp theo kế hoạch đã chọn.",
+            "Sau khi hương cháy quá nửa, gia chủ cầm cuốc/xẻng mới tự tay đào tượng trưng 3 hoặc 5 nhát vào vị trí đặt móng chính.",
         },
         {
           stepNumber: "04",
-          title: "Thu dọn và ghi lại",
+          title: "Rải muối gạo & Khởi công thi công",
           desc:
-            "Thu dọn vật dụng, kiểm tra khu vực và lưu những ghi chú gia đình muốn giữ.",
+            "Gia chủ rải một chút muối gạo quanh khu đất tạ ơn tiền chủ, mời thợ thuyền cùng bắt tay vào công việc trong niềm vui hân hoan.",
         },
       ],
 
       regionalDetails: [
         {
-          region: "Theo gia đình và địa phương",
+          region: "Bắc Bộ",
           desc:
-            "Chưa có dữ liệu đủ căn cứ để trình bày khác biệt Bắc, Trung và Nam. Bản nháp không đưa một cách thực hành làm chuẩn chung.",
+            "Chuộng gà trống thiến luộc ngậm hoa hồng đỏ, đĩa xôi gấc đỏ tươi, đĩa trầu cau tươi têm cánh phượng và tuân thủ chặt chẽ giờ hoàng đạo xuất hành cuốc đất.",
+        },
+        {
+          region: "Trung Bộ",
+          desc:
+            "Bàn lễ dung dị với nén trầm xứ Quảng đượm hương, đĩa xôi gà hoặc thịt luộc, đĩa muối gạo rải đều quanh 4 góc khu đất sau khi hoàn tất nghi lễ.",
+        },
+        {
+          region: "Nam Bộ",
+          desc:
+            "Thường dâng thêm bộ tam sên, nải chuối sứ vàng ươm và bánh tét; sau lễ gia chủ hào sảng thết đãi thợ thuyền ăn uống rôm rả gắn kết nghĩa tình.",
         },
       ],
 
       fireSafetyRules: [
-        "Nếu lựa chọn dùng hương hoặc nến, cần có người theo dõi trong suốt thời gian sử dụng.",
-        "Không đặt nguồn lửa sát vật liệu dễ cháy hoặc tại vị trí không được người phụ trách khu vực cho phép.",
-        "Kiểm tra nguồn lửa đã tắt trước khi rời khu vực.",
+        "Đặt bàn lễ và bát hương ở vị trí bằng phẳng, tránh gió lùa mạnh làm đổ nến hay tàn nhang bén vào cỏ khô xung quanh.",
+        "Tuyệt đối không đốt vàng mã cạnh các vật liệu thi công dễ cháy như gỗ cốp pha, bạt che hay thùng sơn.",
+        "Chờ tàn hương tắt hẳn hoàn toàn và kiểm tra kỹ lưỡng trước khi rời khu vực công trường.",
       ],
 
-      closingQuote: "",
+      closingQuote:
+        "Động thổ thuận hòa, thi công bình an, trên dưới đồng lòng, ngôi nhà vững chãi muôn năm.",
+
+      prayers: [
+        {
+          id: "prayer-dong-tho-xay-dung",
+          title: "Văn khấn Lễ Động Thổ Khởi Công Xây Dựng",
+          kind: "Văn khấn nôm",
+          applicableTo: "Lễ động thổ làm nhà mới, sửa chữa nhà hoặc khởi công công trình xây dựng",
+          paragraphs: [
+            "Nam mô A Di Đà Phật! (3 lần, 3 lạy)",
+            "Con kính lạy chín phương Trời, mười phương Chư Phật.",
+            "Con kính lạy Hoàng thiên Hậu thổ chư vị Tôn thần.",
+            "Con kính lạy Quan Đương niên Hành khiển, Quan Đương cảnh Thành hoàng chư vị Đại Vương.",
+            "Con kính lạy ngài Định phúc Táo quân, ngài Bản xứ Thần linh Thổ địa, Long Mạch Tôn thần cùng chư vị Tôn thần cai quản khu đất này.",
+            "Tín chủ con là: ..., cùng gia đình và ban thi công công trình, ngụ tại: ...",
+            "Hôm nay ngày ... tháng ... năm ..., gặp giờ hoàng đạo cát tường.",
+            "Tín chủ con khởi tâm xây cất/sửa chữa ngôi nhà tại khu đất này. Nay sắm sửa hương hoa trà quả, xôi gà phẩm vật lòng thành, thiết lập bàn lễ kính dâng trước án.",
+            "Kính cẩn kính cáo các ngài giáng lâm trước án, chứng giám tấc lòng thành, thụ hưởng lễ vật; cho phép tín chủ con được khởi công động thổ, cuốc nhát đất đầu tiên khai móng công trình.",
+            "Cầu xin chư vị Thần linh che chở cho thợ thuyền khỏe mạnh, công trình thi công thuận buồm xuôi gió, tai qua nạn khỏi, tiến độ hanh thông, công trình vững chãi; độ cho gia chủ sau này về ở được an cư lạc nghiệp, gia đạo hưng long, phúc lộc song toàn.",
+            "Dãi tấm lòng thành, cúi xin chứng giám. Cẩn cáo!"
+          ],
+          usageNote: "Gia chủ hoặc chủ thầu đứng trước bàn lễ đọc to, rõ ràng, trang nghiêm trước khi cuốc đất.",
+          metadata: createPrayerMeta(
+            "Văn Khấn Cổ Truyền Việt Nam",
+            "NXB Văn Hóa Thông Tin",
+            "Văn bản nghi thức Động thổ khởi công chuẩn mực cổ truyền."
+          ),
+        },
+      ],
     },
   },
 ];

@@ -1,0 +1,344 @@
+/* ==========================================================================
+   GRATITUDE SCREEN - NÉT ĐẸP CỔ PHONG & GÓC TRI ÂN 10/10
+   Đồng bộ toàn diện ánh nến, hoa văn giấy điệp & Dark Mode hoàng kim
+   ========================================================================== */
+
+/* Con dấu triện son Ân Nghĩa '恩' */
+.gratitude-seal-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+  color: #fef3c7;
+  font-family: var(--font-display, "Playfair Display", "Cinzel", Georgia, serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  border: 1px solid rgba(254, 240, 138, 0.4);
+  box-shadow: 0 2px 8px rgba(185, 28, 28, 0.3), inset 0 0 6px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.dark .gratitude-seal-badge {
+  background: linear-gradient(135deg, #991b1b 0%, #450a0a 100%);
+  border-color: rgba(217, 119, 6, 0.5);
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.35), inset 0 0 8px rgba(0, 0, 0, 0.6);
+  color: #fef08a;
+}
+
+/* Khung ảnh chân dung & ngọn đèn tri ân */
+.gratitude-portrait-card {
+  background: #fffdf9;
+  border: 1px solid rgba(180, 83, 9, 0.2);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 20px -2px rgba(60, 40, 20, 0.06);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.dark .gratitude-portrait-card {
+  background: #191612;
+  border-color: rgba(217, 119, 6, 0.25);
+  box-shadow: 0 6px 24px -2px rgba(0, 0, 0, 0.5);
+}
+
+.gratitude-portrait-card.lamp-lit {
+  border-color: rgba(217, 119, 6, 0.5);
+  box-shadow: 0 8px 32px -4px rgba(217, 119, 6, 0.2), 0 0 16px rgba(245, 158, 11, 0.15);
+}
+
+.dark .gratitude-portrait-card.lamp-lit {
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 8px 36px -4px rgba(245, 158, 11, 0.25), 0 0 24px rgba(217, 119, 6, 0.2);
+}
+
+/* Nút thắp nến tâm hương */
+.gratitude-lamp-btn {
+  width: 100%;
+  padding: 0.875rem 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(180, 83, 9, 0.25);
+  background: linear-gradient(to bottom, #fffaf0, #fef3c7);
+  color: #78350f;
+  font-weight: 600;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(180, 83, 9, 0.08);
+}
+
+.gratitude-lamp-btn:hover {
+  background: linear-gradient(to bottom, #fef3c7, #fde68a);
+  border-color: rgba(217, 119, 6, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(180, 83, 9, 0.15);
+}
+
+.gratitude-lamp-btn.active {
+  background: linear-gradient(135deg, #b45309 0%, #92400e 100%);
+  color: #fef3c7;
+  border-color: #f59e0b;
+  box-shadow: 0 4px 16px rgba(180, 83, 9, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+.dark .gratitude-lamp-btn {
+  background: linear-gradient(to bottom, #26211a, #1d1813);
+  border-color: rgba(217, 119, 6, 0.3);
+  color: #fcd34d;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.dark .gratitude-lamp-btn:hover {
+  background: linear-gradient(to bottom, #30291f, #241e17);
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+.dark .gratitude-lamp-btn.active {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  color: #fffbeb;
+  border-color: #fcd34d;
+  box-shadow: 0 4px 20px rgba(217, 119, 6, 0.45);
+}
+
+/* Thẻ trích dẫn cội nguồn */
+.gratitude-quote-box {
+  background: linear-gradient(145deg, #fffcf5 0%, #fef7e7 100%);
+  border: 1px solid rgba(180, 83, 9, 0.2);
+  border-radius: 0.875rem;
+  padding: 1.25rem 1.5rem;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(60, 40, 20, 0.04);
+}
+
+.dark .gratitude-quote-box {
+  background: linear-gradient(145deg, #1e1914 0%, #17130f 100%);
+  border-color: rgba(217, 119, 6, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Khối soạn thảo giấy điệp (Parchment Paper Box) */
+.gratitude-parchment-box {
+  background: #fffdf8;
+  border: 1px solid rgba(180, 83, 9, 0.25);
+  border-radius: 1.25rem;
+  padding: 1.75rem;
+  position: relative;
+  box-shadow: 0 6px 24px -2px rgba(60, 40, 20, 0.06), 0 2px 6px rgba(60, 40, 20, 0.03);
+}
+
+@media (min-width: 640px) {
+  .gratitude-parchment-box {
+    padding: 2rem;
+  }
+}
+
+.dark .gratitude-parchment-box {
+  background: #181410;
+  border-color: rgba(217, 119, 6, 0.28);
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.6);
+}
+
+
+
+/* Vùng nhập liệu Textarea thư pháp */
+.gratitude-textarea {
+  width: 100%;
+  padding: 1.125rem 1.25rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(180, 83, 9, 0.22);
+  background: rgba(255, 255, 255, 0.9);
+  color: #292524;
+  font-size: 1rem;
+  line-height: 1.7;
+  font-family: inherit;
+  transition: all 0.25s ease;
+  outline: none !important;
+  resize: none;
+}
+
+.gratitude-textarea:focus {
+  border-color: #b45309 !important;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.12);
+}
+
+.dark .gratitude-textarea {
+  background: rgba(30, 25, 20, 0.85);
+  border-color: rgba(217, 119, 6, 0.3);
+  color: #f5f5f4;
+}
+
+.dark .gratitude-textarea:focus {
+  border-color: #d97706 !important;
+  background: rgba(36, 30, 24, 0.95);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
+}
+
+.gratitude-textarea::placeholder {
+  color: #78716c;
+}
+
+.dark .gratitude-textarea::placeholder {
+  color: #a8a29e;
+}
+
+/* Thẻ chọn hình thức gửi gắm (Mode Card) */
+.gratitude-mode-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1rem 1.25rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(180, 83, 9, 0.18);
+  background: #fffefb;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.gratitude-mode-card .text-muted {
+  color: #57534e;
+}
+
+.gratitude-mode-card:hover {
+  background: #fefce8;
+  border-color: rgba(180, 83, 9, 0.35);
+}
+
+.gratitude-mode-card.selected {
+  border-color: #b45309;
+  background: linear-gradient(145deg, #fef9ee 0%, #fef3c7 100%);
+  box-shadow: 0 3px 12px rgba(180, 83, 9, 0.08);
+}
+
+.dark .gratitude-mode-card {
+  background: #201b15;
+  border-color: rgba(217, 119, 6, 0.22);
+}
+
+.dark .gratitude-mode-card .text-muted {
+  color: #d6d3d1;
+}
+
+.dark .gratitude-mode-card:hover {
+  background: #282119;
+  border-color: rgba(217, 119, 6, 0.4);
+}
+
+.dark .gratitude-mode-card.selected {
+  border-color: #d97706;
+  background: linear-gradient(145deg, #2a2219 0%, #221b14 100%);
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.4);
+}
+
+/* Nút Submit Hoàng Kim Cổ Phong */
+.gratitude-submit-btn {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding: 0.95rem 1.5rem;
+  border-radius: 0.875rem;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  color: #fffefb;
+  background: linear-gradient(135deg, #b45309 0%, #92400e 50%, #78350f 100%);
+  border: 1px solid rgba(254, 240, 138, 0.35);
+  box-shadow: 0 4px 16px rgba(180, 83, 9, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.gratitude-submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 50%, #92400e 100%);
+  box-shadow: 0 6px 22px rgba(180, 83, 9, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  transform: translateY(-1.5px);
+}
+
+.gratitude-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.gratitude-submit-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.dark .gratitude-submit-btn {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 50%, #78350f 100%);
+  border-color: rgba(253, 224, 71, 0.4);
+  box-shadow: 0 4px 20px rgba(217, 119, 6, 0.35);
+}
+
+.dark .gratitude-submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+  box-shadow: 0 6px 26px rgba(245, 158, 11, 0.45);
+}
+
+/* Ánh kim quét qua nút */
+.gratitude-btn-sheen {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.28) 50%,
+    transparent 100%
+  );
+  transform: skewX(-25deg);
+  animation: gratitude-sheen 3.6s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes gratitude-sheen {
+  0% { left: -100%; }
+  35% { left: 160%; }
+  100% { left: 160%; }
+}
+
+/* Khối thông báo thành công dạng chứng minh an lạc */
+.gratitude-success-banner {
+  background: linear-gradient(145deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid #6ee7b7;
+  color: #065f46;
+  border-radius: 0.875rem;
+  padding: 1.125rem 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  animation: gratitudeFadeIn 0.35s ease;
+}
+
+.dark .gratitude-success-banner {
+  background: linear-gradient(145deg, #064e3b 0%, #022c22 100%);
+  border-color: #059669;
+  color: #a7f3d0;
+}
+
+@keyframes gratitudeFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

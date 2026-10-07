@@ -13,6 +13,9 @@ import {
   ArrowRight,
   Check,
   RotateCcw,
+  Building2,
+  Handshake,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -59,14 +62,9 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
     }
 
     try {
-      localStorage.setItem(
-        "tltl-membership-interest-email",
-        cleanEmail
-      );
+      localStorage.setItem("tltl-membership-interest-email", cleanEmail);
     } catch {
-      setInterestError(
-        "Chưa lưu được email trên trình duyệt. Bạn hãy thử lại."
-      );
+      setInterestError("Chưa lưu được email trên trình duyệt. Bạn hãy thử lại.");
       return;
     }
 
@@ -80,9 +78,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
     try {
       localStorage.removeItem("tltl-membership-interest-email");
     } catch {
-      setInterestError(
-        "Chưa xóa được email đã lưu. Bạn hãy thử lại."
-      );
+      setInterestError("Chưa xóa được email đã lưu. Bạn hãy thử lại.");
       return;
     }
 
@@ -95,49 +91,49 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
       name: "Check-in tâm trạng & Lắng nghe cảm xúc",
       desc: "Lắng nghe tâm tư, nhận thông điệp an yên và câu ca dao ngẫm",
       currentDemo: "✓ Đầy đủ trải nghiệm trên trình duyệt",
-      futureVision: "Định hướng bổ sung thêm thống kê & góc nhìn quán chiếu cảm xúc",
-      status: "Đang mở trên máy",
-      statusColor: "bg-success-soft text-success border-success/25",
+      futureVision: "Định hướng bổ sung thống kê nhịp điệu tâm hồn",
+      status: "Đang mở miễn phí",
+      statusColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30",
     },
     {
       name: "Chiêm nghiệm xin xăm & Gieo keo",
-      desc: "Giải tỏa những sự đắn đo, tìm thấu hiểu tinh thần",
-      currentDemo: "Trải nghiệm bộ thẻ mẫu và gieo keo trong bản demo",
-      futureVision: "Dự kiến lưu lịch sử xăm đồng bộ khi có tài khoản máy chủ",
-      status: "Đang mở trên máy",
-      statusColor: "bg-success-soft text-success border-success/25",
+      desc: "Giải tỏa những đắn đo, tìm thấu hiểu tinh thần",
+      currentDemo: "Trải nghiệm bộ thẻ mẫu theo vùng miền",
+      futureVision: "Đồng bộ lịch sử quẻ xăm đa thiết bị an toàn",
+      status: "Đang mở miễn phí",
+      statusColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30",
     },
     {
-      name: "Cẩm nang nghi lễ & Lịch văn hóa",
+      name: "Cẩm nang nghi lễ & Lịch văn hóa nếp nhà",
       desc: "Thông tin ngày sóc vọng, phong tục dân gian và nghi thức tại gia",
-      currentDemo: "Nội dung tham khảo trong bản demo; nguồn tư liệu đang được hoàn thiện",
-      futureVision: "Dự kiến mở rộng thêm tập quán chi tiết các vùng miền địa phương",
-      status: "Đang mở trên máy",
-      statusColor: "bg-success-soft text-success border-success/25",
+      currentDemo: "Nội dung tham khảo kiểm chứng & lưu việc muốn nhớ",
+      futureVision: "Mở rộng tập quán chi tiết các làng xã truyền thống",
+      status: "Đang mở miễn phí",
+      statusColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30",
     },
     {
       name: "Hồ sơ cá nhân 'Góc của tôi'",
       desc: "Không gian lưu lại các thẻ quẻ, lời ước và suy ngẫm riêng tư",
-      currentDemo: "✓ Lưu trữ độc lập trên Local Storage của trình duyệt",
-      futureVision: "Định hướng hỗ trợ đồng bộ dữ liệu đám mây an toàn",
-      status: "Đang mở trên máy",
-      statusColor: "bg-accent-soft text-accent border-accent/30",
+      currentDemo: "✓ Lưu trữ độc lập trên Local Storage trình duyệt",
+      futureVision: "Bảo mật mã hóa đầu cuối và đồng bộ đám mây",
+      status: "Đang mở miễn phí",
+      statusColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30",
     },
     {
       name: "Khảo cứu nguồn tư liệu chuyên đề",
       desc: "Bản dịch Hán Nôm, di sản đình làng và phong tục cổ truyền",
       currentDemo: "✓ Bài viết đại cương & tư liệu văn hóa chọn lọc",
-      futureVision: "Kế hoạch hợp tác nghiên cứu để bổ sung bản dịch Hán Nôm chi tiết",
-      status: "Định hướng dự kiến",
-      statusColor: "bg-surface-soft text-muted border-line",
+      futureVision: "Số hóa tư liệu văn bia Hán Nôm cùng chuyên gia Viện nghiên cứu",
+      status: "Kế hoạch nghiên cứu",
+      statusColor: "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30",
     },
     {
       name: "Quảng cáo thương mại / Pop-up gây phiền",
       desc: "Cam kết không quấy rầy thương mại, không tạo áp lực tài chính",
-      currentDemo: "Hoàn toàn KHÔNG có",
-      futureVision: "Cam kết duy trì không gian thanh tịnh không quảng cáo",
+      currentDemo: "Hoàn toàn KHÔNG có quảng cáo",
+      futureVision: "Cam kết duy trì không gian thanh tịnh vĩnh viễn",
       status: "Nguyên tắc cốt lõi",
-      statusColor: "bg-danger-soft text-danger border-danger/25",
+      statusColor: "bg-red-500/15 text-red-800 dark:text-red-300 border-red-500/30",
     },
   ];
 
@@ -145,142 +141,142 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
     <div className="screen-shell">
       <main className="page-container max-w-6xl">
         {/* Top Breadcrumb & Status Ribbon */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 text-xs text-muted">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 text-xs text-stone-600 dark:text-stone-400">
           <div className="flex items-center gap-2">
             <button
               onClick={onBackToHome}
-              className="hover:text-accent cursor-pointer transition-colors"
+              className="hover:text-amber-800 dark:hover:text-amber-300 cursor-pointer transition-colors"
             >
               Hôm nay
             </button>
-            <span>/</span>
-            <span className="text-accent font-semibold">Định hướng hội viên</span>
+            <span className="text-stone-400">/</span>
+            <span className="text-amber-800 dark:text-amber-300 font-semibold">Định hướng hội viên & Hợp tác</span>
           </div>
 
           <button
             onClick={onBackToHome}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-accent transition-colors cursor-pointer self-start sm:self-auto"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-600 dark:text-stone-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors cursor-pointer self-start sm:self-auto"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Quay lại trang chủ</span>
           </button>
         </div>
 
-        {/* Top Badges */}
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <span className="px-3 py-1 rounded-full text-xs font-semibold tracking-wider bg-surface text-accent border border-line flex items-center gap-1.5">
-            <Heart className="w-3.5 h-3.5 text-accent" />
-            ĐỊNH HƯỚNG DỰ KIẾN • KHẢO SÁT CỘNG ĐỒNG
-          </span>
-          <span className="text-xs text-muted">
-            • Chưa kích hoạt cổng thanh toán • Toàn bộ bản thử nghiệm đang mở miễn phí
-          </span>
-        </div>
+        {/* Hero Magazine Section */}
+        <section className="mb-10 p-6 sm:p-10 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-surface via-surface to-amber-500/[0.04] shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-amber-500/10 to-transparent pointer-events-none rounded-bl-full" />
 
-        {/* Header Title Section & Top Illustration */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mb-10">
-          <div className="lg:col-span-7">
-            <h1 className="page-title mb-3">
-              Nuôi dưỡng tâm an qua chiều sâu văn hóa Việt
-            </h1>
-            <p className="text-sm sm:text-base text-ink leading-relaxed mb-4">
-              Tin Lắm Tâm Linh hướng tới việc tạo dựng một không gian an trú tâm hồn, nơi bạn có thể
-              chạm vào kho tàng tri thức dân gian một cách chuẩn mực, thấu đáo và tinh tế nhất. Chúng tôi
-              không bao giờ dùng nỗi sợ vận hạn, điềm gở hay sự hoang mang để thúc đẩy hội viên. Mọi giá
-              trị phát triển đều đặt trên sự tôn trọng tự do tinh thần và tự soi tỏ của mỗi cá nhân.
-            </p>
-            <div className="flex items-center gap-4 text-xs font-semibold text-muted flex-wrap">
-              <span className="flex items-center gap-1">
-                <Check className="w-3.5 h-3.5 text-success" />
-                100% Không quảng cáo trục lợi
-              </span>
-              <span className="flex items-center gap-1">
-                <Check className="w-3.5 h-3.5 text-success" />
-                Bảo tồn tri thức độc lập
-              </span>
-              <span className="flex items-center gap-1">
-                <Check className="w-3.5 h-3.5 text-success" />
-                Quyền riêng tư trên trình duyệt
-              </span>
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-7 space-y-3.5">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-amber-800 dark:text-amber-300">
+                  CỘNG ĐỒNG GÌN GIỮ NẾP NHÀ & DI SẢN
+                </span>
+                <span className="text-xs text-stone-400">·</span>
+                <span className="text-xs text-stone-500">Độc Lập & Thanh Tịnh</span>
+              </div>
+
+              <h1 className="page-title font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-ink leading-tight">
+                Nuôi Dưỡng Tâm An Qua Chiều Sâu Văn Hóa Việt
+              </h1>
+
+              <p className="text-xs sm:text-sm text-stone-700 dark:text-stone-300 leading-relaxed max-w-2xl">
+                Tin Lắm Tâm Linh hướng tới việc tạo dựng một không gian an trú tâm hồn, nơi bạn có thể
+                chạm vào kho tàng tri thức dân gian một cách chuẩn mực, thấu đáo và tinh tế nhất. Chúng tôi
+                không bao giờ dùng nỗi sợ vận hạn, điềm gở hay sự hoang mang để thúc đẩy hội viên. Mọi giá
+                trị phát triển đều đặt trên sự tôn trọng tự do tinh thần và sự tự soi tỏ của mỗi cá nhân.
+              </p>
+
+              <div className="flex items-center gap-4 text-xs font-semibold text-stone-600 dark:text-stone-400 flex-wrap pt-2">
+                <span className="flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  100% Không quảng cáo trục lợi
+                </span>
+                <span className="flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
+                  <Sparkles className="w-4 h-4 text-amber-600" />
+                  Bảo tồn tri thức độc lập
+                </span>
+                <span className="flex items-center gap-1.5 text-stone-700 dark:text-stone-300">
+                  <Lock className="w-4 h-4 text-stone-500" />
+                  Bảo mật riêng tư trên máy
+                </span>
+              </div>
             </div>
-          </div>
 
-          <div className="lg:col-span-5">
-            <div className="rounded-card overflow-hidden border border-line shadow-xs relative aspect-16/10 bg-surface-soft">
-              <img
-                src="/images/tea_bowl.jpg"
-                alt="Nhâm nhi tách trà thơm và tìm hiểu nếp xưa dân tộc"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-              <div className="absolute bottom-3 left-4 right-4 text-xs text-white/90 italic flex items-center justify-between">
-                <span>Khoảnh khắc nhâm nhi tách trà thơm và tìm hiểu nếp xưa dân tộc</span>
+            <div className="lg:col-span-5">
+              <div className="rounded-2xl overflow-hidden border border-line shadow-xs relative aspect-16/10 bg-surface-soft">
+                <img
+                  src="/images/tea_bowl.jpg"
+                  alt="Nhâm nhi tách trà thơm và tìm hiểu nếp xưa dân tộc"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+                <div className="absolute bottom-2.5 left-3.5 right-3.5 text-[11px] text-white/90 italic flex items-center justify-between">
+                  <span>Khoảnh khắc thưởng trà và lắng lòng ngẫm đạo</span>
+                  <span className="text-amber-300">✦</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* 2 Primary Plans Comparison: Free vs Tam An */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 items-stretch">
           {/* Card 1: Current Demo Tier */}
-          <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs flex flex-col justify-between">
+          <Card className="p-6 sm:p-8 rounded-3xl bg-surface border border-line shadow-sm flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-accent">
-                  BẢN THỬ NGHIỆM HIỆN TẠI
+                <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
+                  BẢN TRẢI NGHIỆM CỘNG ĐỒNG
                 </span>
-                <Badge variant="outline" className="text-xs border-success/25 text-success bg-success-soft">
-                  Đang mở miễn phí
+                <Badge variant="outline" className="text-xs border-emerald-500/40 text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 font-semibold">
+                  Mở hoàn toàn miễn phí
                 </Badge>
               </div>
 
-              <h3 className="font-display font-bold text-2xl text-ink mb-1">
-                Trải nghiệm Demo
-              </h3>
-              <p className="text-sm text-muted mb-4">Mở đầy đủ cho mọi người dùng</p>
+              <h2 className="font-display font-bold text-2xl text-ink mb-1">
+                Trải Nghiệm Tự Do
+              </h2>
+              <p className="text-xs text-stone-500 mb-4">Dành cho mọi người dùng tìm kiếm sự an yên</p>
 
-              <div className="p-3.5 rounded-panel bg-surface border border-line text-xs text-ink leading-relaxed mb-5">
+              <div className="p-3.5 rounded-2xl bg-surface-soft border border-line text-xs text-stone-700 dark:text-stone-300 leading-relaxed mb-5">
                 Toàn bộ các tính năng cốt lõi hiện có trong ứng dụng đều đang hoạt động miễn phí trên trình duyệt của bạn,
                 không yêu cầu thanh toán hay giới hạn lượt trải nghiệm.
               </div>
 
-              <div className="space-y-3 text-xs text-ink mb-6">
+              <div className="space-y-3 text-xs text-stone-700 dark:text-stone-300 mb-6">
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Check-in tâm trạng:</strong> Nhận thông điệp an yên và câu ca dao
-                    chiêm nghiệm mỗi ngày.
+                    <strong>Check-in tâm trạng:</strong> Nhận thông điệp an yên và câu ca dao chiêm nghiệm mỗi ngày.
                   </span>
                 </div>
 
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Rút thẻ chiêm nghiệm & gieo keo:</strong>{" "}
-                    Khám phá bộ thẻ mẫu theo vùng miền và chủ đề.
+                    <strong>Rút thẻ xăm & Gieo keo:</strong> Khám phá bộ thẻ mẫu cổ truyền theo ba miền Bắc - Trung - Nam.
                   </span>
                 </div>
 
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Gieo hoa đăng & điều ước:</strong> Lưu lại suy ngẫm riêng trong Góc của tôi trên máy.
+                    <strong>Gieo hoa đăng & Nguyện cầu:</strong> Lưu lại suy ngẫm riêng trong Góc của tôi trên máy.
                   </span>
                 </div>
 
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Cẩm nang nghi lễ & Lịch văn hóa:</strong>{" "}
-                    Xem nội dung tham khảo, ngày âm lịch và lưu kế hoạch cá nhân.
+                    <strong>Cẩm nang nghi lễ & Lịch nếp nhà:</strong> Xem ngày âm lịch thuần Việt, tra cứu ngày lành đại sự.
                   </span>
                 </div>
 
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Chuông tĩnh tâm & Biểu tượng ngày sinh:</strong>{" "}
-                    Khám phá lịch âm, can chi và biểu tượng ngũ hành.
+                    <strong>Chuông thiền & Biểu tượng ngày sinh:</strong> Khám phá tứ trụ can chi và bài học ngũ hành.
                   </span>
                 </div>
               </div>
@@ -289,77 +285,76 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
             <Button
               variant="outline"
               onClick={onBackToHome}
-              className="w-full py-3.5 rounded-panel border-line text-xs font-semibold text-ink hover:bg-surface cursor-pointer"
+              className="w-full py-3.5 rounded-xl border-line text-xs font-semibold text-ink hover:bg-surface-soft cursor-pointer min-h-11"
             >
-              Tiếp tục sử dụng bản demo
+              Tiếp tục sử dụng bản tự do
             </Button>
           </Card>
 
           {/* Card 2: Tam An Membership Vision */}
-          <Card className="p-6 sm:p-8 rounded-card bg-surface-soft border-2 border-accent/30 shadow-md flex flex-col justify-between relative overflow-hidden">
-            <div className="self-start mb-5 inline-block bg-action text-white text-xs font-bold uppercase tracking-wider px-3.5 py-1 rounded-bl-xl shadow-xs">
-              Định hướng dự kiến
-            </div>
-
+          <Card className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-surface via-surface to-amber-500/[0.06] border-2 border-amber-500/40 shadow-md flex flex-col justify-between relative overflow-hidden">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-accent">
-                  Ý TƯỞNG TƯƠNG LAI
+                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                  ĐỊNH HƯỚNG BẢO TRỢ DI SẢN
                 </span>
+                <Badge variant="outline" className="text-xs border-amber-500/40 text-amber-800 dark:text-amber-300 bg-amber-500/10 font-semibold">
+                  Ý tưởng tương lai
+                </Badge>
               </div>
 
-              <h3 className="font-display font-bold text-2xl text-ink mb-1">
-                Gói hội viên Tâm An
-              </h3>
-              <p className="text-sm text-muted mb-4">(Đang khảo sát ý kiến cộng đồng - Chưa kích hoạt)</p>
+              <h2 className="font-display font-bold text-2xl text-ink mb-1">
+                Gói Hội Viên Tâm An
+              </h2>
+              <p className="text-xs text-stone-500 mb-4">(Đang khảo sát ý kiến cộng đồng · Chưa thu phí)</p>
 
-              <div className="p-3.5 rounded-panel bg-surface border border-line text-xs text-ink leading-relaxed mb-5">
-                Dành cho việc thăm dò nhu cầu nghiên cứu phong thổ và lưu trữ lâu dài. Chưa chốt chính sách đóng góp,
-                hiện tại toàn bộ dự án chưa thu bất kỳ chi phí nào.
+              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-stone-700 dark:text-stone-300 leading-relaxed mb-5">
+                Chương trình đồng hành dành cho những ai tâm huyết muốn bảo tồn sâu hơn kho tàng di sản văn hóa,
+                hỗ trợ các nghệ nhân dân gian và lưu trữ tư liệu số hóa lâu dài.
               </div>
 
-              <div className="space-y-3 text-xs text-ink mb-6">
+              <div className="space-y-3 text-xs text-stone-700 dark:text-stone-300 mb-6">
                 <div className="flex items-start gap-2.5">
-                  <Sparkles className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                  <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
                   <span>
                     <strong>Nội dung văn hóa chuyên sâu:</strong> Kế hoạch khảo cứu chi tiết về đình làng,
-                    phong tục ba miền biên soạn cùng chuyên gia văn hóa.
+                    phong tục ba miền biên soạn cùng các nhà nghiên cứu Hán Nôm.
                   </span>
                 </div>
 
                 <div className="flex items-start gap-2.5">
-                  <Sparkles className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                  <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Kho tư liệu số hóa di sản:</strong> Dự kiến tiếp cận tư liệu số hóa văn bia, bản dịch nghĩa
-                    cổ truyền khi nguồn tư liệu được hoàn tất kiểm chứng.
+                    <strong>Kho tư liệu số hóa di sản:</strong> Tiếp cận tư liệu số hóa văn bia, bản dịch cổ truyền
+                    và diễn xướng âm nhạc tâm linh độc quyền.
                   </span>
                 </div>
 
                 <div className="flex items-start gap-2.5">
-                  <Sparkles className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                  <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Định hướng cá nhân hóa:</strong> Ý tưởng lưu trữ lịch trình nhịp điệu tâm trạng và đồng bộ
-                    đa thiết bị khi có hệ thống Backend.
+                    <strong>Đồng bộ đa thiết bị:</strong> Lưu trữ lịch trình nhịp điệu tâm trạng và góc riêng tư
+                    an toàn trên hạ tầng bảo mật cao cấp.
                   </span>
                 </div>
 
                 <div className="flex items-start gap-2.5">
-                  <Sparkles className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                  <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Không gian tọa đàm lắng đọng:</strong> Định hướng tổ chức các buổi đàm thoại chuyên đề
-                    văn hóa mở cho người hữu duyên.
+                    <strong>Tọa đàm văn hóa định kỳ:</strong> Tham gia các buổi đàm thoại chuyên đề văn hóa
+                    cùng các học giả và nghệ nhân dân gian.
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Email interest demo */}
+            {/* Email interest registration */}
             <div className="pt-4 border-t border-line">
               {interestError && (
                 <p
                   id="membership-interest-error"
                   role="alert"
-                  className="mb-3 text-sm text-danger"
+                  className="mb-3 text-xs text-red-700 bg-red-500/10 p-2.5 rounded-xl border border-red-500/30"
                 >
                   {interestError}
                 </p>
@@ -368,46 +363,34 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
               {savedEmail ? (
                 <div
                   role="status"
-                  className="p-4 rounded-panel bg-success-soft border border-success/25 space-y-3"
+                  className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 space-y-2 text-xs"
                 >
-                  <div className="flex items-start gap-2 text-success">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-
+                  <div className="flex items-start gap-2 text-emerald-800 dark:text-emerald-300">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold">
-                        Đã lưu email trên trình duyệt này
-                      </p>
-
-                      <p className="mt-1 text-sm [overflow-wrap:anywhere]">
-                        {savedEmail}
-                      </p>
+                      <p className="font-semibold">Đã lưu email quan tâm trên trình duyệt:</p>
+                      <p className="font-mono text-[11px] mt-0.5">{savedEmail}</p>
                     </div>
                   </div>
-
-                  <p className="text-sm text-ink leading-relaxed">
-                    Email chưa được gửi đến nhóm dự án và chưa đăng ký
-                    nhận thông báo. Đây là thao tác lưu thử trong bản demo.
+                  <p className="text-stone-600 dark:text-stone-400 text-[11px]">
+                    Cảm ơn tấm lòng của bạn với văn hóa truyền thống!
                   </p>
-
                   <button
                     type="button"
                     onClick={handleClearInterest}
-                    className="inline-flex min-h-11 items-center gap-2 text-sm text-success underline underline-offset-4 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-xs text-emerald-800 dark:text-emerald-300 underline cursor-pointer pt-1"
                   >
-                    <RotateCcw className="w-4 h-4 shrink-0" />
-                    Xóa email đã lưu
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Xóa email này</span>
                   </button>
                 </div>
               ) : (
-                <form
-                  onSubmit={handleRegisterNewsletter}
-                  className="space-y-3"
-                >
+                <form onSubmit={handleRegisterNewsletter} className="space-y-2.5">
                   <label
                     htmlFor="membership-interest-email"
-                    className="block text-sm font-semibold text-ink"
+                    className="block text-xs font-semibold text-ink"
                   >
-                    Email quan tâm — lưu thử trên trình duyệt
+                    Đăng ký nhận tin tức khi gói mở chính thức:
                   </label>
 
                   <div className="flex flex-col sm:flex-row gap-2">
@@ -423,82 +406,55 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
                         setRegisteredEmail(e.target.value);
                         setInterestError("");
                       }}
-                      aria-invalid={Boolean(interestError)}
-                      aria-describedby={
-                        interestError
-                          ? "membership-interest-help membership-interest-error"
-                          : "membership-interest-help"
-                      }
-                      placeholder="ban@example.com"
-                      className="min-w-0 flex-1 min-h-11 px-3.5 py-2.5 rounded-control border border-line text-base text-ink outline-none bg-surface focus:border-accent"
+                      placeholder="email-cua-ban@domain.com"
+                      className="min-w-0 flex-1 px-3.5 py-2.5 rounded-xl border border-line text-xs text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-amber-500/30 min-h-11"
                     />
 
                     <Button
                       type="submit"
-                      className="min-h-11 w-full sm:w-auto px-4 rounded-control bg-action text-white text-sm font-semibold shrink-0 cursor-pointer"
+                      className="rounded-xl bg-gradient-to-r from-red-800 to-amber-700 hover:from-red-700 hover:to-amber-800 text-white font-semibold text-xs px-4 min-h-11 cursor-pointer shadow-xs shrink-0"
                     >
-                      Lưu email trên máy
+                      Nhận thông tin
                     </Button>
                   </div>
-
-                  <p
-                    id="membership-interest-help"
-                    className="text-sm text-muted leading-relaxed"
-                  >
-                    Email chỉ được lưu trên trình duyệt này. Nhóm dự án
-                    chưa nhận được thông tin và chưa gửi email thông báo.
-                  </p>
                 </form>
               )}
-
-              <p className="text-sm text-muted mt-4">
-                Gói Tâm An chưa mở đăng ký hoặc thanh toán.
-                Bản demo hiện tại miễn phí.
-              </p>
             </div>
           </Card>
         </div>
 
         {/* Feature Comparison Matrix Table */}
-        <section className="membership-matrix-frame mb-10">
+        <section className="membership-matrix-frame mb-10 p-6 sm:p-8 rounded-3xl bg-surface border border-line shadow-xs">
           <div className="mb-6">
             <h3 className="font-display font-bold text-xl sm:text-2xl text-ink mb-1">
-              Định hướng tính năng dự kiến (Khảo sát nhu cầu cộng đồng)
+              So Sánh Tính Năng Trực Quan
             </h3>
-            <p className="text-sm text-muted">
-              Đối chiếu trung thực giữa tính năng đang hoạt động trong bản thử nghiệm và các định hướng nội dung đang nghiên cứu.
+            <p className="text-xs text-stone-500">
+              Đối chiếu trung thực giữa tính năng đang hoạt động trong bản thử nghiệm và các định hướng nội dung tương lai.
             </p>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="membership-matrix">
-              <colgroup>
-                <col style={{ width: "30%" }} />
-                <col style={{ width: "23%" }} />
-                <col style={{ width: "29%" }} />
-                <col style={{ width: "18%" }} />
-              </colgroup>
+            <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr>
-                  <th scope="col">Tính năng / Giá trị trải nghiệm</th>
-                  <th scope="col">Bản Demo Hiện Tại</th>
-                  <th scope="col">Định Hướng Dự Kiến (Tương lai)</th>
-                  <th scope="col">Trạng thái thực tế</th>
+                <tr className="border-b border-line text-stone-500 uppercase text-[10px] tracking-wider font-bold">
+                  <th className="py-3 px-3">Tính năng / Giá trị trải nghiệm</th>
+                  <th className="py-3 px-3">Bản Tự Do Hiện Tại</th>
+                  <th className="py-3 px-3">Định Hướng Tâm An</th>
+                  <th className="py-3 px-3">Trạng thái</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-line">
                 {featureMatrix.map((row, idx) => (
-                  <tr key={idx}>
-                    <td>
+                  <tr key={idx} className="hover:bg-surface-soft/60 transition-colors">
+                    <td className="py-3.5 px-3">
                       <div className="font-semibold text-ink">{row.name}</div>
-                      <div className="text-sm text-muted mt-1">{row.desc}</div>
+                      <div className="text-[11px] text-stone-500 mt-0.5">{row.desc}</div>
                     </td>
-                    <td data-label="Bản Demo Hiện Tại" className="text-ink">{row.currentDemo}</td>
-                    <td data-label="Định Hướng Dự Kiến (Tương lai)" className="text-accent">{row.futureVision}</td>
-                    <td data-label="Trạng thái thực tế">
-                      <span
-                        className={`inline-flex max-w-full whitespace-nowrap rounded-md border px-2.5 py-1 text-xs font-semibold leading-tight ${row.statusColor}`}
-                      >
+                    <td className="py-3.5 px-3 text-ink font-medium">{row.currentDemo}</td>
+                    <td className="py-3.5 px-3 text-amber-800 dark:text-amber-300 font-medium">{row.futureVision}</td>
+                    <td className="py-3.5 px-3">
+                      <span className={`inline-flex rounded-lg border px-2.5 py-1 text-[11px] font-semibold ${row.statusColor}`}>
                         {row.status}
                       </span>
                     </td>
@@ -510,90 +466,48 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
         </section>
 
         {/* 3 Immutable Ethical Principles */}
-        <div className="p-6 rounded-card bg-surface border border-line mb-10">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-4">
-            <ShieldCheck className="w-4 h-4 text-accent" />
-            <span>Ba nguyên tắc đạo đức bất di bất dịch</span>
+        <section className="p-6 sm:p-8 rounded-3xl bg-surface border border-line mb-10 shadow-xs">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 mb-4">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>Ba nguyên tắc đạo đức bất di bất dịch của Tin Lắm Tâm Linh</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-ink leading-relaxed">
-            <div className="p-4 rounded-panel bg-surface border border-line">
-              <div className="font-bold text-ink mb-1 flex items-center gap-1.5 text-danger">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-stone-700 dark:text-stone-300 leading-relaxed">
+            <div className="p-4 rounded-2xl bg-surface-soft border border-line">
+              <div className="font-bold text-red-700 dark:text-red-400 mb-1 flex items-center gap-1.5">
                 <span>🚫 Không thương mại hóa nỗi sợ</span>
               </div>
-              Chúng tôi không quy định hạn hán xui xẻo, không đe dọa tâm lý hay đưa ra các phép giải hạn đắt đỏ.
+              Chúng tôi không quy định hạn hán xui xẻo, không đe dọa tâm lý hay bán các phép giải hạn đắt đỏ.
               Tâm linh chân chính là hướng thiện và soi mình, không phải sợ hãi.
             </div>
 
-            <div className="p-4 rounded-panel bg-surface border border-line">
-              <div className="font-bold text-ink mb-1 flex items-center gap-1.5 text-gold">
+            <div className="p-4 rounded-2xl bg-surface-soft border border-line">
+              <div className="font-bold text-amber-700 dark:text-amber-400 mb-1 flex items-center gap-1.5">
                 <span>📖 Tự nguyện & Minh bạch nguồn cội</span>
               </div>
-              Bản demo hiện tại miễn phí. Nguồn tham khảo và phạm vi áp dụng
-              của từng nội dung cần được công khai; việc hợp tác thẩm định
-              với chuyên gia là định hướng phát triển.
+              Bản demo hiện tại miễn phí. Nguồn tham khảo và phạm vi áp dụng của từng phong tục luôn được công khai
+              rõ ràng để người dùng tự do tham chiếu.
             </div>
 
-            <div className="p-4 rounded-panel bg-surface border border-line">
-              <div className="font-bold text-ink mb-1 flex items-center gap-1.5 text-accent">
+            <div className="p-4 rounded-2xl bg-surface-soft border border-line">
+              <div className="font-bold text-emerald-700 dark:text-emerald-400 mb-1 flex items-center gap-1.5">
                 <span>🔒 Tôn trọng sự riêng tư tâm khảm</span>
               </div>
-              Những dòng suy tư, nhật ký tâm trạng trong Góc của tôi là bí mật của bạn. Chúng tôi không bao
-              giờ phân tích dữ liệu tâm tư cá nhân để chạy quảng cáo hay cung cấp cho bên thứ ba.
+              Những dòng suy tư, nhật ký tâm trạng trong Góc của tôi là bí mật của bạn. Chúng tôi tuyệt đối
+              không phân tích dữ liệu tâm tư cá nhân để vụ lợi.
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* FAQ Section */}
-        <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
-          <h3 className="font-display font-bold text-xl text-ink mb-4">
-            Giải đáp thắc mắc
-          </h3>
-
-          <div className="space-y-4 text-xs text-ink">
-            <div className="p-4 rounded-panel bg-surface border border-line">
-              <div className="font-bold text-ink mb-1">
-                ① Tôi có thể sử dụng Tin Lắm Tâm Linh hoàn toàn miễn phí không?
-              </div>
-              <p className="leading-relaxed">
-                Có. Toàn bộ các giá trị cốt lõi như lắng nghe cảm xúc, gieo điều an yên, xin xăm chiêm nghiệm,
-                gieo keo, gõ chuông tĩnh tâm và tra cứu lịch ngày rằm/mùng một luôn miễn phí cho mọi người. Bạn không cần trả bất
-                kỳ khoản phí nào để duy trì sự bình yên thường nhật.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-panel bg-surface border border-line">
-              <div className="font-bold text-ink mb-1">
-                ② Khi nào gói Tâm An chính thức vận hành và mức đóng góp là bao nhiêu?
-              </div>
-              <p className="leading-relaxed">
-                Hiện tại dự án đang ở giai đoạn lấy ý kiến cộng đồng và hoàn thiện thiết kế giao diện (UI/UX).
-                Chưa chốt chính sách đóng góp hay mức phí. Mọi ý tưởng về gói hội viên chỉ nhằm định hướng nghiên cứu và
-                duy trì hệ sinh thái văn hóa độc lập trong tương lai.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-panel bg-surface border border-line">
-              <div className="font-bold text-ink mb-1">
-                ③ Tin Lắm Tâm Linh có bảo mật nội dung tôi viết trong 'Góc của tôi' không?
-              </div>
-              <p className="leading-relaxed">
-                Các nội dung bạn chọn lưu trong Góc của tôi hiện được lưu
-                trên trình duyệt này, chưa đồng bộ lên máy chủ. Người dùng
-                chung trình duyệt có thể tiếp cận dữ liệu; xóa dữ liệu
-                trình duyệt có thể làm mất nội dung đã lưu.
-              </p>
-            </div>
-          </div>
-        </Card>
-
+        {/* Premium Demo Content Showcase */}
         <MembershipDemoFlow
           key={currentUserEmail || "guest"}
           email={currentUserEmail}
           onGoToLogin={onGoToLogin}
         />
-        <BrandPartnershipForm />
 
+        {/* B2B Cultural Brand Partnership Section */}
+        <BrandPartnershipForm />
       </main>
     </div>
   );

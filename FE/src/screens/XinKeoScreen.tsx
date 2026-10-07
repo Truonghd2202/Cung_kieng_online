@@ -13,6 +13,7 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
+import "../styles/XinKeoScreen.css";
 
 interface XinKeoScreenProps {
   onBackToExperience: () => void;
@@ -260,26 +261,24 @@ const CrescentKeoPiece: React.FC<{
         }`}
       />
 
-      {/* Badge nhận diện */}
-      <div className="text-center mt-3">
-        <div
-          className={`inline-flex flex-col items-center px-3 py-1.5 rounded-xl border text-xs font-medium ${
+      {/* Badge nhận diện gọn gàng, thanh thoát, không tràn chữ */}
+      <div className="text-center mt-2.5">
+        <span
+          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border shadow-xs ${
             side === "am"
-              ? "bg-amber-950/70 text-amber-200 border-amber-600/50"
-              : "bg-rose-950/70 text-rose-200 border-rose-700/50"
+              ? "bg-amber-950/80 text-amber-200 border-amber-600/50"
+              : "bg-rose-950/80 text-rose-200 border-rose-700/50"
           }`}
         >
-          <span className="font-bold tracking-wide uppercase text-[11px] flex items-center gap-1.5">
-            {side === "am" ? (
-              <><span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]" />MẶT PHẲNG (ÂM • NGỬA)</>
-            ) : (
-              <><span className="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.9)]" />MẶT CONG (DƯƠNG • ÚP)</>
-            )}
-          </span>
-          <span className="text-[10px] opacity-80 mt-0.5">
-            {side === "am" ? "Thớ gỗ xẻ • mặt phẳng ngửa lên" : "Vòm cong bóng loáng • úp xuống đĩa"}
-          </span>
-        </div>
+          <span
+            className={`w-2 h-2 rounded-full ${
+              side === "am"
+                ? "bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.9)]"
+                : "bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.9)]"
+            }`}
+          />
+          <span>{side === "am" ? "Mặt Ngửa (Âm)" : "Mặt Úp (Dương)"}</span>
+        </span>
       </div>
     </div>
   );
@@ -294,6 +293,7 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
   const [reflectionText, setReflectionText] = useState("");
   const [isCasting, setIsCasting] = useState(false);
   const [castResult, setCastResult] = useState<KeoOutcome | null>(null);
+  const [cooldown, setCooldown] = useState(0);
   // Chốt quẻ trước khi tung. Nhờ vậy mặt nhìn thấy trong lúc xoay chính là
   // mặt sẽ chạm đĩa, không bị thay hình ở khoảnh khắc animation kết thúc.
   const [landingResult, setLandingResult] = useState<KeoOutcome | null>(null);
@@ -301,6 +301,15 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
   const castTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const castLockedRef = useRef(false);
   const hapticStartedRef = useRef(false);
+
+  // Khoảng lặng định tâm (cooldown) sau khi gieo
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   useEffect(() => {
     return () => {
@@ -336,8 +345,8 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
   ];
 
   const handleCastKeo = () => {
-    // Khóa bằng ref để chặn cả hai lần bấm sát nhau trước khi React render.
-    if (castLockedRef.current) return;
+    // Chặn bấm liên tục khi đang gieo hoặc trong thời gian định tâm (cooldown)
+    if (isCasting || cooldown > 0 || castLockedRef.current) return;
     castLockedRef.current = true;
 
     const prefersReducedMotion = () =>
@@ -380,6 +389,7 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
       setCastResult(outcome);
       setIsCasting(false);
       castLockedRef.current = false;
+      setCooldown(3);
       return;
     }
 
@@ -392,8 +402,9 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
       setCastResult(outcome);
       setIsCasting(false);
       castLockedRef.current = false;
+      setCooldown(3); // 3 giây định tâm trước khi được gieo lại
 
-      // Kiểm tra lại tùy chọn vì người dùng có thể đổi trong lúc chờ.
+      // Rung nhẹ báo hiệu keo đã an vị
       vibrate([140]);
     }, 2200);
   };
@@ -443,8 +454,9 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
 
         {/* Header Title Section */}
         <div className="mb-10">
-          <h1 className="page-title mb-3">
-            Xin keo âm dương
+          <h1 tabIndex={-1} className="xinkeo-page-title mb-3 outline-none focus:outline-none flex items-center">
+            <span className="xinkeo-seal-badge" aria-hidden="true">筶</span>
+            <span>Xin keo âm dương</span>
           </h1>
           <p className="text-sm sm:text-base text-ink leading-relaxed max-w-4xl">
             Tục gieo keo (âm dương bối) là nét văn hóa dân gian truyền thống lâu đời của người Việt,
@@ -482,14 +494,12 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
                       key={t.id}
                       type="button"
                       onClick={() => setSelectedTopic(t.id)}
-                      className={`p-3 rounded-panel border text-left text-xs font-semibold transition-all flex items-center justify-between cursor-pointer ${
-                        isSelected
-                          ? "bg-accent/10 border-accent text-accent shadow-2xs"
-                          : "bg-surface border-line text-ink hover:border-accent/40"
+                      className={`xinkeo-topic-card ${
+                        isSelected ? "xinkeo-topic-card--active" : ""
                       }`}
                     >
                       <span>{t.label}</span>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-accent" />}
+                      {isSelected && <Check className="w-4 h-4 text-accent shrink-0" />}
                     </button>
                   );
                 })}
@@ -556,13 +566,23 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
               </div>
 
               {/* Sacred Altar Tray with Ambient Aura */}
-              <div className="relative rounded-card overflow-visible pt-16 sm:pt-20 bg-gradient-to-b from-surface-soft/80 via-surface/60 to-surface-soft border border-line p-6 sm:p-12 text-center mb-6">
-                {/* Ambient Golden Glow Aura */}
-                <div className="absolute inset-0 bg-radial from-amber-500/15 via-orange-500/5 to-transparent pointer-events-none rounded-card" />
+              <div className="xinkeo-altar-stage mb-6">
+                <div className="xinkeo-altar-stage-rim" />
 
-                {/* Circular Stone/Woven Mat Platform */}
-                <div className="relative mx-auto max-w-lg rounded-3xl border border-accent/25 bg-surface/90 backdrop-blur-xs p-6 sm:p-10 shadow-inner">
-                  <div className="flex items-center justify-center gap-6 sm:gap-10 py-4" aria-live="polite">
+                {/* Circular Stone/Woven Mat Platform -> Đĩa Gốm Men Rạn / Mâm Đồng Cổ */}
+                <div className="xinkeo-dish-platform">
+                  {/* Làn khói trầm hương thoang thoảng */}
+                  <div className="xinkeo-incense-smoke" />
+
+                  {/* Biểu tượng thái cực ẩn mờ */}
+                  <div className="xinkeo-taiji-watermark" />
+
+                  {/* Sóng chấn động hào quang khi vừa chạm đất */}
+                  {castResult && !isCasting && (
+                    <div className="xinkeo-landing-ripple" />
+                  )}
+
+                  <div className="flex items-center justify-center gap-6 sm:gap-10 py-6" aria-live="polite">
                     {/* Keo Piece 1 */}
                     <CrescentKeoPiece
                       side={landingResult ? landingResult.piece1 : "am"}
@@ -601,15 +621,15 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
                     />
                   </div>
 
-                  <div className="h-px w-28 mx-auto bg-line/80 my-4" />
+                  <div className="h-px w-36 mx-auto bg-amber-900/15 dark:bg-amber-400/20 my-3" />
                   <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-ink/80">
                     <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block shadow-[0_0_6px_rgba(244,63,94,0.6)]"></span>
-                      <span><strong>Mặt cong (Dương / Úp):</strong> Lưng vòm cong tròn</span>
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block shadow-[0_0_8px_rgba(244,63,94,0.7)]"></span>
+                      <span><strong>Mặt cong (Dương / Úp):</strong> Lưng vòm cong bóng</span>
                     </span>
                     <span className="hidden sm:inline text-muted">•</span>
                     <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block shadow-[0_0_6px_rgba(251,191,36,0.6)]"></span>
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block shadow-[0_0_8px_rgba(251,191,36,0.7)]"></span>
                       <span><strong>Mặt phẳng (Âm / Ngửa):</strong> Thớ gỗ xẻ phẳng</span>
                     </span>
                   </div>
@@ -618,25 +638,33 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
 
               {/* Primary Action Button */}
               <div className="text-center">
-                <Button
-                  variant="default"
-                  size="lg"
+                <button
+                  type="button"
                   onClick={handleCastKeo}
-                  disabled={isCasting}
-                  className="w-full py-4 text-base font-semibold shadow-md bg-action text-white hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  disabled={isCasting || cooldown > 0}
+                  className="xinkeo-cast-btn w-full text-base"
                 >
+                  <span className="xinkeo-btn-sheen" />
                   <Sparkles className="w-5 h-5 shrink-0" />
                   <span>
                     {isCasting
                       ? "Đang gieo keo trong chánh niệm..."
+                      : cooldown > 0
+                      ? `Định tâm chiêm nghiệm... (${cooldown}s)`
                       : castResult
-                      ? "Gieo lại lần khác"
-                      : "Gieo keo âm dương"}
+                      ? "Thành tâm gieo lại"
+                      : "Thành tâm gieo keo"}
                   </span>
-                </Button>
-                <p className="text-xs text-muted mt-2.5">
-                  Chạm để gieo — Hãy hít một hơi thật sâu và buông lỏng tâm trí trước khi bắt đầu
-                </p>
+                </button>
+                {cooldown > 0 ? (
+                  <p className="text-xs text-amber-700 dark:text-amber-300 mt-2.5 font-medium animate-pulse">
+                    ⏳ Hãy dành vài giây tĩnh lặng đọc kỹ ý nghĩa quẻ vừa ứng trước khi khởi ý gieo lại.
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted mt-2.5">
+                    Chạm để gieo — Hãy hít một hơi thật sâu và buông lỏng tâm trí trước khi bắt đầu
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -646,7 +674,7 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
         <section className="mb-12">
           {castResult ? (
             /* ================= ACTIVE RESULT: SEAMLESS LITERARY ESSAY ================= */
-            <div className="p-8 sm:p-12 rounded-card bg-surface border border-accent/30 shadow-card">
+            <div className="xinkeo-result-card p-8 sm:p-12 shadow-card relative">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-line mb-8">
                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-accent">
                   <span className="w-5 h-5 rounded-full bg-action text-white flex items-center justify-center text-xs font-bold">
@@ -660,18 +688,23 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
               </div>
 
               <div className="max-w-3xl">
-                <div className="flex items-baseline gap-3 mb-4">
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl text-ink">
-                    {castResult.title}
-                  </h3>
-                  <span className="text-xs text-muted font-medium">({castResult.subTitle})</span>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="xinkeo-seal-badge shrink-0" aria-hidden="true">
+                    {castResult.type === "nhat-am-nhat-duong" ? "吉" : castResult.type === "nhi-duong" ? "笑" : "默"}
+                  </span>
+                  <div>
+                    <h3 className="font-display font-bold text-2xl sm:text-3xl text-ink">
+                      {castResult.title}
+                    </h3>
+                    <span className="text-xs text-muted font-medium block mt-0.5">({castResult.subTitle})</span>
+                  </div>
                 </div>
 
-                <p className="text-base sm:text-lg text-ink leading-relaxed mb-6 first-letter:text-4xl first-letter:font-serif first-letter:font-bold first-letter:mr-2.5 first-letter:float-left first-letter:text-accent first-letter:leading-none">
+                <p className="text-base sm:text-lg text-ink leading-relaxed mb-6">
                   {castResult.meaning}
                 </p>
 
-                <div className="p-5 sm:p-6 rounded-panel bg-surface-soft border border-line text-sm sm:text-base text-ink leading-relaxed mb-8">
+                <div className="p-5 sm:p-6 rounded-panel bg-surface-soft/80 border border-line text-sm sm:text-base text-ink leading-relaxed mb-8">
                   <strong className="text-accent font-bold block mb-1">
                     Gợi mở tâm thế hôm nay:
                   </strong>
@@ -683,11 +716,11 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
                     variant="default"
                     size="sm"
                     onClick={handleCastKeo}
-                    disabled={isCasting}
+                    disabled={isCasting || cooldown > 0}
                     className="gap-2 bg-action text-white cursor-pointer"
                   >
                     <RotateCcw className="w-4 h-4" />
-                    <span>Gieo lại lần khác</span>
+                    <span>{cooldown > 0 ? `Định tâm... (${cooldown}s)` : "Gieo lại lần khác"}</span>
                   </Button>
 
                   {onGoToCulture && (
@@ -706,7 +739,7 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
             </div>
           ) : (
             /* ================= REFERENCE GUIDE (WHEN NOT YET CAST) ================= */
-            <div className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
+            <div className="xinkeo-result-card p-6 sm:p-8 shadow-xs relative">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-3">
                 <span className="w-5 h-5 rounded-full bg-action text-white flex items-center justify-center text-xs font-bold">
                   3

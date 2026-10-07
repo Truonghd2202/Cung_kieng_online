@@ -12,6 +12,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Card } from "../components/ui/card";
+import "../styles/WishScreen.css";
 
 export type WishTopic = "Bình an" | "Gia đình" | "Học tập" | "Công việc" | "Khác";
 export type WishMode = "journal" | "ephemeral";
@@ -206,7 +207,10 @@ export const WishScreen: React.FC<WishScreenProps> = ({
 
             {/* Main Header */}
             <div className="mx-auto mb-6 max-w-2xl text-center">
-              <h1 className="page-title mb-3">Lời gửi gắm</h1>
+              <h1 tabIndex={-1} className="wish-page-title mb-3 outline-none focus:outline-none flex items-center justify-center">
+                <span className="wish-seal-badge" aria-hidden="true">願</span>
+                <span>Lời gửi gắm</span>
+              </h1>
 
               <p className="text-sm leading-relaxed text-muted sm:text-base">
                 Viết điều bạn đang nghĩ. Bạn có thể lưu để đọc lại
@@ -219,12 +223,12 @@ export const WishScreen: React.FC<WishScreenProps> = ({
               {/* Left Column: Form & Options (7 columns) */}
               <div className="lg:col-span-7 space-y-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Card 1: Textarea Card */}
-                  <Card className="p-6 rounded-card bg-surface border border-line shadow-xs">
+                  {/* Card 1: Textarea Card (Parchment Box) */}
+                  <div className="wish-parchment-box">
                     <div className="flex items-center justify-between mb-2">
                       <label
                         htmlFor="wish-content"
-                        className="text-base font-semibold text-ink"
+                        className="text-base font-semibold text-ink font-display"
                       >
                         Điều bạn muốn viết
                       </label>
@@ -241,7 +245,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
 
                     <p
                       id="wish-content-help"
-                      className="mb-3 text-sm leading-relaxed text-muted"
+                      className="mb-3 text-xs sm:text-sm leading-relaxed text-muted"
                     >
                       Không cần viết thật hay. Tránh nhập thông tin cá nhân nhạy cảm.
                     </p>
@@ -259,7 +263,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                         }}
                         aria-describedby="wish-content-help wish-content-count"
                         placeholder="Hôm nay, mình muốn gửi gắm..."
-                        className="w-full resize-y rounded-panel border border-line bg-surface/70 p-4 text-base leading-relaxed text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-accent"
+                        className="wish-parchment-textarea"
                       />
                     </div>
 
@@ -295,10 +299,8 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                               key={t}
                               type="button"
                               onClick={() => setTopic(t)}
-                              className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
-                                isActive
-                                  ? "bg-action text-white shadow-2xs font-semibold"
-                                  : "bg-surface text-ink border border-line hover:border-line"
+                              className={`wish-topic-pill ${
+                                isActive ? "wish-topic-pill--active" : ""
                               }`}
                             >
                               {isActive ? `● ${t}` : t}
@@ -307,10 +309,10 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                         })}
                       </div>
                     </div>
-                  </Card>
+                  </div>
 
                   <fieldset className="space-y-3">
-                    <legend className="text-base font-semibold text-ink">
+                    <legend className="text-base font-semibold text-ink font-display">
                       Bạn muốn giữ lại lời viết này thế nào?
                     </legend>
 
@@ -338,10 +340,8 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                       ).map((option) => (
                         <label
                           key={option.value}
-                          className={`flex cursor-pointer items-start gap-3 rounded-card border p-4 transition-colors ${
-                            mode === option.value
-                              ? "border-accent bg-accent/5"
-                              : "border-line bg-surface hover:border-accent/50"
+                          className={`wish-mode-card ${
+                            mode === option.value ? "wish-mode-card--active" : ""
                           }`}
                         >
                           <input
@@ -361,7 +361,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                               {option.title}
                             </span>
 
-                            <span className="mt-1 block text-sm leading-relaxed text-muted">
+                            <span className="mt-1 block text-xs sm:text-sm leading-relaxed text-muted">
                               {option.description}
                             </span>
                           </span>
@@ -396,17 +396,12 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                       <span>Quay lại Trải nghiệm</span>
                     </Button>
 
-                    <Button
+                    <button
                       type="submit"
-                      variant="default"
-                      size="lg"
                       disabled={!content.trim()}
-                      className={`w-full sm:w-auto font-semibold gap-2 shadow-xs px-8 transition-all ${
-                        !content.trim()
-                          ? "opacity-50 cursor-not-allowed"
-                          : "cursor-pointer"
-                      }`}
+                      className="wish-submit-btn w-full sm:w-auto"
                     >
+                      <span className="wish-btn-sheen" />
                       <span>
                         {mode === "journal"
                           ? isLoggedIn
@@ -414,8 +409,8 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                             : "Đăng nhập để lưu"
                           : "Thả hoa đăng — không lưu"}
                       </span>
-                      <ArrowRight className="w-4 h-4" />
-                    </Button>
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </button>
                   </div>
                 </form>
 
@@ -425,44 +420,58 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                 </p>
               </div>
 
-              {/* Writing companion */}
+              {/* Sacred Wishing Tree & Silk Streamer Companion */}
               <aside className="self-start lg:col-span-5 lg:sticky lg:top-24">
-                <Card className="overflow-hidden rounded-card border border-line bg-surface shadow-xs">
-                  <img
-                    src="/images/relic_box.jpg"
-                    alt=""
-                    loading="lazy"
-                    className="h-40 w-full object-cover sm:h-48"
-                  />
+                <div className="wishing-sacred-tree-card">
+                  <div className="wishing-tree-visual">
+                    <img
+                      src="/images/temple_bac_bo.jpg"
+                      alt="Cây ước nguyện cổ thụ sân đình"
+                      loading="lazy"
+                      className="h-full w-full object-cover filter brightness-95"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30" />
+                    
+                    {/* Dải lụa đỏ son đung đưa theo gió */}
+                    <div className="wishing-silk-streamer">
+                      BÌNH AN
+                    </div>
+
+                    <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs text-amber-200 font-semibold">
+                      <span>CÂY NGUYỆN ƯỚC DÂN GIAN</span>
+                      <span className="bg-black/50 px-2.5 py-0.5 rounded-full border border-amber-400/30 text-[11px] text-amber-300">
+                        Dải lụa gửi tâm tư
+                      </span>
+                    </div>
+                  </div>
 
                   <div className="space-y-4 p-5">
-                    <h2 className="text-lg font-semibold text-ink">
-                      Một khoảng dừng cho bạn
+                    <h2 className="text-lg font-semibold text-ink font-display">
+                      Gửi gắm ước vọng thiện lành
                     </h2>
 
                     <p className="text-sm leading-relaxed text-muted">
-                      Bạn có thể bắt đầu bằng một câu đơn giản:
-                      “Điều mình đang cần lúc này là…”
+                      Người xưa tin rằng, khi dải lụa đỏ mang theo ước nguyện được buộc lên cành cây cổ thụ,
+                      từng cơn gió thoảng qua sẽ chở lời khẩn cầu hòa vào đất trời.
                     </p>
 
                     <details className="border-t border-line pt-3">
-                      <summary className="cursor-pointer py-2 text-sm font-medium text-ink">
-                        Chưa biết viết gì?
+                      <summary className="cursor-pointer py-2 text-sm font-medium text-ink hover:text-accent transition-colors">
+                        Gợi ý hướng dòng suy nghĩ ▾
                       </summary>
 
-                      <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-relaxed text-muted">
-                        <li>Điều gì khiến mình bận lòng hôm nay?</li>
-                        <li>Mình muốn nói điều gì với người thân?</li>
-                        <li>Một việc nhỏ mình có thể làm sau khi viết là gì?</li>
+                      <ul className="mt-2 list-disc space-y-2 pl-5 text-xs sm:text-sm leading-relaxed text-muted">
+                        <li>Điều gì khiến bạn băn khoăn nhất lúc này?</li>
+                        <li>Một lời chúc bình an bạn muốn trao gửi người thân yêu?</li>
+                        <li>Một việc thiện lành bạn tự nhủ sẽ làm trong hôm nay?</li>
                       </ul>
                     </details>
 
                     <p className="border-t border-line pt-3 text-xs leading-relaxed text-muted">
-                      Hoa đăng trong màn này là hình ảnh tượng trưng.
-                      Trải nghiệm không bảo đảm điều ước sẽ thành hiện thực.
+                      Hoa đăng và dải lụa là hình ảnh văn hóa tượng trưng, giúp tâm trí định an và hướng thiện.
                     </p>
                   </div>
-                </Card>
+                </div>
               </aside>
             </div>
 
@@ -544,8 +553,9 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                 </span>
               </div>
 
-              <h1 className="page-title mb-3">
-                Đã lưu vào Góc của tôi
+              <h1 tabIndex={-1} className="wish-page-title mb-3 outline-none focus:outline-none flex items-center justify-center">
+                <span className="wish-seal-badge" aria-hidden="true">願</span>
+                <span>Đã lưu vào Góc của tôi</span>
               </h1>
               <p className="text-sm text-muted max-w-xl mx-auto leading-relaxed">
                 Lời gửi gắm đã được lưu vào Góc của tôi trên trình duyệt này.
@@ -553,14 +563,14 @@ export const WishScreen: React.FC<WishScreenProps> = ({
               </p>
             </div>
 
-            {/* Central Privacy Card */}
-            <Card className="max-w-2xl mx-auto rounded-card p-6 sm:p-8 bg-surface border border-line shadow-sm mb-8">
+            {/* Central Privacy Card (Parchment Result Card) */}
+            <div className="wish-result-card max-w-2xl mx-auto mb-8 relative">
               <div className="flex items-start gap-3.5 mb-6 pb-6 border-b border-line">
                 <div className="w-10 h-10 rounded-panel bg-surface flex items-center justify-center text-accent flex-shrink-0">
                   <Lock className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-base text-ink mb-1 flex items-center gap-1.5">
+                  <h4 className="font-bold text-base text-ink mb-1 flex items-center gap-1.5 font-display">
                     <span>Không gian lưu riêng trên trình duyệt</span>
                     <span className="text-xs text-accent">🛡</span>
                   </h4>
@@ -574,14 +584,14 @@ export const WishScreen: React.FC<WishScreenProps> = ({
 
               {/* 3 Status Meta Boxes */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-                <div className="p-3.5 rounded-panel bg-surface border border-line">
+                <div className="p-3.5 rounded-panel bg-surface/90 border border-line">
                   <div className="text-xs text-muted uppercase mb-0.5">
                     Chủ đề gắn kèm
                   </div>
                   <div className="font-bold text-sm text-accent">{topic}</div>
                 </div>
 
-                <div className="p-3.5 rounded-panel bg-surface border border-line">
+                <div className="p-3.5 rounded-panel bg-surface/90 border border-line">
                   <div className="text-xs text-muted uppercase mb-0.5">
                     Nơi lưu
                   </div>
@@ -591,7 +601,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-panel bg-surface border border-line">
+                <div className="p-3.5 rounded-panel bg-surface/90 border border-line">
                   <div className="text-xs text-muted uppercase mb-0.5">
                     Trạng thái
                   </div>
@@ -606,7 +616,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                 “Hít một hơi thật sâu, thả lỏng đôi vai. Bạn vừa trao cho chính mình một cơ
                 hội được thấu hiểu.”
               </div>
-            </Card>
+            </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
@@ -640,7 +650,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
             </div>
 
             <div className="max-w-2xl mx-auto mb-8 rounded-card border border-line bg-surface p-5">
-              <h2 className="mb-2 text-base font-semibold text-ink">
+              <h2 className="mb-2 text-base font-semibold text-ink font-display">
                 Khi muốn đọc lại
               </h2>
 
@@ -700,17 +710,19 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                 ● KHOẢNG LẶNG BUÔNG BỎ • KHÔNG LƯU TRỮ VĂN BẢN
               </span>
 
-              {/* Floating Lantern Motif */}
-              <div className="w-20 h-20 mx-auto rounded-card bg-surface-soft border-2 border-line flex items-center justify-center text-accent shadow-md mb-2 relative animate-pulse motion-reduce:animate-none">
-                <span className="text-3xl">🏮</span>
+              {/* Floating Lotus Lantern Motif */}
+              <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-b from-amber-950/40 to-stone-900 border-2 border-amber-400/50 flex items-center justify-center text-accent shadow-xl mb-3 relative wishing-lotus-glow">
+                <div className="w-10 h-10 rounded-full bg-amber-400/20 blur-md absolute -top-1" />
+                <span className="text-4xl filter drop-shadow">🪷</span>
               </div>
 
-              <div className="text-xs uppercase font-serif tracking-widest text-muted mb-4">
-                HOA ĐĂNG TƯỢNG TRƯNG
+              <div className="text-xs uppercase font-serif tracking-widest text-amber-700 dark:text-amber-400 font-semibold mb-4">
+                HOA ĐĂNG TRÔI AN YÊN
               </div>
 
-              <h1 className="page-title mb-3">
-                Bạn đã gửi gắm một khoảng lòng
+              <h1 tabIndex={-1} className="wish-page-title mb-3 outline-none focus:outline-none flex items-center justify-center">
+                <span className="wish-seal-badge" aria-hidden="true">願</span>
+                <span>Bạn đã gửi gắm một khoảng lòng</span>
               </h1>
               <p className="text-sm text-muted max-w-xl mx-auto leading-relaxed">
                 Ưu tư hay ước vọng như cánh hoa đăng trôi theo dòng nước biếc. Nhẹ lòng buông
@@ -718,8 +730,8 @@ export const WishScreen: React.FC<WishScreenProps> = ({
               </p>
             </div>
 
-            {/* Central Ephemeral Box */}
-            <Card className="max-w-2xl mx-auto rounded-card p-6 sm:p-8 bg-surface border border-line shadow-sm mb-8">
+            {/* Central Ephemeral Box (Parchment Result Card) */}
+            <div className="wish-result-card max-w-2xl mx-auto mb-8 relative">
               <div className="flex items-start gap-3.5 mb-6">
                 <div className="w-10 h-10 rounded-panel bg-surface flex items-center justify-center text-accent flex-shrink-0">
                   <Flower2 className="w-5 h-5" />
@@ -734,7 +746,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                     </Badge>
                   </div>
 
-                  <h4 className="font-bold text-base text-ink mb-1.5">
+                  <h4 className="font-bold text-base text-ink mb-1.5 font-display">
                     Nội dung vừa viết không được lưu và không thể xem lại.
                   </h4>
                   <p className="text-sm text-muted leading-relaxed">
@@ -748,7 +760,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                 “Cảm nhận sự nhẹ nhõm nơi lồng ngực. Mọi việc rồi sẽ an bài theo cách tự
                 nhiên nhất.”
               </div>
-            </Card>
+            </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">

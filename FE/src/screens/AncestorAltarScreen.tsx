@@ -4,7 +4,19 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { ArrowLeft, Heart } from "lucide-react";
+import {
+  ArrowLeft,
+  Heart,
+  Landmark,
+  Calendar,
+  Sparkles,
+  Eye,
+  EyeOff,
+  Send,
+  Compass,
+  CheckCircle2,
+  BookOpen,
+} from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
@@ -46,14 +58,8 @@ export const AncestorAltarScreen: React.FC<
   const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
-    onDraftChange?.(
-      submitted ? null : tribute
-    );
-  }, [
-    tribute,
-    submitted,
-    onDraftChange,
-  ]);
+    onDraftChange?.(submitted ? null : tribute);
+  }, [tribute, submitted, onDraftChange]);
 
   const sendTribute = () => {
     const cleanContent = tribute.trim();
@@ -67,56 +73,92 @@ export const AncestorAltarScreen: React.FC<
     if (saved) {
       setSubmitted(true);
     } else if (isLoggedIn) {
-      setSaveError(
-        "Chưa lưu được lời tri ân. Bạn hãy thử lại."
-      );
+      setSaveError("Chưa lưu được lời tri ân. Bạn hãy thử lại.");
     }
   };
 
   return (
     <div className="screen-shell">
       <main className="page-container max-w-5xl">
-        <div className="flex items-center justify-between gap-3 mb-6 text-xs text-muted">
-          <button onClick={onBack} className="inline-flex items-center gap-1.5 hover:text-accent transition-colors">
-            <ArrowLeft className="w-3.5 h-3.5" /> Không gian của tôi
+        {/* Top Breadcrumb */}
+        <div className="flex items-center justify-between gap-3 mb-6 text-xs text-stone-600 dark:text-stone-400">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 hover:text-accent transition-colors font-medium cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Không gian của tôi</span>
           </button>
-          <Badge variant="outline">Góc riêng trên thiết bị</Badge>
+          <Badge
+            variant="outline"
+            className="text-xs px-2.5 py-0.5 font-medium border-amber-400/40 text-amber-800 dark:text-amber-300 bg-amber-500/10"
+          >
+            Góc riêng tâm linh
+          </Badge>
         </div>
 
+        {/* Page Header */}
         <header className="max-w-2xl mb-8">
-          <span className="text-xs font-semibold uppercase tracking-widest text-accent">Một nếp nhà</span>
-          <h1 className="page-title mt-2 mb-3">Bàn thờ gia tiên</h1>
-          <p className="text-sm sm:text-base text-muted leading-relaxed">Một không gian mô phỏng giản dị để bạn dừng lại, nhớ về người đi trước và gửi một lời lành.</p>
+          <span className="text-xs font-bold uppercase tracking-widest text-amber-800 dark:text-amber-400">
+            NẾP NHÀ VIỆT
+          </span>
+          <h1
+            tabIndex={-1}
+            className="page-title mt-1.5 mb-2.5 font-display text-3xl sm:text-4xl font-bold text-ink outline-none focus:outline-none focus-visible:outline-none focus:ring-0 border-0"
+          >
+            Bàn thờ gia tiên
+          </h1>
+          <p className="text-sm sm:text-base text-stone-700 dark:text-stone-300 leading-relaxed">
+            Không gian tâm linh mô phỏng trang nghiêm để bạn dừng lại giữa nhịp sống bận rộn,
+            hướng về nguồn cội, dâng nén tâm hương và gửi một lời chúc lành đến gia tiên.
+          </p>
         </header>
 
+        {/* 3D Altar Interactive Section */}
         <section
           aria-labelledby="ancestor-scene-title"
-          className="mb-8"
+          className="mb-10"
         >
-          <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <h2
-                id="ancestor-scene-title"
-                className="font-display text-xl font-semibold text-ink"
-              >
-                Một khoảng lặng hướng về nhà
-              </h2>
-
-              <p className="mt-2 text-sm text-muted leading-relaxed">
-                Mở mô hình để xoay góc nhìn và thắp nhang tượng trưng.
-                Thao tác này không tạo bản ghi lời tri ân.
-              </p>
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-2xl bg-surface-soft/80 border border-line">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-400/30 flex items-center justify-center text-amber-700 dark:text-amber-400 shrink-0">
+                <Landmark className="w-6 h-6" />
+              </div>
+              <div>
+                <h2
+                  id="ancestor-scene-title"
+                  className="font-display text-lg sm:text-xl font-bold text-ink"
+                >
+                  Một khoảng lặng hướng về gia tiên
+                </h2>
+                <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300">
+                  Mở mô hình 3D để chiêm bái 360°, thắp nén hương lòng và bài trí kỷ vật
+                </p>
+              </div>
             </div>
 
             <Button
               type="button"
-              variant="outline"
               aria-expanded={show3D}
               aria-controls="ancestor-scene-panel"
               onClick={() => setShow3D((value) => !value)}
-              className="min-h-11 w-full sm:w-auto shrink-0"
+              className={`min-h-11 px-5 rounded-xl font-semibold transition-all cursor-pointer shadow-md shrink-0 ${
+                show3D
+                  ? "bg-stone-800 text-stone-200 hover:bg-stone-700 border border-stone-600"
+                  : "bg-gradient-to-r from-red-800 via-amber-700 to-amber-900 hover:from-red-700 hover:to-amber-800 text-white"
+              }`}
             >
-              {show3D ? "Đóng cảnh 3D" : "Mở bàn thờ 3D"}
+              {show3D ? (
+                <>
+                  <EyeOff className="w-4 h-4 mr-1.5" />
+                  <span>Đóng bàn thờ 3D</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4 mr-1.5" />
+                  <span>Mở bàn thờ 3D</span>
+                </>
+              )}
             </Button>
           </div>
 
@@ -124,12 +166,15 @@ export const AncestorAltarScreen: React.FC<
             {show3D ? (
               <Suspense
                 fallback={
-                  <p
+                  <div
                     role="status"
-                    className="rounded-card border border-line bg-surface p-6 text-sm text-muted"
+                    className="p-12 text-center rounded-2xl bg-surface border border-line shadow-sm"
                   >
-                    Đang mở bàn thờ 3D…
-                  </p>
+                    <div className="w-8 h-8 rounded-full border-2 border-amber-600 border-t-transparent animate-spin mx-auto mb-3" />
+                    <p className="text-sm font-medium text-stone-600 dark:text-stone-300">
+                      Đang chuẩn bị bàn thờ gia tiên 3D…
+                    </p>
+                  </div>
                 }
               >
                 <SanctuaryScene
@@ -138,62 +183,90 @@ export const AncestorAltarScreen: React.FC<
                 />
               </Suspense>
             ) : (
-              <div className="rounded-card border border-line bg-surface-soft p-6 sm:p-8">
-                <p className="font-display text-lg italic text-ink">
-                  “Uống nước nhớ nguồn.”
+              <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-surface to-orange-500/5 p-7 sm:p-9 text-center shadow-xs">
+                <div className="w-12 h-12 rounded-full bg-amber-500/15 border border-amber-400/30 flex items-center justify-center text-amber-700 dark:text-amber-400 mx-auto mb-3.5">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <p className="font-display text-xl sm:text-2xl italic font-bold text-ink mb-2">
+                  “Cây có cội mới nở cành xanh ngọn, nước có nguồn mới biển rộng sông sâu.”
                 </p>
-
-                <p className="mt-3 text-sm text-muted leading-relaxed">
-                  Bạn có thể mở cảnh khi muốn, hoặc viết lời tri ân
-                  ở bên dưới.
+                <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed max-w-lg mx-auto">
+                  Bạn có thể nhấn nút <strong className="text-ink">Mở bàn thờ 3D</strong> ở trên để thắp hương và chiêm bái,
+                  hoặc viết đôi dòng tri ân gửi đến người đi trước ở khung bên dưới.
                 </p>
               </div>
             )}
           </div>
         </section>
 
-        <section className="mb-8 rounded-xl border border-line bg-surface p-5 sm:p-6">
-          <h2 className="font-display text-xl font-semibold text-ink mb-2">
-            Giữ lại một người bạn muốn nhớ
-          </h2>
+        {/* Memorial & Remembrance Section */}
+        <section className="mb-10 rounded-2xl border border-line bg-surface/95 p-6 sm:p-8 shadow-xs backdrop-blur-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-line mb-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-400/30 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
+                <Heart className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="font-display text-xl font-bold text-ink">
+                  Ghi nhớ bóng hình người thân
+                </h2>
+                <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300">
+                  Tạo góc tưởng niệm riêng tư để lưu tên, mối quan hệ và ngày giỗ thiêng liêng
+                </p>
+              </div>
+            </div>
 
-          <p className="mb-4 text-sm leading-relaxed text-muted">
-            Tạo góc tưởng niệm để ghi tên, ngày và lời tri ân.
-            Nếu muốn nhắc ngày giỗ, bạn có thể thêm ngày âm lịch
-            hoặc dương lịch trong Nhắc lịch.
+            {memorial && (
+              <Badge className="bg-emerald-600/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 text-xs px-3 py-1 font-semibold self-start sm:self-auto">
+                Đang gắn kết: {memorial.name}
+              </Badge>
+            )}
+          </div>
+
+          <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed mb-6">
+            Hồ sơ tưởng niệm lưu trữ an toàn ngay trên trình duyệt máy bạn. Bạn có thể thiết lập lịch nhắc ngày giỗ
+            (theo âm lịch hoặc dương lịch) để luôn trọn vẹn đạo hiếu.
           </p>
 
-          <p className="mb-5 text-sm leading-relaxed text-muted">
-            Hồ sơ tưởng niệm chưa tự tạo lịch nhắc.
-            Bản thử nghiệm hiển thị lời nhắc khi mở web,
-            chưa gửi thông báo khi đóng web.
-          </p>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={onGoToMemorial}
+              className="gap-2 border-line text-ink hover:text-accent cursor-pointer"
             >
-              Mở góc tưởng niệm
+              <Heart className="w-4 h-4 text-rose-500" />
+              <span>{memorial ? "Xem góc tưởng niệm" : "Tạo góc tưởng niệm"}</span>
             </Button>
 
             <Button
               type="button"
               variant="outline"
               onClick={onGoToReminders}
+              className="gap-2 border-line text-ink hover:text-accent cursor-pointer"
             >
-              Mở nhắc lịch
+              <Calendar className="w-4 h-4 text-amber-600" />
+              <span>Quản lý lịch nhắc ngày giỗ</span>
             </Button>
           </div>
         </section>
 
-        <Card className="p-6 sm:p-8 border-line mb-12">
-          <h2 className="font-display text-xl font-bold mb-2">Gửi một lời nếu bạn muốn</h2>
-          <p className="text-sm text-muted mb-4">
-            Bạn có thể viết và chọn lưu vào Góc của tôi.
-            <br className="hidden sm:inline" /> Chỉ thắp nhang không tạo bản ghi lời tri ân.
-          </p>
+        {/* Tribute Note Section */}
+        <Card className="p-6 sm:p-8 rounded-2xl border-line bg-surface/95 mb-12 shadow-xs">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-400/30 flex items-center justify-center text-amber-700 dark:text-amber-400 shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-display text-xl font-bold text-ink">
+                Gửi một lời tri ân thành kính
+              </h2>
+              <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300">
+                Những lời tấc lòng gửi gắm đến đấng sinh thành, tổ tiên sẽ được bảo lưu trong Góc của tôi
+              </p>
+            </div>
+          </div>
+
           <Textarea
             value={tribute}
             onChange={(event) => {
@@ -202,35 +275,55 @@ export const AncestorAltarScreen: React.FC<
               setSaveError("");
             }}
             aria-label="Lời tri ân"
-            placeholder="Một lời biết ơn hoặc tưởng nhớ bạn muốn giữ lại..."
-            className="min-h-28 mb-4"
+            placeholder="Một lời biết ơn, tâm nguyện lành hoặc nỗi nhớ thương bạn muốn gửi đến tổ tiên..."
+            className="min-h-32 mb-4 p-4 text-sm sm:text-base leading-relaxed rounded-xl border border-line bg-surface-soft/60 focus:bg-surface text-ink placeholder:text-stone-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
           />
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-muted">Không bắt buộc</span>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <span className="text-xs text-stone-500 dark:text-stone-400 italic">
+              * Tùy tâm nguyện, không bắt buộc điền
+            </span>
+
             <Button
               type="button"
               onClick={sendTribute}
               disabled={!tribute.trim() || submitted}
-              className="gap-2"
+              className={`gap-2 min-h-11 px-6 rounded-xl font-semibold transition-all cursor-pointer shadow-md ${
+                submitted
+                  ? "bg-emerald-700 text-white hover:bg-emerald-800"
+                  : "bg-gradient-to-r from-red-800 via-amber-700 to-amber-900 hover:from-red-700 hover:to-amber-800 text-white"
+              }`}
             >
-              <Heart className="w-4 h-4" aria-hidden="true" />
-              <span>
-                {submitted
-                  ? "Đã lưu lời tri ân"
-                  : isLoggedIn
-                    ? "Lưu vào Góc của tôi"
-                    : "Đăng nhập để lưu"}
-              </span>
+              {submitted ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-white" />
+                  <span>Đã lưu lời tri ân</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 text-amber-200" />
+                  <span>
+                    {isLoggedIn ? "Lưu vào Góc của tôi" : "Đăng nhập để lưu"}
+                  </span>
+                </>
+              )}
             </Button>
           </div>
+
           {submitted && (
-            <p role="status" className="mt-4 text-sm text-success">
-              Đã lưu lời tri ân vào Góc của tôi trên trình duyệt này.
-            </p>
+            <div
+              role="status"
+              className="mt-5 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-sm font-medium flex items-center gap-2.5 animate-fadeIn"
+            >
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>
+                Lời tri ân đã được lưu giữ trang trọng vào mục Điều ước & Tri ân tại Góc của tôi!
+              </span>
+            </div>
           )}
 
           {saveError && (
-            <p role="alert" className="mt-4 text-sm text-danger">
+            <p role="alert" className="mt-4 text-sm text-danger font-medium">
               {saveError}
             </p>
           )}

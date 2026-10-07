@@ -1,0 +1,282 @@
+/* ==========================================================================
+   TIN LẮM TÂM LINH — ZEN SCREEN 10/10 STYLES
+   Không Gian Tĩnh Tâm Cổ Phong, Vòng Tròn Hơi Thở & Đồng Bộ Dark Mode
+   ========================================================================== */
+
+/* 1. DẤU TRIỆN SON "TĨNH / THIỀN" (靜) & TIÊU ĐỀ */
+.zen-seal-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #8b1e28 0%, #68131b 100%);
+  border: 1.5px solid rgba(245, 195, 110, 0.7);
+  box-shadow: 0 3px 10px rgba(139, 30, 40, 0.32);
+  color: #fde8c4;
+  font-family: "Noto Serif", Georgia, serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+  margin-right: 12px;
+  vertical-align: middle;
+  user-select: none;
+}
+
+/* Triệt tiêu hoàn toàn viền focus outline đỏ bao quanh tiêu đề */
+h1.zen-page-title,
+.zen-page-title,
+.zen-page-title:focus,
+.zen-page-title:focus-visible,
+.zen-page-title:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* 2. CÁC NÚT ĐIỀU KHIỂN THẺ BÀI (PILL BUTTONS) */
+.zen-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(215, 185, 150, 0.45);
+  background: rgba(255, 252, 247, 0.85);
+  color: #4a382c;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+  user-select: none;
+}
+
+.zen-pill-btn:hover {
+  background: #ffffff;
+  border-color: rgba(185, 135, 75, 0.75);
+  color: #8b1e28;
+  transform: translateY(-1px);
+}
+
+.zen-pill-btn--active {
+  background: linear-gradient(135deg, #8b1e28 0%, #71151f 100%);
+  border-color: #dfbd7d;
+  color: #fff6ed;
+  font-weight: 600;
+  box-shadow: 0 3px 10px rgba(139, 30, 40, 0.22);
+}
+
+/* 3. KHUNG TRƯỚNG TRẠNG THÁI (STATE MODAL CARD) - KÍNH MỜ CỔ PHONG TRONG SUỐT */
+.zen-state-card {
+  position: relative;
+  isolation: isolate;
+  border-radius: 22px;
+  border: 1.5px solid rgba(212, 175, 55, 0.55);
+  background: rgba(26, 20, 16, 0.76);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 16px 44px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 235, 205, 0.25),
+    0 0 20px rgba(212, 175, 55, 0.1);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  text-align: center;
+  overflow: hidden;
+  color: #ffffff;
+}
+
+.zen-state-card h2,
+.zen-state-card .section-title {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+.zen-state-card p {
+  color: rgba(245, 238, 228, 0.95) !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.zen-state-card .text-accent {
+  color: #fcd34d !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+/* Khung trạng thái Active (Kính mờ cổ phong nhìn xuyên thấu phong cảnh hiên chùa) */
+.zen-active-card {
+  position: relative;
+  isolation: isolate;
+  border-radius: 24px;
+  border: 1.5px solid rgba(245, 195, 110, 0.45);
+  background: rgba(18, 14, 12, 0.68);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 235, 205, 0.25),
+    0 0 28px rgba(245, 158, 11, 0.15);
+  padding: clamp(1.75rem, 4vw, 2.75rem);
+  text-align: center;
+  color: #f7efe4;
+  overflow: hidden;
+}
+
+/* Hào quang ánh đèn hoa đăng khi thắp sáng */
+.zen-lamp-glow-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 75% 75%,
+    rgba(251, 191, 36, 0.35) 0%,
+    rgba(245, 158, 11, 0.2) 40%,
+    rgba(180, 83, 9, 0.08) 70%,
+    transparent 100%
+  );
+  mix-blend-mode: screen;
+  transition: opacity 800ms ease;
+  animation: zenFlicker 3.5s infinite alternate ease-in-out;
+  z-index: 5;
+}
+
+@keyframes zenFlicker {
+  0% { opacity: 0.85; filter: brightness(0.96); }
+  50% { opacity: 1; filter: brightness(1.08); }
+  100% { opacity: 0.9; filter: brightness(1.02); }
+}
+
+/* Đèn dầu / Hoa đăng góc hiên nhà */
+.zen-floating-lantern {
+  position: absolute;
+  bottom: 24px;
+  right: 28px;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.8));
+  animation: zenLanternFloat 3s infinite ease-in-out alternate;
+}
+
+@keyframes zenLanternFloat {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-6px); }
+}
+
+
+
+/* 5. NÚT CHU SA ÁNH KIM (ZEN ACTION BUTTON) */
+.zen-action-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 32px;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(135, 28, 20, 0.95);
+  background:
+    radial-gradient(120% 140% at 50% 0%, rgba(255, 140, 110, 0.25), transparent 55%),
+    linear-gradient(180deg, #b3342a 0%, #9a2219 55%, #841812 100%);
+  box-shadow:
+    0 4px 18px rgba(130, 30, 20, 0.35),
+    inset 0 1px 0 rgba(255, 215, 180, 0.35);
+  color: #fff6ed;
+  font-family: var(--font-display, "Fraunces", serif);
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 220ms ease;
+  user-select: none;
+}
+
+.zen-action-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 24px rgba(130, 30, 20, 0.45);
+  transform: translateY(-2px);
+}
+
+.zen-btn-sheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  pointer-events: none;
+  transform: translateX(-110%);
+  transition: transform 700ms ease;
+}
+
+.zen-action-btn:hover .zen-btn-sheen {
+  transform: translateX(110%);
+}
+
+/* 6. VÒNG HƠI THỞ (BREATH RING) - MỸ HỌC THIỀN VIỆN */
+.zen-breath-ring-inhale {
+  border-color: #2dd4bf !important;
+  box-shadow: 0 0 35px rgba(45, 212, 191, 0.5), inset 0 0 20px rgba(45, 212, 191, 0.25) !important;
+}
+
+.zen-breath-ring-hold {
+  border-color: #fbbf24 !important;
+  box-shadow: 0 0 35px rgba(251, 191, 36, 0.55), inset 0 0 22px rgba(251, 191, 36, 0.3) !important;
+}
+
+.zen-breath-ring-exhale {
+  border-color: #fb923c !important;
+  box-shadow: 0 0 35px rgba(251, 146, 60, 0.5), inset 0 0 20px rgba(251, 146, 60, 0.25) !important;
+}
+
+/* 7. ĐỒNG BỘ DARK MODE CHO ZEN SCREEN */
+.dark .zen-seal-badge {
+  background: linear-gradient(135deg, #8a242c 0%, #5c141a 100%);
+  border-color: rgba(225, 175, 95, 0.65);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+  color: #fae4c3;
+}
+
+.dark .zen-pill-btn {
+  background: rgba(32, 27, 24, 0.75);
+  border-color: rgba(90, 75, 65, 0.5);
+  color: #dfd3c5;
+}
+
+.dark .zen-pill-btn:hover {
+  background: rgba(42, 34, 30, 0.95);
+  border-color: rgba(200, 150, 85, 0.6);
+  color: #f7a8b0;
+}
+
+.dark .zen-pill-btn--active {
+  background: linear-gradient(135deg, #9b242d 0%, #75141c 100%);
+  border-color: #e5bd75;
+  color: #fff2e5;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
+}
+
+.dark .zen-state-card {
+  border-color: rgba(185, 145, 75, 0.45);
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(36, 29, 25, 0.98) 0%,
+    rgba(24, 20, 18, 0.96) 100%
+  );
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+
+
+.dark .zen-action-btn {
+  border-color: rgba(180, 45, 35, 0.95);
+  background:
+    radial-gradient(120% 140% at 50% 0%, rgba(255, 140, 110, 0.2), transparent 55%),
+    linear-gradient(180deg, #99241b 0%, #7e1912 55%, #63120c 100%);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 195, 160, 0.25);
+  color: #fff2e5;
+}

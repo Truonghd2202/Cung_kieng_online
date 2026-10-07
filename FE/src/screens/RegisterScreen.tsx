@@ -1,23 +1,25 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   User,
   Mail,
   Lock,
   Eye,
   EyeOff,
-  ArrowLeft,
   ArrowRight,
   Loader2,
   Sparkles,
+  Bell,
   CheckCircle2,
 } from "lucide-react";
-import { registerAccount } from "../data/authService";
-import { AltarVisualSection } from "../components/AltarVisualSection";
+import { registerAccount, loginWithSocial } from "../data/authService";
+import { CelestialAuthLeft } from "../components/CelestialAuthLeft";
+import "../styles/LoginScreen.css";
 
-interface RegisterScreenProps {
+export interface RegisterScreenProps {
   onBack?: () => void;
   onSuccess: (name?: string, email?: string) => void;
   onGoToLogin: () => void;
+  onImmersiveChange?: (immersive: boolean) => void;
   pendingSignalMood?: string;
 }
 
@@ -25,6 +27,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   onBack,
   onSuccess,
   onGoToLogin,
+  onImmersiveChange,
   pendingSignalMood,
 }) => {
   const [name, setName] = useState("");
@@ -37,39 +40,103 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bellRinging, setBellRinging] = useState(false);
 
-  const registerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  );
+  const audioElementRef = useRef<HTMLAudioElement | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
 
-  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  );
+  // Ẩn thanh header chung để hiển thị toàn màn hình chuẩn Split-screen
+  useEffect(() => {
+    onImmersiveChange?.(true);
+    return () => {
+      onImmersiveChange?.(false);
+    };
+  }, [onImmersiveChange]);
 
   useEffect(() => {
     return () => {
-      if (registerTimerRef.current !== null) {
-        clearTimeout(registerTimerRef.current);
-        registerTimerRef.current = null;
+      if (audioElementRef.current) {
+        audioElementRef.current.pause();
+        audioElementRef.current = null;
       }
-
-      if (redirectTimerRef.current !== null) {
-        clearTimeout(redirectTimerRef.current);
-        redirectTimerRef.current = null;
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close().catch(() => {});
+        audioCtxRef.current = null;
       }
     };
   }, []);
 
+  const playSynthesizedBell = (ctx: AudioContext, now: number) => {
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.001, now);
+    masterGain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 8.5);
+    masterGain.connect(ctx.destination);
+
+    const freqs = [216, 432, 648, 864, 1296];
+    const decays = [8.5, 6.2, 4.8, 3.5, 2.2];
+    const amps = [0.4, 0.25, 0.15, 0.08, 0.04];
+
+    freqs.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(amps[idx], now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + decays[idx]);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + decays[idx]);
+    });
+  };
+
+  const playZenBellSound = () => {
+    try {
+      const audio = new Audio("/audio/meditation-bowl.mp3");
+      audio.volume = 0.8;
+      audioElementRef.current = audio;
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          try {
+            const AudioCtx =
+              window.AudioContext ||
+              (window as unknown as { webkitAudioContext: typeof AudioContext })
+                .webkitAudioContext;
+            if (AudioCtx) {
+              const ctx = new AudioCtx();
+              audioCtxRef.current = ctx;
+              playSynthesizedBell(ctx, ctx.currentTime);
+            }
+          } catch {}
+        });
+      }
+    } catch {
+      try {
+        const AudioCtx =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext })
+            .webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          audioCtxRef.current = ctx;
+          playSynthesizedBell(ctx, ctx.currentTime);
+        }
+      } catch {}
+    }
+  };
+
+  const handleRingBell = () => {
+    setBellRinging(true);
+    playZenBellSound();
+    setTimeout(() => setBellRinging(false), 900);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Chặn gửi lại trong lúc đăng ký hoặc chờ chuyển trang.
-    if (
-      registerTimerRef.current !== null ||
-      redirectTimerRef.current !== null
-    ) {
-      return;
-    }
+    if (isSubmitting) return;
 
     setErrorMessage("");
     setSuccessMessage("");
@@ -79,7 +146,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
     const submittedPassword = password;
 
     if (!cleanName) {
-      setErrorMessage("Vui lòng nhập tên hiển thị của bạn.");
+      setErrorMessage("Vui lòng nhập họ tên hoặc danh xưng hiển thị.");
       return;
     }
 
@@ -99,330 +166,382 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
     }
 
     if (submittedPassword !== confirmPassword) {
-      setErrorMessage(
-        "Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại."
-      );
+      setErrorMessage("Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại.");
       return;
     }
 
     if (!agreed) {
-      setErrorMessage(
-        "Vui lòng đồng ý với quy ước gìn giữ không gian an trú."
-      );
+      setErrorMessage("Vui lòng đồng ý với quy ước gìn giữ không gian an trú.");
       return;
     }
 
     setIsSubmitting(true);
 
-    registerTimerRef.current = setTimeout(() => {
-      registerTimerRef.current = null;
-
-      let result: ReturnType<typeof registerAccount>;
-
-      try {
-        result = registerAccount(
-          cleanName,
-          cleanEmail,
-          submittedPassword
-        );
-      } catch {
-        setIsSubmitting(false);
-        setErrorMessage(
-          "Không thể tạo tài khoản. Vui lòng thử lại."
-        );
-        return;
-      }
+    try {
+      const result = registerAccount(cleanName, cleanEmail, submittedPassword);
 
       if (!result.success) {
         setIsSubmitting(false);
-        setErrorMessage(
-          result.error || "Không thể tạo tài khoản. Vui lòng thử lại."
-        );
+        setErrorMessage(result.error || "Không thể tạo tài khoản. Vui lòng thử lại.");
         return;
       }
 
       try {
         localStorage.setItem("tltl_remembered_email", cleanEmail);
-      } catch {
-        // Việc ghi nhớ email không quyết định kết quả đăng ký.
-      }
+      } catch {}
 
-      setSuccessMessage(
-        "Khởi tạo hồ sơ thành công! Đang chuyển qua trang Đăng nhập..."
-      );
+      // Vào trang tiếp theo liền luôn theo mong muốn của người dùng
+      onSuccess(result.user.name, result.user.email);
+    } catch {
+      setIsSubmitting(false);
+      setErrorMessage("Có lỗi xảy ra khi tạo tài khoản. Vui lòng thử lại.");
+    }
+  };
 
-      redirectTimerRef.current = setTimeout(() => {
-        redirectTimerRef.current = null;
+  const handleSocialAuth = (provider: "Google" | "Apple") => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setErrorMessage("");
+
+    try {
+      const result = loginWithSocial(provider);
+      if (result.success) {
         onSuccess(result.user.name, result.user.email);
-      }, 1000);
-    }, 400);
+      } else {
+        setIsSubmitting(false);
+        setErrorMessage(`Đăng ký với ${provider} không thành công.`);
+      }
+    } catch {
+      setIsSubmitting(false);
+      setErrorMessage(`Đăng ký với ${provider} không thành công.`);
+    }
   };
 
   return (
-    <div className="relative w-full flex flex-col lg:flex-row bg-[#f6f2ea] dark:bg-[#151214] text-ink transition-all duration-700 overflow-hidden min-h-[calc(100vh-73px)] lg:h-[calc(100dvh-73px)] lg:max-h-[calc(100dvh-73px)]">
-      {/* CỘT TRÁI: KHÔNG GIAN BÀN THỜ GIA TIÊN SỐNG ĐỘNG (LỬA ĐÈN DẦU, BỤI VÀNG, PARALLAX 2.5D) */}
-      <AltarVisualSection
-        quoteText='"Khởi tâm an lạc • Kết duyên thiện lành"'
-        className="w-full lg:w-[56%] xl:w-[60%] h-44 sm:h-56 lg:h-full shrink-0 min-h-[180px] lg:min-h-0"
+    <div className="split-login-viewport" role="main">
+      {/* =====================================================================
+          CỘT TRÁI (~60%): TRANH TIÊN CẢNH NGHỆ THUẬT & LƯ HƯƠNG TAM THẾ
+          ===================================================================== */}
+      <CelestialAuthLeft
+        onBack={onBack || onGoToLogin}
       />
 
-      {/* CỘT PHẢI: FORM KHỞI TẠO HỒ SƠ — CHỈN CHU, SANG TRỌNG, VỪA KHÍT KHUNG HÌNH */}
-      <section
-        aria-label="Biểu mẫu đăng ký tài khoản"
-        className="relative w-full lg:w-[44%] xl:w-[40%] shrink-0 flex flex-col justify-center items-center px-6 py-5 sm:px-10 lg:px-8 xl:px-12 lg:h-full lg:max-h-full overflow-y-auto bg-[radial-gradient(ellipse_at_top_left,_rgba(217,119,6,0.05),_transparent_65%),_linear-gradient(to_bottom,_#fbf8f2,_#f5efe6)] dark:bg-[radial-gradient(ellipse_at_top_left,_rgba(180,83,9,0.06),_transparent_65%),_linear-gradient(to_bottom,_#1c1719,_#151214)]"
-      >
-        {/* Họa tiết hạt xơ giấy dó & hoa sen chìm truyền thống mờ ảo */}
-        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none bg-[radial-gradient(#8b1e28_1px,transparent_1px)] [background-size:18px_18px]" />
+      {/* =====================================================================
+          CỘT PHẢI (~40%): NỀN GIẤY DÓ THANH NHÃ & FORM KHỞI TẠO HỒ SƠ
+          ===================================================================== */}
+      <div className="split-login-right">
+        {/* Họa tiết mây dập chìm góc trên bên phải */}
         <svg
-          className="absolute -right-16 -bottom-16 w-72 h-72 text-amber-900/[0.035] dark:text-amber-300/[0.02] pointer-events-none select-none"
-          viewBox="0 0 100 100"
-          fill="currentColor"
+          className="split-corner-cloud-tr"
+          viewBox="0 0 120 90"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1"
           aria-hidden="true"
         >
-          <path d="M50 15 C35 30 20 45 20 65 C20 80 35 90 50 90 C65 90 80 80 80 65 C80 45 65 30 50 15 Z" />
+          <path d="M110 10c-15 0-25 8-28 18-5-2-12-1-16 4-6-2-14 1-16 8-4-1-9 1-11 5-4 0-8 4-8 9 0 8 7 14 15 14h64c12 0 22-9 22-21 0-11-9-20-20-21" />
         </svg>
 
-        <div className="relative z-10 w-full max-w-[390px] my-auto py-2">
-          {onBack && (
-            <button
-              type="button"
-              onClick={onBack}
-              className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-ink transition-colors cursor-pointer mb-3"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Quay lại</span>
-            </button>
-          )}
+        {/* Cành hoa đào/mai trang nhã góc dưới */}
+        <svg
+          className="split-corner-blossom-br"
+          viewBox="0 0 140 120"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.1"
+          aria-hidden="true"
+        >
+          <path d="M140 110c-35-5-65-25-85-55-10-15-18-35-20-55" />
+          <circle cx="85" cy="72" r="6" />
+          <circle cx="110" cy="50" r="5" />
+          <circle cx="55" cy="45" r="4" />
+        </svg>
 
-          {/* TIÊU ĐỀ TRANG NHÃ KÈM DẤU ẤN TRIỆN SON KHẮC GỖ */}
-          <div className="mb-3.5">
-            <div className="flex items-center gap-2.5">
-              <div 
-                className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8b1e28] to-[#68131b] border border-amber-400/50 flex items-center justify-center shadow-[0_2px_10px_rgba(139,30,40,0.35)] shrink-0 select-none"
-                title="Triện son Tâm"
-              >
-                <span className="font-serif font-black text-amber-200 text-xs tracking-tighter leading-none">
+        {/* Thanh công cụ góc trên: Nút Thỉnh chuông */}
+        <div className="split-right-topbar">
+          <button
+            type="button"
+            onClick={handleRingBell}
+            className={`split-topbar-btn split-bell-btn ${
+              bellRinging ? "split-bell-btn--active" : ""
+            }`}
+            title="Thỉnh một tiếng chuông tĩnh tâm"
+            aria-label="Thỉnh chuông tĩnh tâm"
+          >
+            <Bell
+              className={`w-3.5 h-3.5 text-amber-700 ${
+                bellRinging ? "split-bell-shake" : ""
+              }`}
+            />
+            <span>Thỉnh chuông</span>
+          </button>
+        </div>
+
+        {/* Khung nội dung biểu mẫu */}
+        <div className="split-form-wrapper">
+          <div className="split-form-header">
+            <h1 className="split-form-title">
+              <div className="split-form-title-row">
+                <span className="split-seal-badge" title="Dấu ấn Tâm">
                   心
                 </span>
+                <span>Khởi tạo hồ sơ</span>
+                <CloudOrnament className="split-cloud-svg" />
               </div>
-              <h1 className="font-serif text-2xl sm:text-[1.7rem] font-bold text-ink tracking-tight">
-                Khởi Tạo Hồ Sơ
-              </h1>
-            </div>
-            <p className="text-xs sm:text-sm text-muted mt-1 leading-relaxed">
+            </h1>
+            <p className="split-form-subtitle">
               Ghi danh tâm thức để lưu giữ quẻ xăm và hành trình tĩnh tại.
             </p>
           </div>
 
-          {/* QUẺ CHỜ LƯU (NẾU CÓ) */}
+          {/* Quẻ đang chờ lưu (nếu có) */}
           {pendingSignalMood && (
-            <div className="mb-3 p-2.5 rounded-xl bg-accent-soft border border-line text-xs text-ink flex items-start gap-2 shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 shrink-0 mt-0.5 text-accent" />
-              <span>
-                Đang chờ lưu: <strong>"{pendingSignalMood}"</strong>
-              </span>
+            <div className="split-alert split-alert--mood">
+              <Sparkles className="w-3.5 h-3.5 inline mr-1 text-amber-600" />
+              Đang chờ lưu: <strong>{pendingSignalMood}</strong>
             </div>
           )}
 
-          {/* THÔNG BÁO LỖI */}
+          {/* Thông báo lỗi (nếu có) */}
           {errorMessage && (
-            <div
-              role="alert"
-              className="mb-3 p-2.5 rounded-xl bg-danger-soft border border-danger/30 text-xs text-danger flex items-start gap-2"
-            >
-              <span className="font-bold leading-none mt-0.5">✕</span>
-              <span className="leading-relaxed flex-1">{errorMessage}</span>
+            <div role="alert" className="split-alert split-alert--error">
+              {errorMessage}
             </div>
           )}
 
-          {/* THÔNG BÁO THÀNH CÔNG */}
+          {/* Thông báo thành công */}
           {successMessage && (
-            <div
-              role="status"
-              className="mb-3 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-xs text-emerald-800 dark:text-emerald-300 flex items-start gap-2 shadow-xs animate-fade-in"
-            >
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
-              <span className="leading-relaxed font-medium">{successMessage}</span>
+            <div role="status" className="split-alert split-alert--mood">
+              <CheckCircle2 className="w-3.5 h-3.5 inline mr-1 text-emerald-600" />
+              {successMessage}
             </div>
           )}
 
-          <p className="mb-3 rounded-xl border border-line bg-accent-soft px-3 py-2 text-xs leading-relaxed text-ink">
-            <strong>Bản thử nghiệm giao diện.</strong>{" "}
-            Hồ sơ được lưu trên trình duyệt này.
-            Mật khẩu chưa được xác thực; hãy dùng thông tin mẫu.
-          </p>
-
-          {/* FORM NHẬP LIỆU */}
-          <form onSubmit={handleSubmit} className="space-y-2.5 sm:space-y-3">
-            {/* Tên hiển thị */}
-            <div>
-              <label
-                htmlFor="register-name"
-                className="block text-xs font-semibold text-ink mb-1 tracking-wide"
-              >
-                Tên hiển thị
-              </label>
-              <div className="relative group">
-                <User className="w-4 h-4 text-subtle group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  id="register-name"
-                  type="text"
-                  required
-                  maxLength={80}
-                  autoComplete="nickname"
-                  disabled={isSubmitting}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Bạn muốn được gọi là gì?"
-                  className="w-full h-10.5 pl-10 pr-3.5 rounded-xl border border-line bg-surface text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600/70 dark:focus:border-amber-500 transition-all shadow-xs disabled:opacity-60"
-                />
-              </div>
+          <form onSubmit={handleSubmit} className="split-form split-form-compact">
+            {/* Họ và tên */}
+            <div className="split-input-field">
+              <User className="split-input-icon" aria-hidden="true" />
+              <input
+                id="register-name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                required
+                maxLength={80}
+                disabled={isSubmitting}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Tên hiển thị của bạn"
+                className="split-input-box"
+              />
             </div>
 
             {/* Email */}
-            <div>
-              <label
-                htmlFor="register-email"
-                className="block text-xs font-semibold text-ink mb-1 tracking-wide"
-              >
-                Địa chỉ Email
-              </label>
-              <div className="relative group">
-                <Mail className="w-4 h-4 text-subtle group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  id="register-email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  disabled={isSubmitting}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="tenban@domain.com"
-                  className="w-full h-10.5 pl-10 pr-3.5 rounded-xl border border-line bg-surface text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600/70 dark:focus:border-amber-500 transition-all shadow-xs disabled:opacity-60"
-                />
-              </div>
+            <div className="split-input-field">
+              <Mail className="split-input-icon" aria-hidden="true" />
+              <input
+                id="register-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                inputMode="email"
+                required
+                disabled={isSubmitting}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Địa chỉ Email"
+                className="split-input-box"
+              />
             </div>
 
             {/* Mật khẩu */}
-            <div>
-              <label
-                htmlFor="register-password"
-                className="block text-xs font-semibold text-ink mb-1 tracking-wide"
+            <div className="split-input-field">
+              <Lock className="split-input-icon" aria-hidden="true" />
+              <input
+                id="register-password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                disabled={isSubmitting}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Mật khẩu (tối thiểu 6 ký tự)"
+                className="split-input-box"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                disabled={isSubmitting}
+                className="split-input-toggle"
               >
-                Mật khẩu mẫu
-              </label>
-              <div className="relative group">
-                <Lock className="w-4 h-4 text-subtle group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  id="register-password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="new-password"
-                  required
-                  disabled={isSubmitting}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Tối thiểu 6 ký tự"
-                  className="w-full h-10.5 pl-10 pr-11 rounded-xl border border-line bg-surface text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600/70 dark:focus:border-amber-500 transition-all shadow-xs disabled:opacity-60"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                  disabled={isSubmitting}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-subtle hover:text-ink cursor-pointer disabled:opacity-50 transition-colors p-1"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
+                {showPassword ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              </button>
             </div>
 
-            {/* Xác nhận mật khẩu */}
-            <div>
-              <label
-                htmlFor="register-confirm-password"
-                className="block text-xs font-semibold text-ink mb-1 tracking-wide"
+            {/* Nhập lại mật khẩu */}
+            <div className="split-input-field">
+              <Lock className="split-input-icon" aria-hidden="true" />
+              <input
+                id="register-confirm-password"
+                name="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                disabled={isSubmitting}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Xác nhận lại mật khẩu"
+                className="split-input-box"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                disabled={isSubmitting}
+                className="split-input-toggle"
               >
-                Nhập lại mật khẩu mẫu
-              </label>
-              <div className="relative group">
-                <Lock className="w-4 h-4 text-subtle group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  id="register-confirm-password"
-                  type={showConfirmPassword ? "text" : "password"}
-                  autoComplete="new-password"
-                  required
-                  disabled={isSubmitting}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Nhập lại mật khẩu"
-                  className="w-full h-10.5 pl-10 pr-11 rounded-xl border border-line bg-surface text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600/70 dark:focus:border-amber-500 transition-all shadow-xs disabled:opacity-60"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                  disabled={isSubmitting}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-subtle hover:text-ink cursor-pointer disabled:opacity-50 transition-colors p-1"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
+                {showConfirmPassword ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              </button>
             </div>
 
-            {/* Đồng ý quy ước an trú */}
-            <div className="flex items-start gap-2 pt-0.5 pb-0.5">
+            {/* Checkbox Quy ước an trú */}
+            <label className="split-terms-row">
               <input
                 type="checkbox"
-                id="agreed"
+                id="register-agreed"
                 checked={agreed}
                 disabled={isSubmitting}
                 onChange={(e) => setAgreed(e.target.checked)}
-                className="w-4 h-4 mt-0.5 rounded border-line text-accent accent-[#8b1e28] focus:ring-amber-500/30 cursor-pointer"
+                className="split-checkbox"
               />
-              <label
-                htmlFor="agreed"
-                className="text-xs text-muted cursor-pointer select-none font-medium leading-relaxed"
-              >
-                Đồng ý quy ước gìn giữ không gian an trú thanh tịnh
-              </label>
-            </div>
+              <span>Đồng ý quy ước gìn giữ không gian an trú thanh tịnh</span>
+            </label>
 
-            {/* Nút Đăng ký đỏ trầm son ánh kim */}
+            {/* Nút KHỞI TẠO HỒ SƠ -> */}
             <button
               type="submit"
               disabled={isSubmitting || !agreed}
-              className="group relative w-full h-11 rounded-xl bg-gradient-to-r from-[#8b1e28] via-[#9e222d] to-[#781820] hover:from-[#781820] hover:via-[#8b1e28] hover:to-[#63131b] border border-amber-400/35 text-[#fff8ed] font-medium text-sm flex items-center justify-center gap-2 transition-all shadow-[0_4px_18px_rgba(139,30,40,0.28)] hover:shadow-[0_6px_26px_rgba(139,30,40,0.42)] overflow-hidden cursor-pointer disabled:opacity-60 active:scale-[0.99]"
+              className="split-submit-btn"
             >
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-
+              <span className="split-sheen" />
+              <ButtonOrnament className="split-btn-ornament split-btn-ornament--left" />
+              <ButtonOrnament className="split-btn-ornament split-btn-ornament--right" />
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin text-amber-200" />
-                  <span>Đang khởi tạo...</span>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>ĐANG KHỞI TẠO...</span>
                 </>
               ) : (
                 <>
-                  <span>Tạo hồ sơ an trú</span>
-                  <ArrowRight className="w-4 h-4 text-amber-200" />
+                  <span>TẠO HỒ SƠ AN TRÚ</span>
+                  <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
-          {/* Quay về Đăng nhập */}
-          <div className="text-center text-xs text-muted mt-3.5 pt-2.5 border-t border-line">
-            <span>Đã có tài khoản? </span>
+          {/* Dải phân cách hoa sen & hoặc */}
+          <div className="split-divider-row" aria-hidden="true">
+            <span className="split-divider-line" />
+            <div className="split-divider-center">
+              <svg viewBox="0 0 24 16" fill="none" stroke="currentColor" strokeWidth="1.2">
+                <path d="M12 2c-1.5 2-2 4.5-1.5 7 .5 1.5 1 2.5 1.5 3 .5-.5 1-1.5 1.5-3 .5-2.5 0-5-1.5-7Z" />
+                <path d="M9.5 6C7.5 5.5 5.5 6 4.5 7c1 2.2 3.2 4 7.5 4.8" />
+                <path d="M14.5 6c2-.5 4 0 5 1-1 2.2-3.2 4-7.5 4.8" />
+              </svg>
+              <span>hoặc</span>
+            </div>
+            <span className="split-divider-line" />
+          </div>
+
+          {/* Nút đăng nhập Google */}
+          <div className="split-social-single">
+            <button
+              type="button"
+              onClick={() => handleSocialAuth("Google")}
+              disabled={isSubmitting}
+              className="split-social-btn"
+            >
+              <svg className="split-social-icon" viewBox="0 0 48 48" aria-hidden="true">
+                <path
+                  fill="#4285F4"
+                  d="M47.5 24.6c0-1.6-.1-3.1-.4-4.6H24v9h13.2c-.6 2.9-2.3 5.4-4.8 7.1l7.7 6C44.6 37.8 47.5 31.7 47.5 24.6Z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M24 48c6.5 0 11.9-2.2 15.9-5.9l-7.7-6c-2.1 1.4-4.7 2.3-8.2 2.3-6.3 0-11.6-4.2-13.5-9.9l-8 6.2C6.5 42.6 14.6 48 24 48Z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M10.5 28.5a14.5 14.5 0 0 1 0-9.1l-8-6.2a24 24 0 0 0 0 21.5l8-6.2Z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M24 9.5c3.5 0 6.7 1.2 9.2 3.6l6.9-6.9C35.9 2.4 30.5 0 24 0 14.6 0 6.5 5.4 2.5 13.2l8 6.2C12.4 13.7 17.7 9.5 24 9.5Z"
+                />
+              </svg>
+              <span>Tiếp tục với Google</span>
+            </button>
+          </div>
+
+          {/* Chân trang: Đã có tài khoản? */}
+          <div className="split-footer-link">
+            <span>Đã có tài khoản?</span>
             <button
               type="button"
               onClick={onGoToLogin}
               disabled={isSubmitting}
-              className="text-accent font-medium hover:underline cursor-pointer ml-1"
+              className="split-register-action"
             >
               Đăng nhập ngay →
             </button>
           </div>
         </div>
-      </section>
+
+        {/* Khoảng đệm chân */}
+        <div className="h-6 w-full" aria-hidden="true" />
+      </div>
     </div>
   );
 };
+
+const CloudOrnament: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    className={className}
+    viewBox="0 0 60 28"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M4 18c2-3 5-4 8-3 1-3 4-5 8-4 2-4 7-4 10-1 3-3 8-2 10 2 3-1 6 1 7 4 2 3 1 7-2 9H6c-3 0-4-4-2-7Z" />
+    <path d="M12 18c3-1 7 1 9 3" />
+    <path d="M26 15c2-1 5 0 7 2" />
+    <path d="M46 19c3 0 6 2 8 4" />
+  </svg>
+);
+
+const ButtonOrnament: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    className={className}
+    viewBox="0 0 30 20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M2 3v14" />
+    <path d="M2 10h4" />
+    <path d="M9 10c0-2.6 2-4.4 4.4-4.4 2.2 0 3.8 1.6 3.8 3.6 0 1.6-1.2 2.8-2.7 2.8-1.2 0-2.1-.9-2.1-2 0-.9.7-1.6 1.6-1.6" />
+    <path d="M17.2 9.2c1.2-2.6 3.6-3.8 6-3.2 1.8.5 3 2 3 3.6" />
+    <path d="M9 10c0 2.6 2 4.4 4.6 4.4h12.4" />
+    <path d="M6 5.5c1.2-1.4 2.8-2.2 4.6-2.2" />
+    <path d="M6 14.5c1.2 1.4 2.8 2.2 4.6 2.2" />
+  </svg>
+);

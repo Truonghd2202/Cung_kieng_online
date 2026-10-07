@@ -4,6 +4,17 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import {
+  Flame,
+  RotateCcw,
+  RotateCw,
+  ZoomIn,
+  ZoomOut,
+  Compass,
+  Sparkles,
+  Heart,
+} from "lucide-react";
 import type { MemorialRecord } from "../screens/MemorialSpaceScreen";
 import {
   createDigitalDecoration,
@@ -1680,147 +1691,211 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
   }, [decoration]);
 
   return (
-    <div className="overflow-hidden rounded-card border border-line bg-surface">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line p-4">
-        <p className="text-sm font-semibold text-ink">
-          Góc tri ân 3D — mô hình mẫu
-        </p>
+    <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-md">
+      {/* 3D Header Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-surface-soft/80 p-4 sm:px-6">
+        <div className="flex items-center gap-2.5">
+          <Badge
+            variant="outline"
+            className="text-xs px-2.5 py-0.5 font-semibold bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-400/40 gap-1.5"
+          >
+            <Compass className="w-3.5 h-3.5" />
+            <span>Mô hình 3D tương tác</span>
+          </Badge>
+          <span className="text-xs text-stone-500 dark:text-stone-400 hidden sm:inline">
+            Góc tri ân và không gian bài trí
+          </span>
+        </div>
 
         <Button
           type="button"
           variant="outline"
+          size="sm"
           disabled={Boolean(error)}
           onClick={() => resetRef.current?.()}
+          className="text-xs border-line text-ink hover:text-accent cursor-pointer gap-1.5"
         >
-          Đặt lại góc nhìn
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>Đặt lại góc nhìn</span>
         </Button>
       </div>
 
+      {/* 3D Canvas Viewport */}
       {error ? (
-        <p role="status" className="p-6 text-sm text-muted">
-          {error}
-        </p>
+        <div role="status" className="p-8 text-center bg-surface-soft">
+          <p className="text-sm text-stone-600 dark:text-stone-300">{error}</p>
+        </div>
       ) : (
-        <div
-          ref={hostRef}
-          className="h-[340px] w-full sm:h-[420px] lg:h-[480px]"
-        />
+        <div className="relative">
+          <div
+            ref={hostRef}
+            className="h-[360px] w-full sm:h-[440px] lg:h-[500px]"
+          />
+
+          {/* Quick Incense Status Pill over 3D Canvas */}
+          <div className="absolute top-3.5 left-3.5 pointer-events-none z-10">
+            <span
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md shadow-sm transition-all ${
+                incenseLit
+                  ? "bg-amber-950/80 text-amber-200 border border-amber-400/50"
+                  : "bg-black/50 text-stone-200 border border-white/20"
+              }`}
+            >
+              <Flame
+                className={`w-3.5 h-3.5 ${
+                  incenseLit ? "text-amber-400 animate-pulse fill-current" : "text-stone-400"
+                }`}
+              />
+              <span>{incenseLit ? "Hương đang thắp" : "Hương chưa thắp"}</span>
+            </span>
+          </div>
+        </div>
       )}
 
-      <div className="border-t border-line bg-surface-soft p-4 sm:p-5">
+      {/* Memorial Tribute Display (if recorded) */}
+      <div className="border-t border-line bg-surface-soft/60 p-4 sm:p-6">
         {memorial ? (
-          <>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Người bạn tưởng nhớ
-            </p>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400">
+              <Heart className="w-3.5 h-3.5 fill-current text-rose-500" />
+              <span>GHI CHÚ TƯỞNG NHỚ ĐÍNH KÈM</span>
+            </div>
 
-            <h3 className="mt-2 break-words font-display text-xl font-semibold text-ink">
+            <h3 className="font-display text-xl font-bold text-ink">
               {memorial.name}
+              {memorial.relation && (
+                <span className="text-sm font-normal text-stone-500 dark:text-stone-400 ml-2">
+                  ({memorial.relation})
+                </span>
+              )}
             </h3>
 
-            <p className="mt-1 break-words text-sm text-muted">
-              {memorial.relation}
-            </p>
-
             {memorial.note?.trim() && (
-              <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink">
-                {memorial.note}
+              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-stone-700 dark:text-stone-200 italic bg-surface/80 p-3.5 rounded-xl border border-line">
+                “{memorial.note}”
               </p>
             )}
-          </>
+          </div>
         ) : (
-          <p className="text-sm leading-relaxed text-muted">
-            Bạn có thể lưu tên người thân và một lời tưởng nhớ
-            để hiển thị cùng không gian này.
-          </p>
-        )}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h4 className="font-display font-semibold text-base text-ink mb-0.5">
+                Chưa có ghi chú tưởng nhớ
+              </h4>
+              <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+                Bạn có thể ghi lại tên người thân và một tâm nguyện để gắn kết vào không gian 3D này.
+              </p>
+            </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onOpenMemorial}
-          className="mt-4 min-h-11"
-        >
-          {memorial ? "Xem ghi chú tưởng nhớ" : "Tạo ghi chú tưởng nhớ"}
-        </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onOpenMemorial}
+              className="text-xs shrink-0 border-line text-ink hover:text-accent cursor-pointer"
+            >
+              Tạo ghi chú tưởng nhớ
+            </Button>
+          </div>
+        )}
       </div>
 
-      <div className="border-t border-line p-4">
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <Button
-            type="button"
-            className="min-h-11"
-            disabled={Boolean(error)}
-            aria-pressed={incenseLit}
-            onClick={handleToggleIncense}
-          >
-            {incenseLit ? "Tắt hương" : "Thắp hương"}
-          </Button>
+      {/* Interactive Controls Toolbar */}
+      <div className="border-t border-line bg-surface p-4 sm:p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* Incense Action Button */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              disabled={Boolean(error)}
+              aria-pressed={incenseLit}
+              onClick={handleToggleIncense}
+              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md flex items-center gap-2 cursor-pointer ${
+                incenseLit
+                  ? "bg-stone-800 text-stone-200 hover:bg-stone-700 border border-stone-600"
+                  : "bg-gradient-to-r from-red-800 via-amber-800 to-red-900 hover:from-red-700 hover:to-amber-700 text-white shadow-amber-900/20"
+              }`}
+            >
+              <Flame
+                className={`w-4 h-4 ${
+                  incenseLit ? "text-amber-400 animate-pulse fill-current" : "text-amber-200"
+                }`}
+              />
+              <span>{incenseLit ? "Tắt làn hương" : "Thắp hương lòng"}</span>
+            </button>
 
-          <p
-            role="status"
-            aria-live="polite"
-            className="text-sm leading-relaxed text-muted"
+            <span className="text-xs text-stone-600 dark:text-stone-300 font-medium">
+              {incenseLit
+                ? "Làn hương thanh tịnh đang dâng lên trong không gian."
+                : "Nhấn để dâng nén hương thơm thành kính."}
+            </span>
+          </div>
+
+          {/* Camera View Controls */}
+          <div
+            role="group"
+            aria-label="Điều khiển góc nhìn 3D"
+            className="flex items-center gap-1.5 self-start md:self-auto"
           >
-            {error
-              ? "Cảnh 3D hiện chưa khả dụng."
-              : incenseLit
-                ? "Hương đang được thắp trong mô hình."
-                : "Hương chưa được thắp."}
-          </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={Boolean(error)}
+              onClick={() => viewRef.current?.rotate(-Math.PI / 12)}
+              className="text-xs h-9 px-3 gap-1 border-line cursor-pointer"
+              title="Xoay góc nhìn sang trái"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Xoay trái</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={Boolean(error)}
+              onClick={() => viewRef.current?.rotate(Math.PI / 12)}
+              className="text-xs h-9 px-3 gap-1 border-line cursor-pointer"
+              title="Xoay góc nhìn sang phải"
+            >
+              <RotateCw className="w-3.5 h-3.5" />
+              <span>Xoay phải</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={Boolean(error)}
+              onClick={() => viewRef.current?.zoom(0.85)}
+              className="text-xs h-9 px-3 gap-1 border-line cursor-pointer"
+              title="Phóng to góc nhìn"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+              <span>Phóng to</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={Boolean(error)}
+              onClick={() => viewRef.current?.zoom(1.15)}
+              className="text-xs h-9 px-3 gap-1 border-line cursor-pointer"
+              title="Thu nhỏ góc nhìn"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+              <span>Thu nhỏ</span>
+            </Button>
+          </div>
         </div>
 
-        <div
-          role="group"
-          aria-label="Điều khiển góc nhìn 3D"
-          className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap"
-        >
-          <Button
-            type="button"
-            variant="outline"
-            className="min-h-11"
-            disabled={Boolean(error)}
-            onClick={() => viewRef.current?.rotate(-Math.PI / 12)}
-          >
-            Xoay trái
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            className="min-h-11"
-            disabled={Boolean(error)}
-            onClick={() => viewRef.current?.rotate(Math.PI / 12)}
-          >
-            Xoay phải
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            className="min-h-11"
-            disabled={Boolean(error)}
-            onClick={() => viewRef.current?.zoom(0.85)}
-          >
-            Phóng to
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            className="min-h-11"
-            disabled={Boolean(error)}
-            onClick={() => viewRef.current?.zoom(1.15)}
-          >
-            Thu nhỏ
-          </Button>
-        </div>
-
-        <p className="mt-3 text-sm leading-relaxed text-muted">
-          Kéo để xoay, dùng con lăn hoặc hai ngón tay để thu/phóng. Bạn cũng có
-          thể dùng các nút phía trên; nhấn Tab để chọn nút và Enter để thao tác.
+        <p className="mt-3 text-xs leading-relaxed text-stone-500 dark:text-stone-400">
+          💡 <strong>Mẹo tương tác:</strong> Bạn có thể dùng chuột kéo để xoay tự do 360°, cuộn con lăn (hoặc thao tác 2 ngón tay trên điện thoại) để thu/phóng mô hình bàn thờ.
         </p>
       </div>
     </div>
   );
 };
+

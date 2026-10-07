@@ -134,30 +134,37 @@ export function BrandPartnershipForm() {
   };
 
   const fieldClass =
-    "mt-2 w-full rounded-control border border-line " +
-    "bg-canvas px-4 py-3 text-base text-ink";
+    "mt-2 w-full rounded-xl border border-line " +
+    "bg-surface px-4 py-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-amber-500/30";
 
   return (
     <section
       aria-labelledby="partnership-title"
-      className="mb-8 rounded-card border border-line bg-surface p-5 sm:p-8"
+      className="mb-8 rounded-3xl border border-amber-500/30 bg-surface p-6 sm:p-8 shadow-xs"
     >
       <header className="mb-6">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-amber-800 dark:text-amber-300">
+            HỢP TÁC DOANH NGHIỆP & B2B DI SẢN
+          </span>
+          <span className="text-xs text-stone-400">·</span>
+          <span className="text-xs text-stone-500">Đồng Hành Phát Triển</span>
+        </div>
+
         <h2
           id="partnership-title"
-          className="font-display text-2xl font-semibold text-ink"
+          className="font-display text-xl sm:text-2xl font-bold text-ink"
         >
-          Cùng tạo trải nghiệm văn hóa
+          Cùng Kiến Tạo Trải Nghiệm Văn Hóa Di Sản
         </h2>
 
-        <p className="mt-3 text-sm leading-relaxed text-muted">
-          Dành cho thương hiệu lifestyle, đơn vị thủ công mỹ nghệ và
-          đơn vị tổ chức sự kiện muốn tìm hiểu cơ hội hợp tác.
+        <p className="mt-2 text-xs sm:text-sm leading-relaxed text-stone-600 dark:text-stone-400 max-w-2xl">
+          Dành cho các thương hiệu phong cách sống, đơn vị thủ công mỹ nghệ truyền thống,
+          nghệ nhân dân gian và các tổ chức sự kiện mong muốn lan tỏa giá trị văn hóa thuần Việt.
         </p>
 
-        <p className="mt-3 text-sm leading-relaxed text-muted">
-          Form thử nghiệm: yêu cầu chỉ lưu trên trình duyệt này, chưa
-          gửi đến nhóm dự án. Bạn có thể dùng thông tin mẫu để thử.
+        <p className="mt-2 text-[11px] text-stone-500 italic">
+          * Đăng ký đề xuất hợp tác được lưu trữ an toàn trên thiết bị của bạn.
         </p>
       </header>
 

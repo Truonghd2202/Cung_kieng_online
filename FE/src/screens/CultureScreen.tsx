@@ -179,31 +179,90 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
 
 
         {/* Editorial Masthead Opening */}
-        <div className="discovery-masthead culture-masthead mb-8">
-          <div className="relative max-w-2xl">
-            <div className="mb-3">
-              <Badge
-                variant="terracotta"
-                className="px-3.5 py-1 text-xs font-semibold uppercase tracking-wider bg-surface text-accent border-line"
+        <div className="discovery-masthead culture-masthead mb-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
+          {/* Left Column: Editorial Introduction & Heritage Philosophy */}
+          <div className="lg:col-span-7 flex flex-col justify-between py-1 space-y-5">
+            <div className="space-y-3.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge
+                  variant="outline"
+                  className="px-3.5 py-1 text-xs font-semibold uppercase tracking-wider bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-400/40 rounded-full"
+                >
+                  ✦ Tuyển tập di sản ba miền
+                </Badge>
+                <span className="text-xs text-stone-500 dark:text-stone-400">
+                  · Khảo cứu & Gìn giữ nếp xưa
+                </span>
+              </div>
+
+              <h1
+                tabIndex={-1}
+                className="page-title font-display text-3xl sm:text-4xl lg:text-[42px] font-bold text-ink outline-none focus:outline-none focus-visible:outline-none focus:ring-0 border-0 leading-tight"
               >
-                ✦ Tuyển tập di sản ba miền
-              </Badge>
+                Khám phá văn hóa Việt
+              </h1>
+
+              <p className="text-sm sm:text-base text-stone-700 dark:text-stone-300 leading-relaxed">
+                Hành trình tìm về câu chuyện, phong tục và không gian tín ngưỡng ba miền Bắc — Trung — Nam.
+                Mỗi miền đất là một nét trầm tích dân gian, đọng lại trong nếp sống và nếp thờ tự của người Việt.
+              </p>
             </div>
 
-            <h1 className="page-title mb-4">
-              Khám phá văn hóa Việt
-            </h1>
+            {/* Philosophy Quote Box */}
+            <div className="p-3.5 sm:p-4 rounded-xl border-l-2 border-amber-600 bg-amber-500/5 dark:bg-amber-500/10 border border-line/60">
+              <p className="font-display italic text-xs sm:text-sm text-ink leading-relaxed">
+                “Đất có lề, quê có thói — Hiểu nếp xưa để thêm thương dáng hình hiện tại.”
+              </p>
+            </div>
 
-            <p className="text-sm sm:text-base text-ink leading-relaxed">
-              Tìm hiểu câu chuyện, phong tục và không gian văn hóa
-              Bắc, Trung, Nam. Chọn vùng hoặc chủ đề bạn muốn khám phá.
-            </p>
+            {/* Heritage Highlights Counter Bar */}
+            <div className="pt-3 flex items-center justify-between sm:justify-start sm:gap-10 border-t border-line/60 text-xs text-stone-600 dark:text-stone-400">
+              <div>
+                <strong className="font-display text-xl sm:text-2xl font-bold text-ink block">3</strong>
+                <span>Miền di sản</span>
+              </div>
+              <div className="w-px h-8 bg-line"></div>
+              <div>
+                <strong className="font-display text-xl sm:text-2xl font-bold text-ink block">{CULTURE_ARTICLES.length}+</strong>
+                <span>Chuyên đề khảo cứu</span>
+              </div>
+              <div className="w-px h-8 bg-line"></div>
+              <div>
+                <strong className="font-display text-xl sm:text-2xl font-bold text-ink block">5</strong>
+                <span>Nhóm chủ đề lễ tục</span>
+              </div>
+            </div>
           </div>
-          <img
-            src="/images/hue_trung_bo.jpg"
-            alt="Kiến trúc truyền thống xứ Huế"
-            className="discovery-masthead__image"
-          />
+
+          {/* Right Column: Heritage Visual Canvas */}
+          <div className="lg:col-span-5 relative flex flex-col justify-center">
+            <div className="relative overflow-hidden rounded-2xl shadow-md border border-line bg-surface-soft h-72 sm:h-80 lg:h-full min-h-[300px]">
+              <img
+                src="/images/hue_trung_bo.jpg"
+                alt="Kiến trúc truyền thống xứ Huế bên hồ sen"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent pointer-events-none" />
+
+              <div className="absolute top-3.5 left-3.5">
+                <Badge
+                  variant="outline"
+                  className="px-3 py-1 bg-surface/90 backdrop-blur-md text-[11px] font-bold text-amber-800 dark:text-amber-300 border-amber-400/40 shadow-xs"
+                >
+                  ✦ DI SẢN CỐ ĐÔ HUẾ
+                </Badge>
+              </div>
+
+              <div className="absolute bottom-4 left-4 right-4 text-white">
+                <span className="text-[11px] uppercase tracking-wider text-amber-300 font-semibold block mb-1">
+                  KIẾN TRÚC TRUYỀN THỐNG VIỆT
+                </span>
+                <p className="font-display text-xs sm:text-sm font-medium leading-snug drop-shadow-sm text-stone-100">
+                  Mặt nước hồ sen nghiêng bóng lầu son — Nơi thời gian dừng lại cùng nếp cúng tế ngàn xưa
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <DiscoveryNav
@@ -215,7 +274,7 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
         />
 
         {/* Search & Filter Toolbar */}
-        <div className="py-6 border-y border-line/70 mb-10 space-y-4">
+        <Card className="p-5 sm:p-7 rounded-2xl border-line bg-surface/90 backdrop-blur-sm shadow-xs mb-10 space-y-5">
           {/* Search Input Box */}
           <div className="relative">
             <input
@@ -226,16 +285,16 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
                 setSearchQuery(e.target.value);
                 setVisibleCount(4);
               }}
-              placeholder="Tìm bài viết, phong tục, lễ hội..."
-              className="w-full pl-11 pr-4 py-3 rounded-panel bg-surface/70 border border-line text-base text-ink placeholder:text-subtle focus:outline-none focus:ring-1 focus:ring-accent transition-all"
+              placeholder="Tìm bài viết, phong tục, lễ hội, điển tích xưa..."
+              className="w-full pl-11 pr-4 min-h-12 rounded-xl bg-surface-soft/60 focus:bg-surface border border-line text-base text-ink placeholder:text-stone-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
             />
-            <Search className="w-5 h-5 text-muted absolute left-3.5 top-3.5" />
+            <Search className="w-5 h-5 text-stone-500 absolute left-3.5 top-3.5" />
           </div>
 
           {/* Region Filters Row */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-2 border-t border-line/50">
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted min-w-[130px]">
-              <Compass className="w-4 h-4 text-accent" />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 pt-3 border-t border-line/50">
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400 min-w-[120px]">
+              <Compass className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               <span>Vùng miền:</span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -250,10 +309,10 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
                       setSelectedRegion(r.key);
                       setVisibleCount(4);
                     }}
-                    className={`min-h-11 px-3.5 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${
+                    className={`min-h-10 px-4 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                       isActive
-                        ? "bg-action text-white shadow-2xs font-semibold"
-                        : "bg-surface text-ink border border-line hover:border-accent/40"
+                        ? "bg-gradient-to-r from-red-800 via-amber-700 to-amber-900 text-white font-semibold shadow-xs"
+                        : "bg-surface-soft/60 text-stone-700 dark:text-stone-300 border border-line hover:border-amber-500/40 hover:text-amber-800 dark:hover:text-amber-300"
                     }`}
                   >
                     {r.label}
@@ -264,9 +323,9 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
           </div>
 
           {/* Category Filters Row */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-2 border-t border-line/50">
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted min-w-[130px]">
-              <Tag className="w-4 h-4 text-accent" />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 pt-3 border-t border-line/50">
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400 min-w-[120px]">
+              <Tag className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               <span>Chủ đề:</span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -281,10 +340,10 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
                       setSelectedCategory(c.key);
                       setVisibleCount(4);
                     }}
-                    className={`min-h-11 px-3.5 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${
+                    className={`min-h-10 px-4 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                       isActive
-                        ? "bg-action text-white shadow-2xs font-semibold"
-                        : "bg-surface text-ink border border-line hover:border-accent/40"
+                        ? "bg-gradient-to-r from-red-800 via-amber-700 to-amber-900 text-white font-semibold shadow-xs"
+                        : "bg-surface-soft/60 text-stone-700 dark:text-stone-300 border border-line hover:border-amber-500/40 hover:text-amber-800 dark:hover:text-amber-300"
                     }`}
                   >
                     {c.label}
@@ -295,64 +354,65 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
           </div>
 
           {/* Status Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-line/50 text-xs text-muted">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-line/50 text-xs text-stone-600 dark:text-stone-400">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-action"></span>
+              <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse"></span>
               <span role="status" aria-live="polite" aria-atomic="true">
-                Tìm thấy <strong>{filteredArticles.length}</strong> bài viết
+                Tìm thấy <strong className="text-ink">{filteredArticles.length}</strong> chuyên đề di sản
               </span>
             </div>
 
             {(selectedRegion !== "all" || selectedCategory !== "all" || searchQuery.trim()) && (
               <button
                 onClick={handleResetFilters}
-                className="flex items-center gap-1 text-accent font-semibold hover:underline cursor-pointer"
+                className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-semibold hover:underline cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Đặt lại bộ lọc</span>
               </button>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* ================= EDITORIAL COVER STORY (When browsing default) ================= */}
         {featuredArticle && (
-          <section className="mb-8 sm:mb-12">
-            <div className="text-xs font-bold uppercase tracking-widest text-accent mb-3 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-accent" />
+          <section className="mb-10 sm:mb-12">
+            <div className="text-xs font-bold uppercase tracking-widest text-amber-800 dark:text-amber-400 mb-3 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               <span>CHUYÊN ĐỀ TÂM ĐIỂM KỲ NÀY</span>
             </div>
 
-            <article
-              className="group rounded-card overflow-hidden bg-surface border border-line shadow-xs hover:shadow-card transition-all duration-300 grid grid-cols-1 lg:grid-cols-12"
-            >
-              <div className="lg:col-span-7 relative h-48 sm:h-72 lg:h-full overflow-hidden bg-surface-soft">
+            <article className="group rounded-2xl overflow-hidden bg-surface/95 border border-amber-500/30 shadow-sm hover:shadow-md transition-all duration-300 grid grid-cols-1 lg:grid-cols-12">
+              <div className="lg:col-span-7 relative h-56 sm:h-72 lg:h-full overflow-hidden bg-surface-soft">
                 <img
                   src={featuredArticle.image}
                   alt={featuredArticle.title}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-black/50 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-black/60 via-transparent to-transparent pointer-events-none" />
                 <div className="absolute top-4 left-4 flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full bg-surface/90 backdrop-blur-md text-xs font-bold text-accent border border-line shadow-xs">
+                  <Badge
+                    variant="outline"
+                    className="px-3 py-1 bg-surface/90 backdrop-blur-md text-xs font-bold text-amber-800 dark:text-amber-300 border-amber-400/40 shadow-xs"
+                  >
                     {featuredArticle.region}
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-action text-white text-xs font-semibold shadow-xs">
+                  </Badge>
+                  <Badge className="px-3 py-1 bg-amber-700 text-white text-xs font-semibold shadow-xs">
                     {featuredArticle.category}
-                  </span>
+                  </Badge>
                 </div>
               </div>
 
-              <div className="lg:col-span-5 p-6 sm:p-10 flex flex-col justify-between space-y-6">
+              <div className="lg:col-span-5 p-6 sm:p-9 flex flex-col justify-between space-y-6">
                 <div>
-                  <div className="flex items-center gap-2 text-xs text-muted mb-3">
-                    <Clock className="w-3.5 h-3.5 text-accent" />
+                  <div className="flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400 mb-3">
+                    <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                     <span>Thời gian đọc {featuredArticle.readingTime}</span>
                     <span>•</span>
-                    <span className="italic text-accent">Khảo cứu văn hóa</span>
+                    <span className="italic text-amber-700 dark:text-amber-400 font-medium">Khảo cứu văn hóa</span>
                   </div>
 
-                  <h2 className="font-display font-bold text-2xl sm:text-3xl text-ink leading-tight mb-4 group-hover:text-accent transition-colors">
+                  <h2 className="font-display font-bold text-2xl sm:text-3xl text-ink leading-tight mb-4 group-hover:text-amber-800 dark:group-hover:text-amber-400 transition-colors">
                     <a
                       href={`/culture-detail?articleId=${encodeURIComponent(
                         featuredArticle.id
@@ -360,27 +420,25 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
                       onClick={(event) =>
                         handleArticleLinkClick(event, featuredArticle.id)
                       }
-                      className="rounded-sm hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                      className="rounded-sm hover:text-amber-800 dark:hover:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
                     >
                       {featuredArticle.title}
                     </a>
                   </h2>
 
-                  <p className="line-clamp-3 text-sm leading-relaxed text-muted sm:line-clamp-none sm:text-base">
+                  <p className="line-clamp-3 text-sm sm:text-base leading-relaxed text-stone-600 dark:text-stone-300">
                     {featuredArticle.subtitle}
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-line/70 flex items-center justify-between">
-                  <span className="text-xs text-muted italic">
+                <div className="pt-4 border-t border-line flex items-center justify-between">
+                  <span className="text-xs text-stone-500 italic">
                     Di sản & Không gian tín ngưỡng
                   </span>
                   <Button
                     type="button"
-                    variant="default"
-                    size="sm"
                     onClick={() => onSelectArticle(featuredArticle.id)}
-                    className="gap-2 bg-action text-white shadow-xs group-hover:shadow-card cursor-pointer"
+                    className="gap-2 min-h-11 px-5 rounded-xl bg-gradient-to-r from-red-800 via-amber-700 to-amber-900 hover:from-red-700 hover:to-amber-800 text-white font-semibold shadow-md cursor-pointer"
                   >
                     <span>Đọc chuyên đề</span>
                     <ArrowRight className="w-4 h-4" />
@@ -393,14 +451,14 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
 
         {/* Section Heading for Catalog Grid */}
         {filteredArticles.length > 0 && (
-          <div className="flex items-center justify-between gap-4 mb-6 pb-2 border-b border-line/60">
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-4 bg-action rounded-full"></span>
+          <div className="flex items-center justify-between gap-4 mb-6 pb-3 border-b border-line">
+            <div className="flex items-center gap-2.5">
+              <span className="w-1.5 h-5 bg-gradient-to-b from-red-800 to-amber-600 rounded-full"></span>
               <h2 className="font-display font-bold text-lg sm:text-xl text-ink">
                 {isDefaultView ? "Các chuyên đề di sản chọn lọc" : "Kết quả tra cứu"}
               </h2>
             </div>
-            <span className="text-xs text-muted">
+            <span className="text-xs font-medium text-stone-500">
               {catalogArticles.length} chuyên đề
             </span>
           </div>
@@ -408,114 +466,106 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
 
         {/* Articles Grid or Empty State */}
         {filteredArticles.length === 0 ? (
-          <div className="p-12 text-center rounded-card bg-surface border border-line max-w-lg mx-auto shadow-xs my-10">
-            <div className="w-14 h-14 mx-auto rounded-full bg-surface-soft text-accent flex items-center justify-center mb-4">
+          <Card className="p-12 text-center rounded-2xl bg-surface/95 border-line max-w-lg mx-auto shadow-xs my-10">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/15 border border-amber-400/30 text-amber-700 dark:text-amber-400 flex items-center justify-center mb-4">
               <BookOpen className="w-6 h-6" />
             </div>
             <h3 className="font-display font-bold text-xl text-ink mb-2">
               Chưa tìm thấy chuyên đề phù hợp
             </h3>
-            <p className="text-sm text-muted leading-relaxed mb-6">
+            <p className="text-sm text-stone-600 dark:text-stone-300 leading-relaxed mb-6">
               Không có bài viết nào khớp với từ khóa hoặc bộ lọc hiện tại. Bạn có thể thử tìm
               từ khóa khác hoặc đặt lại bộ lọc.
             </p>
-            <Button variant="default" size="pill" onClick={handleResetFilters}>
+            <Button
+              type="button"
+              onClick={handleResetFilters}
+              className="min-h-11 px-6 rounded-xl bg-gradient-to-r from-red-800 via-amber-700 to-amber-900 text-white font-semibold cursor-pointer shadow-md"
+            >
               Đặt lại tất cả bộ lọc
             </Button>
-          </div>
+          </Card>
         ) : (
           <>
             <div
               id="culture-article-list"
-              className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-7 lg:grid-cols-3"
+              className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mb-10"
             >
               {visibleArticles.map((article) => (
-                <article
+                <Card
                   key={article.id}
-                  className="group border-b border-line pb-5 md:flex md:flex-col md:pb-6"
+                  className="group rounded-2xl border-line bg-surface/95 hover:bg-surface-soft/80 p-5 flex flex-col justify-between shadow-xs hover:shadow-sm hover:border-amber-500/40 transition-all duration-300"
                 >
-                  <div className="flex items-start gap-4 md:block">
-                    <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-surface-soft md:mb-4 md:h-auto md:w-full md:aspect-16/10">
+                  <div>
+                    <div className="relative overflow-hidden rounded-xl bg-surface-soft aspect-16/10 mb-4">
                       <img
                         src={article.image}
                         alt={article.title}
                         loading="lazy"
                         decoding="async"
-                        className="h-full w-full object-cover transition-transform duration-300 motion-reduce:transition-none md:group-hover:scale-105"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="mb-1.5 text-xs font-medium text-accent">
+                      <Badge
+                        variant="outline"
+                        className="absolute top-2.5 left-2.5 px-2.5 py-0.5 bg-surface/90 backdrop-blur-md text-xs font-semibold text-amber-800 dark:text-amber-300 border-amber-400/40"
+                      >
                         {article.region}
-                        <span aria-hidden="true"> · </span>
-                        {article.readingTime}
-                      </p>
-
-                      <h3 className="mb-2 font-display text-base font-bold leading-snug text-ink md:text-xl">
-                        <a
-                          href={`/culture-detail?articleId=${encodeURIComponent(
-                            article.id
-                          )}`}
-                          onClick={(event) =>
-                            handleArticleLinkClick(
-                              event,
-                              article.id
-                            )
-                          }
-                          className="rounded-sm hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                        >
-                          {article.title}
-                        </a>
-                      </h3>
-
-                      <p className="line-clamp-2 text-sm leading-relaxed text-muted">
-                        {article.excerpt}
-                      </p>
+                      </Badge>
                     </div>
+
+                    <div className="flex items-center gap-1.5 text-xs text-stone-500 dark:text-stone-400 mb-2">
+                      <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                      <span>{article.readingTime}</span>
+                      <span>·</span>
+                      <span className="font-medium text-amber-700 dark:text-amber-400">{article.category}</span>
+                    </div>
+
+                    <h3 className="font-display text-lg font-bold leading-snug text-ink mb-2 group-hover:text-amber-800 dark:group-hover:text-amber-400 transition-colors">
+                      <a
+                        href={`/culture-detail?articleId=${encodeURIComponent(
+                          article.id
+                        )}`}
+                        onClick={(event) =>
+                          handleArticleLinkClick(event, article.id)
+                        }
+                        className="rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                      >
+                        {article.title}
+                      </a>
+                    </h3>
+
+                    <p className="line-clamp-2 text-sm leading-relaxed text-stone-600 dark:text-stone-300 mb-4">
+                      {article.excerpt}
+                    </p>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-between gap-3 md:mt-auto md:pt-4">
-                    <span className="min-w-0 text-xs text-muted">
-                      {article.category}
+                  <div className="pt-4 border-t border-line flex items-center justify-between">
+                    <span className="text-xs text-stone-500">
+                      Chuyên đề di sản
                     </span>
 
-                    <a
-                      href={`/culture-detail?articleId=${encodeURIComponent(
-                        article.id
-                      )}`}
-                      onClick={(event) =>
-                        handleArticleLinkClick(
-                          event,
-                          article.id
-                        )
-                      }
-                      aria-label={`Đọc bài: ${article.title}`}
-                      className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-accent hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    <button
+                      type="button"
+                      onClick={() => onSelectArticle(article.id)}
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-800 dark:text-amber-300 hover:text-amber-600 transition-colors cursor-pointer"
                     >
-                      Đọc bài
-                      <ArrowRight
-                        className="h-4 w-4"
-                        aria-hidden="true"
-                      />
-                    </a>
+                      <span>Đọc bài</span>
+                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </button>
                   </div>
-                </article>
+                </Card>
               ))}
             </div>
 
-            <div className="mb-10 mt-6 flex flex-col items-center gap-3">
+            <div className="mb-12 flex flex-col items-center gap-3">
               <p
                 role="status"
                 aria-live="polite"
                 aria-atomic="true"
-                className="text-sm text-muted"
+                className="text-xs sm:text-sm text-stone-500"
               >
-                Đang hiển thị {visibleArticles.length} /{" "}
-                {catalogArticles.length} bài
-                {featuredArticle
-                  ? " trong danh sách, ngoài bài nổi bật."
-                  : "."}
+                Đang hiển thị {visibleArticles.length} / {catalogArticles.length} bài
+                {featuredArticle ? " (ngoài bài tâm điểm)." : "."}
               </p>
 
               {catalogArticles.length > 4 && (
@@ -524,17 +574,14 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
                   variant="outline"
                   disabled={!hasMoreArticles}
                   aria-controls="culture-article-list"
-                  onClick={() =>
-                    setVisibleCount((count) => count + 4)
-                  }
-                  className="min-h-11 w-full sm:w-auto"
+                  onClick={() => setVisibleCount((count) => count + 4)}
+                  className="min-h-11 px-7 rounded-xl border-line text-ink hover:text-accent font-semibold cursor-pointer"
                 >
                   {hasMoreArticles
                     ? `Xem thêm ${Math.min(
                         4,
-                        catalogArticles.length -
-                          visibleArticles.length
-                      )} bài`
+                        catalogArticles.length - visibleArticles.length
+                      )} chuyên đề`
                     : "Đã hiển thị tất cả"}
                 </Button>
               )}
@@ -543,30 +590,32 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
         )}
 
         {/* Editorial Principles Callout Banner */}
-        <div className="p-6 sm:p-8 rounded-card bg-surface border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-16 shadow-2xs">
+        <Card className="p-6 sm:p-8 rounded-2xl border-line bg-surface/95 flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-16 shadow-xs backdrop-blur-sm">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-panel bg-surface-soft border border-line flex items-center justify-center text-accent shrink-0">
-              <ShieldCheck className="w-6 h-6 text-accent" />
+            <div className="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-400/30 flex items-center justify-center text-amber-700 dark:text-amber-400 shrink-0">
+              <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <div className="text-xs uppercase tracking-widest text-muted font-semibold mb-1">
+              <div className="text-xs uppercase tracking-widest text-stone-500 font-semibold mb-0.5">
                 Thông điệp của Tin Lắm Tâm Linh
               </div>
-              <div className="text-xs font-bold uppercase tracking-wider text-accent mb-1">
+              <div className="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400 mb-1.5">
                 NGUYÊN TẮC BIÊN TẬP & BẢO TỒN DI SẢN
               </div>
-              <p className="text-sm text-ink/80 leading-relaxed max-w-2xl">
-                Nội dung được giới thiệu theo góc nhìn văn hóa.
-                Bạn có thể xem tài liệu tham khảo trong từng bài;
-                các nguồn cần tiếp tục được đối chiếu trước khi phát hành chính thức.
+              <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed max-w-2xl">
+                Nội dung được giới thiệu theo góc nhìn văn hóa, tôn trọng đa dạng tập tục vùng miền.
+                Bạn có thể xem tài liệu tham khảo chi tiết trong từng bài viết để cùng gìn giữ nếp xưa.
               </p>
             </div>
           </div>
 
-          <div className="px-4 py-2 rounded-full bg-surface-soft border border-line text-xs font-semibold text-accent shrink-0 self-start sm:self-auto shadow-2xs">
+          <Badge
+            variant="outline"
+            className="px-4 py-2 rounded-full bg-amber-500/10 border-amber-400/40 text-xs font-semibold text-amber-800 dark:text-amber-300 shrink-0 self-start sm:self-auto"
+          >
             Bảo tồn văn hóa phi vật thể
-          </div>
-        </div>
+          </Badge>
+        </Card>
       </main>
     </div>
   );

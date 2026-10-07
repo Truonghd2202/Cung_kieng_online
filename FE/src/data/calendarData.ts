@@ -115,16 +115,66 @@ export const SAMPLE_CALENDAR_EVENTS: CalendarEventItem[] = [
     region: "Ninh Thuận & Bình Thuận",
     title: "Lễ hội Katê của đồng bào Chăm",
     shortDesc:
-      "Lễ hội truyền thống lớn nhất của người Chăm tưởng nhớ thần Po Klong Garai, Po Rome và ông bà tổ tiên, gắn liền với tiếng trống Ghinăng rộn rã.",
-    lunarDate: "Đầu tháng 7 lịch Chăm (02/10/2024)",
+      "Lễ hội truyền thống thiêng liêng và quy mô lớn nhất của người Chăm Bà-la-môn, tưởng nhớ thần Po Klong Garai, Po Rome và tổ tiên, hòa trong tiếng trống Ghinăng rộn rã và điệu múa quạt huyền ảo.",
+    lunarDate: "Đầu tháng 7 lịch Chăm (02/10/2024 Dương lịch)",
     badge: "Di sản Quốc gia",
     verifiedSource:
-      "Kiểm chứng: Quyết định ghi danh Di sản văn hóa phi vật thể Quốc gia (Bộ VHTTDL); Lịch thực hành lễ nghi Hội đồng chức sắc Chăm Bà-la-môn.",
-    heroImage: "/images/den_hung.jpg",
-    heroCaption: "Không gian lễ hội Katê linh thiêng dưới chân tháp Chăm cổ kính.",
-    timing: "01 - 03/10/2024 Dương lịch",
-    scope: "Khu vực Nam Trung Bộ (Cộng đồng Chăm)",
-    coreMeaning: "Tri ân tiền nhân khai mương đắp đập, cầu mưa thuận gió hòa"
+      "Kiểm chứng: Quyết định số 2473/QĐ-BVHTTDL ghi danh Di sản văn hóa phi vật thể Quốc gia; Khảo cứu 'Văn hóa Chăm' của GS. Phan Xuân Biên và Hội đồng Chức sắc Chăm Bà-la-môn.",
+    heroImage: "/images/hue_trung_bo.jpg",
+    heroCaption:
+      "Không gian lễ hội Katê huyền ảo dưới chân tháp Chăm cổ kính: Điệu múa quạt uyển chuyển và nhịp trống Ghinăng trầm hùng.",
+    timing: "01/10 - 03/10/2024 Dương lịch (Đầu tháng 7 lịch Chăm)",
+    scope: "Nam Trung Bộ (Cộng đồng Chăm Ninh Thuận, Bình Thuận & kiều bào)",
+    coreMeaning: "Tri ân tiền nhân khai mương đắp đập, thắt chặt tình đoàn kết cộng đồng",
+    culturalMeaning: {
+      paragraphs: [
+        "Lễ hội Katê (Mbang Katé) là ngày Tết dân gian lớn nhất trong năm của cộng đồng người Chăm theo đạo Bà-la-môn. Diễn ra dưới bóng các cụm tháp cổ ngàn năm như Po Klong Garai, Po Rome (Ninh Thuận) và Po Sah Inư (Bình Thuận), Katê là dịp người Chăm tề tựu để tri ân các vị vua hiền, anh hùng dân tộc có công khai hoang, dạy dân trồng lúa nước và đắp đập dẫn thủy nhập điền.",
+        "Sau phần nghi lễ thiêng liêng trên đền tháp do các chức sắc tôn giáo chủ trì, lễ hội chuyển về từng làng Chăm (Plêi) và từng gia đình. Tiếng kèn Saranai réo rắt, tiếng trống Ghinăng rộn rã thúc giục những bước chân nhảy múa trong sắc áo thổ cẩm rực rỡ, gắn kết tình làng nghĩa xóm và chan chứa tinh thần tự hào dân tộc."
+      ],
+      quote:
+        "Tiếng kèn Saranai ngân vang chân tháp cổ, điệu múa quạt huyền ảo dâng ngàn lời tri ân tiền hiền khai sơn phá thạch."
+    },
+    customs: [
+      {
+        title: "Lễ rước y trang thần linh",
+        desc: "Đồng bào người Raglai trang trọng rước xiêm y của các vị thần trao lại cho các chức sắc Chăm mở cửa tháp, biểu tượng của tình anh em keo sơn giữa hai dân tộc."
+      },
+      {
+        title: "Nghi thức Mộc Dục (Tắm tượng)",
+        desc: "Thầy Cả sư (Po Adhia) thực hiện nghi thức rưới nước thơm, thoa trầm hương lên linga và tượng thần trên tháp cổ trong tiếng tụng kinh trang nghiêm."
+      },
+      {
+        title: "Dâng mâm lễ vật truyền thống",
+        desc: "Mỗi gia đình sửa soạn mâm cỗ dâng thần gồm trầu cau, gạo nếp, bánh gừng (Ging bil), hoa quả tươi và chén nước trong, cầu chúc mùa màng tốt tươi."
+      },
+      {
+        title: "Vũ điệu dân gian & Trò chơi hội",
+        desc: "Thiếu nữ Chăm duyên dáng múa quạt, hòa cùng các cuộc thi kéo co, dệt thổ cẩm, thi đội nước và giao lưu văn nghệ thâu đêm suốt sáng."
+      }
+    ],
+    youthActions: [
+      {
+        step: 1,
+        title: "Tìm hiểu di sản kiến trúc đền tháp Chăm",
+        desc: "Khám phá kỹ thuật xây gạch không mạch vữa và nghệ thuật điêu khắc đá độc bản của văn minh Champa cổ xưa."
+      },
+      {
+        step: 2,
+        title: "Lắng nghe thanh âm nhạc cụ dân gian",
+        desc: "Thưởng thức sự phối hợp độc đáo của bộ ba nhạc cụ thiêng: trống Ghinăng, trống Paranưng và kèn Saranai."
+      },
+      {
+        step: 3,
+        title: "Tôn trọng không gian tín ngưỡng bản địa",
+        desc: "Khi tham gia lễ hội, mặc trang phục kín đáo, xin phép trước khi chụp ảnh nghi lễ thiêng và chung tay giữ gìn vệ sinh di tích."
+      }
+    ],
+    regionalNuances: {
+      bac: "Cộng đồng người Chăm tại thủ đô và phía Bắc tổ chức giao lưu văn hóa tại Làng Văn hóa - Du lịch các dân tộc Việt Nam (Đồng Mô).",
+      trung: "Tâm điểm rực rỡ tại đền tháp Ninh Thuận và Bình Thuận với sự tham gia của hàng vạn đồng bào và du khách quốc tế.",
+      nam: "Đồng bào Chăm tại An Giang và TP.HCM tổ chức các buổi họp mặt truyền thống, trao học bổng cho học sinh nghèo và giao lưu văn nghệ.",
+      note: "Lễ hội Katê tôn vinh sự cần cù lao động và lòng biết ơn thiên nhiên; nghiêm cấm các hành vi trục lợi thương mại hay xuyên tạc tín ngưỡng dân gian."
+    }
   },
   {
     id: "tet-trung-cuu",
@@ -134,18 +184,68 @@ export const SAMPLE_CALENDAR_EVENTS: CalendarEventItem[] = [
     type: "festival",
     typeLabel: "Phong tục cổ truyền",
     region: "Toàn quốc",
-    title: "Tết Trùng Cửu (Trùng Dương 9/9)",
+    title: "Tết Trùng Cửu (Trùng Dương 9/9 Âm lịch)",
     shortDesc:
-      "Tục xưa lên núi ngắm cảnh thu (đăng cao), thưởng hoa cúc mùa thu, uống trà cúc và gửi lời chúc trường thọ tới bậc cao niên trong gia đình.",
-    lunarDate: "Ngày 9 tháng 9 Giáp Thìn (11/10/2024)",
+      "Tiết thu thanh bình, tục xưa leo núi ngắm cảnh thu (đăng cao), thưởng thức hoa cúc vàng, uống trà cúc thanh tao và dâng lời chúc trường thọ tới ông bà, cha mẹ.",
+    lunarDate: "Ngày 9 tháng 9 Giáp Thìn (11/10/2024 Dương lịch)",
     badge: "Mỹ tục mùa thu",
     verifiedSource:
-      "Kiểm chứng: 'Hội hè lễ tết của người Việt' (Nguyễn Văn Huyên); Các trước tác thi ca cổ điển thời Lý - Trần - Lê.",
+      "Kiểm chứng: 'Hội hè lễ tết của người Việt' (Nguyễn Văn Huyên); Khảo cứu 'Việt Nam phong tục' (Phan Kế Bính) và thi ca thời Lý - Trần.",
     heroImage: "/images/tea_bowl.jpg",
-    heroCaption: "Thưởng hoa cúc và tách trà thu trong tiết Trùng Cửu thanh cao.",
+    heroCaption:
+      "Thưởng hoa cúc vàng và chén trà ấm thanh tao: Nét tao nhã của tiết Trùng Cửu dưỡng tâm an lành.",
     timing: "11/10/2024 Dương lịch (09/9 Âm lịch)",
-    scope: "Toàn quốc (Truyền thống văn nhân & gia đình)",
-    coreMeaning: "Kính dưỡng người già & Chiêm nghiệm sự tuần hoàn của trời đất"
+    scope: "Toàn quốc (Nếp sống văn nhân & Gia đình tri ân bậc cao niên)",
+    coreMeaning: "Kính dưỡng người già, thưởng ngoạn thiên nhiên & Dưỡng tâm thanh tịnh",
+    culturalMeaning: {
+      paragraphs: [
+        "Tết Trùng Cửu rơi vào ngày mùng 9 tháng 9 âm lịch. Con số 9 trong quan niệm dịch học là số cực dương; ngày mùng 9 tháng 9 là ngày 'Trùng Cửu' hay 'Trùng Dương' — hai số chín gặp nhau biểu trưng cho sự viên mãn, trường thọ và vĩnh cửu.",
+        "Vào tiết thu se lạnh, người Việt xưa có tập tục thanh nhã: leo núi ngắm cảnh mây trời (gọi là 'đăng cao'), uống rượu cúc hoặc trà hoa cúc và cắm cành thù du trừ tà. Trong đời sống gia đình, đây là ngày hội mừng thọ, bày tỏ lòng hiếu kính đối với các bậc cao niên, cầu mong ông bà cha mẹ được bách niên giai lão, sống vui vầy cùng con cháu."
+      ],
+      quote:
+        "Trùng dương chín chín ngát hương cúc, nâng chén trà thu kính thọ người. Trời đất giao hòa gió mát lành, tâm an một thoáng giữa chơi vơi."
+    },
+    customs: [
+      {
+        title: "Thưởng hoa cúc & Uống trà cúc",
+        desc: "Hoa cúc nở rộ vào mùa thu tượng trưng cho khí phách thanh cao của bậc quân tử; uống trà hoa cúc giúp thanh nhiệt, tĩnh tâm và sáng mắt."
+      },
+      {
+        title: "Đăng cao (Lên núi ngắm cảnh)",
+        desc: "Cùng người thân leo núi dạo bước giữa thiên nhiên khoáng đạt, hít thở không khí trong lành của mùa thu và ngắm nhìn non nước."
+      },
+      {
+        title: "Kính dưỡng & Chúc thọ bậc cao niên",
+        desc: "Dâng chén trà ấm, chuẩn bị bữa cơm nếp nhà sum vầy và gửi gắm những lời chúc trường thọ chân thành tới ông bà cha mẹ."
+      },
+      {
+        title: "Ngâm thơ & Đàm đạo văn chương",
+        desc: "Các bậc văn nhân xưa thường họp bạn ngâm vịnh thơ thu, chia sẻ lẽ sống an nhiên tự tại giữa sự đổi thay của trời đất."
+      }
+    ],
+    youthActions: [
+      {
+        step: 1,
+        title: "Pha một ấm trà hoa cúc tặng người thân",
+        desc: "Tự tay pha một ấm trà cúc mật ong ấm áp mời cha mẹ hoặc ông bà thưởng thức trong buổi sáng se lạnh."
+      },
+      {
+        step: 2,
+        title: "Dành một buổi dã ngoại giữa thiên nhiên",
+        desc: "Rời xa khói bụi và áp lực công việc, tìm đến một công viên nhiều cây xanh hoặc ngọn đồi thoai thoải để tái tạo năng lượng tinh thần."
+      },
+      {
+        step: 3,
+        title: "Lắng nghe tâm sự của người già",
+        desc: "Ngồi lại chuyện trò, lắng nghe ông bà kể về ký ức nếp nhà xưa, bồi đắp lòng trắc ẩn và sự thấu hiểu giữa các thế hệ."
+      }
+    ],
+    regionalNuances: {
+      bac: "Gắn liền với mùa thu Hà Nội, người dân chuộng mua hoa cúc họa mi, cúc vàng dâng hương và thưởng trà sen, trà cúc bên hồ.",
+      trung: "Xứ Huế trầm mặc với phong vị trà cung đình, ngắm hoa cúc vườn ngự và dâng hương cầu an tại các ngôi chùa cổ ven sông Hương.",
+      nam: "Tiết trời phương Nam ấm áp, con cháu thường tổ chức lễ mừng thọ tại gia đình và dâng mâm quả ngọt sum vầy.",
+      note: "Ý nghĩa cao quý nhất của Tết Trùng Cửu là chữ Hiếu và lối sống hòa hợp thiên nhiên; giản dị, thanh tao, không phô trương hình thức."
+    }
   },
   {
     id: "hoi-chua-keo-mua-thu",
@@ -157,16 +257,66 @@ export const SAMPLE_CALENDAR_EVENTS: CalendarEventItem[] = [
     region: "Vũ Thư, Thái Bình",
     title: "Lễ hội Chùa Keo mùa thu (Khai hội)",
     shortDesc:
-      "Lễ hội tưởng nhớ Thiền sư Không Lộ với các nghi thức cổ truyền: rước kiệu, thi bơi chải và điệu múa ếch vồ độc đáo tại ngôi chùa gỗ hơn 400 năm tuổi.",
-    lunarDate: "Từ 13/9 đến 15/9 Giáp Thìn (15 - 17/10/2024)",
+      "Đại lễ hội tưởng nhớ Thiền sư Không Lộ tại kiệt tác kiến trúc chùa gỗ hơn 400 năm tuổi, nổi bật với lễ rước kiệu thánh, thi bơi chải và điệu múa ếch vồ cổ truyền độc nhất vô nhị.",
+    lunarDate: "Từ 13/9 đến 15/9 Giáp Thìn (15 - 17/10/2024 Dương lịch)",
     badge: "Di sản Quốc gia",
     verifiedSource:
-      "Kiểm chứng: Hồ sơ Di tích Quốc gia Đặc biệt Chùa Keo; Di sản văn hóa phi vật thể Quốc gia (Bộ VHTTDL).",
+      "Kiểm chứng: Hồ sơ Di tích Quốc gia Đặc biệt Chùa Keo; Quyết định ghi danh Di sản văn hóa phi vật thể Quốc gia (Bộ VHTTDL).",
     heroImage: "/images/temple_bac_bo.jpg",
-    heroCaption: "Gác chuông Chùa Keo Thái Bình — Kiệt tác kiến trúc gỗ cổ truyền Việt Nam.",
-    timing: "15/10/2024 - 17/10/2024 Dương lịch (13 - 15/9 Âm lịch)",
-    scope: "Đồng bằng Bắc Bộ (Thái Bình)",
-    coreMeaning: "Tôn vinh vị đại thiền sư, danh y và tổ nghề đúc đồng"
+    heroCaption:
+      "Gác chuông Chùa Keo Thái Bình (3 tầng 12 mái) — Đỉnh cao kiệt tác kiến trúc gỗ cổ truyền Việt Nam.",
+    timing: "15/10 - 17/10/2024 Dương lịch (13 - 15/9 Âm lịch)",
+    scope: "Đồng bằng châu thổ sông Hồng (Vũ Thư, Thái Bình)",
+    coreMeaning: "Tôn vinh bậc đại thiền sư, danh y cứu thế và gìn giữ tinh hoa kiến trúc gỗ Việt",
+    culturalMeaning: {
+      paragraphs: [
+        "Chùa Keo (tên chữ là Thần Quang Tự, tọa lạc tại xã Duy Nhất, huyện Vũ Thư, Thái Bình) là một trong những ngôi cổ tự bằng gỗ đẹp và bề thế bậc nhất Việt Nam. Được dựng lại từ thế kỷ XVII, toàn bộ công trình gồm hàng trăm gian nhà gỗ kết nối bằng mộng mạo tinh xảo mà không dùng một chiếc đinh sắt nào, nổi tiếng với Gác chuông 3 tầng 12 mái dáng vẻ thanh thoát tựa đóa sen nở.",
+        "Lễ hội mùa thu chùa Keo diễn ra từ ngày 13 đến 15 tháng 9 âm lịch, kỷ niệm ngày viên tịch của Thiền sư Dương Không Lộ (1016 - 1094). Ngài là bậc cao tăng thời Lý, vừa là danh y chữa khỏi bệnh nan y cho vua Lý Thần Tông, vừa là ông tổ nghề đúc đồng của dân tộc. Lễ hội là sự hòa quyện tuyệt mỹ giữa nghi lễ Phật giáo thanh tịnh và các trò diễn xướng dân gian hào sảng của cư dân lúa nước sông Hồng."
+      ],
+      quote:
+        "Gác chuông ba tầng mười hai mái / Chuông đồng ngân vọng bóng sông sâu. Nhớ ơn Đức Thánh Không Lộ / Nếp xưa ngàn thuở rạng danh thơm."
+    },
+    customs: [
+      {
+        title: "Lễ rước kiệu Thánh quy mô",
+        desc: "Đoàn rước kiệu thuyền rực rỡ cờ lọng từ chùa ra bến sông, tái hiện cuộc đời chài lưới và hành đạo cứu nhân độ thế của Thiền sư Không Lộ."
+      },
+      {
+        title: "Điệu múa ếch vồ (Múa Chèo chải cổ)",
+        desc: "Điệu múa nghi lễ dân gian độc bản mô phỏng động tác chèo thuyền bắt cá và tiếng kêu linh thiêng của muông thú cầu mưa thuận gió hòa."
+      },
+      {
+        title: "Hội thi bơi chải trên sông Trà Ly",
+        desc: "Các đội chải của làng đua tài quyết liệt giữa tiếng trống giục giã, thể hiện tinh thần thượng võ và sức mạnh quật cường của cư dân vùng sông nước."
+      },
+      {
+        title: "Thi thổi cơm chạy & Bắt vịt trên hồ",
+        desc: "Trò chơi dân gian vui nhộn thử thách tài khéo léo, vừa chạy vừa giữ lửa nấu cơm chín dẻo dâng cúng Phật và Thánh."
+      }
+    ],
+    youthActions: [
+      {
+        step: 1,
+        title: "Chiêm ngưỡng kết cấu kiến trúc gỗ cổ truyền",
+        desc: "Tận mắt quan sát kỹ thuật chồng rường, đấu củng và nghệ thuật chạm khắc rồng phượng tinh xảo thời Lê Trung Hưng tại Gác chuông chùa Keo."
+      },
+      {
+        step: 2,
+        title: "Học tập tinh thần nhập thế của thiền học thời Lý",
+        desc: "Tìm hiểu tấm gương đem tri thức y học và kỹ nghệ đúc đồng giúp ích cho muôn dân của Thiền sư Không Lộ."
+      },
+      {
+        step: 3,
+        title: "Chiêm bái thanh tịnh tại chốn thiền môn",
+        desc: "Giữ tâm thanh tịnh, thắp nén hương trầm mộc mạc và gửi lời cầu nguyện an lành cho quê hương, gia đình."
+      }
+    ],
+    regionalNuances: {
+      bac: "Cái nôi văn hóa lúa nước Thái Bình — Nam Định, thu hút hàng vạn khách thập phương hành hương về chiêm bái và xem hội chèo chải.",
+      trung: "Đồng bào miền Trung tưởng niệm Thiền sư Không Lộ qua việc kế thừa nghề đúc đồng truyền thống tại các làng nghề Phước Kiều (Quảng Nam), đúc đồng xứ Huế.",
+      nam: "Các hội đồng hương Thái Bình tại miền Nam thường tề tựu vào dịp này để giao lưu, ôn lại truyền thống quê hương và tổ chức hoạt động thiện nguyện.",
+      note: "Hội chùa Keo là di sản sống quý báu; việc bảo tồn cấu trúc gỗ cổ và môi trường sinh thái quanh di tích là trách nhiệm chung của toàn xã hội."
+    }
   },
   {
     id: "le-soc-vong-ngay-ram",

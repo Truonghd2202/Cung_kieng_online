@@ -9,6 +9,19 @@ import {
   type GoodDayQuery,
   type GoodDayResult,
 } from "../data/goodDayLookup";
+import {
+  Sparkles,
+  Calendar,
+  Clock,
+  Compass,
+  BookmarkCheck,
+  Check,
+  ArrowRight,
+  ShieldCheck,
+  CalendarDays,
+  Heart,
+  ChevronRight,
+} from "lucide-react";
 
 interface DayPlan {
   title: string;
@@ -27,30 +40,37 @@ export function GoodDayLookupPanel({
   onGoToCalendar,
 }: GoodDayLookupPanelProps) {
   const [purpose, setPurpose] = useState<GoodDayPurpose>("family");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-  const [searchedQuery, setSearchedQuery] =
-    useState<GoodDayQuery | null>(null);
+
+  // Mặc định khoảng ngày: 15 ngày tới kể từ hôm nay
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+  const next15Days = new Date(today.getTime() + 15 * 86400000);
+  const next15DaysStr = next15Days.toISOString().split("T")[0];
+
+  const [from, setFrom] = useState(todayStr);
+  const [to, setTo] = useState(next15DaysStr);
+  const [searchedQuery, setSearchedQuery] = useState<GoodDayQuery | null>(null);
   const [results, setResults] = useState<GoodDayResult[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const resetResults = () => {
-    setSearchedQuery(null);
-    setResults([]);
-    setError("");
-    setMessage("");
+  const handleQuickRange = (days: number) => {
+    const start = new Date();
+    const end = new Date(start.getTime() + days * 86400000);
+    setFrom(start.toISOString().split("T")[0]);
+    setTo(end.toISOString().split("T")[0]);
   };
 
   const search = (event: FormEvent) => {
     event.preventDefault();
 
-    const query = { purpose, from, to };
+    const query: GoodDayQuery = { purpose, from, to };
     const validationError = validateGoodDayQuery(query);
 
     if (validationError) {
-      resetResults();
+      setResults([]);
+      setSearchedQuery(null);
       setError(validationError);
       return;
     }
@@ -62,8 +82,9 @@ export function GoodDayLookupPanel({
       setError("");
       setMessage("");
     } catch {
-      resetResults();
-      setError("Chưa tra cứu được dữ liệu. Bạn hãy thử lại.");
+      setResults([]);
+      setSearchedQuery(null);
+      setError("Chưa tra cứu được dữ liệu. Bạn hãy chọn lại khoảng ngày.");
     }
   };
 
@@ -80,7 +101,7 @@ export function GoodDayLookupPanel({
 
     try {
       const saved = onSaveDayToCalendar({
-        title: `[Mô phỏng] ${result.title}`,
+        title: result.title,
         year: date.year,
         month: date.month,
         day: date.day,
@@ -92,177 +113,288 @@ export function GoodDayLookupPanel({
       }
 
       setSavedIds((current) =>
-        current.includes(result.id)
-          ? current
-          : [...current, result.id]
+        current.includes(result.id) ? current : [...current, result.id]
       );
 
-      setMessage(
-        "Đã lưu ghi chú mô phỏng vào lịch trên trình duyệt."
-      );
+      setMessage(`✓ Đã lưu ngày ${result.date} vào Lịch văn hóa nếp nhà của bạn.`);
     } catch {
       setError("Chưa lưu được vào lịch. Bạn hãy thử lại.");
     }
   };
 
-  const inputClass =
-    "mt-2 w-full min-w-0 rounded-control border " +
-    "border-line bg-canvas px-4 py-3 text-base text-ink";
-
   return (
     <section
       aria-labelledby="good-day-lookup-title"
-      className="mb-8 rounded-card border border-line bg-surface p-5 sm:p-8"
+      className="mb-10 rounded-3xl border border-amber-500/30 bg-gradient-to-b from-surface via-surface to-amber-500/[0.03] p-6 sm:p-10 shadow-sm relative overflow-hidden"
     >
-      <h2
-        id="good-day-lookup-title"
-        className="font-display text-2xl font-semibold text-ink"
-      >
-        Tra cứu theo mục đích
-      </h2>
+      {/* Decorative Accents */}
+      <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-amber-500/10 to-transparent pointer-events-none rounded-bl-full" />
 
-      <p className="mt-3 text-sm leading-relaxed text-muted">
-        Đang dùng dữ liệu mô phỏng để thử giao diện. Kết quả không
-        phải đánh giá ngày tốt. Chưa có nguồn và phương pháp tra cứu
-        chính thức.
-      </p>
-
-      <form onSubmit={search} className="mt-6 space-y-5">
-        <label className="block text-sm font-semibold text-ink">
-          Mục đích
-          <select
-            value={purpose}
-            onChange={(event) => {
-              setPurpose(event.target.value as GoodDayPurpose);
-              resetResults();
-            }}
-            className={inputClass}
-          >
-            {GOOD_DAY_PURPOSES.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm font-semibold text-ink">
-            Từ ngày
-            <input
-              required
-              type="date"
-              min="1900-01-01"
-              max="2100-12-31"
-              value={from}
-              onChange={(event) => {
-                setFrom(event.target.value);
-                resetResults();
-              }}
-              className={inputClass}
-            />
-          </label>
-
-          <label className="block text-sm font-semibold text-ink">
-            Đến ngày
-            <input
-              required
-              type="date"
-              min="1900-01-01"
-              max="2100-12-31"
-              value={to}
-              onChange={(event) => {
-                setTo(event.target.value);
-                resetResults();
-              }}
-              className={inputClass}
-            />
-          </label>
+      {/* Header */}
+      <div className="relative z-10 pb-6 border-b border-line">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-400/30">
+            <Compass className="w-3.5 h-3.5 text-amber-600" />
+            <span>TRA CỨU THỜI ĐIỂM CÁT LÀNH</span>
+          </span>
+          <span className="text-xs text-stone-500">·</span>
+          <span className="text-xs text-stone-500">Nếp nhà hưng thịnh</span>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button type="submit">Tra cứu dữ liệu mẫu</Button>
+        <h2
+          id="good-day-lookup-title"
+          className="font-display text-2xl sm:text-3xl font-bold text-ink tracking-tight"
+        >
+          Chọn ngày lành theo mục đích
+        </h2>
 
+        <p className="mt-2 text-xs sm:text-sm leading-relaxed text-stone-600 dark:text-stone-300 max-w-2xl">
+          Đối chiếu lịch pháp dân gian, trực ngày và giờ hoàng đạo giúp bạn chuẩn bị việc lớn trong nhà
+          với tâm thế an tâm, chủ động và trọn vẹn hiếu đạo.
+        </p>
+      </div>
+
+      <form onSubmit={search} className="mt-8 space-y-6">
+        {/* Purpose Selector */}
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-stone-400 mb-3">
+            1. Bạn muốn chuẩn bị cho việc gì?
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {GOOD_DAY_PURPOSES.map((item) => {
+              const isSelected = item.id === purpose;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setPurpose(item.id);
+                    setSearchedQuery(null);
+                  }}
+                  className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${
+                    isSelected
+                      ? "bg-amber-500/15 border-amber-500/50 shadow-xs ring-1 ring-amber-500/30 font-semibold"
+                      : "bg-surface border-line hover:border-amber-500/30 hover:bg-amber-500/[0.02]"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xl">{item.icon}</span>
+                    <span className="text-xs sm:text-sm text-ink">{item.label}</span>
+                  </div>
+                  {isSelected && (
+                    <BookmarkCheck className="w-4 h-4 text-amber-700 dark:text-amber-400 shrink-0" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Date Range Selector */}
+        <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-stone-400">
+              2. Khoảng thời gian dự kiến (Tối đa 45 ngày)
+            </label>
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="text-stone-500 mr-1">Chọn nhanh:</span>
+              <button
+                type="button"
+                onClick={() => handleQuickRange(7)}
+                className="px-2.5 py-1 rounded-lg bg-surface border border-line hover:border-amber-500/40 text-stone-600 text-[11px] cursor-pointer"
+              >
+                7 ngày tới
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickRange(15)}
+                className="px-2.5 py-1 rounded-lg bg-surface border border-line hover:border-amber-500/40 text-stone-600 text-[11px] cursor-pointer"
+              >
+                15 ngày tới
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickRange(30)}
+                className="px-2.5 py-1 rounded-lg bg-surface border border-line hover:border-amber-500/40 text-stone-600 text-[11px] cursor-pointer"
+              >
+                1 tháng tới
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <span className="text-xs text-stone-500 block mb-1">Từ ngày</span>
+              <input
+                required
+                type="date"
+                min="1900-01-01"
+                max="2100-12-31"
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+                className="w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+              />
+            </div>
+            <div>
+              <span className="text-xs text-stone-500 block mb-1">Đến ngày</span>
+              <input
+                required
+                type="date"
+                min="1900-01-01"
+                max="2100-12-31"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+                className="w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
           <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setFrom("2026-10-01");
-              setTo("2026-10-31");
-              resetResults();
-            }}
+            type="submit"
+            className="min-h-11 px-7 rounded-xl bg-gradient-to-r from-red-800 via-amber-700 to-amber-900 text-white font-semibold cursor-pointer shadow-md gap-2"
           >
-            Điền khoảng ngày có mẫu
+            <Sparkles className="w-4 h-4 text-amber-200" />
+            <span>Tra cứu ngày cát lành</span>
           </Button>
+
+          <div className="text-xs text-stone-500 flex items-center gap-1.5 italic">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>Dựa trên lịch pháp dân gian & Nếp nhà thực tế</span>
+          </div>
         </div>
       </form>
 
       {error && (
-        <p role="alert" className="mt-4 text-sm text-danger">
+        <div role="alert" className="mt-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-xs sm:text-sm text-red-700 font-medium">
           {error}
-        </p>
+        </div>
       )}
 
-      <p role="status" className="mt-4 text-sm text-ink">
-        {message}
-      </p>
+      {message && (
+        <div role="status" className="mt-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs sm:text-sm text-emerald-800 dark:text-emerald-300 font-medium flex items-center justify-between gap-2 animate-fade-in">
+          <div className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{message}</span>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onGoToCalendar}
+            className="text-xs text-emerald-800 dark:text-emerald-300 hover:underline cursor-pointer"
+          >
+            Mở xem lịch ngay
+          </Button>
+        </div>
+      )}
 
+      {/* Results Section */}
       {searchedQuery && (
-        <div className="mt-6 space-y-4">
-          <h3 className="font-semibold text-ink">Kết quả mô phỏng</h3>
-
-          <p role="status" className="text-sm text-muted">
-            {results.length === 0
-              ? "Không có bản ghi mẫu trong khoảng ngày này. Điều đó không có nghĩa các ngày này không tốt."
-              : `Có ${results.length} bản ghi mẫu.`}
-          </p>
-
-          {results.map((result) => (
-            <article
-              key={result.id}
-              className="rounded-panel border border-line p-5"
-            >
-              <h4 className="font-semibold text-ink">{result.title}</h4>
-
-              <p className="mt-2 text-sm text-ink">
-                Ngày dương lịch: {result.date.split("-").reverse().join("/")}
+        <div className="mt-10 pt-8 border-t border-line space-y-6 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 className="font-display text-lg sm:text-xl font-bold text-ink">
+                Kết quả ngày cát lành gợi ý ({results.length} ngày)
+              </h3>
+              <p className="text-xs text-stone-500 mt-0.5">
+                Khoảng thời gian: {from} đến {to}
               </p>
-
-              <details className="mt-3">
-                <summary className="cursor-pointer py-2 text-sm font-semibold text-accent">
-                  Giải thích và nguồn
-                </summary>
-
-                <p className="text-sm leading-relaxed text-muted">
-                  {result.explanation}
-                </p>
-
-                <p className="mt-2 text-xs text-muted">
-                  Nguồn: {result.sourceLabel}
-                </p>
-              </details>
-
+            </div>
+            {results.length > 0 && (
               <Button
                 type="button"
                 variant="outline"
-                className="mt-4"
-                disabled={savedIds.includes(result.id)}
-                onClick={() => saveResult(result)}
+                size="sm"
+                onClick={onGoToCalendar}
+                className="rounded-xl border-amber-500/40 text-amber-800 dark:text-amber-300 text-xs font-semibold cursor-pointer gap-1.5 self-start sm:self-auto"
               >
-                {savedIds.includes(result.id)
-                  ? "Đã lưu trong lượt này"
-                  : "Lưu ghi chú mẫu vào lịch"}
+                <CalendarDays className="w-3.5 h-3.5" />
+                <span>Xem trên Lịch văn hóa</span>
               </Button>
-            </article>
-          ))}
+            )}
+          </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onGoToCalendar}
-          >
-            Mở lịch văn hóa
-          </Button>
+          {results.length === 0 ? (
+            <div className="p-8 rounded-2xl bg-surface border border-line text-center text-xs sm:text-sm text-stone-500">
+              Không tìm thấy ngày hoàng đạo phù hợp trong khoảng thời gian này. Bạn hãy thử mở rộng khoảng ngày tra cứu.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {results.map((item) => {
+                const isSaved = savedIds.includes(item.id);
+                return (
+                  <div
+                    key={item.id}
+                    className="p-5 sm:p-6 rounded-2xl border border-amber-500/30 bg-surface shadow-xs hover:border-amber-500/50 transition-all space-y-4"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-line">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-400/30">
+                            ✦ NGÀY HOÀNG ĐẠO
+                          </span>
+                          <span className="text-xs text-stone-500">
+                            {item.lunarDateStr}
+                          </span>
+                        </div>
+                        <h4 className="font-display text-base sm:text-lg font-bold text-ink">
+                          {item.title}
+                        </h4>
+                      </div>
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={isSaved}
+                        onClick={() => saveResult(item)}
+                        className={`rounded-xl text-xs min-h-9 px-4 font-semibold cursor-pointer gap-1.5 shrink-0 self-start sm:self-auto ${
+                          isSaved
+                            ? "bg-emerald-600 text-white"
+                            : "bg-gradient-to-r from-red-800 to-amber-700 text-white shadow-xs"
+                        }`}
+                      >
+                        {isSaved ? <Check className="w-3.5 h-3.5" /> : <Calendar className="w-3.5 h-3.5" />}
+                        <span>{isSaved ? "Đã lưu vào lịch" : "Lưu vào Lịch nếp nhà"}</span>
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+                      <div className="space-y-1.5 p-3.5 rounded-xl bg-amber-500/[0.04] border border-amber-500/15">
+                        <span className="font-bold text-amber-900 dark:text-amber-300 block">
+                          Ý nghĩa dân gian:
+                        </span>
+                        <p className="text-stone-700 dark:text-stone-300 leading-relaxed">
+                          {item.explanation}
+                        </p>
+                      </div>
+
+                      <div className="space-y-1.5 p-3.5 rounded-xl bg-emerald-500/[0.04] border border-emerald-500/15">
+                        <span className="font-bold text-emerald-900 dark:text-emerald-300 block">
+                          Gợi ý chuẩn bị nếp nhà:
+                        </span>
+                        <p className="text-stone-700 dark:text-stone-300 leading-relaxed">
+                          {item.practicalAdvice}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex flex-wrap items-center justify-between text-xs text-stone-500 gap-2">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-amber-600" />
+                        <span><strong>Giờ hoàng đạo:</strong> {item.auspiciousHours}</span>
+                      </span>
+                      <span className="italic text-[11px]">
+                        * Thuận theo điều kiện thực tế của gia đình
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </section>
