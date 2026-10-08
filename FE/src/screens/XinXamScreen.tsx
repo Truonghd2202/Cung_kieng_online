@@ -27,10 +27,7 @@ import { Card } from "../components/ui/card";
 import { AppDialog } from "../components/AppDialog";
 import { ContentProvenance } from "../components/ContentProvenance";
 import { TraditionalXamPreview } from "../components/TraditionalXamPreview";
-import { TraditionalXamExperience } from "../components/TraditionalXamExperience";
-import type { TraditionalXamSaveRequest } from "../data/savedTraditionalXam";
 import { CULTURE_ARTICLES } from "../data/cultureData";
-import { TRADITIONAL_XAM_TEST_MODE } from "../data/traditionalXamData";
 import {
   RegionType,
   TopicType,
@@ -38,11 +35,10 @@ import {
   XinXamResult,
   XIN_XAM_RESULTS,
 } from "../data/xinXamData";
-import "../styles/XinXamScreen.css";
+import { drawXinXam, loadReflectionProverb } from "../data/reflectionService";
 
 export type XinXamDrawResult = XinXamResult & {
   drawId: string;
-  completedAction?: boolean;
 };
 
 interface XinXamScreenProps {
@@ -56,41 +52,21 @@ interface XinXamScreenProps {
   savedXamList?: {
     drawId?: string;
   }[];
-  initialDraw?: XinXamDrawResult | null;
-  onSnapshotChange?: (snapshot: XinXamDrawResult | null) => void;
-  currentUserEmail?: string;
-  onRequestTraditionalSave: (
-    request: TraditionalXamSaveRequest
-  ) => void;
 }
 
 export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   onBackToExperienceHome,
   onGoToArticle,
   onSaveToAccount,
-  onSnapshotChange,
   onGoToLogin,
   onGoToExplore,
   onGoToWish,
   isLoggedIn = false,
   savedXamList,
-  initialDraw = null,
-  currentUserEmail,
-  onRequestTraditionalSave,
 }) => {
-  const [step, setStep] = useState<1 | 2 | 3>(
-    initialDraw ? 3 : 1
-  );
-
-  const [selectedRegion, setSelectedRegion] =
-    useState<RegionType>(
-      initialDraw?.region ?? "Bắc Bộ"
-    );
-
-  const [selectedTopic, setSelectedTopic] =
-    useState<TopicType>(
-      initialDraw?.topic ?? "Bình an"
-    );
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [selectedRegion, setSelectedRegion] = useState<RegionType>("Bắc Bộ");
+  const [selectedTopic, setSelectedTopic] = useState<TopicType>("Bình an");
 
   // Step 2 Interactive States
   const [drawPhase, setDrawPhase] = useState<"idle" | "shaking" | "dropped">("idle");
@@ -99,69 +75,21 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   const [showGuideModal, setShowGuideModal] = useState(false);
 
   // Step 3 State
-  const [isActionDone, setIsActionDone] = useState(
-    initialDraw?.completedAction ?? false
-  );
-
+  const [isActionDone, setIsActionDone] = useState(false);
   const [currentDrawId, setCurrentDrawId] =
-    useState<string | null>(
-      initialDraw?.drawId ?? null
-    );
+    useState<string | null>(null);
   const [saveError, setSaveError] = useState("");
   const [drawNotice, setDrawNotice] = useState("");
-  const [traditionalPanelOpen, setTraditionalPanelOpen] = useState(
-    () => Boolean(window.history.state?.traditionalXam?.stickId),
-  );
 
   const drawTimerRef = useRef<
     ReturnType<typeof setTimeout> | null
   >(null);
 
-  const [currentResult, setCurrentResult] =
-    useState<XinXamResult>(() =>
-      initialDraw ??
-      getXinXamResult(selectedRegion, selectedTopic)
-    );
+  const [currentResult, setCurrentResult] = useState<XinXamResult>(() =>
+    getXinXamResult(selectedRegion, selectedTopic)
+  );
 
   useEffect(() => {
-    if (!onSnapshotChange) return;
-
-    if (!currentDrawId) {
-      onSnapshotChange(null);
-      return;
-    }
-
-    onSnapshotChange({
-      ...currentResult,
-      drawId: currentDrawId,
-      completedAction: isActionDone,
-    });
-  }, [
-    currentResult,
-    currentDrawId,
-    isActionDone,
-    onSnapshotChange,
-  ]);
-
-  const previousSelectionRef = useRef({
-    region: selectedRegion,
-    topic: selectedTopic,
-  });
-
-  useEffect(() => {
-    const previous = previousSelectionRef.current;
-
-    const selectionChanged =
-      previous.region !== selectedRegion ||
-      previous.topic !== selectedTopic;
-
-    previousSelectionRef.current = {
-      region: selectedRegion,
-      topic: selectedTopic,
-    };
-
-    if (!selectionChanged) return;
-
     if (drawTimerRef.current !== null) {
       clearTimeout(drawTimerRef.current);
       drawTimerRef.current = null;
@@ -200,7 +128,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
     };
   }, []);
 
-  const handleStartDraw = () => {
+  const handleStartDraw = async () => {
     if (drawTimerRef.current !== null) return;
 
     const matchingResults = Object.values(
@@ -228,8 +156,54 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
         ? alternatives
         : matchingResults;
 
-    const chosen =
+    let chosen =
       pool[Math.floor(Math.random() * pool.length)];
+    let nextDrawId: string = crypto.randomUUID();
+    let proverbAttached = false;
+
+    if (isLoggedIn) {
+      try {
+        const remote = await drawXinXam(selectedRegion, selectedTopic);
+        nextDrawId = remote.drawId || remote.id;
+        const localMatch = matchingResults.find((item) => item.stickNumber === remote.stickNumber) || chosen;
+        chosen = {
+          ...localMatch,
+          fortuneType: remote.classification,
+          sealText: remote.classification,
+          insight: remote.classification,
+          quote: remote.quote,
+          reflectionParagraphs: [remote.meaning, remote.disclaimer],
+          tips: [
+            ...(remote.proverb
+              ? [{
+                  title: "Thành ngữ hoặc tục ngữ đi cùng thẻ",
+                  desc: `“${remote.proverb.content}” — ${remote.proverb.meaning} (Nguồn: VIVID)`,
+                }]
+              : []),
+            { title: "Gợi ý chiêm nghiệm", desc: remote.advice },
+            { title: "Lưu ý tham khảo", desc: remote.interpretation.warning },
+          ],
+        };
+        proverbAttached = Boolean(remote.proverb);
+      } catch {
+        // Giữ tráº£i nghiá»‡m local khi API táº¡m thá»i khÃ´ng pháº£n há»“i.
+      }
+    }
+
+    if (!proverbAttached) {
+      try {
+        const proverb = await loadReflectionProverb("XAM");
+        chosen = {
+          ...chosen,
+          tips: [{
+            title: "Thành ngữ hoặc tục ngữ đi cùng thẻ",
+            desc: `“${proverb.content}” — ${proverb.meaning} (Nguồn: VIVID)`,
+          }, ...chosen.tips],
+        };
+      } catch {
+        // Không thay bằng nội dung tự sinh nếu nguồn dữ liệu tạm thời không khả dụng.
+      }
+    }
 
     setDrawNotice(
       matchingResults.length === 1
@@ -259,7 +233,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
       drawTimerRef.current = null;
 
       setCurrentResult(chosen);
-      setCurrentDrawId(crypto.randomUUID());
+      setCurrentDrawId(nextDrawId);
 
       setIsShaking(false);
       setDrawPhase("dropped");
@@ -296,7 +270,6 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
       saved = onSaveToAccount({
         ...currentResult,
         drawId: currentDrawId,
-        completedAction: isActionDone,
       }) === true;
     } catch {
       setSaveError("Chưa lưu được thẻ. Bạn hãy thử lại.");
@@ -320,33 +293,6 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   return (
     <div className="screen-shell">
       <main className="page-container max-w-5xl">
-        {TRADITIONAL_XAM_TEST_MODE && (
-          <aside
-            aria-label="Chế độ kiểm thử xin xăm"
-            className="mb-6 rounded-2xl border border-amber-500/35 bg-amber-50/70 dark:bg-amber-950/25 p-5 shadow-xs"
-          >
-            <div className="flex items-center gap-2.5">
-              <span className="xinxam-seal-badge w-6 h-6 text-xs" aria-hidden="true">試</span>
-              <h2 className="font-semibold text-ink text-base">
-                Đang kiểm thử luồng xin xăm cổ truyền
-              </h2>
-            </div>
-
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              Các thẻ Quan Âm và Quan Thánh là dữ liệu giả lập để kiểm tra
-              thao tác giao diện. Kết quả lưu vào kho kiểm thử riêng.
-              Chế độ này giữ trong tab hiện tại khi chuyển màn hoặc tải lại.
-              Dùng liên kết bên dưới để trở về tư liệu thật.
-            </p>
-
-            <a
-              href="/xinxam?xamTest=0"
-              className="mt-3 inline-flex min-h-11 items-center font-semibold text-accent underline underline-offset-4 hover:text-action transition-colors"
-            >
-              Thoát kiểm thử và mở lại tư liệu thật
-            </a>
-          </aside>
-        )}
         {saveError && (
           <p
             role="alert"
@@ -391,8 +337,8 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                     <span>Gửi gắm điều ước</span>
                   </button>
                 )}
-                <div className="xinxam-step-indicator">
-                  <span className="xinxam-step-dot" />
+                <div className="flex items-center gap-1.5 uppercase font-semibold text-xs text-muted">
+                  <span className="w-2 h-2 rounded-full bg-action inline-block"></span>
                   <span>BƯỚC 1 / 3 • KHỞI TÂM NGUYỆN</span>
                 </div>
               </div>
@@ -400,9 +346,8 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
 
             {/* Heading & Subtitle */}
             <div className="mb-6 text-left">
-              <h1 tabIndex={-1} className="xinxam-page-title mb-3 outline-none focus:outline-none flex items-center">
-                <span className="xinxam-seal-badge" aria-hidden="true">籤</span>
-                <span>Chọn một điều bạn muốn chiêm nghiệm</span>
+              <h1 className="page-title mb-3">
+                Chọn một điều bạn muốn chiêm nghiệm
               </h1>
               <p className="text-sm sm:text-base text-muted leading-relaxed max-w-2xl">
                 Chọn vùng miền và một chủ đề để khám phá thẻ chiêm nghiệm
@@ -416,7 +361,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                 1. Chọn vùng miền
               </legend>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {(
                   [
                     {
@@ -439,42 +384,41 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                     image: string;
                     description: string;
                   }[]
-                ).map((region) => {
-                  const isSelected = selectedRegion === region.value;
-                  return (
-                    <label
-                      key={region.value}
-                      className={`xinxam-region-card ${
-                        isSelected ? "xinxam-region-card--active" : ""
-                      }`}
-                    >
-                      <img
-                        src={region.image}
-                        alt=""
-                        className="h-16 w-20 shrink-0 rounded-panel object-cover border border-line/40 shadow-xs"
-                      />
+                ).map((region) => (
+                  <label
+                    key={region.value}
+                    className={`flex cursor-pointer items-center gap-3 rounded-card border p-3 focus-within:ring-2 focus-within:ring-accent ${
+                      selectedRegion === region.value
+                        ? "border-accent bg-accent-soft"
+                        : "border-line bg-surface"
+                    }`}
+                  >
+                    <img
+                      src={region.image}
+                      alt=""
+                      className="h-16 w-20 shrink-0 rounded-panel object-cover"
+                    />
 
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-base font-semibold text-ink">
-                          {region.value}
-                        </span>
-
-                        <span className="mt-1 block text-xs sm:text-sm text-muted leading-relaxed">
-                          {region.description}
-                        </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-base font-semibold text-ink">
+                        {region.value}
                       </span>
 
-                      <input
-                        type="radio"
-                        name="xam-region"
-                        value={region.value}
-                        checked={isSelected}
-                        onChange={() => setSelectedRegion(region.value)}
-                        className="h-5 w-5 shrink-0 accent-action"
-                      />
-                    </label>
-                  );
-                })}
+                      <span className="mt-1 block text-sm text-muted leading-relaxed">
+                        {region.description}
+                      </span>
+                    </span>
+
+                    <input
+                      type="radio"
+                      name="xam-region"
+                      value={region.value}
+                      checked={selectedRegion === region.value}
+                      onChange={() => setSelectedRegion(region.value)}
+                      className="h-5 w-5 shrink-0 accent-action"
+                    />
+                  </label>
+                ))}
               </div>
             </fieldset>
 
@@ -487,27 +431,29 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {(
                   ["Học tập", "Công việc", "Gia đình", "Bình an"] satisfies TopicType[]
-                ).map((topic) => {
-                  const isSelected = selectedTopic === topic;
-                  return (
-                    <label
-                      key={topic}
-                      className={`xinxam-topic-pill ${
-                        isSelected ? "xinxam-topic-pill--active" : ""
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="xam-topic"
-                        value={topic}
-                        checked={isSelected}
-                        onChange={() => setSelectedTopic(topic)}
-                        className="sr-only"
-                      />
-                      <span>{topic}</span>
-                    </label>
-                  );
-                })}
+                ).map((topic) => (
+                  <label
+                    key={topic}
+                    className={`flex min-h-14 cursor-pointer items-center gap-2 rounded-control border px-3 py-3 focus-within:ring-2 focus-within:ring-accent ${
+                      selectedTopic === topic
+                        ? "border-accent bg-accent-soft"
+                        : "border-line bg-surface"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="xam-topic"
+                      value={topic}
+                      checked={selectedTopic === topic}
+                      onChange={() => setSelectedTopic(topic)}
+                      className="h-5 w-5 shrink-0 accent-action"
+                    />
+
+                    <span className="text-sm font-semibold text-ink">
+                      {topic}
+                    </span>
+                  </label>
+                ))}
               </div>
             </fieldset>
 
@@ -542,44 +488,20 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                   </Button>
                 )}
 
-                <button
-                  type="button"
+                <Button
+                  variant="default"
+                  size="default"
                   onClick={() => {
                     setStep(2);
                     window.scrollTo({ top: 0, behavior: "auto" });
                   }}
-                  className="xinxam-draw-btn w-full sm:w-auto text-sm"
+                  className="w-full sm:w-auto font-semibold shadow-xs gap-2"
                 >
-                  <span className="xinxam-btn-sheen" />
                   <span>Tiếp tục rút thẻ</span>
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </button>
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
               </div>
             </Card>
-
-            <details
-              open={traditionalPanelOpen}
-              onToggle={(event) => {
-                setTraditionalPanelOpen(event.currentTarget.open);
-              }}
-              className="traditional-xam-panel mb-8 p-5 sm:p-6"
-            >
-              <summary className="min-h-11 cursor-pointer py-2 text-base font-semibold text-ink focus-visible:outline-none flex items-center justify-between">
-                <span className="flex items-center gap-2.5">
-                  <span className="xinxam-seal-badge w-6 h-6 text-xs" aria-hidden="true">古</span>
-                  <span>Khám phá bộ xăm cổ Quan Âm / Quan Thánh</span>
-                </span>
-                <span className="text-xs text-accent font-medium italic">Bấm để mở / đóng</span>
-              </summary>
-
-              <div className="mt-4 border-t border-line/60 pt-5">
-                <TraditionalXamExperience
-                  key={currentUserEmail || "guest"}
-                  currentUserEmail={currentUserEmail}
-                  onRequestLoginToSave={onRequestTraditionalSave}
-                />
-              </div>
-            </details>
 
             {import.meta.env.DEV && (
               <details className="mb-6 rounded-card border border-line bg-surface p-4">
@@ -660,177 +582,174 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
 
             {/* Big Serif Heading */}
             <div className="text-center max-w-xl mx-auto mb-8">
-              <h1 tabIndex={-1} className="xinxam-page-title mb-2.5 text-2xl sm:text-3xl lg:text-4xl text-ink font-display outline-none focus:outline-none flex items-center justify-center">
-                <span className="xinxam-seal-badge" aria-hidden="true">籤</span>
-                <span>Lắng lòng và rút một thẻ xăm</span>
+              <h1 className="page-title mb-2.5 text-2xl sm:text-3xl lg:text-4xl text-ink font-display">
+                Lắng lòng và rút một thẻ xăm
               </h1>
               <p className="text-sm text-muted leading-relaxed">
                 Giữ hơi thở chậm rãi, tĩnh tâm trong một khoảnh khắc ngắn. Thẻ tre mở ra một góc nhìn suy ngẫm cổ truyền, gợi ý thái độ an nhiên trước đời sống.
               </p>
             </div>
 
-            {/* Center Altar: Open Sacred Space */}
+            {/* Center Altar: Open Sacred Space without Box Boundary */}
             <div className="max-w-xl mx-auto py-4 text-center relative mb-12">
-              <div className="xinxam-tube-stage mb-6">
-                <div className="xinxam-tube-stage-rim" />
+              {/* Concentric Circle Aura Motif with Warm Ambient Glow */}
+              <div className="relative w-72 h-80 sm:w-96 sm:h-96 mx-auto mb-6 flex items-center justify-center">
+                {/* Golden/Warm Ambient Aura */}
+                <div
+                  className={`absolute inset-0 rounded-full transition-all duration-700 pointer-events-none blur-2xl ${
+                    drawPhase === "dropped"
+                      ? "bg-gradient-to-b from-amber-400/25 via-amber-500/15 to-transparent scale-110"
+                      : isShaking
+                      ? "bg-gradient-to-b from-amber-500/20 via-amber-500/10 to-transparent animate-pulse"
+                      : "bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent"
+                  }`}
+                />
+                <div className="absolute inset-4 rounded-full border border-line/50" />
+                <div className="absolute inset-10 rounded-full border border-dashed border-line/40" />
 
-                {/* Concentric Circle Aura Motif with Warm Ambient Glow */}
-                <div className="relative w-72 h-80 sm:w-96 sm:h-96 mx-auto flex items-center justify-center">
-                  {/* Golden/Warm Ambient Aura */}
+                {/* Khu vực Bó Xăm & Thẻ Tre Rơi */}
+                <div className="relative flex flex-col items-center justify-center z-10 w-full">
+                  {/* Ống xăm thuần Việt & Bó xăm 13 que đầy đặn - Chỉ 1 que nhô cao, không rơi ra ngoài */}
                   <div
-                    className={`absolute inset-0 rounded-full transition-all duration-700 pointer-events-none blur-2xl ${
-                      drawPhase === "dropped"
-                        ? "bg-gradient-to-b from-amber-400/25 via-amber-500/15 to-transparent scale-110"
-                        : isShaking
-                        ? "bg-gradient-to-b from-amber-500/20 via-amber-500/10 to-transparent animate-pulse"
-                        : "bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent"
+                    onClick={drawPhase !== "shaking" ? handleStartDraw : undefined}
+                    className={`relative flex flex-col items-center select-none transition-transform duration-300 cursor-pointer ${
+                      isShaking ? "anim-xam-up-down" : "hover:scale-105 active:scale-95"
                     }`}
-                  />
-                  <div className="absolute inset-4 rounded-full border border-line/50" />
-                  <div className="absolute inset-10 rounded-full border border-dashed border-line/40" />
-
-                  {/* Khu vực Bó Xăm & Thẻ Tre Rơi */}
-                  <div className="relative flex flex-col items-center justify-center z-10 w-full">
-                    {/* Ống xăm thuần Việt & Bó xăm 13 que đầy đặn */}
-                    <div
-                      onClick={drawPhase !== "shaking" ? handleStartDraw : undefined}
-                      className={`relative flex flex-col items-center select-none transition-transform duration-300 cursor-pointer ${
-                        isShaking ? "anim-xam-up-down xinxam-tube-shaking" : "hover:scale-105 active:scale-95"
-                      }`}
-                      title={
-                        isShaking
-                          ? "Đang lắc xăm lên xuống..."
-                          : drawPhase === "dropped"
-                          ? `Thẻ số ${currentResult.stickNumber} đã nhô lên`
-                          : "Chạm để lắc ống xăm"
-                      }
-                    >
-                      {/* 1. BÓ QUE XĂM: 13 que cắm san sát dày dặn */}
-                      <div className="flex items-end justify-center -space-x-1 sm:-space-x-1.5 pointer-events-none relative z-10 px-2 overflow-visible">
-                        {[
-                          { num: "05", h: 84, rot: -7 },
-                          { num: "18", h: 90, rot: -5 },
-                          { num: "33", h: 86, rot: -4 },
-                          { num: "12", h: 93, rot: -3 },
-                          { num: "21", h: 88, rot: -2 },
-                          { num: "07", h: 95, rot: -1 },
-                          // QUE CHÍNH Ở GIỮA
-                          { isMain: true, num: currentResult.stickNumber, h: 98, rot: 0 },
-                          { num: "16", h: 95, rot: 1 },
-                          { num: "28", h: 88, rot: 2 },
-                          { num: "45", h: 93, rot: 3 },
-                          { num: "68", h: 86, rot: 4 },
-                          { num: "79", h: 90, rot: 5 },
-                          { num: "88", h: 84, rot: 7 },
-                        ].map((s, idx) => {
-                          const isChosen = s.isMain;
-                          return (
-                            <div
-                              key={idx}
-                              style={{
-                                height: `${s.h}px`,
-                                transform:
-                                  isChosen && drawPhase === "dropped"
-                                    ? `translateY(-48px) rotate(0deg)`
-                                    : isChosen && isShaking
-                                    ? `translateY(-28px) rotate(0deg)`
-                                    : `rotate(${s.rot}deg)`,
-                                transformOrigin: "bottom center",
-                              }}
-                              className={`w-3.5 sm:w-4 rounded-t-sm flex flex-col overflow-hidden border border-[#8a5525] shadow-xs transition-all duration-500 ${
+                    title={
+                      isShaking
+                        ? "Đang lắc xăm lên xuống..."
+                        : drawPhase === "dropped"
+                        ? `Thẻ số ${currentResult.stickNumber} đã nhô lên`
+                        : "Chạm để lắc ống xăm"
+                    }
+                  >
+                    {/* 1. BÓ QUE XĂM: 13 que cắm san sát dày dặn trong miệng ống, nửa trên đỏ son, nửa dưới ngà kem có số */}
+                    <div className="flex items-end justify-center -space-x-1 sm:-space-x-1.5 pointer-events-none relative z-10 px-2 overflow-visible">
+                      {[
+                        { num: "05", h: 84, rot: -7 },
+                        { num: "18", h: 90, rot: -5 },
+                        { num: "33", h: 86, rot: -4 },
+                        { num: "12", h: 93, rot: -3 },
+                        { num: "21", h: 88, rot: -2 },
+                        { num: "07", h: 95, rot: -1 },
+                        // QUE CHÍNH Ở GIỮA
+                        { isMain: true, num: currentResult.stickNumber, h: 98, rot: 0 },
+                        { num: "16", h: 95, rot: 1 },
+                        { num: "28", h: 88, rot: 2 },
+                        { num: "45", h: 93, rot: 3 },
+                        { num: "68", h: 86, rot: 4 },
+                        { num: "79", h: 90, rot: 5 },
+                        { num: "88", h: 84, rot: 7 },
+                      ].map((s, idx) => {
+                        const isChosen = s.isMain;
+                        return (
+                          <div
+                            key={idx}
+                            style={{
+                              height: `${s.h}px`,
+                              transform:
                                 isChosen && drawPhase === "dropped"
-                                  ? "z-40 ring-2 ring-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.95)]"
-                                  : isChosen
-                                  ? "z-30"
-                                  : "z-10"
-                              } ${
-                                isShaking && !isChosen
-                                  ? idx % 2 === 0
-                                  ? "anim-stick-bounce"
-                                  : "anim-stick-bounce-alt"
-                                  : ""
+                                  ? `translateY(-48px) rotate(0deg)`
+                                  : isChosen && isShaking
+                                  ? `translateY(-28px) rotate(0deg)`
+                                  : `rotate(${s.rot}deg)`,
+                              transformOrigin: "bottom center",
+                            }}
+                            className={`w-3.5 sm:w-4 rounded-t-sm flex flex-col overflow-hidden border border-[#8a5525] shadow-xs transition-all duration-500 ${
+                              isChosen && drawPhase === "dropped"
+                                ? "z-40 ring-2 ring-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.95)]"
+                                : isChosen
+                                ? "z-30"
+                                : "z-10"
+                            } ${
+                              isShaking && !isChosen
+                                ? idx % 2 === 0
+                                ? "anim-stick-bounce"
+                                : "anim-stick-bounce-alt"
+                                : ""
+                            }`}
+                          >
+                            {/* Nửa trên đỏ son chu sa */}
+                            <div
+                              className={`w-full h-1/2 flex items-center justify-center ${
+                                isChosen
+                                  ? "bg-gradient-to-b from-[#bd2626] to-[#871616]"
+                                  : "bg-[#9e2424]"
                               }`}
                             >
-                              {/* Nửa trên đỏ son chu sa */}
-                              <div
-                                className={`w-full h-1/2 flex items-center justify-center ${
-                                  isChosen
-                                    ? "bg-gradient-to-b from-[#bd2626] to-[#871616]"
-                                    : "bg-[#9e2424]"
-                                }`}
-                              >
-                                {isChosen && drawPhase === "dropped" && (
-                                  <div className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse shadow-xs" />
-                                )}
-                              </div>
-
-                              {/* Nửa dưới ngà tre khắc số mực đen rõ nét */}
-                              <div
-                                className={`w-full h-1/2 flex items-start justify-center pt-0.5 ${
-                                  isChosen
-                                    ? "bg-gradient-to-b from-[#fffaf0] to-[#f5ead2]"
-                                    : "bg-[#f5ead2]"
-                                }`}
-                              >
-                                <span
-                                  className={`[writing-mode:vertical-rl] leading-none ${
-                                    isChosen
-                                      ? "text-[10px] font-black text-[#7a141b] tracking-wider"
-                                      : "text-[8px] font-bold text-[#2b180d] opacity-90"
-                                  }`}
-                                >
-                                  {s.num}
-                                </span>
-                              </div>
+                              {isChosen && drawPhase === "dropped" && (
+                                <div className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse shadow-xs" />
+                              )}
                             </div>
-                          );
-                        })}
-                      </div>
 
-                      {/* 2. THÂN ỐNG TRE HÌNH TRỤ CÓ ĐAI ĐỎ CHỮ VIỆT & CHỮ THƯ PHÁP "TÂM" */}
-                      <div
-                        className="w-34 sm:w-40 h-44 sm:h-48 rounded-2xl relative flex flex-col items-center justify-between p-0 z-20 overflow-hidden shadow-2xl border border-[#7a481d] -mt-3.5"
-                        style={{
-                          background:
-                            "linear-gradient(90deg, #965b25 0%, #c4833f 15%, #df9f58 35%, #f2be7e 50%, #d89852 68%, #ba7733 85%, #884d1c 100%)",
-                          boxShadow:
-                            "inset 2px 0 5px rgba(255,255,255,0.25), inset -2px 0 6px rgba(0,0,0,0.4), 0 16px 32px rgba(35,20,10,0.35)",
-                        }}
-                      >
-                        {/* Miệng Ống Tre & Đai Đỏ Chữ Việt */}
-                        <div className="w-full">
-                          <div className="w-full h-1.5 bg-[#663812] border-b border-[#d89750]/40" />
-
-                          <div className="w-full h-9 bg-gradient-to-r from-[#7a1518] via-[#a31f24] to-[#6e1114] border-y border-[#d4af37]/60 flex items-center justify-center shadow-inner">
-                            <span
-                              className="text-[11px] sm:text-xs font-serif font-bold tracking-[0.2em] uppercase"
-                              style={{ color: "#f8e192" }}
+                            {/* Nửa dưới ngà tre khắc số mực đen rõ nét */}
+                            <div
+                              className={`w-full h-1/2 flex items-start justify-center pt-0.5 ${
+                                isChosen
+                                  ? "bg-gradient-to-b from-[#fffaf0] to-[#f5ead2]"
+                                  : "bg-[#f5ead2]"
+                              }`}
                             >
-                              ✦ AN NHIÊN ✦
-                            </span>
+                              <span
+                                className={`[writing-mode:vertical-rl] leading-none ${
+                                  isChosen
+                                    ? "text-[10px] font-black text-[#7a141b] tracking-wider"
+                                    : "text-[8px] font-bold text-[#2b180d] opacity-90"
+                                }`}
+                              >
+                                {s.num}
+                              </span>
+                            </div>
                           </div>
-                        </div>
+                        );
+                      })}
+                    </div>
 
-                        {/* Thân Ống Tre: Chữ Thư Pháp Quốc Ngữ "Tâm" Mực Đen Thuần Việt */}
-                        <div className="my-auto flex flex-col items-center justify-center select-none py-1">
+                    {/* 2. THÂN ỐNG TRE HÌNH TRỤ CÓ ĐAI ĐỎ CHỮ VIỆT & CHỮ THƯ PHÁP "TÂM" (Miệng ống che chân bó xăm) */}
+                    <div
+                      className="w-34 sm:w-40 h-44 sm:h-48 rounded-2xl relative flex flex-col items-center justify-between p-0 z-20 overflow-hidden shadow-2xl border border-[#7a481d] -mt-3.5"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, #965b25 0%, #c4833f 15%, #df9f58 35%, #f2be7e 50%, #d89852 68%, #ba7733 85%, #884d1c 100%)",
+                        boxShadow:
+                          "inset 2px 0 5px rgba(255,255,255,0.25), inset -2px 0 6px rgba(0,0,0,0.4), 0 16px 32px rgba(35,20,10,0.35)",
+                      }}
+                    >
+                      {/* Miệng Ống Tre & Đai Đỏ Chữ Việt */}
+                      <div className="w-full">
+                        {/* Vành miệng tre */}
+                        <div className="w-full h-1.5 bg-[#663812] border-b border-[#d89750]/40" />
+
+                        {/* Đai Đỏ Chu Sa Chữ Việt thuần túy */}
+                        <div className="w-full h-9 bg-gradient-to-r from-[#7a1518] via-[#a31f24] to-[#6e1114] border-y border-[#d4af37]/60 flex items-center justify-center shadow-inner">
                           <span
-                            className="font-serif italic font-black text-4xl sm:text-5xl tracking-tight leading-none"
-                            style={{
-                              color: "#18100a",
-                              textShadow: "0 1px 2px rgba(255,230,190,0.35)",
-                              fontFamily: "var(--font-fraunces), serif",
-                            }}
+                            className="text-[11px] sm:text-xs font-serif font-bold tracking-[0.2em] uppercase"
+                            style={{ color: "#f8e192" }}
                           >
-                            Tâm
-                          </span>
-                          <span className="text-[9px] uppercase font-bold tracking-widest text-[#5c3716] mt-1">
-                            An Lạc
+                            ✦ AN NHIÊN ✦
                           </span>
                         </div>
-
-                        {/* Đáy Ống Tre bo cong tự nhiên */}
-                        <div className="w-full h-3 bg-gradient-to-t from-[#5a300d] to-transparent rounded-b-2xl border-t border-[#462408]/30" />
                       </div>
+
+                      {/* Thân Ống Tre: Chữ Thư Pháp Quốc Ngữ "Tâm" Mực Đen Thuần Việt */}
+                      <div className="my-auto flex flex-col items-center justify-center select-none py-1">
+                        <span
+                          className="font-serif italic font-black text-4xl sm:text-5xl tracking-tight leading-none"
+                          style={{
+                            color: "#18100a",
+                            textShadow: "0 1px 2px rgba(255,230,190,0.35)",
+                            fontFamily: "var(--font-fraunces), serif",
+                          }}
+                        >
+                          Tâm
+                        </span>
+                        <span className="text-[9px] uppercase font-bold tracking-widest text-[#5c3716] mt-1">
+                          An Lạc
+                        </span>
+                      </div>
+
+                      {/* Đáy Ống Tre bo cong tự nhiên */}
+                      <div className="w-full h-3 bg-gradient-to-t from-[#5a300d] to-transparent rounded-b-2xl border-t border-[#462408]/30" />
                     </div>
                   </div>
                 </div>
@@ -856,19 +775,19 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
               <div className="flex flex-col items-center justify-center gap-3 w-full">
                 {drawPhase === "dropped" ? (
                   <div className="flex flex-col items-center gap-3 w-full max-w-sm">
-                    <button
-                      type="button"
+                    <Button
+                      variant="default"
+                      size="lg"
                       onClick={() => {
                         setStep(3);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
-                      className="xinxam-draw-btn w-full"
+                      className="w-full py-3.5 font-semibold shadow-md gap-2 text-base cursor-pointer"
                     >
-                      <span className="xinxam-btn-sheen" />
                       <Sparkles className="w-4 h-4 shrink-0" />
                       <span>Xem chiêm nghiệm thẻ số {currentResult.stickNumber}</span>
                       <ArrowRight className="w-4 h-4 shrink-0" />
-                    </button>
+                    </Button>
 
                     <button
                       type="button"
@@ -881,18 +800,17 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                     </button>
                   </div>
                 ) : (
-                  <button
-                    type="button"
+                  <Button
+                    variant="default"
+                    size="lg"
                     onClick={handleStartDraw}
                     disabled={isShaking}
-                    className="xinxam-draw-btn w-full sm:w-auto px-8"
+                    className="w-full sm:w-auto px-8 py-3.5 font-semibold shadow-md gap-2 text-base cursor-pointer mx-auto"
                   >
-                    <span className="xinxam-btn-sheen" />
                     <Sparkles className="w-4 h-4 shrink-0" />
                     <span>{isShaking ? "Đang lắng đọng rút thẻ..." : "Thành tâm lắc ống xăm"}</span>
-                  </button>
+                  </Button>
                 )}
-
 
                 <button
                   type="button"
@@ -1025,9 +943,8 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Lời quẻ chiêm nghiệm</span>
               </div>
-              <h1 tabIndex={-1} className="xinxam-page-title mb-3 text-2xl sm:text-3xl lg:text-4xl text-ink font-display outline-none focus:outline-none flex items-center">
-                <span className="xinxam-seal-badge" aria-hidden="true">籤</span>
-                <span>Lời gửi gắm từ Thẻ xăm số {currentResult.stickNumber}</span>
+              <h1 className="page-title mb-3 text-2xl sm:text-3xl lg:text-4xl text-ink font-display">
+                Lời gửi gắm từ Thẻ xăm số {currentResult.stickNumber}
               </h1>
               <p className="font-serif italic text-base sm:text-lg text-accent leading-relaxed">
                 “{currentResult.quote}”
@@ -1038,8 +955,9 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 mb-8 items-start">
               {/* Left Column (5 columns): The Sacred Parchment Bamboo Slip */}
               <div className="lg:col-span-5 space-y-4">
-                <div className="xinxam-result-scroll text-center flex flex-col justify-between min-h-[480px]">
-                  <div className="xinxam-scroll-golden-rim" />
+                <div className="rounded-2xl p-6 sm:p-8 bg-surface border border-line shadow-sm relative overflow-hidden text-center flex flex-col justify-between min-h-[480px]">
+                  {/* Subtle inner paper glow */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 via-transparent to-amber-500/5 pointer-events-none" />
 
                   {/* Card Header */}
                   <div className="relative z-10">
@@ -1062,13 +980,13 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                       THẺ SỐ {currentResult.stickNumber} • {selectedRegion.toUpperCase()}
                     </div>
 
-                    <h2 className="section-title text-xl sm:text-2xl leading-snug mb-6 text-ink font-display">
+                    <h2 className="section-title text-xl sm:text-2xl leading-snug mb-8 text-ink">
                       {currentResult.title}
                     </h2>
 
                     {/* 4-Line Poem in Center */}
-                    <div className="xinxam-poem-lines my-6 shadow-inner">
-                      <p className="font-serif italic font-semibold text-base sm:text-lg leading-loose">
+                    <div className="p-6 rounded-xl bg-surface-soft/60 border border-line/60 mb-8 shadow-inner">
+                      <p className="font-serif italic font-semibold text-base sm:text-lg text-ink leading-loose">
                         “{currentResult.poem.line1}
                         <br />
                         {currentResult.poem.line2}

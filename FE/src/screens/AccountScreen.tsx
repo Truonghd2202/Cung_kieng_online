@@ -23,13 +23,9 @@ import {
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Card } from "../components/ui/card";
-import { ProfileAvatar } from "../components/ProfileAvatar";
 import { MoodKey } from "../data/demoSignals";
 import { SavedItemActions } from "../components/SavedItemActions";
 import { AppDialog } from "../components/AppDialog";
-import { SavedReadingList } from "../components/SavedReadingList";
-import { SavedTraditionalXamList } from
-  "../components/SavedTraditionalXamList";
 
 export interface SavedSignalItem {
   id: string;
@@ -413,111 +409,92 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
   return (
     <div className="screen-shell">
       <main className="page-container max-w-6xl">
-        {/* Top Breadcrumb & Status Ribbon */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 text-xs text-stone-600 dark:text-stone-400">
+        {/* Top Breadcrumb & Tag */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 text-xs text-muted">
           <div className="flex items-center gap-2">
             <span
               onClick={onGoToHome}
-              className="hover:text-amber-800 dark:hover:text-amber-300 cursor-pointer transition-colors"
+              className="hover:text-accent cursor-pointer transition-colors"
             >
               Trang chủ
             </span>
-            <span className="text-stone-400">/</span>
-            <span className="text-amber-800 dark:text-amber-300 font-semibold">Góc của tôi</span>
+            <span>&gt;</span>
+            <span className="text-accent font-semibold">Góc của tôi</span>
           </div>
 
-          <div className="flex items-center gap-1.5 uppercase font-medium text-xs text-stone-500">
-            <Lock className="w-3.5 h-3.5 text-amber-700" />
-            <span>KHÔNG GIAN LƯU TRỮ RIÊNG TƯ TRÊN THIẾT BỊ NÀY</span>
+          <div className="flex items-center gap-1.5 uppercase font-semibold text-xs text-muted">
+            <Lock className="w-3.5 h-3.5 text-accent" />
+            <span>NỘI DUNG BẢN DEMO ĐƯỢC LƯU TRÊN TRÌNH DUYỆT NÀY</span>
           </div>
         </div>
 
-        {/* Hero Card Banner with Profile */}
-        <section className="mb-8 p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-surface via-surface to-amber-500/[0.04] shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-amber-500/10 to-transparent pointer-events-none rounded-bl-full" />
-
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="max-w-xl space-y-2">
-              <div className="text-[11px] uppercase font-bold tracking-widest text-amber-800 dark:text-amber-300 flex items-center gap-2">
-                <span>✦ BẢO TÀNG KÝ ỨC & GÓC TĨNH TÂM</span>
-              </div>
-
-              <h1 className="page-title font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-ink">
-                Góc Của Tôi
-              </h1>
-
-              <p className="font-display italic text-sm sm:text-base text-amber-900 dark:text-amber-200 font-medium">
-                “Chào bạn, hôm nay tâm trí bạn đã thảnh thơi hơn chưa?”
-              </p>
-
-              <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-                Nơi lưu giữ những nén hương lòng, thẻ quẻ chiêm nghiệm và lời ước nguyện
-                bạn đã gửi gắm trong những thời khắc an tịnh nhất.
-              </p>
+        {/* Hero Card Banner with Profile on the Right */}
+        <div className="relative py-8 mb-8 border-y border-line flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          <div className="max-w-2xl">
+            <div className="text-xs uppercase font-bold tracking-wider text-accent mb-2 flex items-center gap-1.5">
+              <span>— GÓC TĨNH TÂM CÁ NHÂN</span>
             </div>
 
-            {/* User Profile Card */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-surface border border-line shadow-xs flex items-center justify-between gap-4 min-w-0 w-full lg:w-auto shrink-0">
-              <div className="flex items-center gap-4">
-                <ProfileAvatar
-                  email={currentUser?.email}
-                  name={currentUser?.name || "An Nhiên"}
-                  className="h-14 w-14 border-2 border-amber-500/40 text-2xl shadow-xs"
-                />
+            <h1 className="page-title mb-2">
+              Góc của tôi
+            </h1>
 
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-display font-bold text-base text-ink">
-                      {currentUser?.name || "An Nhiên"}
-                    </span>
-                    <span className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">
-                      ✓
-                    </span>
-                  </div>
-                  <div className="text-xs text-stone-500 mb-1 flex flex-col gap-0.5">
-                    <span className="break-all text-xs font-mono text-stone-500">
-                      {currentUser?.email || "annhien@tinlamtamlinh.vn"}
-                    </span>
-                    <span className="text-[11px] font-semibold text-amber-800 dark:text-amber-300">
-                      ✦ {totalCount} dấu ấn đã lưu giữ
-                    </span>
-                  </div>
+            <p className="font-display italic text-sm sm:text-base text-accent font-medium mb-3">
+              “Chào bạn, hôm nay tâm trí bạn đã thảnh thơi hơn chưa?”
+            </p>
+
+            <p className="text-sm text-ink leading-relaxed">
+              Nơi xem lại lời chiêm nghiệm, thẻ xăm và lời gửi gắm
+              bạn đã chọn lưu trên trình duyệt này.
+            </p>
+          </div>
+
+          {/* User Profile Card */}
+          <div className="p-4 sm:p-5 rounded-panel bg-surface/95 backdrop-blur-md border border-line shadow-sm flex items-center justify-between gap-4 min-w-0 w-full lg:w-auto">
+            <div className="flex items-center gap-4">
+              <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-line shrink-0 bg-surface">
+                <span className="grid h-full w-full place-items-center bg-accent-soft font-display text-2xl font-semibold text-accent" aria-hidden="true">
+                  {(currentUser?.name || "An Nhiên").trim().charAt(0).toUpperCase()}
+                </span>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-display font-bold text-base text-ink">
+                    {currentUser?.name || "An Nhiên"}
+                  </span>
+                  <span className="w-4 h-4 rounded-full bg-action text-white flex items-center justify-center text-xs">
+                    ✓
+                  </span>
+                </div>
+                <div className="text-xs text-muted mb-1.5 flex flex-col gap-0.5">
+                  <span className="break-all text-xs text-muted">
+                    {currentUser?.email || "annhien@tinlamtamlinh.vn"}
+                  </span>
+                  <span className="text-xs font-medium inline-flex items-center gap-1 text-accent">
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent-soft" />
+                    Tài khoản đã xác thực
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-accent font-semibold">
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>{totalCount} dấu ấn đã lưu lại</span>
                 </div>
               </div>
-
-              <div className="flex items-center gap-1.5">
-                {onGoToNotifications && (
-                  <button
-                    onClick={onGoToNotifications}
-                    title="Nhắc lịch & Thông báo"
-                    className="p-2.5 rounded-xl border border-line bg-surface hover:bg-surface-soft text-stone-600 hover:text-amber-800 dark:hover:text-amber-300 transition-colors cursor-pointer"
-                    aria-label="Thông báo"
-                  >
-                    <Bell className="w-4 h-4" />
-                  </button>
-                )}
-
-                {onGoToSettings && (
-                  <button
-                    onClick={onGoToSettings}
-                    title="Cài đặt & Tùy chọn cá nhân"
-                    className="p-2.5 rounded-xl border border-line bg-surface hover:bg-surface-soft text-stone-600 hover:text-amber-800 dark:hover:text-amber-300 transition-colors cursor-pointer"
-                    aria-label="Cài đặt"
-                  >
-                    <Settings className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
             </div>
+
+            {onGoToSettings && (
+              <button
+                onClick={onGoToSettings}
+                title="Cài đặt & Tùy chọn cá nhân"
+                className="p-2.5 rounded-full border border-line bg-surface hover:bg-surface text-muted hover:text-accent transition-colors cursor-pointer"
+                aria-label="Cài đặt"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+            )}
           </div>
-        </section>
-
-        <SavedReadingList
-          key={currentUser?.email || "guest"}
-          email={currentUser?.email}
-        />
-
-        <SavedTraditionalXamList email={currentUser?.email} />
+        </div>
 
         {onGoToMoodJourney && (
           <Card

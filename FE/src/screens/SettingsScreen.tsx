@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   CheckCircle2,
   Sparkles,
+  Camera,
   Edit2,
   Check,
   AlertTriangle,
@@ -22,23 +23,25 @@ import { Card } from "@/src/components/ui/card";
 import type { ThemePreference } from "../hooks/useTheme";
 import { CULTURAL_TOPICS } from "../data/culturalTopics";
 import { AppDialog } from "../components/AppDialog";
-import { ProfileAvatar } from "../components/ProfileAvatar";
-import { ProfileAvatarEditor } from "../components/ProfileAvatarEditor";
+import type { UserSettings } from "../data/userService";
 
 interface SettingsScreenProps {
   onBackToAccount: () => void;
   onGoToHome: () => void;
   themePreference: ThemePreference;
-  onChangeTheme: (theme: ThemePreference) => void;
+  onChangeTheme: (theme: ThemePreference) => Promise<boolean>;
   selectedTopics: string[];
-  onChangeTopics: (topics: string[]) => boolean;
+  onChangeTopics: (topics: string[]) => Promise<boolean>;
+  userSettings: UserSettings;
+  onChangeNotifications: (
+    notifications: Pick<UserSettings, "emailNotifications" | "pushNotifications">
+  ) => Promise<boolean>;
   user?: { name: string; email: string } | null;
   onUpdateProfile?: (
     updated: { name: string; email?: string }
-  ) => boolean;
+  ) => Promise<boolean>;
   onLogout?: () => void;
   onClearAllLocalData?: () => boolean;
-  onGoToReminders: () => void;
 }
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
@@ -48,41 +51,22 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onChangeTheme,
   selectedTopics,
   onChangeTopics,
+  userSettings,
+  onChangeNotifications,
   user,
   onUpdateProfile,
   onLogout,
   onClearAllLocalData,
-  onGoToReminders,
 }) => {
   // Navigation section scroll
   const [activeSection, setActiveSection] = useState<string>("profile");
-
-  const goToSection = (
-    section: "profile" | "experience" | "notifications" | "data"
-  ) => {
-    const target = document.getElementById(`settings-${section}`);
-
-    if (!target) return;
-
-    setActiveSection(section);
-
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-
-    target.focus({ preventScroll: true });
-
-    target.scrollIntoView({
-      behavior: reduceMotion ? "auto" : "smooth",
-      block: "start",
-    });
-  };
 
   // Profile Edit State
   const [displayName, setDisplayName] = useState(user?.name || "An Nhiên");
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(displayName);
   const [nameSaveError, setNameSaveError] = useState("");
+  const [isSavingName, setIsSavingName] = useState(false);
 
   // Đồng bộ displayName khi user prop từ App thay đổi
   useEffect(() => {
@@ -94,7 +78,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
 
   const [topicsSaveStatus, setTopicsSaveStatus] = useState<
-    "idle" | "success" | "error"
+    "idle" | "saving" | "success" | "error"
+  >("idle");
+  const [settingsSaveStatus, setSettingsSaveStatus] = useState<
+    "idle" | "saving" | "success" | "error"
   >("idle");
 
   useEffect(() => {
@@ -108,7 +95,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
 
 
-  const handleSaveName = () => {
+  const handleSaveName = async () => {
     setNameSaveError("");
 
     const cleanName = tempName.trim();
@@ -118,17 +105,20 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       return;
     }
 
-    if (cleanName.length > 80) {
-      setNameSaveError("Tên hiển thị tối đa 80 ký tự.");
+    if (cleanName.length > 120) {
+      setNameSaveError("Tên hiển thị tối đa 120 ký tự.");
       return;
     }
 
+    setIsSavingName(true);
     let saved = false;
 
     try {
-      saved = onUpdateProfile?.({ name: cleanName }) === true;
+      saved = (await onUpdateProfile?.({ name: cleanName })) === true;
     } catch {
       saved = false;
+    } finally {
+      setIsSavingName(false);
     }
 
     if (!saved) {
@@ -170,156 +160,171 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     setDataClearedNotice(true);
   };
 
-  const handleToggleTopic = (topicId: string) => {
+  const handleToggleTopic = async (topicId: string) => {
+    if (topicsSaveStatus === "saving") return;
     const nextTopics = selectedTopics.includes(topicId)
       ? selectedTopics.filter((id) => id !== topicId)
       : [...selectedTopics, topicId];
 
-    const saved = onChangeTopics(nextTopics);
+    setTopicsSaveStatus("saving");
+    const saved = await onChangeTopics(nextTopics);
 
     setTopicsSaveStatus(saved ? "success" : "error");
+  };
+
+  const handleThemeChange = async (theme: ThemePreference) => {
+    if (settingsSaveStatus === "saving") return;
+    setSettingsSaveStatus("saving");
+    const saved = await onChangeTheme(theme);
+    setSettingsSaveStatus(saved ? "success" : "error");
+  };
+
+  const handleNotificationChange = async (
+    key: "emailNotifications" | "pushNotifications"
+  ) => {
+    if (settingsSaveStatus === "saving") return;
+    setSettingsSaveStatus("saving");
+    const saved = await onChangeNotifications({
+      emailNotifications: key === "emailNotifications"
+        ? !userSettings.emailNotifications
+        : userSettings.emailNotifications,
+      pushNotifications: key === "pushNotifications"
+        ? !userSettings.pushNotifications
+        : userSettings.pushNotifications,
+    });
+    setSettingsSaveStatus(saved ? "success" : "error");
   };
 
   return (
     <div className="screen-shell">
       <main className="page-container max-w-6xl">
         {/* Top Breadcrumb */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 text-xs text-stone-600 dark:text-stone-400">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 text-xs text-muted">
           <div className="flex items-center gap-2">
             <button
               onClick={onGoToHome}
-              className="hover:text-amber-800 dark:hover:text-amber-300 cursor-pointer transition-colors"
+              className="hover:text-accent cursor-pointer transition-colors"
             >
               Hôm nay
             </button>
-            <span className="text-stone-400">/</span>
+            <span>/</span>
             <button
               onClick={onBackToAccount}
-              className="hover:text-amber-800 dark:hover:text-amber-300 cursor-pointer transition-colors"
+              className="hover:text-accent cursor-pointer transition-colors"
             >
               Góc của tôi
             </button>
-            <span className="text-stone-400">/</span>
-            <span className="text-amber-800 dark:text-amber-300 font-semibold">Cài đặt & Tùy chọn</span>
+            <span>/</span>
+            <span className="text-accent font-semibold">Cài đặt & Tùy chọn</span>
           </div>
 
           <button
             onClick={onBackToAccount}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-600 dark:text-stone-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors cursor-pointer self-start sm:self-auto"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-accent transition-colors cursor-pointer self-start sm:self-auto"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Về Góc của tôi</span>
+            <span>Về Góc của tôi (Màn 21)</span>
           </button>
         </div>
 
         {/* Header Title Section */}
-        <section className="mb-8 p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-surface via-surface to-amber-500/[0.04] shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-amber-500/10 to-transparent pointer-events-none rounded-bl-full" />
-
-          <div className="relative z-10 space-y-2.5 max-w-2xl">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-amber-800 dark:text-amber-300">
-                TÙY BIẾN KHÔNG GIAN TĨNH TẠI
-              </span>
-              <span className="text-xs text-stone-400">·</span>
-              <span className="text-xs text-stone-500">Cá Nhân Hóa</span>
-            </div>
-
-            <h1 className="page-title font-display text-2xl sm:text-3xl font-bold text-ink">
-              Cài Đặt & Tùy Chọn Cá Nhân
-            </h1>
-
-            <p className="text-xs sm:text-sm text-stone-700 dark:text-stone-300 leading-relaxed">
-              Điều chỉnh không gian tĩnh tại, nhịp trải nghiệm văn hóa và quản lý dữ liệu lưu trữ
-              trên thiết bị của bạn.
-            </p>
-          </div>
-        </section>
+        <div className="mb-8">
+          <span className="text-xs font-bold uppercase tracking-wider text-accent mb-1 block">
+            TÙY BIẾN KHÔNG GIAN
+          </span>
+          <h1 className="page-title mb-2">
+            Cài đặt & Tùy chọn cá nhân
+          </h1>
+          <p className="text-sm sm:text-base text-ink leading-relaxed max-w-3xl">
+            Điều chỉnh không gian tĩnh tại, nhịp trải nghiệm văn hóa và quản lý dữ liệu lưu trữ trên
+            thiết bị của bạn.
+          </p>
+        </div>
 
         {/* 2-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Column (3 cols): User Profile Card & Navigation Menu */}
-          <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column (4 cols): User Profile Card & Navigation Menu */}
+          <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-24">
             {/* User Badge Card */}
-            <Card className="p-5 rounded-3xl bg-surface border border-line shadow-xs">
+            <Card className="p-5 rounded-card bg-surface border border-line shadow-xs">
               <div className="flex items-center gap-3.5">
-                <ProfileAvatar
-                  email={user?.email}
-                  name={displayName}
-                  className="h-12 w-12 border-2 border-amber-500/40 text-xl shadow-xs"
-                />
-                <div className="min-w-0">
-                  <h3 className="font-display font-bold text-base text-ink truncate">
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-surface border border-line shrink-0">
+                  <span className="grid h-full w-full place-items-center bg-accent-soft font-display text-xl font-semibold text-accent" aria-hidden="true">
+                    {displayName.trim().charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-base text-ink">
                     {displayName}
                   </h3>
-                  <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">Tâm thức an hòa · Bản demo</p>
+                  <p className="text-sm text-muted">Tâm thức an hòa • Bản demo</p>
                 </div>
               </div>
             </Card>
 
             {/* Navigation Menu Links */}
-            <Card className="p-2.5 rounded-3xl bg-surface border border-line shadow-xs space-y-1 text-xs font-semibold text-ink">
+            <Card className="p-3 rounded-card bg-surface border border-line shadow-xs space-y-1 text-xs font-semibold text-ink">
               <button
                 type="button"
-                onClick={() => goToSection("profile")}
-                className={`w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center justify-between transition-all cursor-pointer ${
+                onClick={() => setActiveSection("profile")}
+                className={`w-full text-left px-4 py-2.5 rounded-panel flex items-center justify-between transition-all cursor-pointer ${
                   activeSection === "profile"
-                    ? "bg-amber-500/15 text-amber-900 dark:text-amber-200"
+                    ? "bg-accent-soft text-accent"
                     : "hover:bg-surface-soft text-ink"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <User className="w-4 h-4 text-amber-700" />
+                  <User className="w-4 h-4" />
                   <span>Hồ sơ cá nhân</span>
                 </div>
-                {activeSection === "profile" && <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />}
+                {activeSection === "profile" && <span className="w-1.5 h-1.5 rounded-full bg-action" />}
               </button>
 
               <button
                 type="button"
-                onClick={() => goToSection("experience")}
-                className={`w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center justify-between transition-all cursor-pointer ${
+                onClick={() => setActiveSection("experience")}
+                className={`w-full text-left px-4 py-2.5 rounded-panel flex items-center justify-between transition-all cursor-pointer ${
                   activeSection === "experience"
-                    ? "bg-amber-500/15 text-amber-900 dark:text-amber-200"
+                    ? "bg-accent-soft text-accent"
                     : "hover:bg-surface-soft text-ink"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Sparkles className="w-4 h-4 text-amber-700" />
+                  <Sparkles className="w-4 h-4" />
                   <span>Tùy biến trải nghiệm</span>
                 </div>
-                {activeSection === "experience" && <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />}
+                {activeSection === "experience" && <span className="w-1.5 h-1.5 rounded-full bg-action" />}
               </button>
 
               <button
                 type="button"
-                onClick={() => goToSection("notifications")}
-                className={`w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center justify-between transition-all cursor-pointer ${
+                onClick={() => setActiveSection("notifications")}
+                className={`w-full text-left px-4 py-2.5 rounded-panel flex items-center justify-between transition-all cursor-pointer ${
                   activeSection === "notifications"
-                    ? "bg-amber-500/15 text-amber-900 dark:text-amber-200"
+                    ? "bg-accent-soft text-accent"
                     : "hover:bg-surface-soft text-ink"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Bell className="w-4 h-4 text-amber-700" />
+                  <Bell className="w-4 h-4" />
                   <span>Thông báo & Nhắc lịch</span>
                 </div>
               </button>
 
               <button
                 type="button"
-                onClick={() => goToSection("data")}
-                className={`w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center justify-between transition-all cursor-pointer ${
+                onClick={() => setActiveSection("data")}
+                className={`w-full text-left px-4 py-2.5 rounded-panel flex items-center justify-between transition-all cursor-pointer ${
                   activeSection === "data"
-                    ? "bg-amber-500/15 text-amber-900 dark:text-amber-200"
+                    ? "bg-accent-soft text-accent"
                     : "hover:bg-surface-soft text-ink"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <ShieldCheck className="w-4 h-4 text-amber-700" />
+                  <ShieldCheck className="w-4 h-4" />
                   <span>Dữ liệu bản demo</span>
                 </div>
-                {activeSection === "data" && <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />}
+                {activeSection === "data" && <span className="w-1.5 h-1.5 rounded-full bg-action" />}
               </button>
 
               {onLogout && (
@@ -327,7 +332,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   <button
                     type="button"
                     onClick={onLogout}
-                    className="w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center gap-2.5 text-red-700 dark:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
+                    className="w-full text-left px-4 py-2.5 rounded-panel flex items-center gap-2.5 text-danger hover:bg-danger-soft transition-all cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Đăng xuất khỏi thiết bị này</span>
@@ -336,21 +341,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               )}
             </Card>
 
-            <div className="p-3.5 rounded-2xl bg-amber-500/[0.06] border border-amber-500/20 text-xs text-stone-600 dark:text-stone-400 italic leading-relaxed">
-              * Dữ liệu được lưu trữ an toàn và bảo mật trên trình duyệt này.
+            <div className="p-4 rounded-panel bg-surface border border-line text-xs text-muted italic leading-relaxed">
+              Bản thử nghiệm lưu dữ liệu trên trình duyệt này.
+              Một số chức năng mở rộng chưa được triển khai.
             </div>
           </div>
 
           {/* Right Column (8 cols): Setting Blocks */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className="lg:col-span-9 space-y-6">
             {/* Block 1: Hồ sơ cá nhân */}
-            <section
-              id="settings-profile"
-              aria-label="Hồ sơ cá nhân"
-              tabIndex={-1}
-              className="scroll-mt-28 rounded-card focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current"
-            >
-              <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
+            <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-1">
                 <User className="w-3.5 h-3.5" />
                 <span>HỒ SƠ CÁ NHÂN</span>
@@ -363,13 +363,29 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               </p>
 
               {/* Avatar Row */}
-              {user?.email && (
-                <ProfileAvatarEditor
-                  key={user.email}
-                  email={user.email}
-                  name={displayName}
-                />
-              )}
+              <div className="flex items-center justify-between p-4 rounded-panel bg-surface border border-line mb-5">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-14 h-14 rounded-full overflow-hidden bg-surface border border-line">
+                    <span className="grid h-full w-full place-items-center bg-accent-soft font-display text-2xl font-semibold text-accent" aria-hidden="true">
+                      {displayName.trim().charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="font-bold text-sm text-ink">Ảnh đại diện người dùng</div>
+                    <div className="text-xs text-muted">Định dạng JPG, PNG • Chỉ lưu tại bộ nhớ máy</div>
+                  </div>
+                </div>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs border-line gap-1.5"
+                  onClick={() => alert("Tính năng đổi ảnh đại diện cá nhân hóa từ tệp tin sẽ có khi mở rộng bộ nhớ.")}
+                >
+                  <Camera className="w-3.5 h-3.5 text-accent" />
+                  <span>Đổi ảnh</span>
+                </Button>
+              </div>
 
               {/* Fields */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -395,8 +411,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                         }}
                         className="min-w-0 flex-1 px-3 py-2 rounded-control border border-accent bg-surface text-base text-ink font-medium outline-none"
                       />
-                      <Button size="sm" onClick={handleSaveName} className="text-xs bg-action text-white">
-                        Lưu
+                      <Button size="sm" onClick={() => void handleSaveName()} disabled={isSavingName} className="text-xs bg-action text-white">
+                        {isSavingName ? "Đang lưu..." : "Lưu"}
                       </Button>
                     </div>
                   ) : (
@@ -433,7 +449,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   <div className="px-3.5 py-2.5 rounded-xl border border-line bg-surface-soft text-xs font-medium text-muted flex items-center justify-between">
                     <span className="font-sans tabular-nums text-xs">{user?.email || "annhien@tinlamtamlinh.vn"}</span>
                     <span className="text-xs text-muted">
-                      {user?.email === "annhien@tinlamtamlinh.vn" ? "Tài khoản mẫu" : "Hồ sơ cục bộ trên máy"}
+                      Tài khoản đã xác thực
                     </span>
                   </div>
                 </div>
@@ -443,17 +459,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 Tên hiển thị dùng để gọi bạn trong các lời chào buổi sớm và lưu trữ các dòng chiêm
                 nghiệm tại góc lưu bút riêng tư.
               </p>
-              </Card>
-            </section>
+            </Card>
 
             {/* Block 2: Tùy biến trải nghiệm */}
-            <section
-              id="settings-experience"
-              aria-label="Tùy biến trải nghiệm"
-              tabIndex={-1}
-              className="scroll-mt-28 rounded-card focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current"
-            >
-              <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
+            <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-1">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>TÙY BIẾN TRẢI NGHIỆM</span>
@@ -512,7 +521,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                           name="theme-preference"
                           value={option.value}
                           checked={isSelected}
-                          onChange={() => onChangeTheme(option.value)}
+                          onChange={() => void handleThemeChange(option.value)}
+                          disabled={settingsSaveStatus === "saving"}
                           className="mt-1 h-4 w-4 shrink-0"
                         />
 
@@ -548,7 +558,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
                 <p className="text-sm text-muted leading-relaxed mb-4">
                   Bạn có thể chọn nhiều chủ đề hoặc bỏ chọn tất cả.
-                  Lựa chọn được ghi nhớ cho tài khoản trên trình duyệt này.
+                  Lựa chọn được đồng bộ với tài khoản của bạn.
                 </p>
 
                 <div className="flex flex-wrap gap-2">
@@ -560,7 +570,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                         key={topic.id}
                         type="button"
                         aria-pressed={isSelected}
-                        onClick={() => handleToggleTopic(topic.id)}
+                        onClick={() => void handleToggleTopic(topic.id)}
+                        disabled={topicsSaveStatus === "saving"}
                         className={[
                           "inline-flex min-h-11 items-center gap-2",
                           "rounded-full border px-4 py-2 text-sm",
@@ -595,31 +606,26 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                     </p>
                   )}
 
+                  {topicsSaveStatus === "saving" && (
+                    <p className="text-muted">Đang đồng bộ lựa chọn...</p>
+                  )}
+
                   {topicsSaveStatus === "error" && (
                     <p className="text-danger">
-                      Chưa lưu được lựa chọn. Trình duyệt có thể đang
-                      hạn chế lưu dữ liệu; bạn hãy thử lại.
+                      Chưa đồng bộ được lựa chọn với máy chủ; bạn hãy thử lại.
                     </p>
                   )}
                 </div>
 
                 <p className="mt-3 text-sm text-muted leading-relaxed">
-                  Bản thử nghiệm hiện ghi nhớ sở thích.
-                  Các lựa chọn chưa tự động thay đổi thông điệp
-                  hoặc thứ tự bài viết.
+                  Sở thích được lưu theo tài khoản. Việc cá nhân hóa
+                  nội dung sẽ được bổ sung ở phase nội dung.
                 </p>
               </fieldset>
-              </Card>
-            </section>
+            </Card>
 
             {/* Block 3: Nhắc lịch & Thông báo */}
-            <section
-              id="settings-notifications"
-              aria-label="Thông báo và nhắc lịch"
-              tabIndex={-1}
-              className="scroll-mt-28 rounded-card focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current"
-            >
-              <Card className="p-6 sm:p-8 rounded-card bg-surface border-line">
+            <Card className="p-6 sm:p-8 rounded-card bg-surface border-line">
               <div className="flex items-center gap-2 mb-3">
                 <Bell
                   className="w-5 h-5 text-accent"
@@ -630,30 +636,47 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 </h2>
               </div>
 
-              <p className="text-sm text-muted leading-relaxed">
-                Bật nhắc rằm, mùng một và lưu ngày giỗ để xem khi mở
-                ứng dụng. Chưa gửi thông báo khi đóng web.
-              </p>
+              <div className="space-y-3">
+                {[
+                  {
+                    key: "emailNotifications" as const,
+                    title: "Thông báo qua email",
+                    description: "Nhận lời nhắc và cập nhật quan trọng qua email.",
+                  },
+                  {
+                    key: "pushNotifications" as const,
+                    title: "Thông báo trên thiết bị",
+                    description: "Cho phép tài khoản nhận thông báo đẩy khi tính năng được kích hoạt.",
+                  },
+                ].map((option) => (
+                  <label
+                    key={option.key}
+                    className="flex items-start justify-between gap-4 rounded-xl border border-line bg-surface-soft p-4"
+                  >
+                    <span>
+                      <span className="block text-sm font-semibold text-ink">{option.title}</span>
+                      <span className="mt-1 block text-sm text-muted">{option.description}</span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={userSettings[option.key]}
+                      disabled={settingsSaveStatus === "saving"}
+                      onChange={() => void handleNotificationChange(option.key)}
+                      className="mt-1 h-5 w-5 shrink-0"
+                    />
+                  </label>
+                ))}
+              </div>
 
-              <Button
-                type="button"
-                variant="outline"
-                className="mt-4"
-                onClick={onGoToReminders}
-              >
-                Quản lý nhắc lịch
-              </Button>
-              </Card>
-            </section>
+              <div aria-live="polite" className="mt-3 text-sm">
+                {settingsSaveStatus === "saving" && <p className="text-muted">Đang lưu cài đặt...</p>}
+                {settingsSaveStatus === "success" && <p className="text-success">Đã đồng bộ cài đặt.</p>}
+                {settingsSaveStatus === "error" && <p className="text-danger">Chưa lưu được cài đặt; bạn hãy thử lại.</p>}
+              </div>
+            </Card>
 
             {/* Block 4: Dữ liệu bản demo & Lưu trữ thiết bị */}
-            <section
-              id="settings-data"
-              aria-label="Dữ liệu trên trình duyệt"
-              tabIndex={-1}
-              className="scroll-mt-28 rounded-card focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current"
-            >
-              <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
+            <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span>DỮ LIỆU BẢN DEMO & LƯU TRỮ THIẾT BỊ</span>
@@ -680,8 +703,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 <div className="p-3.5 rounded-panel bg-success-soft border border-success/25 text-success text-xs mb-4 flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
                   <span>
-                    Đã xóa nội dung đã lưu, ghi chú lịch và ba miền,
-                    bản nháp nghi lễ, đăng ký hội viên demo và vật phẩm số
+                    Đã xóa nội dung trong Góc của tôi và ghi chú lịch
                     của tài khoản hiện tại trên trình duyệt này.
                   </span>
                 </div>
@@ -709,11 +731,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   className="w-full sm:w-auto text-xs rounded-xl border-danger/25 text-danger hover:bg-danger-soft gap-1.5"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Xóa nội dung và dữ liệu trải nghiệm</span>
+                  <span>Xóa nội dung đã lưu và ghi chú lịch</span>
                 </Button>
               </div>
-              </Card>
-            </section>
+            </Card>
 
             {/* Block 5: Đang đăng nhập dưới phiên */}
             <div className="p-5 rounded-panel bg-surface border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
@@ -763,16 +784,12 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </h3>
 
             <p className="mb-6 text-sm leading-relaxed text-muted">
-              Thao tác này xóa tín hiệu, thẻ xăm, lời gửi gắm,
-              ghi chú lịch và ba miền, bản nháp nghi lễ,
-              đăng ký hội viên demo và vật phẩm số của tài khoản
-              hiện tại trên trình duyệt này. Bạn không thể hoàn tác.
-            </p>
-
-            <p className="mb-6 text-sm leading-relaxed text-muted">
-              Bài đã đánh dấu, góc tưởng niệm, tùy chọn nhắc lịch,
-              giao diện và dữ liệu của tài khoản khác được giữ lại.
-              Yêu cầu hợp tác demo có mục xóa riêng trong biểu mẫu Hợp tác.
+              Xóa lời chiêm nghiệm, thẻ xăm, lời gửi gắm
+              trong Góc của tôi và ghi chú lịch của tài
+              khoản hiện tại trên trình duyệt này.
+              Thao tác không thể hoàn tác.
+              Góc tưởng niệm, tùy chọn giao diện và dữ liệu
+              của tài khoản khác được giữ lại.
             </p>
 
             {clearDataError && (

@@ -49,6 +49,51 @@ function updatePassword(id, passwordHash, client = prisma) {
   });
 }
 
+function updateProfile(id, data, client = prisma) {
+  return client.users.update({
+    where: { id },
+    data: { ...data, updated_at: new Date() },
+    select: publicUserSelect,
+  });
+}
+
+function getSettings(userId, client = prisma) {
+  return client.user_settings.upsert({
+    where: { user_id: userId },
+    create: { user_id: userId },
+    update: {},
+  });
+}
+
+function updateSettings(userId, data, client = prisma) {
+  return client.user_settings.upsert({
+    where: { user_id: userId },
+    create: { user_id: userId, ...data },
+    update: { ...data, updated_at: new Date() },
+  });
+}
+
+async function getTopics(userId, client = prisma) {
+  const rows = await client.user_topics.findMany({
+    where: { user_id: userId },
+    orderBy: { created_at: "asc" },
+    select: { topic: true },
+  });
+  return rows.map((row) => row.topic);
+}
+
+function replaceTopics(userId, topics) {
+  return prisma.$transaction(async (transaction) => {
+    await transaction.user_topics.deleteMany({ where: { user_id: userId } });
+    if (topics.length) {
+      await transaction.user_topics.createMany({
+        data: topics.map((topic) => ({ user_id: userId, topic })),
+      });
+    }
+    return getTopics(userId, transaction);
+  });
+}
+
 module.exports = {
   publicUserSelect,
   findByEmail,
@@ -58,4 +103,9 @@ module.exports = {
   create,
   updateLastLogin,
   updatePassword,
+  updateProfile,
+  getSettings,
+  updateSettings,
+  getTopics,
+  replaceTopics,
 };

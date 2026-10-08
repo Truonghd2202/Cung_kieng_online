@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Search,
   Compass,
@@ -19,6 +19,7 @@ import {
   CultureCategoryKey,
 } from "../data/cultureData";
 import { DiscoveryNav } from "../components/DiscoveryNav";
+import { loadCultureArticles } from "../data/contentService";
 
 const normalizeSearchText = (value: string) =>
   value
@@ -50,6 +51,16 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [visibleCount, setVisibleCount] = useState(4);
+  const [articles, setArticles] = useState(CULTURE_ARTICLES);
+
+  useEffect(() => {
+    void loadCultureArticles().then((remote) => {
+      setArticles(CULTURE_ARTICLES.map((local) => {
+        const item = remote.find((candidate) => candidate.id === local.id);
+        return item ? { ...local, title: String(item.title || local.title), excerpt: String(item.excerpt || local.excerpt) } : local;
+      }));
+    }).catch(() => {});
+  }, []);
 
   const REGIONS = [
     { key: "all", label: "Tất cả" },
@@ -85,7 +96,7 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
   const filteredArticles = useMemo(() => {
     const query = normalizeSearchText(searchQuery);
 
-    return CULTURE_ARTICLES.filter((article) => {
+    return articles.filter((article) => {
       const matchesRegion =
         selectedRegion === "all" ||
         article.region === selectedRegion;
@@ -113,7 +124,7 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
         matchesSearch
       );
     });
-  }, [selectedRegion, selectedCategory, searchQuery]);
+  }, [articles, selectedRegion, selectedCategory, searchQuery]);
 
   const isDefaultView =
     selectedRegion === "all" && selectedCategory === "all" && !searchQuery.trim();

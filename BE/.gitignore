@@ -6,3 +6,8 @@ src/generated/prisma/*
 !src/generated/prisma/.gitkeep
 coverage/
 *.log
+
+# Local Codex/agent skill installations
+.agents/
+.codex/
+skills-lock.json
