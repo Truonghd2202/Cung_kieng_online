@@ -83,8 +83,8 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
       return;
     }
 
-    if (cleanName.length > 80) {
-      setErrorMessage("Tên hiển thị không được vượt quá 80 ký tự.");
+    if (cleanName.length > 120) {
+      setErrorMessage("Tên hiển thị không được vượt quá 120 ký tự.");
       return;
     }
 
@@ -93,8 +93,13 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
       return;
     }
 
-    if (submittedPassword.length < 6) {
-      setErrorMessage("Mật khẩu cần có tối thiểu 6 ký tự.");
+    if (
+      submittedPassword.length < 8 ||
+      !/[A-Z]/.test(submittedPassword) ||
+      !/[a-z]/.test(submittedPassword) ||
+      !/[0-9]/.test(submittedPassword)
+    ) {
+      setErrorMessage("Mật khẩu cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường và chữ số.");
       return;
     }
 
@@ -114,47 +119,38 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
 
     setIsSubmitting(true);
 
-    registerTimerRef.current = setTimeout(() => {
+    registerTimerRef.current = setTimeout(async () => {
       registerTimerRef.current = null;
 
-      let result: ReturnType<typeof registerAccount>;
-
       try {
-        result = registerAccount(
+        const result = await registerAccount(
           cleanName,
           cleanEmail,
           submittedPassword
         );
+
+        if (!result.success) {
+          setIsSubmitting(false);
+          setErrorMessage(result.error || "Không thể tạo tài khoản. Vui lòng thử lại.");
+          return;
+        }
+
+        try {
+          localStorage.setItem("tltl_remembered_email", cleanEmail);
+        } catch {
+          // Việc ghi nhớ email không quyết định kết quả đăng ký.
+        }
+
+        setSuccessMessage("Tạo tài khoản thành công! Đang mở không gian của bạn...");
+
+        redirectTimerRef.current = setTimeout(() => {
+          redirectTimerRef.current = null;
+          onSuccess(result.user.name, result.user.email);
+        }, 1000);
       } catch {
         setIsSubmitting(false);
-        setErrorMessage(
-          "Không thể tạo tài khoản. Vui lòng thử lại."
-        );
-        return;
+        setErrorMessage("Không thể tạo tài khoản. Vui lòng thử lại.");
       }
-
-      if (!result.success) {
-        setIsSubmitting(false);
-        setErrorMessage(
-          result.error || "Không thể tạo tài khoản. Vui lòng thử lại."
-        );
-        return;
-      }
-
-      try {
-        localStorage.setItem("tltl_remembered_email", cleanEmail);
-      } catch {
-        // Việc ghi nhớ email không quyết định kết quả đăng ký.
-      }
-
-      setSuccessMessage(
-        "Khởi tạo hồ sơ thành công! Đang chuyển qua trang Đăng nhập..."
-      );
-
-      redirectTimerRef.current = setTimeout(() => {
-        redirectTimerRef.current = null;
-        onSuccess(result.user.name, result.user.email);
-      }, 1000);
     }, 400);
   };
 
@@ -247,9 +243,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
           )}
 
           <p className="mb-3 rounded-xl border border-line bg-accent-soft px-3 py-2 text-xs leading-relaxed text-ink">
-            <strong>Bản thử nghiệm giao diện.</strong>{" "}
-            Hồ sơ được lưu trên trình duyệt này.
-            Mật khẩu chưa được xác thực; hãy dùng thông tin mẫu.
+            Tài khoản được tạo và xác thực an toàn qua máy chủ.
           </p>
 
           {/* FORM NHẬP LIỆU */}

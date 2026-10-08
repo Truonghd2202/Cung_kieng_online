@@ -11,7 +11,7 @@ const envSchema = z
     JWT_ACCESS_SECRET: z.string().min(16, "JWT_ACCESS_SECRET must contain at least 16 characters"),
     JWT_ACCESS_EXPIRES_IN: z.string().default("15m"),
     JWT_REFRESH_EXPIRES_IN: z.string().default("30d"),
-    CORS_ORIGINS: z.string().default("http://localhost:5173"),
+    CORS_ORIGINS: z.string().default("http://localhost:3000,http://localhost:5173"),
     LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
   })
   .superRefine((value, context) => {

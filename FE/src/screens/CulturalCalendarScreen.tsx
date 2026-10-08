@@ -30,6 +30,7 @@ import {
   loadCalendarPersonalNotes,
   saveCalendarPersonalNotes,
 } from "../data/calendarData";
+import { loadCalendarEvents } from "../data/contentService";
 
 interface CulturalCalendarScreenProps {
   onGoToToday?: () => void;
@@ -75,6 +76,16 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   const [personalNotes, setPersonalNotes] = useState<CalendarEventItem[]>(() =>
     loadCalendarPersonalNotes(currentUserEmail)
   );
+  const [publicEvents, setPublicEvents] = useState(SAMPLE_CALENDAR_EVENTS);
+
+  useEffect(() => {
+    void loadCalendarEvents().then((remote) => {
+      setPublicEvents(SAMPLE_CALENDAR_EVENTS.map((local) => {
+        const item = remote.find((candidate) => candidate.title === local.title);
+        return item ? { ...local, shortDesc: String(item.shortDesc || local.shortDesc) } : local;
+      }));
+    }).catch(() => {});
+  }, []);
 
   // Khi tài khoản đăng nhập thay đổi hoặc đăng xuất, tự động nạp lại đúng dữ liệu lịch
   useEffect(() => {
@@ -83,8 +94,8 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
 
   // Tổng hợp sự kiện: sự kiện lịch sử văn hóa đã kiểm chứng + ngày cá nhân người dùng thực sự lưu
   const allEvents = useMemo(() => {
-    return [...SAMPLE_CALENDAR_EVENTS, ...personalNotes];
-  }, [personalNotes]);
+    return [...publicEvents, ...personalNotes];
+  }, [publicEvents, personalNotes]);
 
   const eventsInSelectedMonth = allEvents.filter(
     (event) =>

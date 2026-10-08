@@ -91,6 +91,25 @@ model calendar_notes {
   users           users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
+model culture_articles {
+  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug       String          @unique @db.VarChar(255)
+  title      String          @db.VarChar(255)
+  excerpt    String?
+  category   String?         @db.VarChar(120)
+  region     vietnam_region? @default(NATIONWIDE)
+  image_url  String?
+  content    Json
+  source     String?
+  verified   Boolean         @default(false)
+  active     Boolean         @default(true)
+  created_at DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at DateTime        @default(now()) @db.Timestamptz(6)
+
+  @@index([category])
+  @@index([region])
+}
+
 model divination_results {
   id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   divination_type_id String             @db.Uuid
@@ -358,6 +377,8 @@ model proverbs {
   created_at DateTime        @default(now()) @db.Timestamptz(6)
   updated_at DateTime        @default(now()) @db.Timestamptz(6)
   signals    signals[]
+  xin_keo_throws xin_keo_throws[]
+  xin_xam_draws xin_xam_draws[]
 }
 
 model refresh_tokens {
@@ -620,10 +641,13 @@ model xin_keo_throws {
   left_side        String           @db.VarChar(20)
   right_side       String           @db.VarChar(20)
   result           xin_keo_result
+  proverb_id       String?          @db.Uuid
   created_at       DateTime         @default(now()) @db.Timestamptz(6)
   xin_keo_sessions xin_keo_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  proverbs         proverbs?         @relation(fields: [proverb_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   @@unique([session_id, throw_number])
+  @@index([proverb_id], map: "idx_xin_keo_throws_proverb_id")
 }
 
 model xin_xam {
@@ -652,14 +676,17 @@ model xin_xam_draws {
   id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id        String   @db.Uuid
   xin_xam_id     String   @db.Uuid
+  proverb_id     String?  @db.Uuid
   question       String?
   ai_explanation String?
   starred        Boolean  @default(false)
   created_at     DateTime @default(now()) @db.Timestamptz(6)
   users          users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   xin_xam        xin_xam  @relation(fields: [xin_xam_id], references: [id], onUpdate: NoAction)
+  proverbs       proverbs? @relation(fields: [proverb_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   @@index([user_id], map: "idx_xin_xam_draws_user_id")
+  @@index([proverb_id], map: "idx_xin_xam_draws_proverb_id")
 }
 
 enum account_status {

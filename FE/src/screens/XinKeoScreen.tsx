@@ -13,6 +13,8 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
+import { castXinKeo, createXinKeoSession, loadReflectionProverb } from "../data/reflectionService";
+import type { SourcedProverb } from "../data/reflectionService";
 
 interface XinKeoScreenProps {
   onBackToExperience: () => void;
@@ -32,6 +34,7 @@ interface KeoOutcome {
   guidance: string;
   piece1: "am" | "duong"; // am = ngua (phang), duong = up (cong)
   piece2: "am" | "duong";
+  proverb?: SourcedProverb | null;
 }
 
 const KEO_OUTCOMES: Record<KeoResultType, KeoOutcome> = {
@@ -297,6 +300,8 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
   // Chốt quẻ trước khi tung. Nhờ vậy mặt nhìn thấy trong lúc xoay chính là
   // mặt sẽ chạm đĩa, không bị thay hình ở khoảnh khắc animation kết thúc.
   const [landingResult, setLandingResult] = useState<KeoOutcome | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [throwCount, setThrowCount] = useState(0);
 
   const topics = [
     { id: "hoctap", label: "Học tập & Thi cử" },
@@ -305,7 +310,7 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
     { id: "binhan", label: "Bình an & Tâm trí" },
   ];
 
-  const handleCastKeo = () => {
+  const handleCastKeo = async () => {
     if (isCasting) return;
     const weightedPool: KeoResultType[] = [
       "nhat-am-nhat-duong",
@@ -313,8 +318,32 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
       "nhi-duong",
       "nhi-am",
     ];
-    const picked = weightedPool[Math.floor(Math.random() * weightedPool.length)];
-    const outcome = KEO_OUTCOMES[picked];
+    let picked = weightedPool[Math.floor(Math.random() * weightedPool.length)];
+    let sourcedProverb: SourcedProverb | null = null;
+    let nextSessionId = sessionId;
+
+    try {
+      if (!nextSessionId || throwCount >= 3) {
+        const session = await createXinKeoSession(reflectionText.trim() || `Chiêm nghiệm chủ đề ${selectedTopic}`);
+        nextSessionId = session.id;
+        setSessionId(session.id);
+        setThrowCount(0);
+      }
+      const cast = await castXinKeo(nextSessionId);
+      picked = cast.type;
+      sourcedProverb = cast.proverb;
+      setThrowCount((count) => count + 1);
+    } catch {
+      // Khách hoặc khi API tạm lỗi vẫn có thể dùng trải nghiệm cục bộ hiện có.
+    }
+    if (!sourcedProverb) {
+      try {
+        sourcedProverb = await loadReflectionProverb("KEO");
+      } catch {
+        // Không thay bằng nội dung tự sinh nếu nguồn dữ liệu tạm thời không khả dụng.
+      }
+    }
+    const outcome = { ...KEO_OUTCOMES[picked], proverb: sourcedProverb };
 
     setLandingResult(outcome);
     setCastResult(null);
@@ -622,6 +651,23 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
                     Gợi mở tâm thế hôm nay:
                   </strong>
                   {castResult.guidance}
+                  {castResult.proverb && (
+                    <div className="mt-4 pt-4 border-t border-line">
+                      <strong className="text-accent font-bold block mb-1">
+                        Thành ngữ hoặc tục ngữ đi cùng lần gieo:
+                      </strong>
+                      <blockquote>“{castResult.proverb.content}”</blockquote>
+                      <p className="mt-1 text-muted">{castResult.proverb.meaning}</p>
+                      <a
+                        href={castResult.proverb.source.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-block mt-2 text-xs text-accent underline"
+                      >
+                        Nguồn VIVID
+                      </a>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">

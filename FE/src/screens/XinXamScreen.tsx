@@ -35,6 +35,7 @@ import {
   XinXamResult,
   XIN_XAM_RESULTS,
 } from "../data/xinXamData";
+import { drawXinXam, loadReflectionProverb } from "../data/reflectionService";
 
 export type XinXamDrawResult = XinXamResult & {
   drawId: string;
@@ -127,7 +128,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
     };
   }, []);
 
-  const handleStartDraw = () => {
+  const handleStartDraw = async () => {
     if (drawTimerRef.current !== null) return;
 
     const matchingResults = Object.values(
@@ -155,8 +156,54 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
         ? alternatives
         : matchingResults;
 
-    const chosen =
+    let chosen =
       pool[Math.floor(Math.random() * pool.length)];
+    let nextDrawId: string = crypto.randomUUID();
+    let proverbAttached = false;
+
+    if (isLoggedIn) {
+      try {
+        const remote = await drawXinXam(selectedRegion, selectedTopic);
+        nextDrawId = remote.drawId || remote.id;
+        const localMatch = matchingResults.find((item) => item.stickNumber === remote.stickNumber) || chosen;
+        chosen = {
+          ...localMatch,
+          fortuneType: remote.classification,
+          sealText: remote.classification,
+          insight: remote.classification,
+          quote: remote.quote,
+          reflectionParagraphs: [remote.meaning, remote.disclaimer],
+          tips: [
+            ...(remote.proverb
+              ? [{
+                  title: "Thành ngữ hoặc tục ngữ đi cùng thẻ",
+                  desc: `“${remote.proverb.content}” — ${remote.proverb.meaning} (Nguồn: VIVID)`,
+                }]
+              : []),
+            { title: "Gợi ý chiêm nghiệm", desc: remote.advice },
+            { title: "Lưu ý tham khảo", desc: remote.interpretation.warning },
+          ],
+        };
+        proverbAttached = Boolean(remote.proverb);
+      } catch {
+        // Giữ tráº£i nghiá»‡m local khi API táº¡m thá»i khÃ´ng pháº£n há»“i.
+      }
+    }
+
+    if (!proverbAttached) {
+      try {
+        const proverb = await loadReflectionProverb("XAM");
+        chosen = {
+          ...chosen,
+          tips: [{
+            title: "Thành ngữ hoặc tục ngữ đi cùng thẻ",
+            desc: `“${proverb.content}” — ${proverb.meaning} (Nguồn: VIVID)`,
+          }, ...chosen.tips],
+        };
+      } catch {
+        // Không thay bằng nội dung tự sinh nếu nguồn dữ liệu tạm thời không khả dụng.
+      }
+    }
 
     setDrawNotice(
       matchingResults.length === 1
@@ -186,7 +233,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
       drawTimerRef.current = null;
 
       setCurrentResult(chosen);
-      setCurrentDrawId(crypto.randomUUID());
+      setCurrentDrawId(nextDrawId);
 
       setIsShaking(false);
       setDrawPhase("dropped");

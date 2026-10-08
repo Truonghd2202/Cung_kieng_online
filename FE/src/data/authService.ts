@@ -1,338 +1,148 @@
+import { ApiError, apiRequest, refreshAccessToken, setAccessToken } from "../lib/api";
+
 export interface UserProfile {
   name: string;
   email: string;
 }
 
-/**
- * TÀI KHOẢN MẪU DEMO CÔNG KHAI:
- * Dùng để tham quan nhanh giao diện với dữ liệu có sẵn (quẻ xăm, điều ước, góc bình an).
- */
+interface ApiUser {
+  id: string;
+  fullName: string;
+  email: string;
+}
+
+interface AuthPayload {
+  user: ApiUser;
+  accessToken: string;
+}
+
+export interface AuthResult {
+  success: boolean;
+  user: UserProfile;
+  error?: string;
+}
+
 export const DEMO_USER: UserProfile = {
   name: "An Nhiên",
   email: "annhien@tinlamtamlinh.vn",
 };
 
-export const LOCAL_ACCOUNTS_STORAGE_KEY = "tltl_local_demo_accounts";
+const CURRENT_USER_STORAGE_KEY = "tltl-current-user";
 
-export function parseLocalDemoProfile(
-  value: unknown
-): UserProfile | null {
-  if (
-    typeof value !== "object" ||
-    value === null ||
-    Array.isArray(value)
-  ) {
-    return null;
-  }
+function toProfile(user: ApiUser): UserProfile {
+  return { name: user.fullName, email: user.email.trim().toLowerCase() };
+}
 
+export function parseLocalDemoProfile(value: unknown): UserProfile | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
-
-  if (
-    typeof record.name !== "string" ||
-    typeof record.email !== "string"
-  ) {
-    return null;
-  }
+  if (typeof record.name !== "string" || typeof record.email !== "string") return null;
 
   const name = record.name.trim();
   const email = record.email.trim().toLowerCase();
-
-  if (
-    !name ||
-    !email ||
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  ) {
-    return null;
-  }
-
+  if (!name || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
   return { name, email };
 }
 
 export function loadCurrentDemoUser(): UserProfile | null {
   try {
-    const raw = localStorage.getItem("tltl-current-user");
-
-    if (raw === null) return null;
-
-    const parsed: unknown = JSON.parse(raw);
-
-    return parseLocalDemoProfile(parsed);
+    const raw = localStorage.getItem(CURRENT_USER_STORAGE_KEY);
+    return raw === null ? null : parseLocalDemoProfile(JSON.parse(raw));
   } catch {
     return null;
   }
 }
 
-function parseLocalDemoAccounts(
-  value: unknown
-): UserProfile[] {
-  if (!Array.isArray(value)) return [];
-
-  const accounts: UserProfile[] = [];
-
-  for (const item of value) {
-    const profile = parseLocalDemoProfile(item);
-
-    if (!profile) continue;
-
-    const alreadyExists = accounts.some(
-      (account) => account.email === profile.email
-    );
-
-    if (!alreadyExists) {
-      accounts.push(profile);
-    }
-  }
-
-  return accounts;
-}
-
-function isCompleteLocalDemoAccounts(
-  value: unknown
-): boolean {
-  return (
-    Array.isArray(value) &&
-    value.every(
-      (item) => parseLocalDemoProfile(item) !== null
-    )
-  );
-}
-
-export function getLocalDemoAccounts(): UserProfile[] {
-  try {
-    const raw = localStorage.getItem(
-      LOCAL_ACCOUNTS_STORAGE_KEY
-    );
-
-    if (raw === null) {
-      return [{ ...DEMO_USER }];
-    }
-
-    const parsed: unknown = JSON.parse(raw);
-
-    return parseLocalDemoAccounts(parsed);
-  } catch {
-    return [];
-  }
-}
-
-export function saveLocalDemoAccount(
-  user: UserProfile
-): boolean {
+// Giữ tên export cũ để các màn hình Phase 2 chưa phải đổi đồng thời.
+export function saveLocalDemoAccount(user: UserProfile): boolean {
   const profile = parseLocalDemoProfile(user);
-
-  if (!profile || profile.name.length > 80) {
-    return false;
-  }
+  if (!profile || profile.name.length > 120) return false;
 
   try {
-    const previousRaw = localStorage.getItem(
-      LOCAL_ACCOUNTS_STORAGE_KEY
-    );
-
-    let accounts: UserProfile[];
-
-    if (previousRaw === null) {
-      accounts = [{ ...DEMO_USER }];
-    } else {
-      let parsed: unknown;
-
-      try {
-        parsed = JSON.parse(previousRaw);
-      } catch {
-        parsed = undefined;
-      }
-
-      if (!isCompleteLocalDemoAccounts(parsed)) {
-        const backupKey =
-          `${LOCAL_ACCOUNTS_STORAGE_KEY}-recovery-${crypto.randomUUID()}`;
-
-        // Sao lưu nguyên văn trước khi ghi đè.
-        // Nếu sao lưu lỗi, hàm dừng và trả false.
-        localStorage.setItem(backupKey, previousRaw);
-      }
-
-      accounts = parseLocalDemoAccounts(parsed);
-    }
-
-    const index = accounts.findIndex(
-      (account) => account.email === profile.email
-    );
-
-    const updatedAccounts = [...accounts];
-
-    if (index >= 0) {
-      updatedAccounts[index] = profile;
-    } else {
-      updatedAccounts.push(profile);
-    }
-
-    localStorage.setItem(
-      LOCAL_ACCOUNTS_STORAGE_KEY,
-      JSON.stringify(updatedAccounts)
-    );
-
+    localStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(profile));
     return true;
   } catch {
     return false;
   }
 }
 
-/**
- * Tìm tài khoản demo cục bộ theo email.
- */
-export function findLocalDemoAccount(
-  email: string
-): UserProfile | undefined {
-  const normalizedEmail = email.trim().toLowerCase();
-
-  const targetEmail =
-    normalizedEmail === "annhien"
-      ? DEMO_USER.email
-      : normalizedEmail;
-
-  const storedAccount = getLocalDemoAccounts().find(
-    (account) => account.email === targetEmail
-  );
-
-  if (storedAccount) return storedAccount;
-
-  return targetEmail === DEMO_USER.email
-    ? { ...DEMO_USER }
-    : undefined;
+export function clearStoredUser() {
+  try {
+    localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+  } catch {
+    // Phiên trên máy chủ vẫn được thu hồi ngay cả khi storage bị chặn.
+  }
 }
 
-/**
- * Trả về thông tin tài khoản demo công khai dùng cho bản thử nghiệm UI
- */
-export function getDemoUser(customName?: string): UserProfile {
-  return {
-    name: customName?.trim() || DEMO_USER.name,
-    email: DEMO_USER.email,
-  };
+function authError(error: unknown): string {
+  if (error instanceof ApiError) return error.errors[0]?.message || error.message;
+  return "Không thể kết nối tới máy chủ. Vui lòng thử lại.";
 }
 
-/**
- * Đăng nhập hồ sơ demo cục bộ độc lập theo email:
- * - Nếu nhập email của An Nhiên: vào tài khoản mẫu có sẵn dữ liệu.
- * - Nếu nhập email khác: đăng nhập vào không gian độc lập của email đó (lấy tên đã đăng ký hoặc tạo mới từ email).
- * - Lưu ý: Chưa có xác thực mật khẩu qua Backend/Máy chủ tập trung.
- */
-export function loginAccount(
-  email?: string,
-  _password?: string
-): { success: boolean; user: UserProfile; error?: string } {
-  const cleanEmail = email?.trim().toLowerCase() || "";
-  if (!cleanEmail) {
-    return {
-      success: false,
-      user: DEMO_USER,
-      error: "Vui lòng nhập địa chỉ email để đăng nhập.",
-    };
+export async function loginAccount(email?: string, password?: string): Promise<AuthResult> {
+  const fallback = { name: "", email: email?.trim().toLowerCase() || "" };
+
+  try {
+    const data = await apiRequest<AuthPayload>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email: fallback.email, password: password || "" }),
+    });
+    setAccessToken(data.accessToken);
+    const user = toProfile(data.user);
+    saveLocalDemoAccount(user);
+    return { success: true, user };
+  } catch (error) {
+    return { success: false, user: fallback, error: authError(error) };
   }
-
-  // Kiểm tra định dạng email cơ bản
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(cleanEmail) && cleanEmail !== "annhien") {
-    return {
-      success: false,
-      user: DEMO_USER,
-      error: "Định dạng email chưa hợp lệ (ví dụ: tenban@domain.com).",
-    };
-  }
-
-
-  // Tìm trong danh sách tài khoản demo đã lưu
-  const existing = findLocalDemoAccount(cleanEmail);
-  if (existing) {
-    return { success: true, user: existing };
-  }
-
-  // Nếu người dùng nhập email mới chưa từng đăng ký ở máy này, khởi tạo hồ sơ demo cục bộ mới
-  const rawPrefix = cleanEmail.split("@")[0] || "Bạn Mới";
-  const formattedName = rawPrefix.charAt(0).toUpperCase() + rawPrefix.slice(1);
-  const newUser: UserProfile = {
-    name: formattedName,
-    email: cleanEmail,
-  };
-  const saved = saveLocalDemoAccount(newUser);
-
-  if (!saved) {
-    return {
-      success: false,
-      user: DEMO_USER,
-      error:
-        "Chưa lưu được hồ sơ trên trình duyệt này. Bạn hãy thử lại.",
-    };
-  }
-
-  return {
-    success: true,
-    user: newUser,
-  };
 }
 
-/**
- * Khởi tạo hồ sơ demo cục bộ độc lập theo email:
- * - Lưu trữ riêng biệt theo email của người dùng.
- * - Không bị gán cứng vào An Nhiên.
- */
-export function registerAccount(
+export async function registerAccount(
   name?: string,
   email?: string,
-  _password?: string
-): { success: boolean; user: UserProfile; error?: string } {
-  const cleanEmail = email?.trim().toLowerCase() || "";
-  if (!cleanEmail) {
-    return {
-      success: false,
-      user: DEMO_USER,
-      error: "Vui lòng nhập địa chỉ email để tạo hồ sơ.",
-    };
+  password?: string,
+): Promise<AuthResult> {
+  const fallback = { name: name?.trim() || "", email: email?.trim().toLowerCase() || "" };
+
+  try {
+    const data = await apiRequest<AuthPayload>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ fullName: fallback.name, email: fallback.email, password: password || "" }),
+    });
+    setAccessToken(data.accessToken);
+    const user = toProfile(data.user);
+    saveLocalDemoAccount(user);
+    return { success: true, user };
+  } catch (error) {
+    return { success: false, user: fallback, error: authError(error) };
   }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(cleanEmail)) {
-    return {
-      success: false,
-      user: DEMO_USER,
-      error: "Định dạng email chưa hợp lệ (ví dụ: tenban@domain.com).",
-    };
-  }
-
-  const cleanName = name?.trim() || cleanEmail.split("@")[0] || "Người Bạn Mới";
-  const newUser: UserProfile = {
-    name: cleanName,
-    email: cleanEmail,
-  };
-
-  const saved = saveLocalDemoAccount(newUser);
-
-  if (!saved) {
-    return {
-      success: false,
-      user: DEMO_USER,
-      error:
-        "Chưa lưu được hồ sơ trên trình duyệt này. Bạn hãy thử lại.",
-    };
-  }
-
-  return {
-    success: true,
-    user: newUser,
-  };
 }
 
-/**
- * Đăng nhập mạng xã hội (Sắp có khi kết nối Backend OAuth)
- */
-export function loginWithSocial(
-  provider: "Google" | "Apple"
-): { success: boolean; user: UserProfile } {
-  return {
-    success: true,
-    user: {
-      name: `Khách (${provider})`,
-      email: `guest-${provider.toLowerCase()}@tinlamtamlinh.vn`,
-    },
-  };
+export async function restoreSession(): Promise<UserProfile | null> {
+  const token = await refreshAccessToken();
+  if (!token) {
+    clearStoredUser();
+    return null;
+  }
+
+  try {
+    const user = await apiRequest<ApiUser>("/auth/me");
+    const profile = toProfile(user);
+    saveLocalDemoAccount(profile);
+    return profile;
+  } catch {
+    setAccessToken(null);
+    clearStoredUser();
+    return null;
+  }
+}
+
+export async function logoutAccount(): Promise<void> {
+  try {
+    await apiRequest<never>("/auth/logout", { method: "POST" });
+  } catch {
+    // Luôn xóa phiên phía client nếu máy chủ tạm thời không phản hồi.
+  } finally {
+    setAccessToken(null);
+    clearStoredUser();
+  }
 }

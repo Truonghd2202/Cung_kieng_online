@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Search,
   BookOpen,
@@ -22,6 +22,7 @@ import {
   RitualGuideItem,
 } from "../data/ritualData";
 import { DiscoveryNav } from "../components/DiscoveryNav";
+import { loadRituals } from "../data/contentService";
 
 const normalizeRitualSearch = (value: string) =>
   value
@@ -53,6 +54,16 @@ export const RitualGuideScreen: React.FC<
   const [selectedOccasion, setSelectedOccasion] = useState<RitualOccasionKey>("all");
   const [selectedRegion, setSelectedRegion] = useState<RitualRegionKey>("all");
   const [visibleCount, setVisibleCount] = useState(4);
+  const [rituals, setRituals] = useState(RITUAL_GUIDES);
+
+  useEffect(() => {
+    void loadRituals().then((remote) => {
+      setRituals(RITUAL_GUIDES.map((local) => {
+        const item = remote.find((candidate) => candidate.id === local.id);
+        return item ? { ...local, title: String(item.title || local.title), desc: String(item.desc || local.desc) } : local;
+      }));
+    }).catch(() => {});
+  }, []);
 
   const OCCASIONS: { key: RitualOccasionKey; label: string }[] = [
     { key: "all", label: "Tất cả" },
@@ -73,7 +84,7 @@ export const RitualGuideScreen: React.FC<
   const filteredItems = useMemo(() => {
     const query = normalizeRitualSearch(searchQuery);
 
-    return RITUAL_GUIDES.filter((item) => {
+    return rituals.filter((item) => {
       const matchesOccasion =
         selectedOccasion === "all" ||
         item.occasion === selectedOccasion;
@@ -97,7 +108,7 @@ export const RitualGuideScreen: React.FC<
         (!query || searchableText.includes(query))
       );
     });
-  }, [searchQuery, selectedOccasion, selectedRegion]);
+  }, [rituals, searchQuery, selectedOccasion, selectedRegion]);
 
   const visibleItems = filteredItems.slice(
     0,

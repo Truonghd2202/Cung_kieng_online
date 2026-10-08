@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavScreen } from "./AppHeader";
+import { DailyProverb, loadDailyProverb } from "../data/contentService";
 
 interface AppFooterProps {
   onNavigate?: (screen: NavScreen) => void;
@@ -13,16 +14,41 @@ const footerLinks: { label: string; screen: NavScreen }[] = [
   { label: "Gói Tâm An", screen: "membership" },
 ];
 
-export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => (
-  <footer className="site-footer">
+export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => {
+  const [dailyProverb, setDailyProverb] = useState<DailyProverb | null>(null);
+  const [proverbLoadFailed, setProverbLoadFailed] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    loadDailyProverb()
+      .then((result) => {
+        if (active) setDailyProverb(result);
+      })
+      .catch(() => {
+        if (active) setProverbLoadFailed(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return <footer className="site-footer">
     <div className="site-footer__inner">
       <div className="site-footer__message">
-        <blockquote className="site-footer__quote">
-          “Tâm bình thế giới bình, lòng an vạn sự tỏ”
-        </blockquote>
-        <p className="site-footer__tagline">
-          Lời gửi gắm từ cội nguồn dân gian • Gieo đóa an yên cho tâm hồn hiện đại
-        </p>
+        {dailyProverb ? (
+          <>
+            <blockquote className="site-footer__quote">“{dailyProverb.content}”</blockquote>
+            <p className="site-footer__tagline">{dailyProverb.meaning}</p>
+            <p className="site-footer__tagline">
+              Nguồn: <a href={dailyProverb.source.url} target="_blank" rel="noreferrer">VIVID</a>
+              {` • Câu ${dailyProverb.sequence}/${dailyProverb.cycleLength}`}
+            </p>
+          </>
+        ) : (
+          <p className="site-footer__tagline">
+            {proverbLoadFailed ? "Chưa thể tải câu hôm nay." : "Đang tải câu hôm nay…"}
+          </p>
+        )}
       </div>
       <nav className="site-footer__nav" aria-label="Liên kết cuối trang">
         {footerLinks.map((link) => (
@@ -42,5 +68,5 @@ export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => (
         © {new Date().getFullYear()} Tin Lắm Tâm Linh. Tiếp nối tinh hoa mỹ học Dó &amp; Gốm Việt đương đại.
       </p>
     </div>
-  </footer>
-);
+  </footer>;
+};

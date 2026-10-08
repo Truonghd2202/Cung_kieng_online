@@ -473,9 +473,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                   </span>
                   <span className="text-xs font-medium inline-flex items-center gap-1 text-accent">
                     <span className="w-1.5 h-1.5 rounded-full bg-accent-soft" />
-                    {currentUser?.email === "annhien@tinlamtamlinh.vn"
-                      ? "Tài khoản demo mẫu"
-                      : "Hồ sơ demo thiết bị"}
+                    Tài khoản đã xác thực
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-accent font-semibold">

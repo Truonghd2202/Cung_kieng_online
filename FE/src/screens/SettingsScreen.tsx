@@ -23,18 +23,23 @@ import { Card } from "@/src/components/ui/card";
 import type { ThemePreference } from "../hooks/useTheme";
 import { CULTURAL_TOPICS } from "../data/culturalTopics";
 import { AppDialog } from "../components/AppDialog";
+import type { UserSettings } from "../data/userService";
 
 interface SettingsScreenProps {
   onBackToAccount: () => void;
   onGoToHome: () => void;
   themePreference: ThemePreference;
-  onChangeTheme: (theme: ThemePreference) => void;
+  onChangeTheme: (theme: ThemePreference) => Promise<boolean>;
   selectedTopics: string[];
-  onChangeTopics: (topics: string[]) => boolean;
+  onChangeTopics: (topics: string[]) => Promise<boolean>;
+  userSettings: UserSettings;
+  onChangeNotifications: (
+    notifications: Pick<UserSettings, "emailNotifications" | "pushNotifications">
+  ) => Promise<boolean>;
   user?: { name: string; email: string } | null;
   onUpdateProfile?: (
     updated: { name: string; email?: string }
-  ) => boolean;
+  ) => Promise<boolean>;
   onLogout?: () => void;
   onClearAllLocalData?: () => boolean;
 }
@@ -46,6 +51,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onChangeTheme,
   selectedTopics,
   onChangeTopics,
+  userSettings,
+  onChangeNotifications,
   user,
   onUpdateProfile,
   onLogout,
@@ -59,6 +66,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(displayName);
   const [nameSaveError, setNameSaveError] = useState("");
+  const [isSavingName, setIsSavingName] = useState(false);
 
   // Đồng bộ displayName khi user prop từ App thay đổi
   useEffect(() => {
@@ -70,7 +78,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
 
   const [topicsSaveStatus, setTopicsSaveStatus] = useState<
-    "idle" | "success" | "error"
+    "idle" | "saving" | "success" | "error"
+  >("idle");
+  const [settingsSaveStatus, setSettingsSaveStatus] = useState<
+    "idle" | "saving" | "success" | "error"
   >("idle");
 
   useEffect(() => {
@@ -84,7 +95,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
 
 
-  const handleSaveName = () => {
+  const handleSaveName = async () => {
     setNameSaveError("");
 
     const cleanName = tempName.trim();
@@ -94,17 +105,20 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       return;
     }
 
-    if (cleanName.length > 80) {
-      setNameSaveError("Tên hiển thị tối đa 80 ký tự.");
+    if (cleanName.length > 120) {
+      setNameSaveError("Tên hiển thị tối đa 120 ký tự.");
       return;
     }
 
+    setIsSavingName(true);
     let saved = false;
 
     try {
-      saved = onUpdateProfile?.({ name: cleanName }) === true;
+      saved = (await onUpdateProfile?.({ name: cleanName })) === true;
     } catch {
       saved = false;
+    } finally {
+      setIsSavingName(false);
     }
 
     if (!saved) {
@@ -146,14 +160,39 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     setDataClearedNotice(true);
   };
 
-  const handleToggleTopic = (topicId: string) => {
+  const handleToggleTopic = async (topicId: string) => {
+    if (topicsSaveStatus === "saving") return;
     const nextTopics = selectedTopics.includes(topicId)
       ? selectedTopics.filter((id) => id !== topicId)
       : [...selectedTopics, topicId];
 
-    const saved = onChangeTopics(nextTopics);
+    setTopicsSaveStatus("saving");
+    const saved = await onChangeTopics(nextTopics);
 
     setTopicsSaveStatus(saved ? "success" : "error");
+  };
+
+  const handleThemeChange = async (theme: ThemePreference) => {
+    if (settingsSaveStatus === "saving") return;
+    setSettingsSaveStatus("saving");
+    const saved = await onChangeTheme(theme);
+    setSettingsSaveStatus(saved ? "success" : "error");
+  };
+
+  const handleNotificationChange = async (
+    key: "emailNotifications" | "pushNotifications"
+  ) => {
+    if (settingsSaveStatus === "saving") return;
+    setSettingsSaveStatus("saving");
+    const saved = await onChangeNotifications({
+      emailNotifications: key === "emailNotifications"
+        ? !userSettings.emailNotifications
+        : userSettings.emailNotifications,
+      pushNotifications: key === "pushNotifications"
+        ? !userSettings.pushNotifications
+        : userSettings.pushNotifications,
+    });
+    setSettingsSaveStatus(saved ? "success" : "error");
   };
 
   return (
@@ -372,8 +411,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                         }}
                         className="min-w-0 flex-1 px-3 py-2 rounded-control border border-accent bg-surface text-base text-ink font-medium outline-none"
                       />
-                      <Button size="sm" onClick={handleSaveName} className="text-xs bg-action text-white">
-                        Lưu
+                      <Button size="sm" onClick={() => void handleSaveName()} disabled={isSavingName} className="text-xs bg-action text-white">
+                        {isSavingName ? "Đang lưu..." : "Lưu"}
                       </Button>
                     </div>
                   ) : (
@@ -410,7 +449,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   <div className="px-3.5 py-2.5 rounded-xl border border-line bg-surface-soft text-xs font-medium text-muted flex items-center justify-between">
                     <span className="font-sans tabular-nums text-xs">{user?.email || "annhien@tinlamtamlinh.vn"}</span>
                     <span className="text-xs text-muted">
-                      {user?.email === "annhien@tinlamtamlinh.vn" ? "Tài khoản mẫu" : "Hồ sơ cục bộ trên máy"}
+                      Tài khoản đã xác thực
                     </span>
                   </div>
                 </div>
@@ -482,7 +521,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                           name="theme-preference"
                           value={option.value}
                           checked={isSelected}
-                          onChange={() => onChangeTheme(option.value)}
+                          onChange={() => void handleThemeChange(option.value)}
+                          disabled={settingsSaveStatus === "saving"}
                           className="mt-1 h-4 w-4 shrink-0"
                         />
 
@@ -518,7 +558,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
                 <p className="text-sm text-muted leading-relaxed mb-4">
                   Bạn có thể chọn nhiều chủ đề hoặc bỏ chọn tất cả.
-                  Lựa chọn được ghi nhớ cho tài khoản trên trình duyệt này.
+                  Lựa chọn được đồng bộ với tài khoản của bạn.
                 </p>
 
                 <div className="flex flex-wrap gap-2">
@@ -530,7 +570,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                         key={topic.id}
                         type="button"
                         aria-pressed={isSelected}
-                        onClick={() => handleToggleTopic(topic.id)}
+                        onClick={() => void handleToggleTopic(topic.id)}
+                        disabled={topicsSaveStatus === "saving"}
                         className={[
                           "inline-flex min-h-11 items-center gap-2",
                           "rounded-full border px-4 py-2 text-sm",
@@ -565,18 +606,20 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                     </p>
                   )}
 
+                  {topicsSaveStatus === "saving" && (
+                    <p className="text-muted">Đang đồng bộ lựa chọn...</p>
+                  )}
+
                   {topicsSaveStatus === "error" && (
                     <p className="text-danger">
-                      Chưa lưu được lựa chọn. Trình duyệt có thể đang
-                      hạn chế lưu dữ liệu; bạn hãy thử lại.
+                      Chưa đồng bộ được lựa chọn với máy chủ; bạn hãy thử lại.
                     </p>
                   )}
                 </div>
 
                 <p className="mt-3 text-sm text-muted leading-relaxed">
-                  Bản thử nghiệm hiện ghi nhớ sở thích.
-                  Các lựa chọn chưa tự động thay đổi thông điệp
-                  hoặc thứ tự bài viết.
+                  Sở thích được lưu theo tài khoản. Việc cá nhân hóa
+                  nội dung sẽ được bổ sung ở phase nội dung.
                 </p>
               </fieldset>
             </Card>
@@ -593,21 +636,43 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 </h2>
               </div>
 
-              <span className="inline-flex rounded-full bg-accent-soft px-3 py-1.5 text-sm text-accent mb-4">
-                Chưa có trong bản thử nghiệm
-              </span>
+              <div className="space-y-3">
+                {[
+                  {
+                    key: "emailNotifications" as const,
+                    title: "Thông báo qua email",
+                    description: "Nhận lời nhắc và cập nhật quan trọng qua email.",
+                  },
+                  {
+                    key: "pushNotifications" as const,
+                    title: "Thông báo trên thiết bị",
+                    description: "Cho phép tài khoản nhận thông báo đẩy khi tính năng được kích hoạt.",
+                  },
+                ].map((option) => (
+                  <label
+                    key={option.key}
+                    className="flex items-start justify-between gap-4 rounded-xl border border-line bg-surface-soft p-4"
+                  >
+                    <span>
+                      <span className="block text-sm font-semibold text-ink">{option.title}</span>
+                      <span className="mt-1 block text-sm text-muted">{option.description}</span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={userSettings[option.key]}
+                      disabled={settingsSaveStatus === "saving"}
+                      onChange={() => void handleNotificationChange(option.key)}
+                      className="mt-1 h-5 w-5 shrink-0"
+                    />
+                  </label>
+                ))}
+              </div>
 
-              <p className="text-base text-muted leading-relaxed">
-                Trang chưa gửi lời nhắc tự động cho ngày rằm,
-                mùng một, lễ hội hoặc giờ check-in. Các tùy chọn
-                sẽ xuất hiện khi chức năng hoạt động.
-              </p>
-
-              <p className="mt-3 text-sm text-muted leading-relaxed">
-                Nếu trước đây bạn đã cấp quyền thông báo, quyền
-                đó vẫn do trình duyệt quản lý. Nó không đồng nghĩa
-                với việc đã đặt lịch nhắc.
-              </p>
+              <div aria-live="polite" className="mt-3 text-sm">
+                {settingsSaveStatus === "saving" && <p className="text-muted">Đang lưu cài đặt...</p>}
+                {settingsSaveStatus === "success" && <p className="text-success">Đã đồng bộ cài đặt.</p>}
+                {settingsSaveStatus === "error" && <p className="text-danger">Chưa lưu được cài đặt; bạn hãy thử lại.</p>}
+              </div>
             </Card>
 
             {/* Block 4: Dữ liệu bản demo & Lưu trữ thiết bị */}

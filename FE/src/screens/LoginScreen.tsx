@@ -11,7 +11,7 @@ import {
   ArrowLeft,
   ArrowRight,
 } from "lucide-react";
-import { loginAccount, saveLocalDemoAccount, UserProfile, DEMO_USER } from "../data/authService";
+import { loginAccount, UserProfile, DEMO_USER } from "../data/authService";
 
 export interface LoginScreenProps {
   onBack?: () => void;
@@ -890,8 +890,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     setErrorMessage("");
     setAuthState("submitting");
 
-    const timer = setTimeout(() => {
-      const result = loginAccount(identifier, password);
+    const timer = setTimeout(async () => {
+      const result = await loginAccount(identifier, password);
       if (!result.success) {
         setAuthState("error");
         setErrorMessage(result.error || "Tài khoản hoặc mật khẩu không chính xác.");
@@ -917,34 +917,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     timeoutRefs.current.push(timer);
   };
 
-  // Xử lý Google demo
+  // OAuth sẽ được bổ sung sau khi backend có endpoint tương ứng.
   const handleGoogleLogin = () => {
     if (isSubmitting || isSuccess) return;
-    setErrorMessage("");
-    setAuthState("submitting");
-
-    const timer = setTimeout(() => {
-      const googleUser: UserProfile = {
-        name: "Người trải nghiệm",
-        email: "nguoi.trai.nghiem@example.com",
-      };
-      const saved = saveLocalDemoAccount(googleUser);
-
-      if (!saved) {
-        setAuthState("error");
-        setErrorMessage(
-          "Chưa lưu được hồ sơ demo trên trình duyệt này. Bạn hãy thử lại."
-        );
-        onImmersiveChange?.(false);
-        return;
-      }
-
-      setAuthenticatedUser(googleUser);
-      setAuthState("success");
-      onImmersiveChange?.(true); // Ẩn Header
-    }, 300);
-
-    timeoutRefs.current.push(timer);
+    setAuthState("error");
+    setErrorMessage("Đăng nhập Google chưa được hỗ trợ. Vui lòng dùng email và mật khẩu.");
   };
 
   return (
@@ -1147,9 +1124,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           )}
 
           <p className="mb-3 rounded-xl border border-line bg-accent-soft px-3 py-2 text-xs leading-relaxed text-ink">
-            <strong>Bản thử nghiệm giao diện.</strong>{" "}
-            Hồ sơ được lưu trên trình duyệt này.
-            Mật khẩu chưa được xác thực; hãy dùng thông tin mẫu.
+            Tài khoản được xác thực an toàn qua máy chủ.
           </p>
 
           {/* FORM NHẬP LIỆU GỌN GÀNG, ĐẸP MẮT */}
@@ -1159,7 +1134,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 htmlFor="login-email"
                 className="block text-xs font-semibold text-ink mb-1 tracking-wide"
               >
-                Tài khoản / Email
+                Email
               </label>
               <div className="relative group">
                 <Mail className="w-4 h-4 text-subtle group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -1273,7 +1248,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               </span>
             </div>
 
-            {/* Nút Đăng nhập Google demo */}
+            {/* OAuth chưa được kết nối ở Phase 1 */}
             <button
               type="button"
               onClick={handleGoogleLogin}
@@ -1298,7 +1273,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                 />
               </svg>
-              <span>Thử hồ sơ Google mẫu</span>
+              <span>Đăng nhập bằng Google (sắp có)</span>
             </button>
           </form>
 

@@ -21,6 +21,8 @@ import {
 import { Trash2, Calendar, BookOpen, ArrowRight, Flower2, Sparkles } from "lucide-react";
 import {
   loadCurrentDemoUser,
+  logoutAccount,
+  restoreSession,
   saveLocalDemoAccount,
 } from "./data/authService";
 import {
@@ -30,6 +32,40 @@ import {
   saveCalendarPersonalNotes,
 } from "./data/calendarData";
 import { sanitizeCulturalTopics } from "./data/culturalTopics";
+import {
+  DEFAULT_USER_SETTINGS,
+  loadUserPreferences,
+  replaceTopics,
+  updateProfile,
+  updateSettings,
+  type UserSettings,
+} from "./data/userService";
+import {
+  createMoodCheckIn,
+  deleteSavedSignal,
+  loadSavedSignals,
+  loadSignals,
+  saveSignal,
+  updateMoodAction,
+  updateSavedSignal,
+} from "./data/moodSignalService";
+import {
+  deleteSavedWish,
+  deleteSavedXam,
+  loadSavedWishes,
+  loadSavedXam,
+  saveWish,
+  saveXam,
+  updateSavedWish,
+  updateSavedXam,
+} from "./data/reflectionService";
+import {
+  deleteCalendarNote,
+  loadCalendarNotes,
+  loadMemorial,
+  saveCalendarNote,
+  saveMemorial,
+} from "./data/memoryService";
 
 const MoodCheckInScreen = lazy(() => import("./screens/MoodCheckInScreen").then((module) => ({ default: module.MoodCheckInScreen })));
 const SignalLoadingScreen = lazy(() => import("./screens/SignalLoadingScreen").then((module) => ({ default: module.SignalLoadingScreen })));
@@ -730,12 +766,104 @@ export default function App() {
     dark,
     themePreference,
     setThemePreference,
-    toggleTheme,
   } = useTheme();
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(initialUser);
+  const [userSettings, setUserSettings] = useState<UserSettings>(DEFAULT_USER_SETTINGS);
   const [pendingSave, setPendingSave] = useState<PendingSave | null>(null);
   const [isLoginImmersive, setIsLoginImmersive] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    void restoreSession().then(async (user) => {
+      if (!active) return;
+
+      setCurrentUser(user);
+      setUserCornerData(loadUserCornerData(user));
+
+      const session = loadUserSessionState(user, todayDateString);
+      setSelectedTopics(session.topics);
+      setIsCheckedIn(session.checkedIn);
+      setSelectedMood(session.mood);
+      setIsActionDone(session.actionDone);
+      setCurrentSignalId(session.signalId);
+
+      if (user) {
+        try {
+          const preferences = await loadUserPreferences();
+          if (!active) return;
+          setUserSettings(preferences.settings);
+          setThemePreference(preferences.settings.theme);
+          setSelectedTopics(sanitizeCulturalTopics(preferences.topics));
+        } catch {
+          // Giữ cache cục bộ nếu máy chủ tạm thời không phản hồi.
+        }
+
+        try {
+          const remoteSignals = await loadSavedSignals();
+          if (active && remoteSignals.length > 0) {
+            setUserCornerData((previous) => ({
+              ...previous,
+              signals: remoteSignals,
+            }));
+          }
+        } catch {
+          // Giữ cache cục bộ khi danh sách tín hiệu chưa sẵn sàng.
+        }
+
+        try {
+          const [remoteXam, remoteWishes] = await Promise.all([
+            loadSavedXam(),
+            loadSavedWishes(),
+          ]);
+          if (active) {
+            setUserCornerData((previous) => ({
+              ...previous,
+              xam: remoteXam,
+              wishes: remoteWishes,
+            }));
+          }
+        } catch {
+          // Giữ cache cục bộ nếu API reflection chưa sẵn sàng.
+        }
+
+        try {
+          const [remoteMemorial, remoteNotes] = await Promise.all([
+            loadMemorial(),
+            loadCalendarNotes(),
+          ]);
+          if (active) {
+            if (remoteMemorial) setMemorial(remoteMemorial);
+            if (remoteNotes.length > 0) {
+              for (const note of remoteNotes) {
+                try {
+                  const key = getCalendarNotesStorageKey(user.email);
+                  const current = loadCalendarPersonalNotes(user.email);
+                  if (!current.some((item) => item.id === note.id)) {
+                    localStorage.setItem(key, JSON.stringify([note, ...current]));
+                  }
+                } catch {
+                  // Backend remains the source of truth when local cache is unavailable.
+                }
+              }
+            }
+          }
+        } catch {
+          // Giữ cache local nếu memorial/calendar API chưa sẵn sàng.
+        }
+      }
+
+      if (user) {
+        const path = window.location.pathname.replace(/^\/+/, "");
+        if (["account", "settings"].includes(path)) setScreen(path as NavScreen);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [todayDateString]);
 
   useEffect(() => {
     if (screen !== "login") {
@@ -764,6 +892,7 @@ export default function App() {
     }
     return initialSession.signalId;
   });
+  const [pendingMoodCheckInId, setPendingMoodCheckInId] = useState<string | null>(null);
 
   // Trạng thái hành động hoàn thành theo từng tài khoản
   const [isActionDone, setIsActionDone] =
@@ -1118,10 +1247,17 @@ export default function App() {
     }
 
     setIsActionDone(completed);
+
+    if (currentUser && pendingMoodCheckInId) {
+      void updateMoodAction(pendingMoodCheckInId, completed).catch(() => {
+        window.alert("Chưa đồng bộ được trạng thái hành động. Bạn hãy thử lại.");
+      });
+    }
+
     return true;
   };
 
-  const handleSubmitMood = () => {
+  const handleSubmitMood = async () => {
     // Mỗi lần gửi cảm xúc là một lượt mới,
     // kể cả khi chọn lại cùng cảm xúc.
     const resetSucceeded = handleToggleAction(false);
@@ -1132,7 +1268,22 @@ export default function App() {
       selectedMood
     );
 
-    setCurrentSignalId(nextSignal.id);
+    if (currentUser) {
+      try {
+        const result = await createMoodCheckIn({
+          mood: selectedMood,
+          note: journalText.trim() || undefined,
+          signalId: nextSignal.id,
+        });
+        setPendingMoodCheckInId(result.checkIn.id);
+        setCurrentSignalId(result.signal.id);
+      } catch {
+        window.alert("Chưa ghi nhận được cảm xúc. Bạn hãy thử lại.");
+        return;
+      }
+    } else {
+      setCurrentSignalId(nextSignal.id);
+    }
     navigateTo("loading");
   };
 
@@ -1147,7 +1298,34 @@ export default function App() {
     navigateTo("result", activeSignal.id);
   };
 
-  const handleRefreshSignal = () => {
+  const handleRefreshSignal = async () => {
+    if (currentUser) {
+      try {
+        const result = await loadSignals(activeSignal.mood);
+        const currentIndex = result.items.findIndex((item) => item.id === activeSignal.id);
+        const nextSignal = result.items[(currentIndex + 1) % result.items.length];
+        if (!nextSignal) return;
+
+        const checkIn = await createMoodCheckIn({
+          mood: activeSignal.mood,
+          note: journalText.trim() || undefined,
+          signalId: nextSignal.id,
+        });
+        setPendingMoodCheckInId(checkIn.checkIn.id);
+        setIsActionDone(false);
+        setSelectedMood(activeSignal.mood);
+        setCurrentSignalId(checkIn.signal.id);
+        window.history.replaceState(
+          { screen: "result", signalId: checkIn.signal.id, mood: activeSignal.mood },
+          "",
+          `/result?signalId=${encodeURIComponent(checkIn.signal.id)}`
+        );
+      } catch {
+        window.alert("Chưa đổi được lời chiêm nghiệm. Bạn hãy thử lại.");
+      }
+      return;
+    }
+
     const nextSignal = getNextSignalForMood(
       activeSignal.id,
       activeSignal.mood
@@ -1155,12 +1333,12 @@ export default function App() {
 
     const signalKey = getAccountScopedKey(
       "tltl-current-signal-id",
-      currentUser?.email
+      undefined
     );
 
     const actionKey = getAccountScopedKey(
       "tltl-action-done-date",
-      currentUser?.email
+      undefined
     );
 
     let previousSignal: string | null;
@@ -1223,7 +1401,7 @@ export default function App() {
     );
   };
 
-  const handleSaveResult = () => {
+  const handleSaveResult = async () => {
     setIsCheckedIn(true);
     try {
       const email = currentUser?.email;
@@ -1257,26 +1435,28 @@ export default function App() {
       return;
     }
 
-    const exists = userCornerData.signals.some((entry) =>
-      isSameSavedReflection(entry, newEntry)
-    );
+    try {
+      const remoteEntry = await saveSignal(activeSignal.id, {
+        checkInId: pendingMoodCheckInId || undefined,
+        note: journalText.trim() || undefined,
+        actionDone: isActionDone,
+      });
+      setUserCornerData((previous) => ({
+        ...previous,
+        signals: [
+          remoteEntry,
+          ...previous.signals.filter((entry) => entry.id !== remoteEntry.id),
+        ],
+      }));
+      return;
+    } catch {
+      window.alert("Chưa lưu được lời chiêm nghiệm. Bạn hãy thử lại.");
+      return;
+    }
 
-    if (exists) return;
+    return;
 
-    const updated: UserCornerData = {
-      ...userCornerData,
-      signals: [
-        newEntry,
-        ...userCornerData.signals,
-      ],
-    };
-
-    const saved = saveUserCornerData(
-      currentUser.email,
-      updated
-    );
-
-    if (!saved) {
+    /* if (!saved) {
       window.alert(
         "Chưa lưu được lời chiêm nghiệm. Trình duyệt có thể hết dung lượng hoặc đang chặn lưu dữ liệu. Bạn hãy thử lại."
       );
@@ -1284,10 +1464,10 @@ export default function App() {
       return;
     }
 
-    setUserCornerData(updated);
+    setUserCornerData(updated); */
   };
 
-  const handleSimulatedLogin = (
+  const handleAuthenticated = (
     name?: string,
     email?: string
   ) => {
@@ -1379,6 +1559,54 @@ export default function App() {
     setUserCornerData(nextData);
     setSelectedTopics(userSession.topics);
 
+    void loadUserPreferences()
+      .then((preferences) => {
+        setUserSettings(preferences.settings);
+        setThemePreference(preferences.settings.theme);
+        setSelectedTopics(sanitizeCulturalTopics(preferences.topics));
+      })
+      .catch(() => {
+        // Phiên đăng nhập vẫn hợp lệ; giữ tùy chọn cache để người dùng tiếp tục.
+      });
+
+    void loadSavedSignals()
+      .then((remoteSignals) => {
+        if (remoteSignals.length > 0) {
+          setUserCornerData((previous) => ({
+            ...previous,
+            signals: remoteSignals,
+          }));
+        }
+      })
+      .catch(() => {
+        // Giữ dữ liệu local nếu API tín hiệu chưa sẵn sàng.
+      });
+
+    void Promise.all([loadSavedXam(), loadSavedWishes()])
+      .then(([remoteXam, remoteWishes]) => {
+        setUserCornerData((previous) => ({
+          ...previous,
+          xam: remoteXam,
+          wishes: remoteWishes,
+        }));
+      })
+      .catch(() => {
+        // Giữ cache local nếu API reflection chưa sẵn sàng.
+      });
+
+    void Promise.all([loadMemorial(), loadCalendarNotes()])
+      .then(([remoteMemorial, remoteNotes]) => {
+        if (remoteMemorial) setMemorial(remoteMemorial);
+        if (remoteNotes.length > 0) {
+          try {
+            localStorage.setItem(getCalendarNotesStorageKey(user.email), JSON.stringify(remoteNotes));
+          } catch {
+            // Backend remains the source of truth.
+          }
+        }
+      })
+      .catch(() => {});
+
     if (pending?.type === "signal") {
       const savedSignal =
         getSignalById(pending.item.signalId) ||
@@ -1440,12 +1668,35 @@ export default function App() {
 
       setPendingSave(null);
 
+      if (pending?.type === "signal") {
+        void saveSignal(pending.item.signalId, {
+          note: pending.item.journal,
+          actionDone: isActionDone,
+        }).catch(() => {
+          // Bản ghi local vẫn được giữ lại để không mất nội dung khi API tạm thời lỗi.
+        });
+      }
+
       navigateTo("result", savedSignal.id, user);
       return;
     }
 
     // Đăng nhập thông thường hoặc lưu xăm/lời nguyện:
     // khôi phục trạng thái riêng của tài khoản.
+    if (pending?.type === "xam") {
+      void saveXam({
+        stickNumber: pending.item.stickNumber,
+        topic: pending.item.category,
+        region: pending.item.region,
+        category: pending.item.category,
+        fortuneType: pending.item.fortuneType,
+        quote: pending.item.quote,
+      }).catch(() => {});
+    }
+    if (pending?.type === "wish") {
+      void saveWish(pending.item.content, pending.item.category).catch(() => {});
+    }
+
     setIsCheckedIn(userSession.checkedIn);
     setSelectedMood(userSession.mood);
     setIsActionDone(userSession.actionDone);
@@ -1456,15 +1707,8 @@ export default function App() {
     navigateTo("account", undefined, user);
   };
 
-  const handleLogout = () => {
-    try {
-      localStorage.removeItem("tltl-current-user");
-    } catch {
-      window.alert(
-        "Chưa đăng xuất được vì trình duyệt đang chặn thao tác bộ nhớ. Bạn hãy thử lại."
-      );
-      return;
-    }
+  const handleLogout = async () => {
+    await logoutAccount();
 
     const guestSession = loadUserSessionState(
       null,
@@ -1472,6 +1716,7 @@ export default function App() {
     );
 
     setCurrentUser(null);
+    setUserSettings(DEFAULT_USER_SETTINGS);
 
     setUserCornerData({
       signals: [],
@@ -1494,75 +1739,84 @@ export default function App() {
     navigateTo("guest", undefined, null);
   };
 
-  const handleUpdateProfile = (
+  const handleUpdateProfile = async (
     updated: { name: string; email?: string }
-  ): boolean => {
+  ): Promise<boolean> => {
     if (!currentUser) return false;
 
     const cleanName = updated.name.trim();
 
-    if (!cleanName || cleanName.length > 80) {
+    if (!cleanName || cleanName.length > 120) {
       return false;
     }
 
-    const updatedUser: UserProfile = {
-      ...currentUser,
-      name: cleanName,
-    };
-
-    const sessionKey = "tltl-current-user";
-    let previousSession: string | null;
-
     try {
-      previousSession = localStorage.getItem(sessionKey);
-
-      localStorage.setItem(
-        sessionKey,
-        JSON.stringify(updatedUser)
-      );
+      const updatedUser = await updateProfile(cleanName);
+      saveLocalDemoAccount(updatedUser);
+      setCurrentUser(updatedUser);
+      return true;
     } catch {
       return false;
     }
-
-    // Dùng hàm trả boolean đã sửa ở đợt trước.
-    const saved = saveLocalDemoAccount(updatedUser);
-
-    if (!saved) {
-      // Khôi phục hồ sơ phiên trước nếu lưu danh sách thất bại.
-      try {
-        if (previousSession === null) {
-          localStorage.removeItem(sessionKey);
-        } else {
-          localStorage.setItem(sessionKey, previousSession);
-        }
-      } catch {
-        // Không báo thành công nếu khôi phục cũng thất bại.
-      }
-
-      return false;
-    }
-
-    setCurrentUser(updatedUser);
-    return true;
   };
 
-  const handleSaveTopics = (topics: string[]): boolean => {
+  const handleSaveTopics = async (topics: string[]): Promise<boolean> => {
+    if (!currentUser) return false;
     const nextTopics = sanitizeCulturalTopics(topics);
 
     try {
-      localStorage.setItem(
-        getAccountScopedKey(
-          "tltl-selected-topics",
-          currentUser?.email
-        ),
-        JSON.stringify(nextTopics)
-      );
+      const savedTopics = sanitizeCulturalTopics(await replaceTopics(nextTopics));
+      setSelectedTopics(savedTopics);
+      try {
+        localStorage.setItem(
+          getAccountScopedKey("tltl-selected-topics", currentUser.email),
+          JSON.stringify(savedTopics)
+        );
+      } catch {
+        // Backend là nguồn dữ liệu chính; cache local có thể không khả dụng.
+      }
+      return true;
     } catch {
       return false;
     }
+  };
 
-    setSelectedTopics(nextTopics);
-    return true;
+  const handleChangeTheme = async (theme: typeof themePreference): Promise<boolean> => {
+    if (!currentUser) return false;
+    const previous = themePreference;
+    setThemePreference(theme);
+
+    try {
+      const saved = await updateSettings({ theme });
+      setUserSettings(saved);
+      setThemePreference(saved.theme);
+      return true;
+    } catch {
+      setThemePreference(previous);
+      return false;
+    }
+  };
+
+  const handleChangeNotifications = async (
+    notifications: Pick<UserSettings, "emailNotifications" | "pushNotifications">
+  ): Promise<boolean> => {
+    if (!currentUser) return false;
+    try {
+      const saved = await updateSettings(notifications);
+      setUserSettings(saved);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleToggleTheme = () => {
+    const nextTheme = dark ? "light" : "dark";
+    if (currentUser) {
+      void handleChangeTheme(nextTheme);
+    } else {
+      setThemePreference(nextTheme);
+    }
   };
 
   const commitCornerData = (
@@ -1605,11 +1859,17 @@ export default function App() {
       setOpenedSavedSignal(null);
     }
 
+    if (saved && currentUser) {
+      void deleteSavedSignal(id).catch(() => {
+        // Optimistic local update; server retry can happen on the next sync.
+      });
+    }
+
     return saved;
   };
 
   const handleDeleteXam = (id: string): boolean => {
-    return commitCornerData(
+    const saved = commitCornerData(
       {
         ...userCornerData,
         xam: userCornerData.xam.filter(
@@ -1618,10 +1878,12 @@ export default function App() {
       },
       false
     );
+    if (saved && currentUser) void deleteSavedXam(id).catch(() => {});
+    return saved;
   };
 
   const handleDeleteWish = (id: string): boolean => {
-    return commitCornerData(
+    const saved = commitCornerData(
       {
         ...userCornerData,
         wishes: userCornerData.wishes.filter(
@@ -1630,9 +1892,12 @@ export default function App() {
       },
       false
     );
+    if (saved && currentUser) void deleteSavedWish(id).catch(() => {});
+    return saved;
   };
 
   const handleToggleStarSignal = (id: string) => {
+    const entry = userCornerData.signals.find((item) => item.id === id);
     commitCornerData({
       ...userCornerData,
       signals: userCornerData.signals.map(
@@ -1642,9 +1907,16 @@ export default function App() {
             : item
       ),
     });
+
+    if (currentUser && entry) {
+      void updateSavedSignal(id, !entry.starred).catch(() => {
+        // Optimistic local update; server remains the source of truth on reload.
+      });
+    }
   };
 
   const handleToggleStarXam = (id: string) => {
+    const entry = userCornerData.xam.find((item) => item.id === id);
     commitCornerData({
       ...userCornerData,
       xam: userCornerData.xam.map(
@@ -1654,9 +1926,11 @@ export default function App() {
             : item
       ),
     });
+    if (currentUser && entry) void updateSavedXam(id, !entry.starred).catch(() => {});
   };
 
   const handleToggleStarWish = (id: string) => {
+    const entry = userCornerData.wishes.find((item) => item.id === id);
     commitCornerData({
       ...userCornerData,
       wishes: userCornerData.wishes.map(
@@ -1666,6 +1940,7 @@ export default function App() {
             : item
       ),
     });
+    if (currentUser && entry) void updateSavedWish(id, !entry.starred).catch(() => {});
   };
 
   const handleSavePrivateWish = (
@@ -1696,6 +1971,15 @@ export default function App() {
       navigateTo("login");
       return false;
     }
+
+    void saveWish(cleanContent, category)
+      .then((remoteWish) => {
+        setUserCornerData((previous) => ({
+          ...previous,
+          wishes: [remoteWish, ...previous.wishes.filter((item) => item.id !== remoteWish.id)],
+        }));
+      })
+      .catch(() => {});
 
     const nextData: UserCornerData = {
       ...userCornerData,
@@ -1761,6 +2045,12 @@ export default function App() {
         JSON.stringify([newNote, ...currentList])
       );
 
+      if (currentUser) {
+        void saveCalendarNote(dayData).catch(() => {
+          // Local cache keeps the calendar usable if the API is temporarily unavailable.
+        });
+      }
+
       return true;
     } catch {
       return false;
@@ -1788,7 +2078,7 @@ export default function App() {
           currentScreen={screen}
           onNavigate={navigateTo}
           dark={dark}
-          onToggleDark={toggleTheme}
+          onToggleDark={handleToggleTheme}
           onLoginClick={() => navigateTo("login")}
           user={currentUser}
           onLogout={handleLogout}
@@ -1933,6 +2223,11 @@ export default function App() {
               }
 
               setMemorial(nextMemorial);
+              if (currentUser) {
+                void saveMemorial(nextMemorial).catch(() => {
+                  // Local cache keeps the form usable if the API is temporarily unavailable.
+                });
+              }
               navigateTo("memorial");
               return true;
             }}
@@ -2053,6 +2348,15 @@ export default function App() {
                 navigateTo("login");
                 return false;
               }
+
+              void saveXam(result)
+                .then((remoteItem) => {
+                  setUserCornerData((previous) => ({
+                    ...previous,
+                    xam: [remoteItem, ...previous.xam.filter((item) => item.id !== remoteItem.id)],
+                  }));
+                })
+                .catch(() => {});
 
               const exists = userCornerData.xam.some(
                 (item) =>
@@ -2189,7 +2493,7 @@ export default function App() {
                 navigateTo("guest");
               }
             }}
-            onSuccess={handleSimulatedLogin}
+            onSuccess={handleAuthenticated}
             onGoToRegister={() => navigateTo("register")}
             onGoToForgotPassword={() => navigateTo("forgot")}
             onImmersiveChange={setIsLoginImmersive}
@@ -2208,10 +2512,7 @@ export default function App() {
         {screen === "register" && (
           <RegisterScreen
             onBack={() => navigateTo("login")}
-            onSuccess={() => {
-              // Đăng ký thành công -> tự chuyển qua trang Đăng nhập (không cắm nhang)
-              navigateTo("login");
-            }}
+            onSuccess={handleAuthenticated}
             onGoToLogin={() => navigateTo("login")}
             pendingSignalMood={
               pendingSave?.type === "signal"
@@ -2324,9 +2625,11 @@ export default function App() {
             onBackToAccount={() => navigateTo("account")}
             onGoToHome={() => navigateTo("today")}
             themePreference={themePreference}
-            onChangeTheme={setThemePreference}
+            onChangeTheme={handleChangeTheme}
             selectedTopics={selectedTopics}
             onChangeTopics={handleSaveTopics}
+            userSettings={userSettings}
+            onChangeNotifications={handleChangeNotifications}
             user={currentUser}
             onUpdateProfile={handleUpdateProfile}
             onLogout={handleLogout}
