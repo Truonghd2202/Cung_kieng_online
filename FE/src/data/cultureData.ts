@@ -37,8 +37,8 @@ export interface CultureArticle {
   id: string;
   title: string;
   subtitle: string;
-  region: RegionKey;
-  category: CultureCategoryKey;
+  region: string;
+  category: string;
   image: string;
   caption: string;
   readingTime: string;

@@ -35,7 +35,8 @@ interface AncestorAltarScreenProps {
   onGoToMemorial: () => void;
   onGoToReminders: () => void;
   isLoggedIn: boolean;
-  onSaveTribute: (content: string) => boolean;
+  onRecordIncense: () => Promise<boolean>;
+  onSaveTribute: (content: string) => boolean | Promise<boolean>;
   initialContent?: string;
   onDraftChange?: (content: string | null) => void;
 }
@@ -48,6 +49,7 @@ export const AncestorAltarScreen: React.FC<
   onGoToMemorial,
   onGoToReminders,
   isLoggedIn,
+  onRecordIncense,
   onSaveTribute,
   initialContent = "",
   onDraftChange,
@@ -56,19 +58,30 @@ export const AncestorAltarScreen: React.FC<
   const [tribute, setTribute] = useState(initialContent);
   const [submitted, setSubmitted] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [incenseStatus, setIncenseStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+
+  const recordIncense = async () => {
+    if (incenseStatus === "saving") return;
+    setIncenseStatus("saving");
+    try {
+      setIncenseStatus(await onRecordIncense() ? "saved" : "error");
+    } catch {
+      setIncenseStatus("error");
+    }
+  };
 
   useEffect(() => {
     onDraftChange?.(submitted ? null : tribute);
   }, [tribute, submitted, onDraftChange]);
 
-  const sendTribute = () => {
+  const sendTribute = async () => {
     const cleanContent = tribute.trim();
 
     if (!cleanContent || submitted) return;
 
     setSaveError("");
 
-    const saved = onSaveTribute(cleanContent);
+    const saved = await onSaveTribute(cleanContent);
 
     if (saved) {
       setSubmitted(true);
@@ -196,6 +209,14 @@ export const AncestorAltarScreen: React.FC<
                 </p>
               </div>
             )}
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <Button type="button" variant="outline" disabled={!isLoggedIn || !memorial?.id || incenseStatus === "saving"} onClick={() => void recordIncense()}>
+              <Heart className="mr-2 h-4 w-4" />
+              {incenseStatus === "saving" ? "Đang ghi nhận…" : "Thắp một nén nhang lòng"}
+            </Button>
+            {incenseStatus === "saved" && <span role="status" className="text-sm text-muted">Đã lưu nén nhang tri ân vào hồ sơ.</span>}
+            {incenseStatus === "error" && <span role="alert" className="text-sm text-destructive">Chưa lưu được. Bạn hãy thử lại.</span>}
           </div>
         </section>
 

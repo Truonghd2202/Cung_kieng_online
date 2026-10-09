@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef } from "react";
+import { YearlyReading } from "../components/YearlyReading";
 import {
   ArrowLeft,
   Sparkles,
@@ -685,6 +686,7 @@ export const HoroscopeScreen: React.FC<HoroscopeScreenProps> = ({
             </button>
           )}
         </div>
+        <YearlyReading />
       </main>
     </div>
   );

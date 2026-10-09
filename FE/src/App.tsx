@@ -1,4 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+import { readPrivateJson, writePrivateJson } from "./lib/privateStorage";
+import { apiRequest, ApiError } from "./lib/api";
+import { clearPersonalStorage } from "./lib/clearPersonalStorage";
 import { AppHeader, NavScreen } from "./components/AppHeader";
 import { AppFooter } from "./components/AppFooter";
 import { ScreenFocus } from "./components/ScreenFocus";
@@ -15,7 +18,10 @@ import {
   MoodKey,
   getSignalById,
   getDefaultSignalForMood,
+  getSignalForMoodContext,
   getNextSignalForMood,
+  type MoodContextKey,
+  type SignalData,
 } from "./data/demoSignals";
 
 import { Trash2, Calendar, BookOpen, ArrowRight, Flower2, Sparkles } from "lucide-react";
@@ -42,6 +48,7 @@ import {
 } from "./data/userService";
 import {
   createMoodCheckIn,
+  analyzeMoodSignal,
   deleteSavedSignal,
   loadSavedSignals,
   loadSignals,
@@ -63,6 +70,7 @@ import {
   deleteCalendarNote,
   loadCalendarNotes,
   loadMemorial,
+  recordIncense,
   saveCalendarNote,
   saveMemorial,
 } from "./data/memoryService";
@@ -340,9 +348,9 @@ const isCompleteUserCornerData = (
   );
 };
 
-export const loadUserCornerData = (
+export const loadUserCornerData = async (
   user: UserProfile | null
-): UserCornerData => {
+): Promise<UserCornerData> => {
   const empty: UserCornerData = {
     signals: [],
     xam: [],
@@ -363,7 +371,7 @@ export const loadUserCornerData = (
   // Khóa đã tồn tại: đọc dữ liệu, không tự tạo lại mẫu.
   if (stored !== null) {
     try {
-      const parsed: unknown = JSON.parse(stored);
+      const parsed: unknown = await readPrivateJson(key);
       return parseUserCornerData(parsed);
     } catch {
       // Giữ nguyên dữ liệu gốc trong bộ nhớ trình duyệt.
@@ -383,7 +391,7 @@ export const loadUserCornerData = (
   const demoData = getAnNhienDefaultData();
 
   try {
-    localStorage.setItem(key, JSON.stringify(demoData));
+    await writePrivateJson(key, demoData);
   } catch {
     // Vẫn cho xem dữ liệu mẫu trong phiên hiện tại.
   }
@@ -391,10 +399,10 @@ export const loadUserCornerData = (
   return demoData;
 };
 
-export const saveUserCornerData = (
+export const saveUserCornerData = async (
   email: string,
   data: UserCornerData
-): boolean => {
+): Promise<boolean> => {
   if (!isCompleteUserCornerData(data)) {
     return false;
   }
@@ -408,7 +416,7 @@ export const saveUserCornerData = (
       let previousIsValid = false;
 
       try {
-        const previousParsed: unknown = JSON.parse(previousRaw);
+        const previousParsed: unknown = await readPrivateJson(key);
         previousIsValid =
           isCompleteUserCornerData(previousParsed);
       } catch {
@@ -420,11 +428,11 @@ export const saveUserCornerData = (
           `${key}-recovery-${crypto.randomUUID()}`;
 
         // Giữ nguyên nội dung gốc, kể cả JSON không đọc được.
-        localStorage.setItem(backupKey, previousRaw);
+        await writePrivateJson(backupKey, previousRaw);
       }
     }
 
-    localStorage.setItem(key, JSON.stringify(data));
+    await writePrivateJson(key, data);
     return true;
   } catch {
     // Nếu sao lưu hoặc ghi dữ liệu mới thất bại, không báo thành công.
@@ -780,7 +788,7 @@ export default function App() {
       if (!active) return;
 
       setCurrentUser(user);
-      setUserCornerData(loadUserCornerData(user));
+      setUserCornerData(await loadUserCornerData(user));
 
       const session = loadUserSessionState(user, todayDateString);
       setSelectedTopics(session.topics);
@@ -802,7 +810,7 @@ export default function App() {
 
         try {
           const remoteSignals = await loadSavedSignals();
-          if (active && remoteSignals.length > 0) {
+          if (active) {
             setUserCornerData((previous) => ({
               ...previous,
               signals: remoteSignals,
@@ -884,6 +892,10 @@ export default function App() {
     }
     return initialSession.mood;
   });
+  const [selectedContextKey, setSelectedContextKey] = useState<MoodContextKey>(() =>
+    getSignalById(initialUrlSignal?.id || initialSession.signalId)?.contextKey || "general"
+  );
+  const [analyzedSignal, setAnalyzedSignal] = useState<SignalData | null>(null);
 
   // Current signal theo tài khoản
   const [currentSignalId, setCurrentSignalId] = useState<string>(() => {
@@ -919,9 +931,7 @@ export default function App() {
   ]);
 
   // Tách biệt dữ liệu Góc của tôi (tín hiệu, thẻ xăm, điều ước) theo từng tài khoản
-  const [userCornerData, setUserCornerData] = useState<UserCornerData>(() => {
-    return loadUserCornerData(initialUser);
-  });
+  const [userCornerData, setUserCornerData] = useState<UserCornerData>({ signals: [], xam: [], wishes: [] });
 
   const [openedSavedSignal, setOpenedSavedSignal] =
     useState<SavedSignalItem | null>(null);
@@ -951,7 +961,9 @@ export default function App() {
     );
 
   // Active signal computed from currentSignalId
-  const activeSignal = getSignalById(currentSignalId) || getDefaultSignalForMood(selectedMood);
+  const activeSignal = analyzedSignal?.id === currentSignalId
+    ? analyzedSignal
+    : getSignalById(currentSignalId) || getDefaultSignalForMood(selectedMood);
 
   useEffect(() => {
     setMemorial(loadMemorialRecord(currentUser?.email));
@@ -1257,34 +1269,70 @@ export default function App() {
     return true;
   };
 
-  const handleSubmitMood = async () => {
+  const handleSubmitMood = async (contextKey: MoodContextKey) => {
     // Mỗi lần gửi cảm xúc là một lượt mới,
     // kể cả khi chọn lại cùng cảm xúc.
     const resetSucceeded = handleToggleAction(false);
 
     if (!resetSucceeded) return;
 
-    const nextSignal = getDefaultSignalForMood(
-      selectedMood
-    );
+    const nextSignal = getSignalForMoodContext(selectedMood, contextKey);
+    setSelectedContextKey(contextKey);
 
     if (currentUser) {
       try {
         const result = await createMoodCheckIn({
           mood: selectedMood,
+          contextKey,
           note: journalText.trim() || undefined,
-          signalId: nextSignal.id,
         });
         setPendingMoodCheckInId(result.checkIn.id);
-        setCurrentSignalId(result.signal.id);
+        setAnalyzedSignal({ ...nextSignal, ...result.signal, metadata: nextSignal.metadata });
+        setCurrentSignalId(nextSignal.id);
       } catch {
         window.alert("Chưa ghi nhận được cảm xúc. Bạn hãy thử lại.");
         return;
       }
     } else {
+      try {
+        const result = await analyzeMoodSignal({ mood: selectedMood, contextKey });
+        setAnalyzedSignal({ ...nextSignal, ...result.signal, metadata: nextSignal.metadata });
+      } catch {
+        // Dữ liệu biên tập theo mood và context tiếp tục dùng được khi API offline.
+        setAnalyzedSignal(nextSignal);
+      }
       setCurrentSignalId(nextSignal.id);
     }
     navigateTo("loading");
+  };
+
+  const handleChangeSignalContext = async (contextKey: MoodContextKey) => {
+    const nextSignal = getSignalForMoodContext(selectedMood, contextKey);
+    setSelectedContextKey(contextKey);
+    setAnalyzedSignal(nextSignal);
+    setCurrentSignalId(nextSignal.id);
+    setIsActionDone(false);
+
+    if (currentUser) {
+      try {
+        const result = await createMoodCheckIn({
+          mood: selectedMood,
+          contextKey,
+          note: journalText.trim() || undefined,
+        });
+        setPendingMoodCheckInId(result.checkIn.id);
+        setAnalyzedSignal({ ...nextSignal, ...result.signal, metadata: nextSignal.metadata });
+      } catch {
+        window.alert("Chưa đồng bộ được ngữ cảnh. Kết quả hiện tại vẫn được giữ trên màn hình.");
+      }
+    } else {
+      try {
+        const result = await analyzeMoodSignal({ mood: selectedMood, contextKey });
+        setAnalyzedSignal({ ...nextSignal, ...result.signal, metadata: nextSignal.metadata });
+      } catch {
+        // Giữ nội dung biên tập cục bộ làm phương án dự phòng.
+      }
+    }
   };
 
   const handleFinishLoading = () => {
@@ -1309,13 +1357,15 @@ export default function App() {
 
         const checkIn = await createMoodCheckIn({
           mood: activeSignal.mood,
+          contextKey: activeSignal.contextKey || selectedContextKey,
           note: journalText.trim() || undefined,
-          signalId: nextSignal.id,
         });
         setPendingMoodCheckInId(checkIn.checkIn.id);
         setIsActionDone(false);
         setSelectedMood(activeSignal.mood);
-        setCurrentSignalId(checkIn.signal.id);
+        const localSignal = getSignalForMoodContext(activeSignal.mood, activeSignal.contextKey || selectedContextKey);
+        setAnalyzedSignal({ ...localSignal, ...checkIn.signal, metadata: localSignal.metadata });
+        setCurrentSignalId(localSignal.id);
         window.history.replaceState(
           { screen: "result", signalId: checkIn.signal.id, mood: activeSignal.mood },
           "",
@@ -1468,7 +1518,7 @@ export default function App() {
     setUserCornerData(updated); */
   };
 
-  const handleAuthenticated = (
+  const handleAuthenticated = async (
     name?: string,
     email?: string
   ) => {
@@ -1481,7 +1531,7 @@ export default function App() {
     // Giữ nội dung đang chờ trước khi cập nhật state.
     const pending = pendingSave;
 
-    const existingData = loadUserCornerData(user);
+    const existingData = await loadUserCornerData(user);
 
     const nextData: UserCornerData = {
       signals: [...existingData.signals],
@@ -1489,66 +1539,29 @@ export default function App() {
       wishes: [...existingData.wishes],
     };
 
-    if (pending?.type === "signal") {
-      const item = pending.item;
-
-      const exists = nextData.signals.some((entry) =>
-        isSameSavedReflection(entry, item)
-      );
-
-      if (!exists) {
-        nextData.signals.unshift(item);
-      }
-    }
-
-    if (pending?.type === "xam") {
-      const item = pending.item;
-
-      const exists = nextData.xam.some(
-        (entry) =>
-          entry.id === item.id ||
-          (
-            Boolean(item.drawId) &&
-            entry.drawId === item.drawId
-          )
-      );
-
-      if (!exists) {
-        nextData.xam.unshift(item);
-      }
-    }
-
-    if (pending?.type === "wish") {
-      const item = pending.item;
-
-      const exists = nextData.wishes.some(
-        (entry) => entry.id === item.id
-      );
-
-      if (!exists) {
-        nextData.wishes.unshift(item);
-      }
-    }
-
-    // Ghi trực tiếp để lỗi lưu không bị hàm helper bỏ qua.
+    // Save on the server before hydration so cached items use canonical IDs.
     try {
-      if (pending) {
-        const saved = saveUserCornerData(user.email, nextData);
-
-        if (!saved) {
-          throw new Error("Không thể lưu nội dung đang chờ.");
-        }
+      if (pending?.type === "signal") {
+        const item = await saveSignal(pending.item.signalId, { note: pending.item.journal, actionDone: isActionDone });
+        nextData.signals = [item, ...nextData.signals.filter((entry) => entry.id !== item.id)];
+      } else if (pending?.type === "xam") {
+        const item = await saveXam({
+          drawId: pending.item.drawId, stickNumber: pending.item.stickNumber,
+          topic: pending.item.category, region: pending.item.region,
+          category: pending.item.category, fortuneType: pending.item.fortuneType, quote: pending.item.quote,
+        });
+        nextData.xam = [item, ...nextData.xam.filter((entry) => entry.id !== item.id)];
+      } else if (pending?.type === "wish") {
+        const item = await saveWish(pending.item.content, pending.item.category);
+        nextData.wishes = [item, ...nextData.wishes.filter((entry) => entry.id !== item.id)];
       }
-
-      localStorage.setItem(
-        "tltl-current-user",
-        JSON.stringify(user)
-      );
-    } catch {
-      window.alert(
-        "Trình duyệt chưa lưu được dữ liệu. Nội dung đang chờ vẫn được giữ trong phiên này. Bạn hãy thử lại."
-      );
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Chưa lưu được nội dung đang chờ. Vui lòng thử lại.");
       return;
+    }
+    await saveUserCornerData(user.email, nextData);
+    try { localStorage.setItem("tltl-current-user", JSON.stringify(user)); } catch {
+      // Server session remains valid when browser storage is unavailable.
     }
 
     const userSession = loadUserSessionState(
@@ -1572,7 +1585,7 @@ export default function App() {
 
     void loadSavedSignals()
       .then((remoteSignals) => {
-        if (remoteSignals.length > 0) {
+        {
           setUserCornerData((previous) => ({
             ...previous,
             signals: remoteSignals,
@@ -1669,14 +1682,6 @@ export default function App() {
 
       setPendingSave(null);
 
-      if (pending?.type === "signal") {
-        void saveSignal(pending.item.signalId, {
-          note: pending.item.journal,
-          actionDone: isActionDone,
-        }).catch(() => {
-          // Bản ghi local vẫn được giữ lại để không mất nội dung khi API tạm thời lỗi.
-        });
-      }
 
       navigateTo("result", savedSignal.id, user);
       return;
@@ -1684,19 +1689,6 @@ export default function App() {
 
     // Đăng nhập thông thường hoặc lưu xăm/lời nguyện:
     // khôi phục trạng thái riêng của tài khoản.
-    if (pending?.type === "xam") {
-      void saveXam({
-        stickNumber: pending.item.stickNumber,
-        topic: pending.item.category,
-        region: pending.item.region,
-        category: pending.item.category,
-        fortuneType: pending.item.fortuneType,
-        quote: pending.item.quote,
-      }).catch(() => {});
-    }
-    if (pending?.type === "wish") {
-      void saveWish(pending.item.content, pending.item.category).catch(() => {});
-    }
 
     setIsCheckedIn(userSession.checkedIn);
     setSelectedMood(userSession.mood);
@@ -1820,13 +1812,13 @@ export default function App() {
     }
   };
 
-  const commitCornerData = (
+  const commitCornerData = async (
     updated: UserCornerData,
     showErrorAlert = true
-  ): boolean => {
+  ): Promise<boolean> => {
     if (!currentUser) return false;
 
-    const saved = saveUserCornerData(
+    const saved = await saveUserCornerData(
       currentUser.email,
       updated
     );
@@ -1845,57 +1837,25 @@ export default function App() {
     return true;
   };
 
-  const handleDeleteSignal = (id: string): boolean => {
-    const saved = commitCornerData(
-      {
-        ...userCornerData,
-        signals: userCornerData.signals.filter(
-          (item) => item.id !== id
-        ),
-      },
-      false
-    );
-
-    if (saved && openedSavedSignal?.id === id) {
-      setOpenedSavedSignal(null);
+  const deleteCornerItem = async (
+    kind: "signals" | "xam" | "wishes", id: string, remove: (id: string) => Promise<unknown>,
+  ): Promise<boolean> => {
+    if (!currentUser) return false;
+    try { await remove(id); } catch (error) {
+      if (!(error instanceof ApiError && error.status === 404)) {
+        window.alert(error instanceof Error ? error.message : "Máy chủ chưa xóa được dữ liệu. Vui lòng thử lại.");
+        return false;
+      }
     }
-
-    if (saved && currentUser) {
-      void deleteSavedSignal(id).catch(() => {
-        // Optimistic local update; server retry can happen on the next sync.
-      });
-    }
-
-    return saved;
+    const updated = { ...userCornerData, [kind]: userCornerData[kind].filter((item) => item.id !== id) };
+    setUserCornerData(updated);
+    await saveUserCornerData(currentUser.email, updated);
+    if (kind === "signals" && openedSavedSignal?.id === id) setOpenedSavedSignal(null);
+    return true;
   };
-
-  const handleDeleteXam = (id: string): boolean => {
-    const saved = commitCornerData(
-      {
-        ...userCornerData,
-        xam: userCornerData.xam.filter(
-          (item) => item.id !== id
-        ),
-      },
-      false
-    );
-    if (saved && currentUser) void deleteSavedXam(id).catch(() => {});
-    return saved;
-  };
-
-  const handleDeleteWish = (id: string): boolean => {
-    const saved = commitCornerData(
-      {
-        ...userCornerData,
-        wishes: userCornerData.wishes.filter(
-          (item) => item.id !== id
-        ),
-      },
-      false
-    );
-    if (saved && currentUser) void deleteSavedWish(id).catch(() => {});
-    return saved;
-  };
+  const handleDeleteSignal = (id: string) => deleteCornerItem("signals", id, deleteSavedSignal);
+  const handleDeleteXam = (id: string) => deleteCornerItem("xam", id, deleteSavedXam);
+  const handleDeleteWish = (id: string) => deleteCornerItem("wishes", id, deleteSavedWish);
 
   const handleToggleStarSignal = (id: string) => {
     const entry = userCornerData.signals.find((item) => item.id === id);
@@ -1944,10 +1904,10 @@ export default function App() {
     if (currentUser && entry) void updateSavedWish(id, !entry.starred).catch(() => {});
   };
 
-  const handleSavePrivateWish = (
+  const handleSavePrivateWish = async (
     content: string,
     category: string
-  ): boolean => {
+  ): Promise<boolean> => {
     const cleanContent = content.trim();
     if (!cleanContent) return false;
 
@@ -1973,26 +1933,19 @@ export default function App() {
       return false;
     }
 
-    void saveWish(cleanContent, category)
-      .then((remoteWish) => {
-        setUserCornerData((previous) => ({
-          ...previous,
-          wishes: [remoteWish, ...previous.wishes.filter((item) => item.id !== remoteWish.id)],
-        }));
-      })
-      .catch(() => {});
+    let remoteWish: SavedWishItem;
+    try { remoteWish = await saveWish(cleanContent, category); }
+    catch { return false; }
 
     const nextData: UserCornerData = {
       ...userCornerData,
-      wishes: [newWish, ...userCornerData.wishes],
+      wishes: [remoteWish, ...userCornerData.wishes.filter((item) => item.id !== remoteWish.id)],
     };
 
-    const saved = saveUserCornerData(
+    const saved = await saveUserCornerData(
       currentUser.email,
       nextData
     );
-
-    if (!saved) return false;
 
     setUserCornerData(nextData);
     return true;
@@ -2140,8 +2093,8 @@ export default function App() {
               navigateTo("today");
             }}
             onSubmit={handleSubmitMood}
-            contextKey="general"
-            onChangeContext={() => {}}
+            contextKey={selectedContextKey}
+            onChangeContext={setSelectedContextKey}
           />
         )}
 
@@ -2165,7 +2118,7 @@ export default function App() {
             onRefreshSignal={handleRefreshSignal}
             onGoToDiary={() => navigateTo("account")}
             isSaved={isCurrentSignalSaved}
-            onChangeContext={() => {}}
+            onChangeContext={(contextKey) => void handleChangeSignalContext(contextKey)}
             onOpenCultureArticle={(articleId) => navigateTo("culture-detail", articleId)}
           />
         )}
@@ -2200,6 +2153,15 @@ export default function App() {
             onBack={() => navigateTo("sanctuary")}
             onGoToMemorial={() => navigateTo("memorial")}
             isLoggedIn={Boolean(currentUser)}
+            onRecordIncense={async () => {
+              if (!currentUser || !memorial?.id) return false;
+              try {
+                await recordIncense(memorial.id);
+                return true;
+              } catch {
+                return false;
+              }
+            }}
             onSaveTribute={(text) =>
               handleSavePrivateWish(text, "Tri ân gia tiên")
             }
@@ -2209,6 +2171,7 @@ export default function App() {
 
         {screen === "memorial" && (
           <MemorialSpaceScreen
+            onSelect={setMemorial}
             memorial={memorial}
             onBack={() => navigateTo("sanctuary")}
             onCreate={() => navigateTo("memorial-form")}
@@ -2237,7 +2200,7 @@ export default function App() {
 
               setMemorial(nextMemorial);
               if (currentUser) {
-                void saveMemorial(nextMemorial).catch(() => {
+                void saveMemorial(nextMemorial).then(setMemorial).catch(() => {
                   // Local cache keeps the form usable if the API is temporarily unavailable.
                 });
               }
@@ -2333,7 +2296,7 @@ export default function App() {
               setSelectedArticleId(articleId);
               navigateTo("culture-detail", articleId);
             }}
-            onSaveToAccount={(result) => {
+            onSaveToAccount={async (result) => {
               const createdAt = Date.now();
 
               const newXam: SavedXinXamItem = {
@@ -2362,14 +2325,9 @@ export default function App() {
                 return false;
               }
 
-              void saveXam(result)
-                .then((remoteItem) => {
-                  setUserCornerData((previous) => ({
-                    ...previous,
-                    xam: [remoteItem, ...previous.xam.filter((item) => item.id !== remoteItem.id)],
-                  }));
-                })
-                .catch(() => {});
+              let remoteItem: SavedXinXamItem;
+              try { remoteItem = await saveXam(result); }
+              catch { return false; }
 
               const exists = userCornerData.xam.some(
                 (item) =>
@@ -2382,19 +2340,15 @@ export default function App() {
               const updated: UserCornerData = {
                 ...userCornerData,
                 xam: [
-                  newXam,
-                  ...userCornerData.xam,
+                  remoteItem,
+                  ...userCornerData.xam.filter((item) => item.id !== remoteItem.id),
                 ],
               };
 
-              const saved = saveUserCornerData(
+              const saved = await saveUserCornerData(
                 currentUser.email,
                 updated
               );
-
-              if (!saved) {
-                return false;
-              }
 
               setUserCornerData(updated);
               return true;
@@ -2648,75 +2602,18 @@ export default function App() {
             user={currentUser}
             onUpdateProfile={handleUpdateProfile}
             onLogout={handleLogout}
-            onClearAllLocalData={() => {
+            onClearAllLocalData={async () => {
               if (!currentUser) return false;
-
-              const cornerKey = getUserCornerStorageKey(
-                currentUser.email
-              );
-
-              const calendarKey = getCalendarNotesStorageKey(
-                currentUser.email
-              );
-
-              const emptyData: UserCornerData = {
-                signals: [],
-                xam: [],
-                wishes: [],
-              };
-
-              let previousCorner: string | null;
-              let previousCalendar: string | null;
-
-              try {
-                previousCorner = localStorage.getItem(
-                  cornerKey
-                );
-
-                previousCalendar = localStorage.getItem(
-                  calendarKey
-                );
-              } catch {
-                return false;
-              }
-
-              try {
-                localStorage.setItem(
-                  cornerKey,
-                  JSON.stringify(emptyData)
-                );
-
-                localStorage.removeItem(calendarKey);
-              } catch {
-                // Cố khôi phục nếu chỉ một thao tác thành công.
-                try {
-                  if (previousCorner === null) {
-                    localStorage.removeItem(cornerKey);
-                  } else {
-                    localStorage.setItem(
-                      cornerKey,
-                      previousCorner
-                    );
-                  }
-
-                  if (previousCalendar === null) {
-                    localStorage.removeItem(calendarKey);
-                  } else {
-                    localStorage.setItem(
-                      calendarKey,
-                      previousCalendar
-                    );
-                  }
-                } catch {
-                  // Bộ nhớ vẫn có thể đang chặn thao tác.
-                }
-
-                return false;
-              }
-
-              setUserCornerData(emptyData);
+              try { await apiRequest("/users/me/personal-content", { method: "DELETE" }); }
+              catch { return false; }
+              setUserCornerData({ signals: [], xam: [], wishes: [] });
               setOpenedSavedSignal(null);
-
+              setMemorial(null);
+              setJournalText("");
+              setPendingSave(null);
+              setIsCheckedIn(false);
+              try { clearPersonalStorage(currentUser.email); }
+              catch { return false; }
               return true;
             }}
           />

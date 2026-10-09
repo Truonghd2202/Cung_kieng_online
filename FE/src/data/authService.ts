@@ -1,4 +1,5 @@
 import { ApiError, apiRequest, refreshAccessToken, setAccessToken } from "../lib/api";
+import { trackProductEvent } from "./productAnalytics";
 
 export interface UserProfile {
   name: string;
@@ -111,6 +112,7 @@ export async function registerAccount(
     setAccessToken(data.accessToken);
     const user = toProfile(data.user);
     saveLocalDemoAccount(user);
+    trackProductEvent("signup_completed");
     return { success: true, user };
   } catch (error) {
     return { success: false, user: fallback, error: authError(error) };
@@ -137,6 +139,7 @@ export async function restoreSession(): Promise<UserProfile | null> {
 }
 
 export async function logoutAccount(): Promise<void> {
+  await import("./pushService").then((service) => service.disableDevicePush()).catch(() => {});
   try {
     await apiRequest<never>("/auth/logout", { method: "POST" });
   } catch {

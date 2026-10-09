@@ -1,5 +1,17 @@
 const moodService = require("../services/mood.service");
+const signalService = require("../services/signal.service");
 const { sendSuccess } = require("../utils/response");
+
+async function analyzeSignal(req, res) {
+  const result = await moodService.analyzeSignal(req.body);
+  return sendSuccess(res, { message: result.aiUsed ? "Contextual signal generated" : "Curated contextual signal retrieved", data: result });
+}
+
+async function saveSignal(req, res) {
+  const { signalId, ...input } = req.body;
+  const item = await signalService.saveSignal(req.user.id, signalId, input);
+  return sendSuccess(res, { statusCode: 201, message: "Signal saved", data: item });
+}
 
 async function createCheckIn(req, res) {
   const result = await moodService.createCheckIn(req.user.id, req.body);
@@ -26,4 +38,4 @@ async function statistics(req, res) {
   return sendSuccess(res, { message: "Mood statistics retrieved", data: result });
 }
 
-module.exports = { createCheckIn, getToday, list, updateAction, statistics };
+module.exports = { analyzeSignal, saveSignal, createCheckIn, getToday, list, updateAction, statistics };

@@ -27,7 +27,18 @@ async function loadItems(path: string): Promise<RemoteContentItem[]> {
   return result.items;
 }
 
-export const loadCultureArticles = () => loadItems("/content/culture");
-export const loadRituals = () => loadItems("/content/rituals");
-export const loadCalendarEvents = () => loadItems("/content/calendar/events");
+async function loadAllItems(path: string): Promise<RemoteContentItem[]> {
+  const pageSize = 100;
+  const items: RemoteContentItem[] = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const page = await loadItems(`${path}?limit=${pageSize}&offset=${offset}`);
+    items.push(...page);
+    if (page.length < pageSize) return items;
+  }
+}
+
+export const loadCultureArticles = () => loadAllItems("/content/culture");
+export const loadRituals = () => loadAllItems("/content/rituals");
+export const loadCalendarEvents = () => loadAllItems("/content/calendar/events");
+export const loadCalendarEvent = (id: string) => apiRequest<RemoteContentItem>(`/content/calendar/events/${encodeURIComponent(id)}`);
 export const loadDailyProverb = () => apiRequest<DailyProverb>("/content/daily-proverb");

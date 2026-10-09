@@ -13,8 +13,9 @@ import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Card } from "../components/ui/card";
 import "../styles/WishScreen.css";
+import { SchoolSupportNotice } from "../components/SchoolSupportNotice";
 
-export type WishTopic = "Bình an" | "Gia đình" | "Học tập" | "Công việc" | "Khác";
+export type WishTopic = "Bình an" | "Gia đạo" | "Công danh" | "Tình duyên";
 export type WishMode = "journal" | "ephemeral";
 
 interface WishScreenProps {
@@ -22,7 +23,7 @@ interface WishScreenProps {
   onGoToDiary: () => void;
   onGoToHome: () => void;
   onGoToExplore: () => void;
-  onSaveJournal?: (text: string, topic: WishTopic) => boolean;
+  onSaveJournal?: (text: string, topic: WishTopic) => boolean | Promise<boolean>;
   isLoggedIn?: boolean;
   initialContent?: string;
   initialCategory?: string;
@@ -35,14 +36,12 @@ interface WishScreenProps {
 const SAMPLE_WISHES: Record<WishTopic, string> = {
   "Bình an":
     "Mong cho những ngày sắp tới trong lòng bớt xao động, công việc dẫu còn bộn bề nhưng mỗi chiều về nhà vẫn tìm được một khoảng bình an bên mâm cơm ấm.",
-  "Gia đình":
+  "Gia đạo":
     "Cầu chúc cho cha mẹ luôn mạnh khỏe, các thành viên trong gia đình luôn thấu hiểu, sẻ chia và bao dung cho nhau trước mọi sóng gió cuộc đời.",
-  "Học tập":
+  "Công danh":
     "Mong cho tâm trí luôn sáng suốt, bền chí trước những kỳ thi và thu nhận được nhiều tri thức hữu ích để vững bước trên con đường tương lai.",
-  "Công việc":
-    "Nguyện cho những dự án sắp tới diễn ra thuận lợi, hanh thông; giữ vững chữ Tín và tìm thấy niềm vui trong từng việc mình cống hiến.",
-  "Khác":
-    "Gửi gắm một ước nguyện chân thành vào vũ trụ, buông bỏ muộn phiền cũ để đón nhận những duyên lành mới đang tới.",
+  "Tình duyên":
+    "Mong mỗi cuộc gặp gỡ được nuôi dưỡng bằng sự chân thành, lắng nghe và tôn trọng lựa chọn của nhau.",
 };
 
 export const WishScreen: React.FC<WishScreenProps> = ({
@@ -65,10 +64,9 @@ export const WishScreen: React.FC<WishScreenProps> = ({
   const [topic, setTopic] = useState<WishTopic>(() => {
     const validTopics: WishTopic[] = [
       "Bình an",
-      "Gia đình",
-      "Học tập",
-      "Công việc",
-      "Khác",
+      "Gia đạo",
+      "Công danh",
+      "Tình duyên",
     ];
 
     return (
@@ -99,7 +97,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
     onDraftChange,
   ]);
 
-  const TOPICS: WishTopic[] = ["Bình an", "Gia đình", "Học tập", "Công việc", "Khác"];
+  const TOPICS: WishTopic[] = ["Gia đạo", "Công danh", "Tình duyên", "Bình an"];
 
   const handleApplySample = () => {
     if (content.trim()) {
@@ -125,7 +123,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
     });
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSaveError("");
 
@@ -146,7 +144,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
       let saved = false;
 
       try {
-        saved = onSaveJournal(cleanContent, topic) === true;
+        saved = await onSaveJournal(cleanContent, topic) === true;
       } catch {
         setSaveError("Chưa lưu được lời gửi gắm. Bạn hãy thử lại.");
         return;
@@ -267,6 +265,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                       />
                     </div>
 
+                    <SchoolSupportNotice text={content} />
                     {/* Counter & Clear Button */}
                     <div className="flex items-center justify-between text-xs text-muted mb-5">
                       <span id="wish-content-count" className="text-xs text-muted">

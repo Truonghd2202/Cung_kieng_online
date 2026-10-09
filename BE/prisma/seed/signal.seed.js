@@ -7,11 +7,25 @@ const MOOD_SEEDS = [
   ["non-nong", "IMPATIENT", "Nôn nóng", "Hạ nhịp thở và chậm lại"],
   ["biet-on", "GRATEFUL", "Biết ơn", "Trân trọng những duyên lành"],
   ["can-diem-tua", "NEED_SUPPORT", "Cần điểm tựa", "Được vỗ về trong khoảng lặng"],
+  ["mood-ap-luc-01", "PRESSURED", "Áp lực", "Không cần giải quyết mọi việc cùng một lúc"],
+  ["mood-co-don-01", "LONELY", "Cô đơn", "Mong muốn được lắng nghe đáng được trân trọng"],
+  ["mood-vui-ve-01", "HAPPY", "Vui vẻ", "Dành thời gian tận hưởng niềm vui hiện tại"],
+  ["mood-mong-lung-01", "OTHER", "Mông lung", "Một bước nhỏ có thể bắt đầu từ điều chưa rõ"],
 ];
 
-function signalContent(moodLabel, moodDescription, index) {
+const CONTEXTS = {
+  study: "Học tập",
+  work: "Công việc",
+  family: "Gia đình",
+  relationship: "Tình cảm",
+};
+
+function signalContent(moodLabel, moodDescription, index, contextLabel) {
+  const contextNote = contextLabel
+    ? ` Lời gợi mở hướng về ${contextLabel.toLowerCase()}, dựa trên cảm xúc bạn đã chọn.`
+    : "";
   return {
-    moodDesc: moodDescription,
+    moodDesc: `${moodDescription}${contextNote}`,
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
     poem: {
       line1: `${moodLabel} lắng nghe nhịp thở hiền hòa`,
@@ -27,8 +41,8 @@ function signalContent(moodLabel, moodDescription, index) {
     reflection: {
       title: "VÙNG 3 • Góc Nhìn Soi Tỏ Tâm Thức",
       highlightWord: moodLabel.toLowerCase(),
-      content: `Hãy để cảm xúc ${moodLabel.toLowerCase()} được hiện diện mà không cần phán xét. Một khoảng dừng ngắn có thể mở ra góc nhìn dịu dàng hơn cho bạn.`,
-      advice: "Gợi ý tiếp nhận: đặt tay lên ngực và thở chậm ba lần",
+      content: `Hãy để cảm xúc ${moodLabel.toLowerCase()} được hiện diện mà không cần phán xét.${contextLabel ? ` Khi nghĩ về ${contextLabel.toLowerCase()}, hãy tách điều bạn biết rõ khỏi điều còn đang suy đoán.` : ""} Một khoảng dừng ngắn có thể mở ra góc nhìn dịu dàng hơn cho bạn.`,
+      advice: contextLabel ? `Chọn một việc nhỏ, có thể làm trong ${contextLabel.toLowerCase()}, rồi xác định điều bạn cần thêm.` : "Gợi ý tiếp nhận: đặt tay lên ngực và thở chậm ba lần",
       signalNumber: `Chiêm nghiệm máy chủ #${index}`,
     },
     action: {
@@ -59,21 +73,47 @@ function signalContent(moodLabel, moodDescription, index) {
 }
 
 async function seedSignals() {
-  let index = 1000;
   for (const [prefix, mood, moodLabel, moodDescription] of MOOD_SEEDS) {
-    for (let variant = 1; variant <= 2; variant += 1) {
-      const source = `${prefix}-${variant}`;
-      const content = signalContent(moodLabel, moodDescription, index++);
+    const variants = prefix.startsWith("mood-") ? [1] : [1, 2];
+    for (const variant of variants) {
+      const source = prefix.startsWith("mood-") ? prefix : `${prefix}-${variant}`;
+      const content = signalContent(moodLabel, moodDescription, source);
       const existing = await prisma.signals.findFirst({ where: { source } });
 
       if (existing) {
         await prisma.signals.update({
           where: { id: existing.id },
-          data: { content: JSON.stringify(content), mood, title: `${moodLabel} · ${variant}`, advice: content.reflection.advice, active: true },
+          data: { content: JSON.stringify(content), mood, title: `${moodLabel} · ${variant}`, advice: content.reflection.advice, context_key: null, active: true },
         });
       } else {
         await prisma.signals.create({
-          data: { source, mood, title: `${moodLabel} · ${variant}`, content: JSON.stringify(content), advice: content.reflection.advice, category: "daily", active: true },
+          data: { source, mood, title: `${moodLabel} · ${variant}`, content: JSON.stringify(content), advice: content.reflection.advice, category: "daily", context_key: null, active: true },
+        });
+      }
+    }
+
+    for (const [contextKey, contextLabel] of Object.entries(CONTEXTS)) {
+      const baseSource = prefix.startsWith("mood-") ? prefix : `${prefix}-1`;
+      const source = `${baseSource}-context-${contextKey}`;
+      const content = signalContent(moodLabel, moodDescription, source, contextLabel);
+      const existing = await prisma.signals.findFirst({ where: { source } });
+      const data = {
+        mood,
+        title: `${moodLabel} · ${contextLabel}`,
+        content: JSON.stringify(content),
+        advice: content.reflection.advice,
+        category: "mood-context",
+        context_key: contextKey,
+        active: true,
+      };
+      if (existing) {
+        await prisma.signals.update({ where: { id: existing.id }, data });
+      } else {
+        await prisma.signals.create({
+          data: {
+          source,
+            ...data,
+          },
         });
       }
     }

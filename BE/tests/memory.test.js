@@ -33,6 +33,25 @@ test("memorial and calendar notes are private and account-scoped", { timeout: 30
     assert.equal(otherNotes.payload.data.items.length, 0);
     const deleted = await request(`/api/memory/calendar/notes/${note.payload.data.id}`, { method: "DELETE", token });
     assert.equal(deleted.response.status, 200);
+
+    const profile = await request("/api/memorials", {
+      method: "POST", token,
+      body: {
+        fullName: "Người thân được tưởng niệm",
+        relationship: "Ông",
+        deathDate: "2020-08-10",
+        anniversary: { calendar: "LUNAR", day: 12, month: 7 },
+      },
+    });
+    assert.equal(profile.response.status, 201);
+    assert.equal(profile.payload.data.anniversaries[0].calendar, "LUNAR");
+    const incense = await request(`/api/memorials/${profile.payload.data.id}/incense`, {
+      method: "POST", token, body: { message: "Tưởng nhớ", incenseCount: 1 },
+    });
+    assert.equal(incense.response.status, 201);
+    assert.equal(incense.payload.data.memorialId, profile.payload.data.id);
+    const otherProfiles = await request("/api/memorials", { token: other });
+    assert.equal(otherProfiles.payload.data.items.length, 0);
   } finally {
     server.close();
     await prisma.$disconnect();

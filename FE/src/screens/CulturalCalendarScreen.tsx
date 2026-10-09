@@ -24,13 +24,12 @@ import { AppDialog } from "../components/AppDialog";
 import {
   CalendarEventType,
   CalendarEventItem,
-  SAMPLE_CALENDAR_EVENTS,
   getReliableLunarDate,
   getCanChiYear,
   loadCalendarPersonalNotes,
   saveCalendarPersonalNotes,
 } from "../data/calendarData";
-import { loadCalendarEvents } from "../data/contentService";
+import { loadCalendarEvents, type RemoteContentItem } from "../data/contentService";
 
 interface CulturalCalendarScreenProps {
   onGoToToday?: () => void;
@@ -76,15 +75,11 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   const [personalNotes, setPersonalNotes] = useState<CalendarEventItem[]>(() =>
     loadCalendarPersonalNotes(currentUserEmail)
   );
-  const [publicEvents, setPublicEvents] = useState(SAMPLE_CALENDAR_EVENTS);
+  const [remoteEvents, setRemoteEvents] = useState<RemoteContentItem[]>([]);
+  const [calendarError, setCalendarError] = useState("");
 
   useEffect(() => {
-    void loadCalendarEvents().then((remote) => {
-      setPublicEvents(SAMPLE_CALENDAR_EVENTS.map((local) => {
-        const item = remote.find((candidate) => candidate.title === local.title);
-        return item ? { ...local, shortDesc: String(item.shortDesc || local.shortDesc) } : local;
-      }));
-    }).catch(() => {});
+    void loadCalendarEvents().then(setRemoteEvents).catch(() => setCalendarError("Chưa tải được sự kiện từ máy chủ. Vui lòng tải lại trang; lịch ngày và ghi chú cá nhân vẫn dùng được."));
   }, []);
 
   // Khi tài khoản đăng nhập thay đổi hoặc đăng xuất, tự động nạp lại đúng dữ liệu lịch
@@ -94,8 +89,40 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
 
   // Tổng hợp sự kiện: sự kiện lịch sử văn hóa đã kiểm chứng + ngày cá nhân người dùng thực sự lưu
   const allEvents = useMemo(() => {
-    return [...publicEvents, ...personalNotes];
-  }, [publicEvents, personalNotes]);
+    const remotePublicEvents: CalendarEventItem[] = [];
+    for (const item of remoteEvents) {
+      const eventDay = Number(item.day);
+      const eventMonth = Number(item.month);
+      if (!Number.isInteger(eventDay) || !Number.isInteger(eventMonth)) continue;
+      const calendar = item.calendar === "SOLAR" ? "SOLAR" : "LUNAR";
+      const daysInYear = new Date(selectedYear, 1, 29).getMonth() === 1 ? 366 : 365;
+      for (let offset = 0; offset < daysInYear; offset += 1) {
+        const date = new Date(selectedYear, 0, 1 + offset);
+        const lunar = getReliableLunarDate(date.getDate(), date.getMonth() + 1, selectedYear);
+        const matches = calendar === "SOLAR"
+          ? date.getDate() === eventDay && date.getMonth() + 1 === eventMonth
+          : !lunar.isLeapMonth && lunar.lunarDay === eventDay && lunar.lunarMonth === eventMonth;
+        if (!matches) continue;
+        const region = String(item.region || "Toàn quốc");
+        const title = String(item.title || "Sự kiện văn hóa");
+        remotePublicEvents.push({
+          id: `api:${item.id}:${selectedYear}:${date.getMonth() + 1}:${date.getDate()}`,
+          title,
+          day: date.getDate(),
+          month: date.getMonth() + 1,
+          year: selectedYear,
+          type: "festival",
+          typeLabel: String(item.typeLabel || "Sự kiện văn hóa"),
+          region,
+          shortDesc: String(item.shortDesc || ""),
+          lunarDate: `Âm lịch: ${lunar.lunarDay}/${lunar.lunarMonth}${lunar.isLeapMonth ? " nhuận" : ""}`,
+          verifiedSource: item.verified === true ? String(item.source || "") : undefined,
+        });
+      }
+    }
+
+    return [...remotePublicEvents, ...personalNotes];
+  }, [remoteEvents, personalNotes, selectedYear]);
 
   const eventsInSelectedMonth = allEvents.filter(
     (event) =>
@@ -380,6 +407,7 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   return (
     <div className="screen-shell">
       <main className="page-container max-w-7xl">
+        {calendarError && <p role="alert" className="mb-5 rounded-xl border border-danger/30 p-4 text-sm text-danger">{calendarError}</p>}
         {noteDeleteError && (
           <p
             role="alert"

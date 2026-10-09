@@ -8,6 +8,7 @@ function toPublicCheckIn(checkIn) {
   return {
     id: checkIn.id,
     mood: signalService.toMoodLabel(checkIn.mood),
+    contextKey: checkIn.context_key || "general",
     note: checkIn.note,
     intensity: checkIn.intensity,
     actionDone: checkIn.action_done,
@@ -17,21 +18,28 @@ function toPublicCheckIn(checkIn) {
 }
 
 async function createCheckIn(userId, input) {
-  const signal = await signalService.resolveForMood(input.mood, input.signalId);
+  const contextKey = input.contextKey || "general";
+  const { signal } = await signalService.analyzeForMood({ mood: input.mood, contextKey });
   const checkIn = await moodRepository.create({
     user_id: userId,
     mood: signal.mood,
+    context_key: contextKey,
     note: input.note || null,
     intensity: input.intensity === undefined ? null : input.intensity,
-    signal_id: signal.id,
+    signal_id: signal.dbId,
+    signal_snapshot: signal,
     action_done: Boolean(input.actionDone),
   });
-  return { checkIn: toPublicCheckIn(checkIn), signal: signalService.toPublicSignal(signal) };
+  return { checkIn: toPublicCheckIn(checkIn), signal };
+}
+
+async function analyzeSignal(input) {
+  return signalService.analyzeForMood(input);
 }
 
 async function getLatest(userId) {
   const checkIn = await moodRepository.findLatestForUser(userId);
-  return checkIn ? { checkIn: toPublicCheckIn(checkIn), signal: checkIn.signals ? signalService.toPublicSignal(checkIn.signals) : null } : null;
+  return checkIn ? { checkIn: toPublicCheckIn(checkIn), signal: signalService.toCheckInSignal(checkIn) } : null;
 }
 
 async function list(userId, query) {
@@ -55,4 +63,4 @@ async function statistics(userId) {
   };
 }
 
-module.exports = { createCheckIn, getLatest, list, updateAction, statistics };
+module.exports = { createCheckIn, analyzeSignal, getLatest, list, updateAction, statistics };

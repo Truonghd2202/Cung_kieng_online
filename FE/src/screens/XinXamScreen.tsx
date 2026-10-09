@@ -44,7 +44,7 @@ export type XinXamDrawResult = XinXamResult & {
 interface XinXamScreenProps {
   onBackToExperienceHome?: () => void;
   onGoToArticle?: (articleId: string) => void;
-  onSaveToAccount?: (result: XinXamDrawResult) => boolean;
+  onSaveToAccount?: (result: XinXamDrawResult) => boolean | Promise<boolean>;
   onGoToLogin?: () => void;
   onGoToExplore?: () => void;
   onGoToWish?: () => void;
@@ -161,13 +161,23 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
     let nextDrawId: string = crypto.randomUUID();
     let proverbAttached = false;
 
-    if (isLoggedIn) {
+    {
       try {
         const remote = await drawXinXam(selectedRegion, selectedTopic);
         nextDrawId = remote.drawId || remote.id;
         const localMatch = matchingResults.find((item) => item.stickNumber === remote.stickNumber) || chosen;
         chosen = {
           ...localMatch,
+          stickNumber: remote.stickNumber,
+          title: `Quẻ Quan Âm ${remote.stickNumber} — ${remote.classification}`,
+          poem: {
+            line1: "Văn bản thơ gốc chưa được lưu trong ứng dụng.",
+            line2: "",
+            line3: "",
+            line4: "",
+          },
+          source: remote.source,
+          verified: remote.verified,
           fortuneType: remote.classification,
           sealText: remote.classification,
           insight: remote.classification,
@@ -186,7 +196,8 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
         };
         proverbAttached = Boolean(remote.proverb);
       } catch {
-        // Giữ tráº£i nghiá»‡m local khi API táº¡m thá»i khÃ´ng pháº£n há»“i.
+        setDrawNotice("Chưa lấy được thẻ từ thư viện. Bạn hãy thử lại khi kết nối ổn định.");
+        return;
       }
     }
 
@@ -205,11 +216,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
       }
     }
 
-    setDrawNotice(
-      matchingResults.length === 1
-        ? "Bản thử nghiệm hiện có một thẻ cho vùng và chủ đề này. Rút lại có thể nhận cùng nội dung."
-        : ""
-    );
+    setDrawNotice("");
 
     setCurrentDrawId(null);
     setSaveError("");
@@ -247,7 +254,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
       (item) => item.drawId === currentDrawId
     );
 
-  const handleSaveResult = () => {
+  const handleSaveResult = async () => {
     if (isCardSaved) return;
 
     setSaveError("");
@@ -267,7 +274,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
     let saved = false;
 
     try {
-      saved = onSaveToAccount({
+      saved = await onSaveToAccount({
         ...currentResult,
         drawId: currentDrawId,
       }) === true;
@@ -1040,6 +1047,23 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                     </span>
                   </button>
                 </div>
+                {currentResult.source && (
+                  <div className="px-2 text-xs text-muted space-y-1">
+                    <p>
+                      {currentResult.verified
+                        ? "Thông tin đã đối chiếu nguồn tham khảo."
+                        : "Hệ tham khảo CTC (Hong Kong); diễn giải tiếng Việt chưa được thẩm định."}
+                    </p>
+                    <a
+                      href={currentResult.source}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline underline-offset-2 hover:text-action"
+                    >
+                      Mở bản ghi nguồn
+                    </a>
+                  </div>
+                )}
               </div>
 
               {/* Right Column (7 columns): Seamless Literary Essay (No 4 box cards) */}

@@ -1,4 +1,5 @@
 import React from "react";
+import { MemorialProfilesPanel } from "../components/MemorialProfilesPanel";
 import {
   ArrowLeft,
   ArrowRight,
@@ -17,6 +18,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 
 export interface MemorialRecord {
+  id?: string;
   name: string;
   relation: string;
   date: string;
@@ -24,6 +26,7 @@ export interface MemorialRecord {
 }
 
 interface MemorialSpaceScreenProps {
+  onSelect: (record: MemorialRecord | null) => void;
   memorial: MemorialRecord | null;
   onBack: () => void;
   onCreate: () => void;
@@ -41,6 +44,7 @@ const formatMemorialDate = (value: string): string => {
 };
 
 export const MemorialSpaceScreen: React.FC<MemorialSpaceScreenProps> = ({
+  onSelect,
   memorial,
   onBack,
   onCreate,
@@ -84,6 +88,7 @@ export const MemorialSpaceScreen: React.FC<MemorialSpaceScreenProps> = ({
           </p>
         </header>
 
+        <MemorialProfilesPanel selectedId={memorial?.id} onSelect={onSelect} />
         {/* Main Content Area */}
         {!memorial ? (
           /* Empty State: Haven't created yet */

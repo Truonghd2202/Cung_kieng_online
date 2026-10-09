@@ -22,7 +22,7 @@ interface GratitudeScreenProps {
   onBackToHome: () => void;
   onGoToCulture?: () => void;
   user?: { name: string; email: string } | null;
-  onSaveGratitude?: (content: string) => boolean;
+  onSaveGratitude?: (content: string) => boolean | Promise<boolean>;
   onRequireLogin?: (content: string) => void;
   initialContent?: string;
   initialSaveMode?: boolean;
@@ -107,7 +107,7 @@ export const GratitudeScreen: React.FC<GratitudeScreenProps> = ({
     setReleaseStatus("idle");
   };
 
-  const handleSendOrSave = () => {
+  const handleSendOrSave = async () => {
     if (isSubmitting || releaseTimerRef.current !== null) {
       return;
     }
@@ -121,7 +121,7 @@ export const GratitudeScreen: React.FC<GratitudeScreenProps> = ({
       if (!cleanContent) return;
 
       const saved =
-        onSaveGratitude?.(cleanContent) === true;
+        await onSaveGratitude?.(cleanContent) === true;
 
       if (saved) {
         setSaveSuccess(true);

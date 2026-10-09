@@ -12,9 +12,8 @@ export function getCultureMetadata(
 
   return {
     contentKind: "editorial",
-    editorialStatus: "approved",
-    quotationVerified: true,
-    reviewedBy: "Hội đồng khảo cứu văn hóa dân gian Thích Cúng Kiếng",
+    editorialStatus: "in-review",
+    quotationVerified: false,
     sources: article.sources.map((source, index) => ({
       id: `${article.id}-source-${index + 1}`,
       title: source.title,
@@ -24,7 +23,7 @@ export function getCultureMetadata(
     })),
     editorialNote:
       article.editorialNote ||
-      "Nội dung chuyên khảo được khảo cứu, biên soạn và đối chiếu từ các thư tịch cổ và tài liệu văn hóa dân gian chính thống.",
+      "Tư liệu tham khảo đang chờ đối chiếu nguồn và thẩm định nội dung.",
   };
 }
 
@@ -35,9 +34,8 @@ export function getRitualMetadata(
 
   return {
     contentKind: "editorial",
-    editorialStatus: "approved",
-    quotationVerified: true,
-    reviewedBy: "Ban nghi lễ & Nếp sống gia đình Thích Cúng Kiếng",
+    editorialStatus: "in-review",
+    quotationVerified: false,
     sources: [
       {
         id: `${ritual.id}-source-1`,

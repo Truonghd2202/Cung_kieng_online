@@ -1,0 +1,18 @@
+name: New Environment
+values:
+  - key: baseUrl
+    value: ''
+  - key: accessToken
+    value: ''
+  - key: checkInId
+    value: ''
+  - key: savedSignalId
+    value: ''
+  - key: xamId
+    value: ''
+  - key: wishId
+    value: ''
+  - key: keoSessionId
+    value: ''
+  - key: calendarNoteId
+    value: ''

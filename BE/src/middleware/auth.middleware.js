@@ -37,3 +37,8 @@ async function authenticate(req, res, next) {
 
 module.exports = authenticate;
 module.exports.authenticate = authenticate;
+module.exports.optionalAuthenticate = function optionalAuthenticate(req, res, next) {
+  const authorization = req.get("authorization") || "";
+  if (!authorization) return next();
+  return authenticate(req, res, next);
+};

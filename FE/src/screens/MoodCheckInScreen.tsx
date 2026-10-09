@@ -29,6 +29,8 @@ import { Button } from "@/src/components/ui/button";
 import { Textarea } from "@/src/components/ui/textarea";
 import "../styles/MoodCheckInScreen.css";
 
+import { SchoolSupportNotice } from "../components/SchoolSupportNotice";
+
 interface MoodCheckInScreenProps {
   selectedMood: MoodKey;
   onSelectMood: (mood: MoodKey) => void;
@@ -432,6 +434,7 @@ export const MoodCheckInScreen: React.FC<MoodCheckInScreenProps> = ({
             </button>
           </div>
         </div>
+        <SchoolSupportNotice text={journalText} />
       </main>
     </div>
   );

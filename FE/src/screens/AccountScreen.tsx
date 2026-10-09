@@ -51,6 +51,8 @@ export interface SavedXinXamItem {
   date: string;
   createdAt?: number;
   starred?: boolean;
+  source?: string;
+  verified?: boolean;
 }
 
 export interface SavedWishItem {
@@ -68,9 +70,9 @@ interface AccountScreenProps {
   savedSignals: SavedSignalItem[];
   savedXamList: SavedXinXamItem[];
   savedWishList: SavedWishItem[];
-  onDeleteSignal: (id: string) => boolean;
-  onDeleteXam: (id: string) => boolean;
-  onDeleteWish: (id: string) => boolean;
+  onDeleteSignal: (id: string) => boolean | Promise<boolean>;
+  onDeleteXam: (id: string) => boolean | Promise<boolean>;
+  onDeleteWish: (id: string) => boolean | Promise<boolean>;
   onToggleStarSignal?: (id: string) => void;
   onToggleStarXam: (id: string) => void;
   onToggleStarWish: (id: string) => void;
@@ -270,7 +272,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
   };
 
   // Perform deletion
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!itemToDelete) return;
 
     setDeleteError("");
@@ -279,11 +281,11 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
     try {
       if (itemToDelete.type === "signal") {
-        deleted = onDeleteSignal(itemToDelete.id);
+        deleted = await onDeleteSignal(itemToDelete.id);
       } else if (itemToDelete.type === "xinxam") {
-        deleted = onDeleteXam(itemToDelete.id);
+        deleted = await onDeleteXam(itemToDelete.id);
       } else {
-        deleted = onDeleteWish(itemToDelete.id);
+        deleted = await onDeleteWish(itemToDelete.id);
       }
     } catch {
       deleted = false;

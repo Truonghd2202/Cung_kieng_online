@@ -119,8 +119,8 @@ export const SignalLoadingScreen = ({
           )}
 
           <p className="mt-6 text-xs leading-relaxed text-muted">
-            Thông điệp sử dụng nội dung biên soạn sẵn.
-            Bản thử nghiệm chưa phân tích tâm sự bằng AI.
+            Bạn có thể nhận gợi ý biên soạn sẵn hoặc hỗ trợ AI theo tâm trạng và chủ đề đã chọn.
+            Nội dung tâm sự riêng không được gửi đi.
           </p>
 
           <Button

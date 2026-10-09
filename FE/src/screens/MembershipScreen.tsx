@@ -20,9 +20,11 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
-import { MembershipDemoFlow } from "../components/MembershipDemoFlow";
+import { MembershipCheckout } from "../components/MembershipCheckout";
 import { BrandPartnershipForm } from "../components/BrandPartnershipForm";
 import type { MembershipTerm } from "../data/membershipIntent";
+import { registerMembershipInterest, removeMembershipInterest } from "../data/membershipService";
+import { trackProductEvent } from "../data/productAnalytics";
 
 interface MembershipScreenProps {
   onBackToHome: () => void;
@@ -39,6 +41,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
 }) => {
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [interestError, setInterestError] = useState("");
+  const [isSubmittingInterest, setIsSubmittingInterest] = useState(false);
   const [savedEmail, setSavedEmail] = useState<string | null>(() => {
     try {
       return localStorage.getItem("tltl-membership-interest-email");
@@ -47,7 +50,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
     }
   });
 
-  const handleRegisterNewsletter = (e: React.FormEvent) => {
+  const handleRegisterNewsletter = async (e: React.FormEvent) => {
     e.preventDefault();
     setInterestError("");
 
@@ -61,29 +64,46 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
       return;
     }
 
+    setIsSubmittingInterest(true);
     try {
-      localStorage.setItem("tltl-membership-interest-email", cleanEmail);
+      await registerMembershipInterest(cleanEmail);
+      trackProductEvent("membership_interest_registered");
     } catch {
-      setInterestError("Chưa lưu được email trên trình duyệt. Bạn hãy thử lại.");
+      setInterestError("Chưa đăng ký được. Bạn hãy kiểm tra kết nối và thử lại.");
+      setIsSubmittingInterest(false);
       return;
     }
 
+    try { localStorage.setItem("tltl-membership-interest-email", cleanEmail); } catch { /* The server record is authoritative. */ }
+
     setSavedEmail(cleanEmail);
     setRegisteredEmail("");
+    setIsSubmittingInterest(false);
   };
 
-  const handleClearInterest = () => {
+  const handleClearInterest = async () => {
     setInterestError("");
+
+    if (savedEmail) {
+      setIsSubmittingInterest(true);
+      try {
+        await removeMembershipInterest(savedEmail);
+      } catch {
+        setInterestError("Chưa xóa được đăng ký trên máy chủ. Bạn hãy thử lại.");
+        setIsSubmittingInterest(false);
+        return;
+      }
+    }
 
     try {
       localStorage.removeItem("tltl-membership-interest-email");
     } catch {
-      setInterestError("Chưa xóa được email đã lưu. Bạn hãy thử lại.");
-      return;
+      // The server record has already been removed.
     }
 
     setSavedEmail(null);
     setRegisteredEmail("");
+    setIsSubmittingInterest(false);
   };
 
   const featureMatrix = [
@@ -306,7 +326,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
               <h2 className="font-display font-bold text-2xl text-ink mb-1">
                 Gói Hội Viên Tâm An
               </h2>
-              <p className="text-xs text-stone-500 mb-4">(Đang khảo sát ý kiến cộng đồng · Chưa thu phí)</p>
+              <p className="text-xs text-stone-500 mb-4">29.000đ/tháng · Thanh toán qua VNPay khi cổng đã sẵn sàng</p>
 
               <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-stone-700 dark:text-stone-300 leading-relaxed mb-5">
                 Chương trình đồng hành dành cho những ai tâm huyết muốn bảo tồn sâu hơn kho tàng di sản văn hóa,
@@ -368,7 +388,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
                   <div className="flex items-start gap-2 text-emerald-800 dark:text-emerald-300">
                     <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
                     <div className="min-w-0">
-                      <p className="font-semibold">Đã lưu email quan tâm trên trình duyệt:</p>
+                      <p className="font-semibold">Đã ghi nhận email quan tâm:</p>
                       <p className="font-mono text-[11px] mt-0.5">{savedEmail}</p>
                     </div>
                   </div>
@@ -377,7 +397,8 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
                   </p>
                   <button
                     type="button"
-                    onClick={handleClearInterest}
+                    disabled={isSubmittingInterest}
+                    onClick={() => void handleClearInterest()}
                     className="inline-flex items-center gap-1.5 text-xs text-emerald-800 dark:text-emerald-300 underline cursor-pointer pt-1"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
@@ -385,12 +406,12 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleRegisterNewsletter} className="space-y-2.5">
+                <form onSubmit={(event) => void handleRegisterNewsletter(event)} className="space-y-2.5">
                   <label
                     htmlFor="membership-interest-email"
                     className="block text-xs font-semibold text-ink"
                   >
-                    Đăng ký nhận tin tức khi gói mở chính thức:
+                    Để lại email nếu bạn muốn bày tỏ quan tâm tới gói hội viên:
                   </label>
 
                   <div className="flex flex-col sm:flex-row gap-2">
@@ -412,9 +433,10 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
 
                     <Button
                       type="submit"
+                      disabled={isSubmittingInterest}
                       className="rounded-xl bg-gradient-to-r from-red-800 to-amber-700 hover:from-red-700 hover:to-amber-800 text-white font-semibold text-xs px-4 min-h-11 cursor-pointer shadow-xs shrink-0"
                     >
-                      Nhận thông tin
+                      Gửi đăng ký
                     </Button>
                   </div>
                 </form>
@@ -500,10 +522,10 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
         </section>
 
         {/* Premium Demo Content Showcase */}
-        <MembershipDemoFlow
+        <MembershipCheckout
           key={currentUserEmail || "guest"}
           email={currentUserEmail}
-          onGoToLogin={onGoToLogin}
+          onLogin={() => onGoToLogin("monthly")}
         />
 
         {/* B2B Cultural Brand Partnership Section */}

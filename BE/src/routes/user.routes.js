@@ -8,6 +8,10 @@ const { profileSchema, settingsSchema, topicsSchema } = require("../validators/u
 const router = express.Router();
 
 router.use(authenticate);
+router.delete("/me/personal-content", async (req, res) => {
+  await require("../services/privacy.service").clearPersonalContent(req.user.id);
+  return require("../utils/response").sendSuccess(res, { message: "Personal content deleted" });
+});
 router.get("/me", controller.getProfile);
 router.patch("/me", validate(profileSchema), controller.updateProfile);
 router.get("/me/settings", controller.getSettings);

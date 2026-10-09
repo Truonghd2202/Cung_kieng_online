@@ -81,17 +81,9 @@ async function saveXamDraw(userId, input) {
     return toXamItem(existing);
   }
   const region = REGION_TO_DB[input.region] || "NATIONWIDE";
-  const catalog = await xinXamRepository.upsertCatalog({
-    stick_number: input.stickNumber,
-    xam_type: input.xamType,
-    region,
-    category: input.category || input.xamType,
-    fortune_level: input.fortuneType || "Thượng Cát",
-    poem: input.quote || null,
-    meaning: input.quote || null,
-    verified: false,
-    active: true,
-  });
+  const cards = await xinXamRepository.listCatalog(`${region}:${input.xamType}`, region);
+  const catalog = cards.find((card) => card.stick_number === Number(input.stickNumber));
+  if (!catalog) throw new ApiError(404, "Xin xam card not found");
   const proverb = await pickVerifiedProverb({ categories: proverbCategoriesForFortune(catalog.fortune_level) });
   const draw = await xinXamRepository.createDraw({
     user_id: userId,
@@ -108,6 +100,9 @@ async function drawXam(userId, input) {
   if (cards.length === 0) throw new ApiError(404, "No xin xam card is available for this selection");
   const card = cards[Math.floor(Math.random() * cards.length)];
   const proverb = await pickVerifiedProverb({ categories: proverbCategoriesForFortune(card.fortune_level) });
+  if (!userId) {
+    return toXamItem({ id: `guest:${require("node:crypto").randomUUID()}`, xin_xam: card, proverbs: proverb, created_at: new Date(), starred: false });
+  }
   const draw = await xinXamRepository.createDraw({ user_id: userId, xin_xam_id: card.id, proverb_id: proverb?.id || null, question: input.question || null, ai_explanation: card.advice });
   return {
     ...toXamItem(draw),

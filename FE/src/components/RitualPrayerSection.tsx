@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useScreenWakeLock } from "../hooks/useScreenWakeLock";
 import type { RitualPrayer } from "../data/ritualData";
 import { Button } from "./ui/button";
 import { ContentProvenance } from "./ContentProvenance";
@@ -12,6 +13,8 @@ export function RitualPrayerSection({ prayers = [] }: Props) {
   const [selectedId, setSelectedId] = useState("");
   const [copyStatus, setCopyStatus] = useState("");
   const [copying, setCopying] = useState(false);
+  const [readingMode, setReadingMode] = useState(false);
+  const wakeStatus = useScreenWakeLock(readingMode);
   const [fontSize, setFontSize] = useState<"normal" | "large" | "xlarge">("large");
 
   const available = prayers.filter(
@@ -60,8 +63,13 @@ export function RitualPrayerSection({ prayers = [] }: Props) {
   return (
     <section
       aria-labelledby="ritual-prayer-title"
+      style={readingMode ? { background: "#1c1917", color: "#fafaf9" } : undefined}
       className="my-8 rounded-3xl border border-amber-500/25 bg-gradient-to-b from-amber-500/[0.04] via-surface to-surface p-5 sm:p-7 shadow-xs relative overflow-hidden"
     >
+      <button type="button" aria-pressed={readingMode} className="mb-4 rounded-lg border px-4 py-2" onClick={() => { setReadingMode(!readingMode); setFontSize("xlarge"); }}>
+        {readingMode ? "Thoát chế độ đọc trang nghiêm" : "Đọc trang nghiêm · giữ màn hình sáng"}
+      </button>
+      {readingMode && <p role="status" className="mb-3 text-sm">{wakeStatus}</p>}
       {/* Subtle corner ornament */}
       <div
         className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl pointer-events-none"
@@ -184,6 +192,7 @@ export function RitualPrayerSection({ prayers = [] }: Props) {
 
           {/* Prayer Body Content */}
           <div
+            style={readingMode ? { background: "#292524", color: "#fafaf9" } : undefined}
             className={`mt-6 p-5 sm:p-7 rounded-2xl bg-surface/90 border border-line/70 font-serif text-ink tracking-wide space-y-4 shadow-inner ${getFontSizeClass()}`}
           >
             {selected.paragraphs.map((paragraph, index) => (

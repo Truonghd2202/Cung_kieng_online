@@ -26,6 +26,7 @@ import {
 import { getCultureArticleById } from "../data/cultureData";
 import { Button } from "@/src/components/ui/button";
 import { ContentProvenance } from "../components/ContentProvenance";
+import { trackProductEvent } from "../data/productAnalytics";
 import "../styles/SignalResultScreen.css";
 
 interface SignalResultScreenProps {
@@ -83,6 +84,7 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
         throw new Error("Clipboard unavailable");
       }
       await navigator.clipboard.writeText(shareUrl.toString());
+      trackProductEvent("share_link_copied");
       setCopyState("success");
       setTimeout(() => setCopyState("idle"), 3000);
     } catch {

@@ -1,4 +1,9 @@
 const prisma = require("../../src/config/prisma");
+const dsvhInventory = require("./data/dsvh-national-inventory.json");
+const verifiedCalendarEvents = require("./data/verified-calendar-events.json");
+const ctcGuanyinLots = require("./data/ctc-guanyin-100.json");
+
+const DSVH_INVENTORY_URL = "https://dsvh.gov.vn/danh-muc-di-san-van-hoa-phi-vat-the-quoc-gia-1789";
 
 const articles = [
   ["dinh-lang-bac-bo", "Căn cốt đình làng Bắc Bộ & Tục thờ Thành hoàng", "NORTH", "Không gian tín ngưỡng", "/images/temple_bac_bo.jpg"],
@@ -20,46 +25,23 @@ const rituals = [
 
 const calendarEvents = [
   ["Mùng một tháng Chín", 1, 9, "Phong tục dân gian"],
-  ["Lễ hội Katê", 1, 7, "Lễ hội truyền thống"],
-  ["Tết Trùng Cửu", 9, 9, "Phong tục dân gian"],
-  ["Hội Chùa Keo mùa thu", 15, 9, "Lễ hội truyền thống"],
   ["Lễ Sóc Vọng ngày Rằm", 15, 9, "Phong tục dân gian"],
 ];
 
-const xamCards = [
-  [1, "Bình an", "NORTH"], [2, "Gia đình", "NORTH"], [3, "Học tập", "NORTH"], [4, "Công việc", "NORTH"],
-  [5, "Bình an", "CENTRAL"], [6, "Gia đình", "CENTRAL"], [7, "Học tập", "CENTRAL"], [8, "Công việc", "CENTRAL"],
-  [9, "Bình an", "SOUTH"], [10, "Gia đình", "SOUTH"], [11, "Học tập", "SOUTH"], [12, "Công việc", "SOUTH"],
-];
-
-const xamInterpretations = {
-  1: ["Đại Cát", "Vận hội rộng mở, có nhiều điều kiện thuận lợi để khởi sự.", "Tiến hành từng bước, giữ khiêm nhường và kiểm tra nguồn lực thực tế."],
-  2: ["Thượng Cát", "Xu hướng tốt, dễ nhận được sự hỗ trợ hoặc đồng thuận.", "Chủ động kết nối, nhưng không nên phụ thuộc hoàn toàn vào may mắn."],
-  3: ["Trung Cát", "Có thuận lợi xen lẫn thử thách; kết quả phụ thuộc nhiều vào sự chuẩn bị.", "Lập kế hoạch rõ ràng và dành phương án dự phòng."],
-  4: ["Tiểu Cát", "Có tín hiệu tích cực ở quy mô nhỏ, thích hợp tiến chậm và quan sát.", "Ưu tiên một bước thử nghiệm ít rủi ro trước khi mở rộng."],
-  5: ["Bình", "Tình thế tương đối cân bằng, chưa có dấu hiệu nghiêng hẳn về thuận hay nghịch.", "Giữ nhịp ổn định và thu thập thêm dữ kiện trước quyết định lớn."],
-  6: ["Hạ Xăm", "Điều kiện hiện tại còn hạn chế, cần thêm thời gian hoặc nguồn lực.", "Giảm kỳ vọng ngắn hạn, củng cố nền tảng rồi mới tiến tiếp."],
-  7: ["Hung", "Có dấu hiệu rủi ro hoặc xung đột cần được nhận diện sớm.", "Tạm hoãn việc khó đảo ngược và xin ý kiến người có chuyên môn."],
-  8: ["Đại Hung", "Cảnh báo mạnh về rủi ro nếu hành động vội vàng hoặc thiếu thông tin.", "Không dùng thẻ xăm để tự gây sợ hãi; hãy dừng, kiểm chứng thực tế và tìm hỗ trợ phù hợp."],
-  9: ["Thượng Cát", "Có cơ hội thuận lợi nếu giữ đúng mục tiêu và cách làm minh bạch.", "Nắm cơ hội nhưng vẫn đặt giới hạn về thời gian, tài chính và trách nhiệm."],
-  10: ["Trung Cát", "Kết quả có thể tốt khi kiên trì, song tiến độ không nhất thiết nhanh.", "Chia mục tiêu thành các mốc nhỏ để theo dõi và điều chỉnh."],
-  11: ["Bình", "Tình thế đang chuyển tiếp, phù hợp với quan sát hơn là phán đoán.", "Không ép một câu trả lời có–không; cân nhắc nhiều phương án."],
-  12: ["Hung", "Có yếu tố bất lợi cần xử lý trước khi tiếp tục.", "Ưu tiên an toàn, tránh cam kết lớn và kiểm tra lại giả định ban đầu."],
-};
 
 async function seedContent() {
   for (const [slug, title, region, category, image_url] of articles) {
     await prisma.culture_articles.upsert({
       where: { slug },
       create: { slug, title, region, category, image_url, excerpt: title, content: { sections: [], disclaimer: "Tư liệu văn hóa dùng để tham khảo và chiêm nghiệm." }, source: "Tư liệu biên tập nội bộ", verified: false },
-      update: { title, region, category, image_url },
+      update: {},
     });
   }
   for (const [slug, title, occasion, region] of rituals) {
     const ritual = await prisma.rituals.upsert({
       where: { slug },
       create: { slug, title, occasion, region, description: title, source: "Tư liệu thực hành văn hóa gia đình", verified: false },
-      update: { title, occasion, region },
+      update: {},
     });
     await prisma.ritual_steps.upsert({
       where: { ritual_id_step_number: { ritual_id: ritual.id, step_number: 1 } },
@@ -71,15 +53,94 @@ async function seedContent() {
     const existing = await prisma.calendar_events.findFirst({ where: { title, day, month } });
     if (!existing) await prisma.calendar_events.create({ data: { title, day, month, category, description: title, source: "Tư liệu lịch văn hóa Việt Nam", verified: false } });
   }
-  for (const [stick_number, xam_type, region] of xamCards) {
-    const [fortune_level, meaning, advice] = xamInterpretations[stick_number];
-    const poem = `Thẻ số ${String(stick_number).padStart(2, "0")} nhắc người hỏi giữ tâm sáng, xét việc kỹ và hành động có trách nhiệm.`;
-    const source = "Nội dung biên tập theo hướng chiêm nghiệm văn hóa; không phải dự đoán tương lai";
-    await prisma.xin_xam.upsert({
-      where: { xam_type_stick_number: { xam_type: `${region}:${xam_type}`, stick_number } },
-      create: { stick_number, xam_type: `${region}:${xam_type}`, region, category: xam_type, fortune_level, poem, meaning, advice, source, verified: false },
-      update: { region, category: xam_type, fortune_level, poem, meaning, advice, source },
+  for (const event of verifiedCalendarEvents) {
+    const existing = await prisma.calendar_events.findFirst({ where: { title: event.title, day: event.day, month: event.month } });
+    const data = {
+      title: event.title,
+      day: event.day,
+      month: event.month,
+      calendar: "LUNAR",
+      region: event.region,
+      category: event.category,
+      description: event.description,
+      source: event.source,
+      verified: true,
+      active: true,
+    };
+    if (!existing) await prisma.calendar_events.create({ data });
+  }
+
+  for (const item of dsvhInventory) {
+    const slug = `dsvh-quoc-gia-${String(item.sourceRow).padStart(3, "0")}`;
+    const category = item.category || null;
+    const location = item.location || "Chưa nêu trong dòng danh mục được thu thập";
+    const excerpt = ["Di sản văn hóa phi vật thể quốc gia", category, location]
+      .filter(Boolean)
+      .join(" · ");
+    const content = {
+      sections: [{
+        heading: "Thông tin trong danh mục chính thức",
+        body: [
+          `Tên di sản: ${item.title}.`,
+          category ? `Loại hình được ghi: ${category}.` : "Danh mục không hiển thị loại hình trong dòng dữ liệu này.",
+          `Địa điểm được ghi: ${location}.`,
+          `Quyết định: ${item.decision}.`,
+          `Số thứ tự trong bản danh mục đã đối chiếu: ${item.sourceNumber}.`,
+        ].join(" "),
+      }],
+      disclaimer: "Hồ sơ này chỉ xác nhận metadata được công bố trong danh mục của Cục Di sản văn hóa; không thay thế hồ sơ khoa học, không suy diễn nghi lễ, lịch thực hành hoặc quan điểm của cộng đồng chủ thể.",
+      provenance: {
+        organization: "Cục Di sản văn hóa, Bộ Văn hóa, Thể thao và Du lịch",
+        sourceUrl: DSVH_INVENTORY_URL,
+        accessedOn: "2026-10-09",
+        sourceRow: item.sourceRow,
+      },
+    };
+
+    await prisma.culture_articles.upsert({
+      where: { slug },
+      create: {
+        slug,
+        title: item.title,
+        excerpt,
+        category,
+        region: "NATIONWIDE",
+        content,
+        source: DSVH_INVENTORY_URL,
+        verified: false,
+      },
+      // Existing records belong to editors; a seed must not republish or rewrite them.
+      update: {},
     });
+  }
+
+  const xamRegions = ["NORTH", "CENTRAL", "SOUTH"];
+  const xamTopics = ["Bình an", "Gia đình", "Học tập", "Công việc"];
+  const gradeLabels = { "上籤": "Thượng Cát", "中籤": "Trung Cát", "下籤": "Hạ Bình" };
+  for (const region of xamRegions) {
+    for (const topic of xamTopics) {
+      for (const lot of ctcGuanyinLots) {
+        const xam_type = `${region}:${topic}`;
+        const data = {
+          stick_number: lot.stickNumber,
+          xam_type,
+          region,
+          category: topic,
+          fortune_level: gradeLabels[lot.sourceGrade] || "Bình",
+          poem: null,
+          meaning: `Hệ tham khảo: Quan Âm Linh Xăm do Hoa nhân miếu vụ ủy ban (Hong Kong) công bố. Điển tích gốc: ${lot.storyTitle}. Bản diễn giải tiếng Việt chưa được biên tập và thẩm định.`,
+          advice: "Chỉ dùng như tư liệu chiêm nghiệm; hãy đối chiếu với thực tế và không dựa riêng vào thẻ để quyết định việc quan trọng.",
+          source: lot.sourceUrl,
+          verified: false,
+          active: true,
+        };
+        await prisma.xin_xam.upsert({
+          where: { xam_type_stick_number: { xam_type, stick_number: lot.stickNumber } },
+          create: data,
+          update: {},
+        });
+      }
+    }
   }
 }
 

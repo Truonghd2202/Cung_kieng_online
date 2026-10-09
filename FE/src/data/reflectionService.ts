@@ -1,4 +1,5 @@
 import { apiRequest } from "../lib/api";
+import { trackProductEvent } from "./productAnalytics";
 import type { SavedWishItem, SavedXinXamItem } from "../screens/AccountScreen";
 
 export interface SourcedProverb {
@@ -27,7 +28,7 @@ export function saveXam(result: {
   return apiRequest<SavedXinXamItem>("/reflections/xin-xam", {
     method: "POST",
     body: JSON.stringify({
-      drawId: result.drawId,
+      drawId: result.drawId?.startsWith("guest:") ? undefined : result.drawId,
       stickNumber: result.stickNumber,
       xamType: result.topic,
       region: result.region,
@@ -54,9 +55,12 @@ export interface XinXamDrawResponse extends SavedXinXamItem {
 }
 
 export function drawXinXam(region: string, topic: string, question?: string): Promise<XinXamDrawResponse> {
-  return apiRequest<XinXamDrawResponse>("/reflections/xin-xam/draw", {
+  return apiRequest<XinXamDrawResponse>("/xam/draw", {
     method: "POST",
     body: JSON.stringify({ region, topic, question }),
+  }).then((result) => {
+    trackProductEvent("xam_draw_completed");
+    return result;
   });
 }
 
@@ -72,25 +76,25 @@ export function deleteSavedXam(id: string) {
 }
 
 export function loadSavedWishes(): Promise<SavedWishItem[]> {
-  return apiRequest<{ items: SavedWishItem[] }>("/reflections/wishes").then((result) => result.items);
+  return apiRequest<{ items: SavedWishItem[] }>("/wishes").then((result) => result.items);
 }
 
 export function saveWish(content: string, category: string): Promise<SavedWishItem> {
-  return apiRequest<SavedWishItem>("/reflections/wishes", {
+  return apiRequest<SavedWishItem>("/wishes", {
     method: "POST",
     body: JSON.stringify({ content, category }),
   });
 }
 
 export function updateSavedWish(id: string, starred: boolean) {
-  return apiRequest<SavedWishItem>(`/reflections/wishes/${encodeURIComponent(id)}`, {
+  return apiRequest<SavedWishItem>(`/wishes/${encodeURIComponent(id)}`, {
     method: "PATCH",
     body: JSON.stringify({ starred }),
   });
 }
 
 export function deleteSavedWish(id: string) {
-  return apiRequest(`/reflections/wishes/${encodeURIComponent(id)}`, { method: "DELETE" });
+  return apiRequest(`/wishes/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
 export interface XinKeoCast {
@@ -108,9 +112,9 @@ export function createXinKeoSession(question: string): Promise<{ id: string }> {
 }
 
 export function castXinKeo(sessionId: string): Promise<XinKeoCast> {
-  return apiRequest<XinKeoCast>(`/reflections/xin-keo/sessions/${encodeURIComponent(sessionId)}/throws`, {
+  return apiRequest<XinKeoCast>("/xam/toss-keo", {
     method: "POST",
-    body: JSON.stringify({}),
+    body: JSON.stringify({ sessionId }),
   });
 }
 

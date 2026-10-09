@@ -3,7 +3,7 @@ const xinKeoService = require("../services/xin-keo.service");
 const { sendSuccess } = require("../utils/response");
 
 async function saveXam(req, res) { return sendSuccess(res, { statusCode: 201, message: "Xin xam saved", data: await reflectionService.saveXamDraw(req.user.id, req.body) }); }
-async function drawXam(req, res) { return sendSuccess(res, { statusCode: 201, message: "Xin xam drawn", data: await reflectionService.drawXam(req.user.id, req.body) }); }
+async function drawXam(req, res) { return sendSuccess(res, { statusCode: 201, message: "Xin xam drawn", data: await reflectionService.drawXam(req.user?.id, req.body) }); }
 async function listXam(req, res) { return sendSuccess(res, { message: "Saved xin xam retrieved", data: { items: await reflectionService.listSavedXam(req.user.id) } }); }
 async function updateXam(req, res) { return sendSuccess(res, { message: "Saved xin xam updated", data: await reflectionService.updateXamStar(req.user.id, req.params.id, req.body.starred) }); }
 async function deleteXam(req, res) { await reflectionService.deleteXam(req.user.id, req.params.id); return sendSuccess(res, { message: "Saved xin xam deleted" }); }
@@ -14,5 +14,12 @@ async function deleteWish(req, res) { await reflectionService.deleteWish(req.use
 async function createKeoSession(req, res) { return sendSuccess(res, { statusCode: 201, message: "Xin keo session created", data: await xinKeoService.createSession(req.user.id, req.body.question) }); }
 async function throwKeo(req, res) { return sendSuccess(res, { statusCode: 201, message: "Xin keo cast", data: await xinKeoService.throwKeo(req.user.id, req.params.id) }); }
 async function listKeoSessions(req, res) { return sendSuccess(res, { message: "Xin keo sessions retrieved", data: { items: await xinKeoService.listSessions(req.user.id) } }); }
+async function tossKeo(req, res) {
+  const session = req.body.sessionId
+    ? { id: req.body.sessionId }
+    : await xinKeoService.createSession(req.user.id, req.body.question);
+  const result = await xinKeoService.throwKeo(req.user.id, session.id);
+  return sendSuccess(res, { statusCode: 201, message: "Xin keo cast", data: { sessionId: session.id, ...result } });
+}
 
-module.exports = { drawXam, saveXam, listXam, updateXam, deleteXam, listWishes, createWish, updateWish, deleteWish, createKeoSession, throwKeo, listKeoSessions };
+module.exports = { drawXam, saveXam, listXam, updateXam, deleteXam, listWishes, createWish, updateWish, deleteWish, createKeoSession, throwKeo, listKeoSessions, tossKeo };

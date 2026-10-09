@@ -8,6 +8,8 @@ export type TopicType = "Học tập" | "Công việc" | "Gia đình" | "Bình a
 
 export interface XinXamResult {
   metadata: ContentMetadata;
+  source?: string;
+  verified?: boolean;
   stickNumber: string;
   region: RegionType;
   regionSub: string;

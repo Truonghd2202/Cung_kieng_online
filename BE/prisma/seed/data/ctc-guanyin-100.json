@@ -1,0 +1,702 @@
+﻿[
+    {
+        "stickNumber":  1,
+        "sourceTitle":  "第一籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "鍾離成道",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=1"
+    },
+    {
+        "stickNumber":  2,
+        "sourceTitle":  "第二籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "蘇秦不第",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=2"
+    },
+    {
+        "stickNumber":  3,
+        "sourceTitle":  "第三籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "董永賣身",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=3"
+    },
+    {
+        "stickNumber":  4,
+        "sourceTitle":  "第四籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "玉蓮會十朋",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=4"
+    },
+    {
+        "stickNumber":  5,
+        "sourceTitle":  "第五籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "劉晨遇仙",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=5"
+    },
+    {
+        "stickNumber":  6,
+        "sourceTitle":  "第六籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "仁貴遇主",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=6"
+    },
+    {
+        "stickNumber":  7,
+        "sourceTitle":  "第七籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "蘇娘走難",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=7"
+    },
+    {
+        "stickNumber":  8,
+        "sourceTitle":  "第八籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "姚能遇仙",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=8"
+    },
+    {
+        "stickNumber":  9,
+        "sourceTitle":  "第九籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "孔明點將",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=9"
+    },
+    {
+        "stickNumber":  10,
+        "sourceTitle":  "第十籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "龐涓觀陣",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=10"
+    },
+    {
+        "stickNumber":  11,
+        "sourceTitle":  "第十一籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "書薦姜維",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=11"
+    },
+    {
+        "stickNumber":  12,
+        "sourceTitle":  "第十二籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "武吉遇師",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=12"
+    },
+    {
+        "stickNumber":  13,
+        "sourceTitle":  "第十三籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "羅通拜師",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=13"
+    },
+    {
+        "stickNumber":  14,
+        "sourceTitle":  "第十四籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "子牙棄官",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=14"
+    },
+    {
+        "stickNumber":  15,
+        "sourceTitle":  "第十五籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "蘇秦不第",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=15"
+    },
+    {
+        "stickNumber":  16,
+        "sourceTitle":  "第十六籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "葉夢熊朝帝",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=16"
+    },
+    {
+        "stickNumber":  17,
+        "sourceTitle":  "第十七籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "曹操話梅止渴",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=17"
+    },
+    {
+        "stickNumber":  18,
+        "sourceTitle":  "第十八籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "曹國舅為仙",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=18"
+    },
+    {
+        "stickNumber":  19,
+        "sourceTitle":  "第十九籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "子儀封王",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=19"
+    },
+    {
+        "stickNumber":  20,
+        "sourceTitle":  "第二十籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "姜太公遇文王",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=20"
+    },
+    {
+        "stickNumber":  21,
+        "sourceTitle":  "第二十一籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "李旦龍鳳配合",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=21"
+    },
+    {
+        "stickNumber":  22,
+        "sourceTitle":  "第二十二籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "六郎逢救",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=22"
+    },
+    {
+        "stickNumber":  23,
+        "sourceTitle":  "第二十三籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "懷德招親",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=23"
+    },
+    {
+        "stickNumber":  24,
+        "sourceTitle":  "第二十四籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "殷郊遇師",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=24"
+    },
+    {
+        "stickNumber":  25,
+        "sourceTitle":  "第二十五籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "姚能受職",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=25"
+    },
+    {
+        "stickNumber":  26,
+        "sourceTitle":  "第二十六籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "鍾馗得道",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=26"
+    },
+    {
+        "stickNumber":  27,
+        "sourceTitle":  "第二十七籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "劉基諫主",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=27"
+    },
+    {
+        "stickNumber":  28,
+        "sourceTitle":  "第二十八籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "包公尋李后",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=28"
+    },
+    {
+        "stickNumber":  29,
+        "sourceTitle":  "第二十九籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "趙子龍救阿斗",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=29"
+    },
+    {
+        "stickNumber":  30,
+        "sourceTitle":  "第三十籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "棋盤大會",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=30"
+    },
+    {
+        "stickNumber":  31,
+        "sourceTitle":  "第三十一籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "佛印會東坡",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=31"
+    },
+    {
+        "stickNumber":  32,
+        "sourceTitle":  "第三十二籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "劉備求賢",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=32"
+    },
+    {
+        "stickNumber":  33,
+        "sourceTitle":  "第三十三籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "咬金聘仁貴",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=33"
+    },
+    {
+        "stickNumber":  34,
+        "sourceTitle":  "第三十四籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "桃園結義",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=34"
+    },
+    {
+        "stickNumber":  35,
+        "sourceTitle":  "第三十五籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "唐僧取經",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=35"
+    },
+    {
+        "stickNumber":  36,
+        "sourceTitle":  "第三十六籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "湘子遇賓",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=36"
+    },
+    {
+        "stickNumber":  37,
+        "sourceTitle":  "第三十七籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "李靖歸山",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=37"
+    },
+    {
+        "stickNumber":  38,
+        "sourceTitle":  "第三十八籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "何文秀遇難",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=38"
+    },
+    {
+        "stickNumber":  39,
+        "sourceTitle":  "第三十九籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "姜女尋夫",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=39"
+    },
+    {
+        "stickNumber":  40,
+        "sourceTitle":  "第四十籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "武則天登位",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=40"
+    },
+    {
+        "stickNumber":  41,
+        "sourceTitle":  "第四十一籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "董卓收呂布",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=41"
+    },
+    {
+        "stickNumber":  42,
+        "sourceTitle":  "第四十二籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "目蓮見母",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=42"
+    },
+    {
+        "stickNumber":  43,
+        "sourceTitle":  "第四十三籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "行者得道",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=43"
+    },
+    {
+        "stickNumber":  44,
+        "sourceTitle":  "第四十四籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "姜維鄧艾鬥陣",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=44"
+    },
+    {
+        "stickNumber":  45,
+        "sourceTitle":  "第四十五籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "仁宗遇仙",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=45"
+    },
+    {
+        "stickNumber":  46,
+        "sourceTitle":  "第四十六籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "渭水釣魚",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=46"
+    },
+    {
+        "stickNumber":  47,
+        "sourceTitle":  "第四十七籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "梁灝登科",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=47"
+    },
+    {
+        "stickNumber":  48,
+        "sourceTitle":  "第四十八籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "韓信掛帥",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=48"
+    },
+    {
+        "stickNumber":  49,
+        "sourceTitle":  "第四十九籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "王祥求鯉",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=49"
+    },
+    {
+        "stickNumber":  50,
+        "sourceTitle":  "第五十籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "陶朱歸五湖",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=50"
+    },
+    {
+        "stickNumber":  51,
+        "sourceTitle":  "第五十一籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "孔明入川",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=51"
+    },
+    {
+        "stickNumber":  52,
+        "sourceTitle":  "第五十二籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "太白醉撈明月",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=52"
+    },
+    {
+        "stickNumber":  53,
+        "sourceTitle":  "第五十三籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "劉備招親",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=53"
+    },
+    {
+        "stickNumber":  54,
+        "sourceTitle":  "第五十四籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "馬超追曹",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=54"
+    },
+    {
+        "stickNumber":  55,
+        "sourceTitle":  "第五十五籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "周武王登位",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=55"
+    },
+    {
+        "stickNumber":  56,
+        "sourceTitle":  "第五十六籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "祿山謀反",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=56"
+    },
+    {
+        "stickNumber":  57,
+        "sourceTitle":  "第五十七籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "董仲尋親",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=57"
+    },
+    {
+        "stickNumber":  58,
+        "sourceTitle":  "第五十八籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "文王問卜",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=58"
+    },
+    {
+        "stickNumber":  59,
+        "sourceTitle":  "第五十九籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "張良隱山",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=59"
+    },
+    {
+        "stickNumber":  60,
+        "sourceTitle":  "第六十籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "赤壁鏖兵",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=60"
+    },
+    {
+        "stickNumber":  61,
+        "sourceTitle":  "第六十一籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "蘇小妹難夫",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=61"
+    },
+    {
+        "stickNumber":  62,
+        "sourceTitle":  "第六十二籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "唐僧得道",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=62"
+    },
+    {
+        "stickNumber":  63,
+        "sourceTitle":  "第六十三籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "女媧氏煉石",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=63"
+    },
+    {
+        "stickNumber":  64,
+        "sourceTitle":  "第六十四籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "馬前覆水",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=64"
+    },
+    {
+        "stickNumber":  65,
+        "sourceTitle":  "第六十五籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "孫臏困龐涓",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=65"
+    },
+    {
+        "stickNumber":  66,
+        "sourceTitle":  "第六十六籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "霸王被困",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=66"
+    },
+    {
+        "stickNumber":  67,
+        "sourceTitle":  "第六十七籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "金星試竇兒",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=67"
+    },
+    {
+        "stickNumber":  68,
+        "sourceTitle":  "第六十八籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "郭汾陽祝壽",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=68"
+    },
+    {
+        "stickNumber":  69,
+        "sourceTitle":  "第六十九籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "梅開二度",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=69"
+    },
+    {
+        "stickNumber":  70,
+        "sourceTitle":  "第七十籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "李密反唐",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=70"
+    },
+    {
+        "stickNumber":  71,
+        "sourceTitle":  "第七十一籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "文君訪相如",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=71"
+    },
+    {
+        "stickNumber":  72,
+        "sourceTitle":  "第七十二籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "王莽求賢",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=72"
+    },
+    {
+        "stickNumber":  73,
+        "sourceTitle":  "第七十三籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "陳橋兵變",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=73"
+    },
+    {
+        "stickNumber":  74,
+        "sourceTitle":  "第七十四籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "秦敗擒三帥",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=74"
+    },
+    {
+        "stickNumber":  75,
+        "sourceTitle":  "第七十五籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "伍員夜出昭關",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=75"
+    },
+    {
+        "stickNumber":  76,
+        "sourceTitle":  "第七十六籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "洪武看牛",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=76"
+    },
+    {
+        "stickNumber":  77,
+        "sourceTitle":  "第七十七籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "捧璧歸趙",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=77"
+    },
+    {
+        "stickNumber":  78,
+        "sourceTitle":  "第七十八籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "臨潼救駕",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=78"
+    },
+    {
+        "stickNumber":  79,
+        "sourceTitle":  "第七十九籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "暗扶倒銅旗",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=79"
+    },
+    {
+        "stickNumber":  80,
+        "sourceTitle":  "第八十籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "智遠投軍",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=80"
+    },
+    {
+        "stickNumber":  81,
+        "sourceTitle":  "第八十一籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "風送滕王閣",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=81"
+    },
+    {
+        "stickNumber":  82,
+        "sourceTitle":  "第八十二籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "火燒葫蘆谷",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=82"
+    },
+    {
+        "stickNumber":  83,
+        "sourceTitle":  "第八十三籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "李淵登位",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=83"
+    },
+    {
+        "stickNumber":  84,
+        "sourceTitle":  "第八十四籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "莊子試妻",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=84"
+    },
+    {
+        "stickNumber":  85,
+        "sourceTitle":  "第八十五籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "韓文公遇雪",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=85"
+    },
+    {
+        "stickNumber":  86,
+        "sourceTitle":  "第八十六籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "商輅中三元",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=86"
+    },
+    {
+        "stickNumber":  87,
+        "sourceTitle":  "第八十七籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "咬金探地穴",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=87"
+    },
+    {
+        "stickNumber":  88,
+        "sourceTitle":  "第八十八籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "龐洪畏包公",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=88"
+    },
+    {
+        "stickNumber":  89,
+        "sourceTitle":  "第八十九籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "大看瓊花",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=89"
+    },
+    {
+        "stickNumber":  90,
+        "sourceTitle":  "第九十籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "葦佩遇仙",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=90"
+    },
+    {
+        "stickNumber":  91,
+        "sourceTitle":  "第九十一籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "三英戰呂布",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=91"
+    },
+    {
+        "stickNumber":  92,
+        "sourceTitle":  "第九十二籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "蔡卿報恩",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=92"
+    },
+    {
+        "stickNumber":  93,
+        "sourceTitle":  "第九十三籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "高君保招親",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=93"
+    },
+    {
+        "stickNumber":  94,
+        "sourceTitle":  "第九十四籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "伯牙訪友",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=94"
+    },
+    {
+        "stickNumber":  95,
+        "sourceTitle":  "第九十五籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "曹丕稱帝",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=95"
+    },
+    {
+        "stickNumber":  96,
+        "sourceTitle":  "第九十六籤",
+        "sourceGrade":  "上籤",
+        "storyTitle":  "竇燕山積善",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=96"
+    },
+    {
+        "stickNumber":  97,
+        "sourceTitle":  "第九十七籤",
+        "sourceGrade":  "中籤",
+        "storyTitle":  "六出祁山",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=97"
+    },
+    {
+        "stickNumber":  98,
+        "sourceTitle":  "第九十八籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "吉平遇難",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=98"
+    },
+    {
+        "stickNumber":  99,
+        "sourceTitle":  "第九十九籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "陶三春掛帥",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=99"
+    },
+    {
+        "stickNumber":  100,
+        "sourceTitle":  "第一百籤",
+        "sourceGrade":  "下籤",
+        "storyTitle":  "三教談道",
+        "sourceUrl":  "https://www.ctc.org.hk/chim-search/?kwun_yum_chim_number=100"
+    }
+]

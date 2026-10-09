@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -16,6 +16,7 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { CULTURE_ARTICLES, RegionKey } from "../data/cultureData";
+import { loadCultureArticles, type RemoteContentItem } from "../data/contentService";
 import {
   VIETNAM_NORTH_PATHS,
   VIETNAM_CENTRAL_PATHS,
@@ -297,11 +298,23 @@ export const CulturalMapScreen: React.FC<CulturalMapScreenProps> = ({
   );
   const [hoveredLandmark, setHoveredLandmark] = useState<string | null>(null);
   const [hoveredProvince, setHoveredProvince] = useState<string | null>(null);
+  const [remoteArticles, setRemoteArticles] = useState<RemoteContentItem[]>([]);
+
+  useEffect(() => {
+    void loadCultureArticles().then(setRemoteArticles).catch(() => setRemoteArticles([]));
+  }, []);
 
   const currentRegion = REGION_DATA[activeSlug];
   const regionArticles = CULTURE_ARTICLES.filter(
     (a) => a.region === currentRegion.regionName
-  );
+  ).map((article) => {
+    const remote = remoteArticles.find((item) => item.id === article.id);
+    return remote ? {
+      ...article,
+      title: String(remote.title || article.title),
+      excerpt: String(remote.excerpt || article.excerpt),
+    } : article;
+  });
 
   const handleSelectRegionTab = (slug: CultureRegionSlug) => {
     setActiveSlug(slug);
@@ -881,7 +894,7 @@ export const CulturalMapScreen: React.FC<CulturalMapScreenProps> = ({
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
                         <BookOpen className="w-3.5 h-3.5" />
-                        <span>CHUYÊN ĐỀ ĐÃ KHẢO CỨU:</span>
+                        <span>CHUYÊN ĐỀ NỔI BẬT:</span>
                       </span>
                       <span className="text-xs text-stone-500">
                         {regionArticles.length} bài viết

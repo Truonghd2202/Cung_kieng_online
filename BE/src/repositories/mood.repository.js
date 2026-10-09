@@ -1,18 +1,20 @@
 
 const prisma = require("../config/prisma");
+const { encryptPrivateText, decryptPrivateText } = require("../utils/private-text");
+const decoded = (row) => row ? { ...row, note: decryptPrivateText(row.note, row.user_id) } : row;
 
 function create(data, client = prisma) {
   return client.mood_checkins.create({
-    data,
+    data: { ...data, note: encryptPrivateText(data.note, data.user_id) },
     include: { signals: true },
-  });
+  }).then(decoded);
 }
 
 function findByIdForUser(id, userId, client = prisma) {
   return client.mood_checkins.findFirst({
     where: { id, user_id: userId },
     include: { signals: true },
-  });
+  }).then(decoded);
 }
 
 function findLatestForUser(userId, client = prisma) {
@@ -20,7 +22,7 @@ function findLatestForUser(userId, client = prisma) {
     where: { user_id: userId },
     orderBy: { created_at: "desc" },
     include: { signals: true },
-  });
+  }).then(decoded);
 }
 
 function listForUser(userId, { limit, mood } = {}, client = prisma) {
@@ -29,13 +31,13 @@ function listForUser(userId, { limit, mood } = {}, client = prisma) {
     orderBy: { created_at: "desc" },
     take: limit,
     include: { signals: true },
-  });
+  }).then((rows) => rows.map(decoded));
 }
 
 function update(id, userId, data, client = prisma) {
   return client.mood_checkins.updateMany({
     where: { id, user_id: userId },
-    data,
+    data: { ...data, ...(data.note !== undefined ? { note: encryptPrivateText(data.note, userId) } : {}) },
   });
 }
 

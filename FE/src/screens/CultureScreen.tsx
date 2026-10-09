@@ -20,6 +20,7 @@ import {
 } from "../data/cultureData";
 import { DiscoveryNav } from "../components/DiscoveryNav";
 import { loadCultureArticles } from "../data/contentService";
+import { toCultureArticle } from "../data/cultureAdapter";
 
 const normalizeSearchText = (value: string) =>
   value
@@ -55,10 +56,7 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
 
   useEffect(() => {
     void loadCultureArticles().then((remote) => {
-      setArticles(CULTURE_ARTICLES.map((local) => {
-        const item = remote.find((candidate) => candidate.id === local.id);
-        return item ? { ...local, title: String(item.title || local.title), excerpt: String(item.excerpt || local.excerpt) } : local;
-      }));
+      setArticles(remote.map(toCultureArticle));
     }).catch(() => {});
   }, []);
 

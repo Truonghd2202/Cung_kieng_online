@@ -36,9 +36,13 @@ import { ContentProvenance } from "../components/ContentProvenance";
 import { getCultureMetadata } from "../data/readingMetadata";
 import { ChauVanAudioLibrary } from "../components/ChauVanAudioLibrary";
 import { ScrollReveal } from "../components/ScrollReveal";
+import { apiRequest, ApiError } from "../lib/api";
+import type { RemoteContentItem } from "../data/contentService";
+import { toCultureArticle } from "../data/cultureAdapter";
 
 interface CultureDetailScreenProps {
   articleId?: string;
+  resolvedArticle?: CultureArticle;
   currentUserEmail?: string;
   onBackToCulture: () => void;
   onSelectRelatedArticle: (id: string) => void;
@@ -54,6 +58,7 @@ type TextSize = "normal" | "medium" | "large";
 
 const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
   articleId = "dinh-lang-bac-bo",
+  resolvedArticle,
   currentUserEmail,
   onBackToCulture,
   onSelectRelatedArticle,
@@ -62,7 +67,7 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
   onGoToRituals,
   onGoToMood,
 }) => {
-  const article: CultureArticle = getCultureArticleById(articleId)!;
+  const article: CultureArticle = resolvedArticle ?? getCultureArticleById(articleId)!;
   const relatedArticles = getRelatedArticles(article.id, 3);
 
   const [readingProgress, setReadingProgress] = useState(0);
@@ -1048,7 +1053,19 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
 
 export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = (props) => {
   const articleId = props.articleId ?? "dinh-lang-bac-bo";
-  const article = getCultureArticleById(articleId);
+  const [article, setArticle] = useState<CultureArticle | undefined>();
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    apiRequest<RemoteContentItem>(`/content/culture/${encodeURIComponent(articleId)}`)
+      .then((item) => { if (active) setArticle(toCultureArticle(item)); })
+      .catch((error) => { if (active) setArticle(error instanceof ApiError && error.status === 404 ? undefined : getCultureArticleById(articleId)); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [articleId]);
+
+  if (loading) return <p role="status" className="p-8 text-center">Đang tải tư liệu…</p>;
 
   if (!article) {
     return (
@@ -1064,6 +1081,7 @@ export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = (props) =
     <CultureDetailContent
       {...props}
       articleId={articleId}
+      resolvedArticle={article}
       key={articleId}
     />
   );

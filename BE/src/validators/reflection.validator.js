@@ -29,5 +29,9 @@ const xinKeoSessionSchema = z.object({
 });
 
 const xinKeoThrowSchema = z.object({}).strict();
+const xinKeoTossSchema = z.object({
+  sessionId: z.string().uuid().optional(),
+  question: z.string().trim().min(1).max(2000).optional(),
+}).refine((value) => value.sessionId || value.question, { path: ["question"], message: "Question is required for a new session" });
 
-module.exports = { xinXamDrawSchema, xinXamRequestSchema, savedItemUpdateSchema, wishSchema, xinKeoSessionSchema, xinKeoThrowSchema };
+module.exports = { xinXamDrawSchema, xinXamRequestSchema, savedItemUpdateSchema, wishSchema, xinKeoSessionSchema, xinKeoThrowSchema, xinKeoTossSchema };

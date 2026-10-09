@@ -92,8 +92,8 @@ export interface RitualGuideItem {
 
 const createPrayerMeta = (sourceTitle: string, author: string, note: string): ContentMetadata => ({
   contentKind: "editorial",
-  editorialStatus: "approved",
-  quotationVerified: true,
+  editorialStatus: "in-review",
+  quotationVerified: false,
   sources: [
     {
       id: "src-" + sourceTitle.toLowerCase().replace(/[^a-z0-9]/g, "-"),
@@ -922,8 +922,8 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
 
     metadata: {
       contentKind: "editorial",
-      editorialStatus: "approved",
-      quotationVerified: true,
+      editorialStatus: "in-review",
+      quotationVerified: false,
       sources: [
         {
           id: "src-dong-tho",

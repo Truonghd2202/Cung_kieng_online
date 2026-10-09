@@ -3,6 +3,7 @@ const prisma = require("../config/prisma");
 const signalRepository = require("../repositories/signal.repository");
 const moodRepository = require("../repositories/mood.repository");
 const ApiError = require("../utils/api-error");
+const aiService = require("./ai.service");
 
 const MOOD_TO_DB = Object.freeze({
   "An yên": "PEACEFUL",
@@ -11,6 +12,10 @@ const MOOD_TO_DB = Object.freeze({
   "Nôn nóng": "IMPATIENT",
   "Biết ơn": "GRATEFUL",
   "Cần điểm tựa": "NEED_SUPPORT",
+  "Áp lực": "PRESSURED",
+  "Cô đơn": "LONELY",
+  "Vui vẻ": "HAPPY",
+  "Mông lung": "OTHER",
 });
 
 const DB_TO_MOOD = Object.freeze(Object.fromEntries(
@@ -51,6 +56,7 @@ function toPublicSignal(row) {
     id: row.source || row.id,
     dbId: row.id,
     mood: toMoodLabel(row.mood),
+    contextKey: row.context_key || "general",
     title: row.title,
     category: row.category,
     source: row.source,
@@ -62,13 +68,25 @@ function formatDate(date) {
   return new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }).format(date);
 }
 
+function toCheckInSignal(checkIn) {
+  if (!checkIn.signals) return null;
+  return {
+    ...toPublicSignal(checkIn.signals),
+    ...(checkIn.signal_snapshot || {}),
+    id: checkIn.signals.source || checkIn.signals.id,
+    mood: toMoodLabel(checkIn.mood),
+    contextKey: checkIn.context_key || "general",
+  };
+}
+
 function toSavedSignal(checkIn, starredIds = new Set()) {
   if (!checkIn.signals) return null;
-  const signal = toPublicSignal(checkIn.signals);
+  const signal = toCheckInSignal(checkIn);
   return {
     id: checkIn.id,
     signalId: signal.id,
     mood: signal.mood,
+    contextKey: checkIn.context_key || "general",
     date: formatDate(checkIn.created_at),
     createdAt: checkIn.created_at.getTime(),
     journal: checkIn.note || undefined,
@@ -79,9 +97,16 @@ function toSavedSignal(checkIn, starredIds = new Set()) {
   };
 }
 
-async function listSignals({ mood, limit }) {
-  const rows = await signalRepository.listActive({ mood: mood ? toDbMood(mood) : undefined, limit });
+async function listSignals({ mood, limit, contextKey = "general" }) {
+  const rows = await signalRepository.listActive({ mood: mood ? toDbMood(mood) : undefined, limit, contextKey });
   return rows.map(toPublicSignal);
+}
+
+async function analyzeForMood({ mood, contextKey = "general" }) {
+  const row = await signalRepository.findForMoodContext(toDbMood(mood), contextKey);
+  if (!row) throw new ApiError(503, "No curated signal is available for this mood and context");
+  const enriched = await aiService.enrichSignal(toPublicSignal(row), { mood, contextKey });
+  return { signal: enriched.signal, aiUsed: enriched.aiUsed };
 }
 
 async function getSignal(id) {
@@ -159,8 +184,10 @@ module.exports = {
   toDbMood,
   toMoodLabel,
   toPublicSignal,
+  toCheckInSignal,
   toSavedSignal,
   listSignals,
+  analyzeForMood,
   getSignal,
   resolveForMood,
   getSavedSignals,

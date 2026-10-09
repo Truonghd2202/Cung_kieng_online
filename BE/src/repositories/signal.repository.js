@@ -1,9 +1,9 @@
 
 const prisma = require("../config/prisma");
 
-function listActive({ mood, limit } = {}, client = prisma) {
+function listActive({ mood, limit, contextKey = "general" } = {}, client = prisma) {
   return client.signals.findMany({
-    where: { active: true, ...(mood ? { mood } : {}) },
+    where: { active: true, ...(mood ? { mood } : {}), context_key: contextKey === "general" ? null : contextKey },
     orderBy: { created_at: "asc" },
     take: limit,
   });
@@ -19,6 +19,13 @@ function findActiveByIdOrSource(id, client = prisma) {
 function findFirstByMood(mood, client = prisma) {
   return client.signals.findFirst({
     where: { active: true, mood },
+    orderBy: { created_at: "asc" },
+  });
+}
+
+function findForMoodContext(mood, contextKey, client = prisma) {
+  return client.signals.findFirst({
+    where: { active: true, mood, context_key: contextKey === "general" ? null : contextKey },
     orderBy: { created_at: "asc" },
   });
 }
@@ -58,6 +65,7 @@ module.exports = {
   listActive,
   findActiveByIdOrSource,
   findFirstByMood,
+  findForMoodContext,
   findFavorites,
   addFavorite,
   removeFavorite,

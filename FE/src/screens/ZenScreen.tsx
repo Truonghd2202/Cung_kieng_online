@@ -208,12 +208,12 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
       setSecondsRemaining(remaining);
 
       const cycleSecond =
-        Math.floor(elapsedMs / 1000) % 12;
+        Math.floor(elapsedMs / 1000) % 19;
 
       setBreathPhase(
         cycleSecond < 4
           ? "inhale"
-          : cycleSecond < 8
+          : cycleSecond < 11
             ? "hold"
             : "exhale"
       );

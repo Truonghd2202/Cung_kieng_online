@@ -21,7 +21,8 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
-import { getCalendarEventById, CalendarEventItem } from "../data/calendarData";
+import { getCalendarEventById, getReliableLunarDate, CalendarEventItem } from "../data/calendarData";
+import { loadCalendarEvent } from "../data/contentService";
 import { DetailNotFound } from "../components/DetailNotFound";
 import { ScrollReveal } from "../components/ScrollReveal";
 
@@ -44,19 +45,86 @@ const EventDetailContent: React.FC<EventDetailScreenProps> = ({
   onGoToHome,
   onGoToExplore,
 }) => {
-  const event: CalendarEventItem = getCalendarEventById(eventId)!;
+  const staticEvent = getCalendarEventById(eventId);
+  const [remoteEvent, setRemoteEvent] = useState<CalendarEventItem | null>(null);
+  const [remoteLoadFailed, setRemoteLoadFailed] = useState(false);
+  const eventParts = eventId.split(":");
+  const isApiEvent = eventParts.length === 5 && eventParts[0] === "api";
+  const isSampleEvent = eventParts.length === 5 && eventParts[0] === "sample";
+  const isDynamicEvent = isApiEvent || isSampleEvent;
+  const event = staticEvent || remoteEvent || {
+    id: eventId,
+    title: "Đang tải sự kiện",
+    day: Number(eventParts[4]) || 1,
+    month: Number(eventParts[3]) || 1,
+    year: Number(eventParts[2]) || new Date().getFullYear(),
+    type: "festival" as const,
+    typeLabel: "Sự kiện văn hóa",
+    region: "Việt Nam",
+    shortDesc: "",
+    lunarDate: "",
+  };
 
   const [readingProgress, setReadingProgress] = useState(0);
   const [textSize, setTextSize] = useState<TextSize>("normal");
   const [copiedLink, setCopiedLink] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState<boolean>(() => {
     try {
-      const key = `tltl-calendar-bookmark-${currentUserEmail || "guest"}-${event.id}`;
+      const key = `tltl-calendar-bookmark-${currentUserEmail || "guest"}-${eventId}`;
       return localStorage.getItem(key) === "true";
     } catch {
       return false;
     }
   });
+
+  useEffect(() => {
+    if (!isDynamicEvent) {
+      setRemoteEvent(null);
+      setRemoteLoadFailed(false);
+      return;
+    }
+    let cancelled = false;
+    setRemoteEvent(null);
+    setRemoteLoadFailed(false);
+    if (isSampleEvent) {
+      const sample = getCalendarEventById(eventParts[1]);
+      if (sample) {
+        setRemoteEvent({
+          ...sample,
+          id: eventId,
+          year: Number(eventParts[2]),
+          month: Number(eventParts[3]),
+          day: Number(eventParts[4]),
+        });
+      } else {
+        setRemoteLoadFailed(true);
+      }
+      return () => { cancelled = true; };
+    }
+    void loadCalendarEvent(eventParts[1]).then((item) => {
+      if (cancelled) return;
+      const day = Number(eventParts[4]);
+      const month = Number(eventParts[3]);
+      const year = Number(eventParts[2]);
+      const lunar = getReliableLunarDate(day, month, year);
+      setRemoteEvent({
+        id: eventId,
+        title: String(item.title || "Sự kiện văn hóa"),
+        day,
+        month,
+        year,
+        type: "festival",
+        typeLabel: String(item.typeLabel || "Sự kiện văn hóa"),
+        region: String(item.region || "Việt Nam"),
+        shortDesc: String(item.shortDesc || ""),
+        lunarDate: `Âm lịch: ${lunar.lunarDay}/${lunar.lunarMonth}${lunar.isLeapMonth ? " nhuận" : ""}`,
+        verifiedSource: item.verified === true ? String(item.source || "") : undefined,
+      });
+    }).catch(() => {
+      if (!cancelled) setRemoteLoadFailed(true);
+    });
+    return () => { cancelled = true; };
+  }, [eventId, isDynamicEvent, isSampleEvent]);
 
   const eventDate = new Date(event.year, event.month - 1, event.day);
   const eventDateLabel = eventDate.toLocaleDateString("vi-VN", {
@@ -95,7 +163,7 @@ const EventDetailContent: React.FC<EventDetailScreenProps> = ({
     const nextState = !isBookmarked;
     setIsBookmarked(nextState);
     try {
-      const key = `tltl-calendar-bookmark-${currentUserEmail || "guest"}-${event.id}`;
+      const key = `tltl-calendar-bookmark-${currentUserEmail || "guest"}-${eventId}`;
       if (nextState) {
         localStorage.setItem(key, "true");
       } else {
@@ -232,6 +300,12 @@ const EventDetailContent: React.FC<EventDetailScreenProps> = ({
       action: onGoToHome,
     };
   }, [event.id, onGoToRituals, onGoToExplore, onGoToHome]);
+
+  if (isDynamicEvent && !remoteEvent) {
+    return remoteLoadFailed
+      ? <DetailNotFound title="Không tìm thấy sự kiện" backLabel="Quay lại lịch" onBack={onBackToCalendar} />
+      : <div role="status" className="screen-shell grid place-items-center text-muted">Đang tải sự kiện…</div>;
+  }
 
   return (
     <div className="screen-shell relative">

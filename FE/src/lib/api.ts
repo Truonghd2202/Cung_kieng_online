@@ -1,4 +1,7 @@
-const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\/$/, "");
+const configuredApiUrl = (import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1").replace(/\/$/, "");
+const API_URL = configuredApiUrl.endsWith("/api")
+  ? `${configuredApiUrl}/v1`
+  : configuredApiUrl;
 
 interface ApiEnvelope<T> {
   success: boolean;

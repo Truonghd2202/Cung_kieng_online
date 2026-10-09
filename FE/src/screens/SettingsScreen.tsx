@@ -24,6 +24,9 @@ import type { ThemePreference } from "../hooks/useTheme";
 import { CULTURAL_TOPICS } from "../data/culturalTopics";
 import { AppDialog } from "../components/AppDialog";
 import type { UserSettings } from "../data/userService";
+import { hasProductAnalyticsConsent, setProductAnalyticsConsent, trackProductEvent } from "../data/productAnalytics";
+
+import { PushNotificationSettings } from "../components/PushNotificationSettings";
 
 interface SettingsScreenProps {
   onBackToAccount: () => void;
@@ -41,7 +44,7 @@ interface SettingsScreenProps {
     updated: { name: string; email?: string }
   ) => Promise<boolean>;
   onLogout?: () => void;
-  onClearAllLocalData?: () => boolean;
+  onClearAllLocalData?: () => boolean | Promise<boolean>;
 }
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
@@ -60,6 +63,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 }) => {
   // Navigation section scroll
   const [activeSection, setActiveSection] = useState<string>("profile");
+  const [analyticsConsent, setAnalyticsConsent] = useState(hasProductAnalyticsConsent);
 
   // Profile Edit State
   const [displayName, setDisplayName] = useState(user?.name || "An Nhiên");
@@ -135,14 +139,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
 
 
-  const handleConfirmClearData = () => {
+  const handleConfirmClearData = async () => {
     setClearDataError("");
     setDataClearedNotice(false);
 
     let success = false;
 
     try {
-      success = onClearAllLocalData?.() === true;
+      success = await onClearAllLocalData?.() === true;
     } catch {
       success = false;
     }
@@ -685,9 +689,31 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 Minh bạch lưu trữ trên trình duyệt
               </h3>
               <p className="text-sm text-muted mb-5 leading-relaxed">
-                Toàn bộ quẻ xăm, điều ước riêng và nhật ký tâm trạng được lưu trực tiếp trên bộ nhớ máy
-                (Local Storage) của trình duyệt. Không tải về máy chủ trung tâm.
+                Nội dung quẻ xăm, điều ước và nhật ký tâm trạng không được gửi vào analytics. Nếu đồng ý bên dưới,
+                ứng dụng chỉ ghi nhận sự kiện sử dụng và nguồn chiến dịch đã chuẩn hóa để đo lường sản phẩm.
               </p>
+
+              <label className="mb-5 flex items-start justify-between gap-4 rounded-xl border border-line bg-surface-soft p-4">
+                <span>
+                  <span className="block text-sm font-semibold text-ink">Cho phép đo lường hoạt động sản phẩm</span>
+                  <span className="mt-1 block text-sm text-muted">
+                    Khi đăng nhập, sự kiện được gắn với tài khoản để tính retention. Có thể tắt bất cứ lúc nào;
+                    không gửi ghi chú, nội dung tâm trạng, câu hỏi xin xăm, email hay tên.
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={analyticsConsent}
+                  aria-label="Cho phép đo lường hoạt động sản phẩm"
+                  onChange={(event) => {
+                    const consented = event.target.checked;
+                    setProductAnalyticsConsent(consented);
+                    setAnalyticsConsent(consented);
+                    if (consented) trackProductEvent("app_open");
+                  }}
+                  className="mt-1 h-5 w-5 shrink-0"
+                />
+              </label>
 
               {clearDataError && !showClearConfirm && (
                 <p
@@ -703,8 +729,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 <div className="p-3.5 rounded-panel bg-success-soft border border-success/25 text-success text-xs mb-4 flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
                   <span>
-                    Đã xóa nội dung trong Góc của tôi và ghi chú lịch
-                    của tài khoản hiện tại trên trình duyệt này.
+                    Đã xóa dữ liệu cá nhân trên máy chủ và bộ nhớ của tài khoản trên thiết bị này.
                   </span>
                 </div>
               )}
@@ -736,6 +761,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               </div>
             </Card>
 
+            <PushNotificationSettings />
             {/* Block 5: Đang đăng nhập dưới phiên */}
             <div className="p-5 rounded-panel bg-surface border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
               <div>
@@ -784,12 +810,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </h3>
 
             <p className="mb-6 text-sm leading-relaxed text-muted">
-              Xóa lời chiêm nghiệm, thẻ xăm, lời gửi gắm
-              trong Góc của tôi và ghi chú lịch của tài
-              khoản hiện tại trên trình duyệt này.
+              Xóa nhật ký, lời ước, lịch sử xăm, hồ sơ tưởng niệm, ghi chú lịch và luận giải của tài khoản trên máy chủ và thiết bị này.
               Thao tác không thể hoàn tác.
-              Góc tưởng niệm, tùy chọn giao diện và dữ liệu
-              của tài khoản khác được giữ lại.
+              Tài khoản đăng nhập, chứng từ thanh toán và dữ liệu của tài khoản khác được giữ lại.
             </p>
 
             {clearDataError && (
