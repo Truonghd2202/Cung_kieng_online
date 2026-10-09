@@ -38,16 +38,52 @@ async function seedContent() {
     });
   }
   for (const [slug, title, occasion, region] of rituals) {
+    const isNewHome = slug === "ta-on-nha-moi";
+    const isMemorial = slug === "tuong-nho-gia-dinh" || slug === "cung-gio-mien-nam";
+    const steps = [
+      ["Chọn cách thực hành", "Điều chỉnh nghi thức theo nếp nhà, điều kiện nơi ở và mong muốn của gia đình; không cần sắm sửa quá khả năng."],
+      ["Sắp xếp không gian", "Dọn gọn nơi tưởng niệm hoặc khu vực sinh hoạt, chuẩn bị nước sạch và lễ vật phù hợp nếu gia đình có thực hành."],
+      [isNewHome ? "Lời cáo lễ" : isMemorial ? "Tưởng nhớ và tri ân" : "Tĩnh tâm", isNewHome ? "Gia chủ có thể trình bày ngắn gọn việc chuyển đến nhà mới, bày tỏ lòng biết ơn và nguyện giữ gìn nhà cửa an toàn, hòa thuận." : isMemorial ? "Dành ít phút nhắc nhớ người thân, kể lại kỷ niệm hoặc đọc lời khấn gia đình đang sử dụng." : "Dành ít phút tưởng nhớ tổ tiên và nhắc nhau gìn giữ nếp nhà, sống tử tế."],
+      ["Thu dọn an toàn", "Kết thúc trong yên tĩnh; thu dọn lễ vật phù hợp và bảo đảm không còn lửa, nến hay hương đang cháy trước khi rời đi."],
+    ];
+    const offerings = [
+      { name: "Nước sạch", quantity: "1 chén hoặc ly", description: "Có thể dùng nước sạch sẵn có trong gia đình." },
+      { name: "Hoa hoặc trái cây theo mùa", quantity: "Tùy điều kiện", description: "Không bắt buộc; chọn vật phẩm tươi, sạch và vừa sức chuẩn bị." },
+    ];
+    if (occasion === "Tết Nguyên Đán") offerings.push({ name: "Món ăn ngày Tết của gia đình", quantity: "Tùy nếp nhà", description: "Chọn món gia đình thường dùng, không cần bày biện quá khả năng." });
+    if (isMemorial) offerings.push({ name: "Món ăn gợi nhớ người thân", quantity: "Tùy nếp nhà", description: "Có thể chuẩn bị hoặc chỉ dành thời gian tưởng nhớ; không bắt buộc phải có mâm cỗ." });
     const ritual = await prisma.rituals.upsert({
       where: { slug },
       create: { slug, title, occasion, region, description: title, source: "Tư liệu thực hành văn hóa gia đình", verified: false },
-      update: {},
+      update: { description: `${title}. Hướng dẫn tham khảo, có thể điều chỉnh theo nếp nhà và điều kiện thực tế.` },
     });
-    await prisma.ritual_steps.upsert({
-      where: { ritual_id_step_number: { ritual_id: ritual.id, step_number: 1 } },
-      create: { ritual_id: ritual.id, step_number: 1, title: "Chuẩn bị", description: "Giữ không gian sạch sẽ, an toàn và thực hành với sự thành kính, giản dị." },
-      update: {},
-    });
+    for (const [index, [stepTitle, description]] of steps.entries()) {
+      await prisma.ritual_steps.upsert({
+        where: { ritual_id_step_number: { ritual_id: ritual.id, step_number: index + 1 } },
+        create: { ritual_id: ritual.id, step_number: index + 1, title: stepTitle, description },
+        update: { title: stepTitle, description },
+      });
+    }
+    for (const offering of offerings) {
+      let catalogOffering = await prisma.offerings.findFirst({ where: { name: offering.name } });
+      if (!catalogOffering) catalogOffering = await prisma.offerings.create({ data: { ...offering, category: "Nghi lễ gia đình" } });
+      await prisma.ritual_offerings.upsert({
+        where: { ritual_id_offering_id: { ritual_id: ritual.id, offering_id: catalogOffering.id } },
+        create: { ritual_id: ritual.id, offering_id: catalogOffering.id, quantity: offering.quantity, required: false, note: "Tùy điều kiện gia đình." },
+        update: { quantity: offering.quantity, required: false, note: "Tùy điều kiện gia đình." },
+      });
+    }
+    const prayerTitle = `Lời khấn tham khảo: ${title}`;
+    const prayerContent = [
+      "Con kính cáo gia tiên và những người thân đã khuất trong gia đình.",
+      `Hôm nay gia đình ${isNewHome ? "về nơi ở mới" : occasion === "Tết Nguyên Đán" ? "đón dịp đầu năm mới" : `thực hành nếp nhà nhân dịp ${occasion.toLowerCase()}`}, xin dành phút giây tưởng nhớ và tri ân.`,
+      "Nguyện mong người trong nhà biết yêu thương, đùm bọc nhau, sống ngay lành và gìn giữ điều tốt đẹp của gia đình.",
+      "Lời khấn này là bản tham khảo biên tập, không thay thế văn bản nghi lễ của từng địa phương hay gia đình.",
+    ].join("\n");
+    const existingPrayer = await prisma.prayers.findFirst({ where: { ritual_id: ritual.id, title: prayerTitle } });
+    const prayerData = { title: prayerTitle, content: prayerContent, region, source: "Bản tham khảo biên tập nội bộ; chưa xác lập là văn khấn cổ truyền", verified: false, active: true };
+    if (existingPrayer) await prisma.prayers.update({ where: { id: existingPrayer.id }, data: prayerData });
+    else await prisma.prayers.create({ data: { ...prayerData, ritual_id: ritual.id } });
   }
   for (const [title, day, month, category] of calendarEvents) {
     const existing = await prisma.calendar_events.findFirst({ where: { title, day, month } });
@@ -114,34 +150,36 @@ async function seedContent() {
     });
   }
 
-  const xamRegions = ["NORTH", "CENTRAL", "SOUTH"];
-  const xamTopics = ["Bình an", "Gia đình", "Học tập", "Công việc"];
+  const legacyXamTypes = ["NORTH", "CENTRAL", "SOUTH"].flatMap((region) =>
+    ["Bình an", "Gia đình", "Học tập", "Công việc"].map((topic) => `${region}:${topic}`)
+  );
   const gradeLabels = { "上籤": "Thượng Cát", "中籤": "Trung Cát", "下籤": "Hạ Bình" };
-  for (const region of xamRegions) {
-    for (const topic of xamTopics) {
-      for (const lot of ctcGuanyinLots) {
-        const xam_type = `${region}:${topic}`;
-        const data = {
-          stick_number: lot.stickNumber,
-          xam_type,
-          region,
-          category: topic,
-          fortune_level: gradeLabels[lot.sourceGrade] || "Bình",
-          poem: null,
-          meaning: `Hệ tham khảo: Quan Âm Linh Xăm do Hoa nhân miếu vụ ủy ban (Hong Kong) công bố. Điển tích gốc: ${lot.storyTitle}. Bản diễn giải tiếng Việt chưa được biên tập và thẩm định.`,
-          advice: "Chỉ dùng như tư liệu chiêm nghiệm; hãy đối chiếu với thực tế và không dựa riêng vào thẻ để quyết định việc quan trọng.",
-          source: lot.sourceUrl,
-          verified: false,
-          active: true,
-        };
-        await prisma.xin_xam.upsert({
-          where: { xam_type_stick_number: { xam_type, stick_number: lot.stickNumber } },
-          create: data,
-          update: {},
-        });
-      }
-    }
+  for (const lot of ctcGuanyinLots) {
+    const xam_type = "PREVIEW:CTC";
+    const data = {
+      stick_number: lot.stickNumber,
+      name: `Bản xem trước CTC — thẻ ${lot.stickNumber}`,
+      xam_type,
+      region: "NATIONWIDE",
+      category: "Bản xem trước chưa phát hành",
+      fortune_level: gradeLabels[lot.sourceGrade] || "Bình",
+      poem: null,
+      meaning: `Hệ tham khảo: Quan Âm Linh Xăm do Hoa nhân miếu vụ ủy ban (Hong Kong) công bố. Điển tích gốc: ${lot.storyTitle}. Bản diễn giải tiếng Việt chưa được biên tập và thẩm định.`,
+      advice: "Chỉ dùng như tư liệu xem trước; hãy đối chiếu với thực tế và không dựa riêng vào thẻ để quyết định việc quan trọng.",
+      source: lot.sourceUrl,
+      verified: false,
+      active: false,
+    };
+    await prisma.xin_xam.upsert({
+      where: { xam_type_stick_number: { xam_type, stick_number: lot.stickNumber } },
+      create: data,
+      update: {},
+    });
   }
+  await prisma.xin_xam.updateMany({
+    where: { xam_type: { in: legacyXamTypes }, verified: false },
+    data: { active: false },
+  });
 }
 
 module.exports = { seedContent };

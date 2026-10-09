@@ -174,10 +174,12 @@ export function matchesAnniversary(
   const year = date.getFullYear();
 
   if ((anniversary.calendar ?? "solar") === "solar") {
-    return (
-      anniversary.day === day &&
-      anniversary.month === month
-    );
+    if (anniversary.month !== month) return false;
+    const lastDay = new Date(year, month, 0).getDate();
+    const observedDay = anniversary.day > lastDay && anniversary.missingDayPolicy === "last-day"
+      ? lastDay
+      : anniversary.day;
+    return observedDay === day;
   }
 
   const lunar = getReliableLunarDate(day, month, year);

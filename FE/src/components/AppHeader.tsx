@@ -36,6 +36,7 @@ export type NavScreen =
   | "login"
   | "register"
   | "forgot"
+  | "reset-password"
   | "xinkeo"
   | "good-days"
   | "horoscope"
@@ -200,14 +201,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               )}
             </>
           ) : (
-            <Button
-              variant="outline"
-              size="pill"
-              className="hidden sm:inline-flex border-line text-ink hover:border-accent hover:text-accent bg-surface/50 font-medium text-xs px-4"
+            <button
+              type="button"
+              className="hidden sm:inline-flex items-center gap-1.5 px-4.5 py-1.5 rounded-full font-serif text-xs font-semibold tracking-wide text-[#fffaf3] bg-gradient-to-r from-[#8f202b] via-[#a32734] to-[#781721] hover:from-[#a32734] hover:via-[#b82e3c] hover:to-[#8f202b] border border-amber-300/60 shadow-[0_2px_10px_rgba(143,32,43,0.28)] hover:shadow-[0_4px_16px_rgba(143,32,43,0.42)] transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
               onClick={onLoginClick || (() => onNavigate("login"))}
             >
-              Đăng nhập
-            </Button>
+              <span>Đăng nhập</span>
+            </button>
           )}
 
           <button

@@ -1,3 +1,4 @@
+import { toast } from "../components/ui/Toast";
 import React, { useState, useEffect } from "react";
 import {
   ArrowLeft,
@@ -384,7 +385,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   size="sm"
                   variant="outline"
                   className="text-xs border-line gap-1.5"
-                  onClick={() => alert("Tính năng đổi ảnh đại diện cá nhân hóa từ tệp tin sẽ có khi mở rộng bộ nhớ.")}
+                  onClick={() => toast.info("Tính năng đổi ảnh đại diện cá nhân hóa từ tệp tin sẽ có khi mở rộng bộ nhớ.", "Ảnh đại diện")}
                 >
                   <Camera className="w-3.5 h-3.5 text-accent" />
                   <span>Đổi ảnh</span>

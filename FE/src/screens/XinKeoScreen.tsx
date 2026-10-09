@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   ArrowLeft,
   Sparkles,
@@ -20,6 +20,9 @@ interface XinKeoScreenProps {
   onBackToExperience: () => void;
   onGoToCulture?: () => void;
   onGoToHome?: () => void;
+  onGoToLogin?: () => void;
+  drawId?: string | null;
+  isLoggedIn?: boolean;
 }
 
 type KeoResultType = "nhat-am-nhat-duong" | "nhi-duong" | "nhi-am";
@@ -292,6 +295,8 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
   onBackToExperience,
   onGoToCulture,
   onGoToHome,
+  drawId,
+  isLoggedIn = false,
 }) => {
   const [selectedTopic, setSelectedTopic] = useState<string>("binhan");
   const [reflectionText, setReflectionText] = useState("");
@@ -302,6 +307,8 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
   const [landingResult, setLandingResult] = useState<KeoOutcome | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [throwCount, setThrowCount] = useState(0);
+  const [requestError, setRequestError] = useState("");
+  const requestLockRef = useRef(false);
 
   const topics = [
     { id: "hoctap", label: "Học tập & Thi cử" },
@@ -311,7 +318,9 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
   ];
 
   const handleCastKeo = async () => {
-    if (isCasting) return;
+    if (requestLockRef.current) return;
+    requestLockRef.current = true;
+    setRequestError("");
     const weightedPool: KeoResultType[] = [
       "nhat-am-nhat-duong",
       "nhat-am-nhat-duong",
@@ -322,19 +331,28 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
     let sourcedProverb: SourcedProverb | null = null;
     let nextSessionId = sessionId;
 
-    try {
-      if (!nextSessionId || throwCount >= 3) {
-        const session = await createXinKeoSession(reflectionText.trim() || `Chiêm nghiệm chủ đề ${selectedTopic}`);
-        nextSessionId = session.id;
-        setSessionId(session.id);
-        setThrowCount(0);
+    let castSaved = false;
+    if (isLoggedIn) {
+      try {
+        if (!nextSessionId || throwCount >= 3) {
+          const session = await createXinKeoSession(
+            reflectionText.trim() || `Chiêm nghiệm chủ đề ${selectedTopic}`,
+            drawId || undefined,
+          );
+          nextSessionId = session.id;
+          setSessionId(session.id);
+          setThrowCount(0);
+        }
+        const cast = await castXinKeo(nextSessionId);
+        picked = cast.type;
+        sourcedProverb = cast.proverb;
+        setThrowCount((count) => count + 1);
+        castSaved = true;
+      } catch (error) {
+        setRequestError(error instanceof Error ? error.message : "Chưa lưu được lượt xin keo. Vui lòng thử lại.");
+        requestLockRef.current = false;
+        return;
       }
-      const cast = await castXinKeo(nextSessionId);
-      picked = cast.type;
-      sourcedProverb = cast.proverb;
-      setThrowCount((count) => count + 1);
-    } catch {
-      // Khách hoặc khi API tạm lỗi vẫn có thể dùng trải nghiệm cục bộ hiện có.
     }
     if (!sourcedProverb) {
       try {
@@ -344,6 +362,7 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
       }
     }
     const outcome = { ...KEO_OUTCOMES[picked], proverb: sourcedProverb };
+    if (!castSaved) setRequestError("Kết quả này được gieo cục bộ và chưa lưu vào tài khoản.");
 
     setLandingResult(outcome);
     setCastResult(null);
@@ -363,6 +382,7 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
     setTimeout(() => {
       setCastResult(outcome);
       setIsCasting(false);
+      requestLockRef.current = false;
       try {
         if (typeof navigator !== "undefined" && navigator.vibrate) {
           navigator.vibrate([140]);
@@ -376,6 +396,8 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
   return (
     <div className="screen-shell">
       <main className="page-container max-w-6xl">
+        {requestError && <p role="status" className="mb-5 rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted">{requestError}</p>}
+        {drawId && isLoggedIn && <p className="mb-5 rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted">Lượt xin keo này sẽ được liên kết với quẻ xin xăm đã lưu trong tài khoản của bạn.</p>}
         {/* Top Breadcrumb & Status Ribbon */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 text-xs text-muted">
           <div className="flex items-center gap-2">

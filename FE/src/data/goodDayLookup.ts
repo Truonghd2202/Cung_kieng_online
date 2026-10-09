@@ -1,3 +1,5 @@
+import { getReliableLunarDate } from "./calendarData";
+
 export const GOOD_DAY_PURPOSES = [
   { id: "family", label: "Gặp mặt gia đình & Sum họp", icon: "🏡" },
   { id: "ritual", label: "Chuẩn bị nghi lễ & Tạ ơn tổ tiên", icon: "🏮" },
@@ -94,7 +96,8 @@ const TRUC_NAMES = ["Kiến", "Trừ", "Mãn", "Bình", "Định", "Chấp", "Ph
 
 // Hàm tính Can Chi ngày theo số ngày Julius
 export function getCanChiDay(date: Date): { name: string; can: string; chi: string } {
-  const diffDays = Math.floor(date.getTime() / 86400000) + 25569 + 1;
+  const localDateOrdinal = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000;
+  const diffDays = localDateOrdinal + 25569 + 1;
   const can = CAN_DAYS[(diffDays + 9) % 10];
   const chi = CHI_DAYS[(diffDays + 1) % 12];
   return { name: `${can} ${chi}`, can, chi };
@@ -173,8 +176,8 @@ export function lookupGoodDays(query: GoodDayQuery): GoodDayResult[] {
   const to = parseDateInput(query.to)!;
 
   const results: GoodDayResult[] = [];
-  const curr = new Date(from.year, from.month - 1, from.day);
-  const end = new Date(to.year, to.month - 1, to.day);
+  const curr = new Date(from.year, from.month - 1, from.day, 12);
+  const end = new Date(to.year, to.month - 1, to.day, 12);
 
   while (curr <= end) {
     const y = curr.getFullYear();
@@ -182,16 +185,16 @@ export function lookupGoodDays(query: GoodDayQuery): GoodDayResult[] {
     const d = curr.getDate();
     const canChi = getCanChiDay(curr);
 
-    // Tiêu chí ngày lành: Ngày Hoàng đạo, Trực tốt (Mãn, Khai, Thành, Định, Bình) hoặc Rằm/Mùng một/Cuối tuần
-    const dayOfWeek = curr.getDay(); // 0: CN, 6: T7
-    const daySeed = (d * 7 + m * 13 + y) % 12;
-    const truc = TRUC_NAMES[daySeed];
+    // Trực Kiến khởi khi chi ngày trùng chi tháng âm; các trực tiếp theo thứ tự 12 Trực.
+    const lunar = getReliableLunarDate(d, m, y);
+    const lunarMonthBranch = (lunar.lunarMonth + 1) % 12;
+    const dayBranch = CHI_DAYS.indexOf(canChi.chi);
+    const truc = TRUC_NAMES[(dayBranch - lunarMonthBranch + 12) % 12];
 
     const isAuspicious =
       ["Mãn", "Khai", "Thành", "Định", "Bình"].includes(truc) ||
-      d === 1 ||
-      d === 15 ||
-      ((dayOfWeek === 0 || dayOfWeek === 6) && ["Trừ", "Thu"].includes(truc));
+      lunar.isFirstDay ||
+      lunar.isFullMoon;
 
     if (isAuspicious) {
       const dateStr = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
@@ -199,42 +202,37 @@ export function lookupGoodDays(query: GoodDayQuery): GoodDayResult[] {
       let title = "";
       let explanation = "";
       let practicalAdvice = "";
-      let auspiciousHours = "Dần (3-5h), Mão (5-7h), Tỵ (9-11h), Thân (15-17h)";
+      const auspiciousHours = getAuspiciousHoursForDay(canChi.chi);
 
       switch (query.purpose) {
         case "family":
-          title = `Ngày ${canChi.name} · Trực ${truc} — Thích hợp sum họp gia đạo`;
-          explanation = `Ngày khí tiết thuận hòa, trực ${truc} mang ý nghĩa chu toàn viên mãn. Rất tốt để quây quần người thân, dâng hương tiên tổ và sẻ chia tâm tình.`;
+          title = `Tham khảo văn hóa · Trực ${truc} — Gợi ý sum họp gia đạo`;
+          explanation = `Theo một cách diễn giải dân gian, trực ${truc} gợi ý sự chu toàn. Đây là nội dung minh họa, không dự báo kết quả của việc sum họp.`;
           practicalAdvice = `Nên tổ chức bữa cơm thân mật tại gia, cùng nhau dọn dẹp không gian thờ tự và lắng nghe người lớn tuổi chuyện trò.`;
-          auspiciousHours = "Thìn (7-9h), Tỵ (9-11h), Mùi (13-15h), Tuất (19-21h)";
           break;
 
         case "ritual":
-          title = `Ngày ${canChi.name} · Trực ${truc} — Thanh tịnh tiến cúng & Tạ ơn`;
-          explanation = `Thời điểm đất trời giao hòa an định, nạp sinh khí lành. Thuận lợi cho việc bao sái ban thờ, phóng sinh thiện nguyện và làm lễ tạ ơn tổ tiên.`;
+          title = `Tham khảo văn hóa · Trực ${truc} — Chuẩn bị nghi lễ & Tạ ơn`;
+          explanation = `Một cách diễn giải truyền thống gắn trực ${truc} với sự chu toàn. Việc thực hành nên theo phong tục gia đình và điều kiện thực tế.`;
           practicalAdvice = `Chuẩn bị nước thơm ngũ vị bao sái, hoa quả tươi theo mùa và 1 nén trầm mộc. Giữ tâm thế bình an, trang nghiêm.`;
-          auspiciousHours = "Dần (3-5h), Thìn (7-9h), Tỵ (9-11h), Thân (15-17h)";
           break;
 
         case "business":
-          title = `Ngày ${canChi.name} · Trực ${truc} — Khởi sự hanh thông & Chiêu tài cát khánh`;
-          explanation = `Trực ${truc} ngụ ý vạn sự khởi đầu thuận buồm xuôi gió, nhân duyên gặp gỡ tương hợp. Rất tốt cho việc mở hàng, ký hợp đồng hay ra mắt dự án.`;
+          title = `Tham khảo văn hóa · Trực ${truc} — Gợi ý khởi sự`;
+          explanation = `Một số cách diễn giải dân gian gắn trực ${truc} với việc bắt đầu công việc. Kết quả kinh doanh phụ thuộc vào kế hoạch và điều kiện thực tế.`;
           practicalAdvice = `Chọn giờ sáng khi sinh khí tươi mới; chú trọng lời ăn tiếng nói hòa nhã, giữ nụ cười và trao gửi giá trị chân thành tới khách hàng.`;
-          auspiciousHours = "Mão (5-7h), Tỵ (9-11h), Thân (15-17h), Dậu (17-19h)";
           break;
 
         case "construction":
-          title = `Ngày ${canChi.name} · Trực ${truc} — Động thổ & An vị gia trạch`;
-          explanation = `Đất lành an định, hội tụ vượng khí. Thích hợp cho việc sửa sang tổ ấm, đặt đá làm nhà, dọn đồ vào nhà mới hoặc tu tạo gian thờ.`;
+          title = `Tham khảo văn hóa · Trực ${truc} — Chuẩn bị nhà cửa`;
+          explanation = `Đây là gợi ý theo cách diễn giải lịch dân gian, không thay thế tư vấn kỹ thuật, pháp lý hoặc kế hoạch thi công.`;
           practicalAdvice = `Kiểm tra kỹ hợp đồng thợ thuyền, chọn người hợp tuổi động thổ tượng trưng, dâng mâm lễ thanh tịnh tạ ơn thần linh thổ địa.`;
-          auspiciousHours = "Thìn (7-9h), Ngọ (11-13h), Mùi (13-15h), Tuất (19-21h)";
           break;
 
         case "wedding":
-          title = `Ngày ${canChi.name} · Trực ${truc} — Lương duyên kết giao & Cầu an hạnh phúc`;
-          explanation = `Sao lành chiếu soi, biểu trưng cho sự hòa hợp âm dương trường cửu. Rất tốt cho việc dạm ngõ, ăn hỏi, đón dâu hoặc cầu an bản mệnh.`;
+          title = `Tham khảo văn hóa · Trực ${truc} — Gợi ý cho dịp sum vầy`;
+          explanation = `Đây là nội dung tham khảo phong tục, không dự đoán sự hòa hợp hay kết quả của mối quan hệ.`;
           practicalAdvice = `Hai bên gia đình bàn bạc cởi mở, trang phục nhã nhặn, tôn trọng nếp sống và phong tục của nhau.`;
-          auspiciousHours = "Mão (5-7h), Tỵ (9-11h), Thân (15-17h), Hợi (21-23h)";
           break;
       }
 
@@ -246,13 +244,13 @@ export function lookupGoodDays(query: GoodDayQuery): GoodDayResult[] {
         year: y,
         purpose: query.purpose,
         title,
-        lunarDateStr: `Ngày ${d} tháng ${m} Dương lịch · Ngày ${canChi.name}`,
+        lunarDateStr: `${lunar.isLeapMonth ? "Nhuận " : ""}ngày ${lunar.lunarDay}/${lunar.lunarMonth} âm lịch · ${canChi.name}`,
         canChi: canChi.name,
         auspiciousHours,
         explanation,
         practicalAdvice,
-        sourceLabel: "Khảo cứu lịch pháp dân gian & Nếp nhà truyền thống",
-        isDemo: false,
+        sourceLabel: "Gợi ý minh họa theo ngày âm, Can Chi và 12 Trực; không phải lịch chọn ngày đã thẩm định",
+        isDemo: true,
       });
     }
 

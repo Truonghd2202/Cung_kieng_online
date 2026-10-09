@@ -527,8 +527,41 @@ export function getReliableLunarDate(
     isFullMoon,
     isFirstDay,
     isLeapMonth: isLeap,
+    solarTerm: getSolarTermForDate(day, month, year),
     specialBadge,
   };
+}
+
+const SOLAR_TERM_NAMES = [
+  "Xuân phân", "Thanh minh", "Cốc vũ", "Lập hạ", "Tiểu mãn", "Mang chủng",
+  "Hạ chí", "Tiểu thử", "Đại thử", "Lập thu", "Xử thử", "Bạch lộ",
+  "Thu phân", "Hàn lộ", "Sương giáng", "Lập đông", "Tiểu tuyết", "Đại tuyết",
+  "Đông chí", "Tiểu hàn", "Đại hàn", "Lập xuân", "Vũ thủy", "Kinh trập",
+];
+
+/**
+ * Tiết khí gắn với ngày dân sự Việt Nam (UTC+7), từ kinh độ biểu kiến gần đúng của Mặt Trời.
+ * Công thức kinh độ xấp xỉ dùng trong engine âm lịch shared/lunar-calendar.mjs.
+ * Quy ước 24 mốc cách nhau 15°; ngày có thời điểm giao tiết nhận tên tiết mới.
+ * Cách chia mốc theo kinh độ Mặt Trời được mô tả tại https://www.hko.gov.hk/en/gts/time/24solarterms.htm.
+ */
+export function getSolarTermForDate(day: number, month: number, year: number): string {
+  const longitudeAt = (timestamp: number) => {
+    const julianDay = timestamp / 86400000 + 2440587.5;
+    const t = (julianDay - 2451545) / 36525;
+    const t2 = t * t;
+    const radians = Math.PI / 180;
+    const meanAnomaly = 357.5291 + 35999.0503 * t - 0.0001559 * t2 - 0.00000048 * t * t2;
+    const meanLongitude = 280.46645 + 36000.76983 * t + 0.0003032 * t2;
+    const correction = (1.9146 - 0.004817 * t - 0.000014 * t2) * Math.sin(radians * meanAnomaly)
+      + (0.019993 - 0.000101 * t) * Math.sin(radians * 2 * meanAnomaly)
+      + 0.00029 * Math.sin(radians * 3 * meanAnomaly);
+    return ((meanLongitude + correction) % 360 + 360) % 360;
+  };
+
+  const nextLocalMidnightUtc = Date.UTC(year, month - 1, day + 1, -7) - 1;
+  const endTerm = Math.floor(longitudeAt(nextLocalMidnightUtc) / 15);
+  return SOLAR_TERM_NAMES[endTerm % 24];
 }
 
 /**

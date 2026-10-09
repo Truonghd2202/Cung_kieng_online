@@ -15,7 +15,7 @@ function findForUser(id, userId, client = prisma) {
 }
 
 function update(id, userId, data, client = prisma) {
-  return client.wishes.updateMany({ where: { id, user_id: userId }, data });
+  return client.wishes.updateMany({ where: { id, user_id: userId }, data: { ...data, ...(data.content !== undefined ? { content: encryptPrivateText(data.content, userId) } : {}) } });
 }
 
 function remove(id, userId, client = prisma) {

@@ -279,7 +279,7 @@ export function DigitalItemsPanel({
               Bộ sưu tập vật phẩm tâm linh
             </h2>
             <p className="mt-1 text-xs sm:text-sm text-stone-600 dark:text-stone-300">
-              Nhận vật phẩm demo miễn phí để thử nghiệm bài trí vào không gian 3D và lưu giữ kỷ niệm
+              Vật phẩm chỉ dùng cho bản demo; thao tác bài trí là trải nghiệm thử, chưa phải quyền lợi mua bán hay bộ sưu tập đồng bộ tài khoản.
             </p>
           </div>
         </div>
@@ -318,7 +318,7 @@ export function DigitalItemsPanel({
                 Lưu giữ bảo vật theo tài khoản cá nhân
               </h4>
               <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
-                Đăng nhập để đồng bộ và lưu trữ trọn đời bộ sưu tập vật phẩm tâm linh trên trình duyệt này.
+                Bộ sưu tập demo hiện lưu trên thiết bị này; chưa đồng bộ qua tài khoản hoặc máy chủ.
               </p>
             </div>
           </div>

@@ -7,6 +7,7 @@ import {
   type TraditionalXamStick,
 } from "./traditionalXamData";
 import { validateTraditionalXam } from "./validateTraditionalXam";
+import { isPublishableXamCard } from "../../../shared/xin-xam-publication.mjs";
 
 function isApproved(metadata: ContentMetadata): boolean {
   return (
@@ -15,6 +16,13 @@ function isApproved(metadata: ContentMetadata): boolean {
     Boolean(metadata.reviewedBy?.trim()) &&
     Boolean(metadata.reviewedOn?.trim())
   );
+}
+
+function getLocatableSource(metadata: ContentMetadata): string | undefined {
+  const source = metadata.sources.find(
+    (item) => item.title.trim() && (item.url?.trim() || item.bibliographicReference?.trim()) && item.locator?.trim()
+  );
+  return source?.url || source?.bibliographicReference;
 }
 
 export function getPublishableTraditionalSticks(
@@ -37,13 +45,27 @@ export function getPublishableTraditionalSticks(
   }
 
   return TRADITIONAL_XAM_STICKS.filter(
-    (stick) =>
-      stick.collectionId === collectionId &&
-      stick.metadata.quotationVerified &&
-      isApproved(stick.metadata) &&
-      stick.translation !== undefined &&
-      stick.translation.metadata.quotationVerified &&
-      isApproved(stick.translation.metadata) &&
-      Boolean(stick.reflectionByTopic[topic]?.trim())
+    (stick) => {
+      const translation = stick.translation;
+      const reflection = stick.reflectionByTopic[topic];
+      const verified =
+        isApproved(collection.metadata) &&
+        isApproved(stick.metadata) &&
+        stick.metadata.quotationVerified &&
+        translation !== undefined &&
+        isApproved(translation.metadata) &&
+        translation.metadata.quotationVerified;
+
+      return (
+        stick.collectionId === collectionId &&
+        isPublishableXamCard({
+          active: true,
+          verified,
+          source: getLocatableSource(stick.metadata),
+          poem: translation?.lines,
+          interpretations: [reflection],
+        })
+      );
+    }
   );
 }

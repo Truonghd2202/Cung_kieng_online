@@ -16,27 +16,43 @@ async function generateYearly(userId, input) {
   if (!(await getMembership(userId)).subscription) throw new ApiError(403, "Cần hội viên Tâm An đang hoạt động để nhận diễn giải theo năm.");
   if (!env.GEMINI_API_KEY) throw new ApiError(503, "Dịch vụ diễn giải AI chưa được cấu hình.");
   const target = new Date(Date.UTC(input.year, 0, 1));
-  // Limit paid provider calls per account independently from general API quotas.
+  // Provider-attempt quota includes failures; successful-reading quota is separate.
   const reservation = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM users WHERE id = ${userId}::uuid FOR UPDATE`;
-    if (await tx.horoscope_readings.count({ where: { user_id: userId, period_type: "YEARLY", created_at: { gte: new Date(Date.now() - 86400000) } } }) >= 3) throw new ApiError(429, "Bạn đã dùng đủ 3 lượt tạo trong 24 giờ. Hãy đọc lại những bản đã lưu.");
-    return tx.horoscope_readings.create({ data: { user_id: userId, period_type: "YEARLY", target_date: target, content: "{}", model: env.GEMINI_MODEL, prompt_version: "yearly-reflection-pending" } });
+    const windowStart = new Date(Date.now() - 86400000);
+    const quota = { user_id: userId, period_type: "YEARLY", created_at: { gte: windowStart } };
+    if (await tx.horoscope_readings.count({ where: quota }) >= 5) throw new ApiError(429, "Bạn đã dùng đủ 5 lượt gọi AI trong 24 giờ. Các lượt thất bại cũng được tính để kiểm soát chi phí.");
+    if (await tx.horoscope_readings.count({ where: { ...quota, status: "SUCCEEDED" } }) >= 3) throw new ApiError(429, "Bạn đã nhận đủ 3 bản diễn giải thành công trong 24 giờ.");
+    return tx.horoscope_readings.create({ data: { user_id: userId, period_type: "YEARLY", target_date: target, content: "{}", model: env.GEMINI_MODEL, prompt_version: "yearly-reflection-pending", status: "PENDING" } });
   });
+  const markFailed = async () => {
+    await prisma.horoscope_readings.updateMany({ where: { id: reservation.id, status: "PENDING" }, data: { status: "FAILED", prompt_version: "yearly-reflection-failed" } }).catch(() => {});
+  };
   let response;
   try {
     response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(env.GEMINI_MODEL)}:generateContent`, {
       method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": env.GEMINI_API_KEY }, signal: AbortSignal.timeout(15000),
       body: JSON.stringify({ contents: [{ parts: [{ text: `Viết lời chiêm nghiệm tiếng Việt theo năm ${input.year}, dành cho người sinh ngày ${input.birthDate}. Trả JSON {sections:[{title,body}]} gồm 4 phần về học tập/công việc, quan hệ, chăm sóc bản thân và việc thiện. Dùng ngôn ngữ gợi mở thực tế; không tự nhận đã tính lá số, không dự đoán vận hạn hay khẳng định tính cách từ ngày sinh, không chẩn đoán y tế, không tư vấn đầu tư, không hù dọa hoặc ép trả tiền. Mỗi phần tối đa 1000 ký tự.` }] }], generationConfig: { responseMimeType: "application/json", temperature: 0.4 } }),
     });
-  } catch { throw new ApiError(503, "Dịch vụ AI đang bận, vui lòng thử lại sau."); }
-  if (!response.ok) throw new ApiError(503, "Dịch vụ AI tạm thời chưa sẵn sàng.");
-  const reading = parseYearlyReading(await response.json());
-  if (!reading) throw new ApiError(503, "Bản diễn giải chưa đạt kiểm tra nội dung. Vui lòng thử lại sau.");
-  const record = await prisma.horoscope_readings.update({ where: { id: reservation.id }, data: { content: JSON.stringify(reading), prompt_version: "yearly-reflection-v1" } });
+  } catch {
+    await markFailed();
+    throw new ApiError(503, "Dịch vụ AI đang bận, vui lòng thử lại sau.");
+  }
+  if (!response.ok) {
+    await markFailed();
+    throw new ApiError(503, "Dịch vụ AI tạm thời chưa sẵn sàng.");
+  }
+  let reading;
+  try { reading = parseYearlyReading(await response.json()); } catch { reading = null; }
+  if (!reading) {
+    await markFailed();
+    throw new ApiError(503, "Bản diễn giải chưa đạt kiểm tra nội dung. Vui lòng thử lại sau.");
+  }
+  const record = await prisma.horoscope_readings.update({ where: { id: reservation.id }, data: { content: JSON.stringify(reading), prompt_version: "yearly-reflection-v1", status: "SUCCEEDED" } });
   return { id: record.id, year: input.year, ...reading };
 }
 async function listYearly(userId) {
-  const rows = await prisma.horoscope_readings.findMany({ where: { user_id: userId, prompt_version: "yearly-reflection-v1" }, orderBy: { created_at: "desc" }, take: 20 });
+  const rows = await prisma.horoscope_readings.findMany({ where: { user_id: userId, status: "SUCCEEDED", prompt_version: "yearly-reflection-v1" }, orderBy: { created_at: "desc" }, take: 20 });
   return rows.map((row) => ({ id: row.id, year: row.target_date.getUTCFullYear(), ...JSON.parse(row.content) }));
 }
 module.exports = { generateYearly, listYearly, parseYearlyReading };

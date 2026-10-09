@@ -20,11 +20,24 @@ export function RitualPrayerSection({ prayers = [] }: Props) {
   const available = prayers.filter(
     (prayer) =>
       prayer.title.trim() &&
-      prayer.paragraphs.some((paragraph) => paragraph.trim())
+      prayer.paragraphs.some((paragraph) => paragraph.trim()) &&
+      prayer.metadata.contentKind === "editorial" &&
+      prayer.metadata.editorialStatus === "approved" &&
+      prayer.metadata.quotationVerified &&
+      ["confirmed", "public-domain"].includes(
+        prayer.metadata.usageRights?.status ?? "unknown"
+      ) &&
+      prayer.metadata.sources.some((source) =>
+        Boolean(source.url || source.bibliographicReference) &&
+        Boolean(source.locator)
+      )
   );
 
   const selected =
     available.find((prayer) => prayer.id === selectedId) ?? available[0];
+  const demoPreviews = import.meta.env.DEV
+    ? prayers.filter((prayer) => prayer.preview && prayer.paragraphs.some((paragraph) => paragraph.trim()))
+    : [];
 
   const copyPrayer = async () => {
     if (!selected || copying) return;
@@ -89,7 +102,7 @@ export function RitualPrayerSection({ prayers = [] }: Props) {
               Văn khấn Nôm tham khảo
             </h2>
             <p className="text-xs text-muted">
-              Chuẩn mực cổ truyền · Đọc trang nghiêm trước hương án
+              Chỉ hiển thị nội dung đã qua thẩm định nguồn và quyền sử dụng
             </p>
           </div>
         </div>
@@ -138,13 +151,33 @@ export function RitualPrayerSection({ prayers = [] }: Props) {
         )}
       </div>
 
+      {demoPreviews.length > 0 && (
+        <aside role="note" className="mt-5 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-950 dark:text-amber-100">
+          <strong className="block uppercase tracking-wide">Bản văn mẫu để demo · chưa thẩm định</strong>
+          <p className="mt-1 leading-relaxed">Đây là nội dung biên tập minh họa, chưa xác minh nguồn hoặc quyền sử dụng; không phải văn khấn cổ truyền đã được thẩm định và không nên xem là bản hướng dẫn chính thức.</p>
+          <div className="mt-4 space-y-4">
+            {demoPreviews.map((prayer) => (
+              <article key={prayer.id} className="rounded-xl border border-amber-500/30 bg-surface/70 p-3">
+                <h3 className="font-semibold">{prayer.title}</h3>
+                <div className="mt-2 space-y-2 font-serif leading-relaxed">
+                  {prayer.paragraphs.map((paragraph, index) => <p key={`${prayer.id}:${index}`} className="whitespace-pre-wrap">{paragraph}</p>)}
+                </div>
+              </article>
+            ))}
+          </div>
+        </aside>
+      )}
+
       {!selected ? (
         <div className="py-8 text-center">
           <p className="text-sm leading-relaxed text-muted max-w-md mx-auto">
-            Nghi lễ này hiện chưa có bài văn khấn mẫu trong thư viện khảo cứu.
-            Gia chủ có thể dùng tấc lòng thành kính khấn nguyện an lành.
+            Hiện chưa có bài văn khấn nào đủ hồ sơ nguồn, quyền sử dụng và xác nhận thẩm định để xuất bản. Gia chủ vẫn có thể dùng checklist và tự khấn nguyện theo lòng thành.
           </p>
         </div>
+      ) : available.length === 0 ? (
+        <p className="mt-5 rounded-2xl border border-line bg-surface-soft p-4 text-sm leading-relaxed text-muted">
+          Chưa có bài văn khấn nào đủ hồ sơ nguồn, quyền sử dụng và xác nhận thẩm định để xuất bản. Bạn vẫn có thể dùng checklist và chế độ đọc cho phần hướng dẫn nghi lễ.
+        </p>
       ) : (
         <>
           {/* Tabs for Multiple Prayers */}

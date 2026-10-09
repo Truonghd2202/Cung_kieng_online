@@ -23,7 +23,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Card } from "../components/ui/card";
-import { MoodKey } from "../data/demoSignals";
+import { MoodKey, type MoodContextKey, type SignalData } from "../data/demoSignals";
 import { SavedItemActions } from "../components/SavedItemActions";
 import { AppDialog } from "../components/AppDialog";
 
@@ -31,6 +31,8 @@ export interface SavedSignalItem {
   id: string;
   signalId: string;
   mood: MoodKey;
+  contextKey?: MoodContextKey;
+  signalSnapshot?: SignalData;
   date: string;
   createdAt?: number;
   journal?: string;
@@ -1012,8 +1014,8 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                   Bạn chưa lưu tín hiệu nào
                 </h3>
                 <p className="text-sm text-muted leading-relaxed max-w-xl mx-auto mb-6">
-                  Mỗi ngày, hãy dành 1 phút check-in cảm xúc để đón nhận câu ca dao và vi hành
-                  động an lành cho tâm trí.
+                  Mỗi ngày, hãy dành 1 phút check-in cảm xúc để đón nhận lời gợi mở và hành động
+                  an lành cho tâm trí.
                 </p>
                 <Button
                   variant="default"

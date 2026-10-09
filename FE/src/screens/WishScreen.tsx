@@ -212,7 +212,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
 
               <p className="text-sm leading-relaxed text-muted sm:text-base">
                 Viết điều bạn đang nghĩ. Bạn có thể lưu để đọc lại
-                hoặc thả hoa đăng như một cách khép lại lần viết này.
+                hoặc chọn hiệu ứng buông bỏ mang hình ảnh hoa đăng.
               </p>
             </div>
 
@@ -322,14 +322,14 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                             value: "journal",
                             title: "Lưu để đọc lại",
                             description: isLoggedIn
-                              ? "Lưu vào Góc của tôi trên trình duyệt này."
+                              ? "Lưu vào Góc của tôi theo tài khoản; nội dung được mã hóa ở backend."
                               : "Cần đăng nhập để lưu. Bản nháp chưa được giữ khi tải lại trang.",
                           },
                           {
                             value: "ephemeral",
-                            title: "Thả hoa đăng",
+                            title: "Thả hoa đăng (biểu tượng)",
                             description:
-                              "Không lưu vào nhật ký. Nội dung được xóa khỏi ô viết khi bạn gửi.",
+                              "Chỉ là thao tác buông bỏ minh họa trên màn hình; chưa nối với hoa đăng WebGL. Nội dung không được lưu và sẽ bị xóa khi gửi.",
                           },
                         ] satisfies {
                           value: WishMode;
@@ -370,8 +370,8 @@ export const WishScreen: React.FC<WishScreenProps> = ({
 
                     {mode === "journal" && (
                       <p className="text-xs leading-relaxed text-muted">
-                        Bản thử nghiệm lưu dữ liệu trên thiết bị, chưa có đồng bộ
-                        qua máy chủ hoặc mã hóa nội dung.
+                        Lời nguyện được lưu vào tài khoản qua máy chủ; backend mã hóa
+                        nội dung trước khi ghi cơ sở dữ liệu. Đây không phải mã hóa đầu cuối.
                       </p>
                     )}
                   </fieldset>
@@ -415,7 +415,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
 
                 <p className="text-xs leading-relaxed text-muted">
                   Lời gửi gắm không được đăng lên bảng công khai trong trải nghiệm này.
-                  Bạn quyết định lưu lại hoặc thả hoa đăng trước khi gửi.
+                  Bạn quyết định lưu lại hoặc chọn hiệu ứng buông bỏ trước khi gửi.
                 </p>
               </div>
 
@@ -485,8 +485,8 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                     Thông tin lưu trữ
                   </h4>
                   <p className="text-sm text-muted leading-relaxed max-w-2xl">
-                    Chọn lưu để giữ nội dung trên trình duyệt này.
-                    Chọn thả hoa đăng để kết thúc mà không ghi nội dung vào nhật ký.
+                    Chọn lưu để đưa nội dung vào Góc của tôi qua tài khoản.
+                    Chọn hiệu ứng buông bỏ để kết thúc mà không ghi nội dung vào nhật ký.
                   </p>
                 </div>
               </div>
@@ -540,7 +540,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
             <div className="text-center mb-8">
               {hasActuallySaved && (
                 <span className="inline-block text-xs uppercase font-bold tracking-wider text-muted bg-surface px-3.5 py-1 rounded-full border border-line mb-6">
-                  ● KHOẢNG LẶNG TỰ NHÌN LẠI • ĐÃ LƯU TRÊN TRÌNH DUYỆT
+                  ● KHOẢNG LẶNG TỰ NHÌN LẠI • ĐÃ LƯU VÀO TÀI KHOẢN
                 </span>
               )}
 
@@ -557,8 +557,8 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                 <span>Đã lưu vào Góc của tôi</span>
               </h1>
               <p className="text-sm text-muted max-w-xl mx-auto leading-relaxed">
-                Lời gửi gắm đã được lưu vào Góc của tôi trên trình duyệt này.
-                Bạn có thể mở lại để đọc hoặc xóa khi muốn.
+                Lời gửi gắm đã được lưu vào Góc của tôi qua tài khoản. Bạn có thể
+                mở lại để đọc hoặc xóa khi muốn.
               </p>
             </div>
 
@@ -570,13 +570,13 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                 </div>
                 <div>
                   <h4 className="font-bold text-base text-ink mb-1 flex items-center gap-1.5 font-display">
-                    <span>Không gian lưu riêng trên trình duyệt</span>
+                    <span>Lưu riêng trong tài khoản</span>
                     <span className="text-xs text-accent">🛡</span>
                   </h4>
                   <p className="text-sm text-muted leading-relaxed">
-                    Nội dung được lưu theo hồ sơ demo trên trình duyệt này.
-                    Chưa có mã hóa nội dung hoặc đồng bộ qua máy chủ.
-                    Nếu xóa dữ liệu trang web trong trình duyệt, nội dung đã lưu có thể mất.
+                    Backend mã hóa nội dung trước khi lưu vào cơ sở dữ liệu và chỉ
+                    trả nội dung theo tài khoản đã đăng nhập. Đây không phải mã hóa
+                    đầu cuối; backend vẫn có thể giải mã để phục vụ ứng dụng.
                   </p>
                 </div>
               </div>
@@ -750,6 +750,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                   </h4>
                   <p className="text-sm text-muted leading-relaxed">
                     Nội dung đã được xóa khỏi ô viết và không được thêm vào nhật ký.
+                    Đây là hiệu ứng biểu tượng trong giao diện, chưa tạo hoặc thả hoa đăng WebGL.
                     Bạn có thể bắt đầu một lời gửi gắm mới.
                   </p>
                 </div>

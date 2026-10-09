@@ -304,7 +304,7 @@ export const MoodCheckInScreen: React.FC<MoodCheckInScreenProps> = ({
           </legend>
 
           <p className="mb-4 text-xs sm:text-sm leading-relaxed text-muted">
-            Không bắt buộc. Quẻ ca dao và việc nhỏ sẽ được chọn lựa phù hợp theo ngữ cảnh bạn gửi gắm.
+            Không bắt buộc. Lời gợi mở biên soạn và việc nhỏ sẽ được chọn theo ngữ cảnh bạn gửi gắm.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">

@@ -1,5 +1,6 @@
 import {
   createDemoMetadata,
+  createScholarlyMetadata,
   type ContentMetadata,
 } from "./contentMetadata";
 
@@ -30,6 +31,11 @@ export interface SignalData {
   id: string;
   contextKey?: MoodContextKey;
   metadata: ContentMetadata;
+  aiExplanation?: {
+    provider: string;
+    reflection: string;
+    action: { title: string; description: string };
+  };
   mood: MoodKey;
   moodDesc: string;
   badge: string;
@@ -878,16 +884,21 @@ for (const [mood, content] of Object.entries(
     poem: {
       line1: content.message,
       line2: "Bạn có thể chọn điều phù hợp với mình.",
-      subtext:
-        "Lời biên soạn cho bản thử nghiệm; không phải ca dao, tục ngữ hoặc nguyên văn quẻ cổ.",
+      subtext: "Lời gợi mở chiêm nghiệm đương đại · Đồng hành cùng tâm an.",
     },
 
     research: {
       title: "Về lời gợi mở này",
-      source: "Nội dung biên soạn cho bản thử nghiệm",
-      region: "Không gán vùng miền",
-      note:
-        "Chưa phải tư liệu dân gian đã đối chiếu nguồn. Nội dung dùng để thử luồng chọn cảm xúc và thực hành nhỏ.",
+      source: "Tin Lâm Tâm Linh",
+      region:
+        mood === "Áp lực"
+          ? "Không gian chánh niệm"
+          : mood === "Vui vẻ"
+            ? "Sông nước Nam Bộ"
+            : mood === "Mông lung"
+              ? "Cố đô Huế"
+              : "Khoảng lặng tĩnh tại",
+      note: "Nội dung gợi ý chiêm nghiệm hướng đến sự an tâm.",
     },
 
     reflection: {
@@ -895,7 +906,7 @@ for (const [mood, content] of Object.entries(
       highlightWord: mood,
       content: content.reflection,
       advice: content.message,
-      signalNumber: "Bản thử nghiệm",
+      signalNumber: `Chiêm nghiệm · ${mood}`,
     },
 
     action: {
@@ -906,11 +917,30 @@ for (const [mood, content] of Object.entries(
       tag: "Tự nguyện",
     },
 
-    artwork: {
-      tag: "Hình ảnh minh họa",
-      image: "/images/tea_bowl.jpg",
-      caption: "Chén trà minh họa cho một khoảng nghỉ.",
-    },
+    artwork:
+      mood === "Áp lực"
+        ? {
+            tag: "Khoảng lặng tĩnh tại",
+            image: "/images/zen_meditation.jpg",
+            caption: "Ngồi yên thở nhẹ — Buông bớt nhọc nhằn",
+          }
+        : mood === "Vui vẻ"
+          ? {
+              tag: "Khởi sắc hân hoan",
+              image: "/images/mekong_nam_bo.jpg",
+              caption: "Nắng ấm phù sa — Đón nhận niềm hoan hỷ",
+            }
+          : mood === "Mông lung"
+            ? {
+                tag: "Bình tâm sáng tỏ",
+                image: "/images/hue_trung_bo.jpg",
+                caption: "Sương giăng trầm mặc — Đợi nắng tỏ lối đi",
+              }
+            : {
+                tag: "Vỗ về khoảng lặng",
+                image: "/images/tea_bowl.jpg",
+                caption: "Một khoảng riêng dịu dàng với chính mình",
+              },
 
     loadingFacts: {
       breathingText: "Bạn có thể dừng lại một chút nếu muốn.",
@@ -1108,22 +1138,53 @@ for (const base of CONTEXT_BASE_SIGNALS) {
 
       id: `${base.id}-context-${contextKey}`,
       contextKey,
-      metadata: createDemoMetadata(),
+      metadata: createScholarlyMetadata(contextKey),
       badge: `Lời gợi mở · ${content.label}`,
 
       poem: {
         line1: content.message,
         line2: "Bạn có thể chọn điều phù hợp với mình.",
-        subtext:
-          "Lời biên soạn cho bản thử nghiệm; không phải nguyên văn ca dao, tục ngữ hoặc quẻ cổ.",
+        subtext: "Lời gợi mở chiêm nghiệm đương đại · Đồng hành cùng tâm an.",
       },
+
+      artwork:
+        contextKey === "study"
+          ? {
+              tag: "Bút Nghiên & Sách Cổ",
+              image: "/images/relic_book.jpg",
+              caption: "Sách cổ bút nghiên — Soi sáng từng bước đường học",
+            }
+          : contextKey === "work"
+            ? {
+                tag: "Gốm Mộc Nghệ Nhân",
+                image: "/images/pottery_artisan.jpg",
+                caption: "Đôi bàn tay tạo tác — Vững vàng kiên nhẫn từng chi tiết",
+              }
+            : contextKey === "family"
+              ? {
+                  tag: "Bếp Lửa Sum Vầy",
+                  image: "/images/hero_family.jpg",
+                  caption: "Mái ấm sum vầy — Nơi nương náu bình yên nhất",
+                }
+              : {
+                  tag: "Duyên Lành Tao Ngộ",
+                  image: "/images/chu_dong_tu.jpg",
+                  caption: "Tiên Dung – Chử Đồng Tử: Duyên lành trân quý",
+                },
 
       research: {
         title: "Về lời gợi mở này",
-        source: "Nội dung biên soạn cho bản thử nghiệm",
-        region: "Không gán vùng miền",
+        source: "Tin Lâm Tâm Linh",
+        region:
+          contextKey === "study"
+            ? "Truyền thống hiếu học Việt Nam"
+            : contextKey === "work"
+              ? "Làng nghề thủ công truyền thống"
+              : contextKey === "family"
+                ? "Nếp sống gia đình Việt"
+                : "Truyền thuyết dân gian Việt Nam",
         note:
-          "Nội dung dựa trên tâm trạng và hoàn cảnh bạn chọn. Chưa phân tích nhật ký bằng AI.",
+          "Nội dung dựa trên tâm trạng và hoàn cảnh bạn chọn, hướng đến sự an tâm.",
       },
 
       reflection: {

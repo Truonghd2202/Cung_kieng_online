@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { AppDialog } from "./AppDialog";
-import { createMemorialProfile, deleteMemorialProfile, loadMemorialProfiles, updateMemorialProfile, type MemorialProfile } from "../data/memoryService";
+import { createMemorialProfile, deleteMemorialProfile, loadMemorialProfiles, memorialProfileToRecord, updateMemorialProfile, type MemorialProfile } from "../data/memoryService";
 import type { MemorialRecord } from "../screens/MemorialSpaceScreen";
+import { MEMORIAL_PROFILES_CHANGED_EVENT } from "../hooks/useReminderOverview";
 
 const empty = { fullName: "", relationship: "", birthDate: "", deathDate: "", avatarUrl: "", biography: "", note: "", calendar: "LUNAR" as "LUNAR" | "SOLAR", day: "1", month: "1", reminder: false };
 export function MemorialProfilesPanel({ selectedId, onSelect }: { selectedId?: string; onSelect: (value: MemorialRecord | null) => void }) {
@@ -14,7 +15,7 @@ export function MemorialProfilesPanel({ selectedId, onSelect }: { selectedId?: s
   const [editor, setEditor] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<MemorialProfile | null>(null);
   const [form, setForm] = useState(empty);
-  const select = (profile: MemorialProfile) => onSelect({ id: profile.id, name: profile.fullName, relation: profile.relationship || "Người thân", date: profile.deathDate || "", note: profile.note || profile.biography || "" });
+  const select = (profile: MemorialProfile) => onSelect(memorialProfileToRecord(profile));
   async function refresh() {
     setLoading(true); setError("");
     try { setProfiles(await loadMemorialProfiles()); }
@@ -42,6 +43,7 @@ export function MemorialProfilesPanel({ selectedId, onSelect }: { selectedId?: s
         anniversary: form.reminder ? { calendar: form.calendar, day: Number(form.day), month: Number(form.month), repeatYearly: true } : null };
       const saved = editor === "new" ? await createMemorialProfile(input) : await updateMemorialProfile(editor!, input);
       setProfiles((items) => [...items.filter((item) => item.id !== saved.id), saved]);
+      window.dispatchEvent(new Event(MEMORIAL_PROFILES_CHANGED_EVENT));
       select(saved); setEditor(null); setMessage("Đã lưu hồ sơ và chọn cho bàn thờ.");
     } catch (e) { setError(e instanceof Error ? e.message : "Chưa lưu được hồ sơ. Vui lòng thử lại."); }
     finally { setBusy(false); }
@@ -52,6 +54,7 @@ export function MemorialProfilesPanel({ selectedId, onSelect }: { selectedId?: s
     try {
       await deleteMemorialProfile(deleting.id);
       setProfiles((items) => items.filter((item) => item.id !== deleting.id));
+      window.dispatchEvent(new Event(MEMORIAL_PROFILES_CHANGED_EVENT));
       if (selectedId === deleting.id) onSelect(null);
       setDeleting(null); setMessage("Đã xóa hồ sơ cùng lịch nhắc và lịch sử thắp nhang liên quan.");
     } catch (e) { setError(e instanceof Error ? e.message : "Chưa xóa được hồ sơ."); }

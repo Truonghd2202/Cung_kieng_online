@@ -26,12 +26,14 @@ interface SanctuarySceneProps {
   memorial: MemorialRecord | null;
   onOpenMemorial: () => void;
   decoration?: DecorationId | null;
+  onRecordIncense?: () => Promise<void>;
 }
 
 export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
   memorial,
   onOpenMemorial,
   decoration = null,
+  onRecordIncense,
 }) => {
   const hostRef = useRef<HTMLDivElement>(null);
   const resetRef = useRef<(() => void) | null>(null);
@@ -44,17 +46,35 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
   } | null>(null);
   const [error, setError] = useState("");
   const [incenseLit, setIncenseLit] = useState(false);
+  const [incensePending, setIncensePending] = useState(false);
+  const [incenseError, setIncenseError] = useState("");
 
   const incenseRef = useRef<{
     setLit: (lit: boolean) => void;
   } | null>(null);
 
-  const handleToggleIncense = () => {
+  const handleToggleIncense = async () => {
     const controller = incenseRef.current;
 
-    if (!controller || error) return;
+    if (!controller || error || incensePending) return;
 
     const next = !incenseLit;
+    setIncenseError("");
+    if (next) {
+      if (!memorial?.id || !onRecordIncense) {
+        setIncenseError("Hãy đăng nhập và chọn hồ sơ tưởng niệm trước khi ghi nhận lượt thắp hương.");
+        return;
+      }
+      setIncensePending(true);
+      try {
+        await onRecordIncense();
+      } catch {
+        setIncenseError("Chưa lưu được lượt thắp hương. Cảnh 3D chưa thay đổi; bạn có thể thử lại.");
+        setIncensePending(false);
+        return;
+      }
+      setIncensePending(false);
+    }
 
     controller.setLit(next);
     setIncenseLit(next);
@@ -1755,11 +1775,18 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
       {/* Memorial Tribute Display (if recorded) */}
       <div className="border-t border-line bg-surface-soft/60 p-4 sm:p-6">
         {memorial ? (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400">
-              <Heart className="w-3.5 h-3.5 fill-current text-rose-500" />
-              <span>GHI CHÚ TƯỞNG NHỚ ĐÍNH KÈM</span>
-            </div>
+          <div className="flex items-start gap-3">
+            {memorial.avatarUrl && (
+              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-amber-400/40 bg-surface">
+                <img src={memorial.avatarUrl} alt={`Di ảnh ${memorial.name}`} className="h-full w-full object-cover" onError={(event) => { event.currentTarget.classList.add("hidden"); event.currentTarget.nextElementSibling?.classList.remove("hidden"); }} />
+                <Heart className="hidden h-full w-full p-4 text-rose-500" aria-hidden="true" />
+              </div>
+            )}
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400">
+                <Heart className="w-3.5 h-3.5 fill-current text-rose-500" />
+                <span>GHI CHÚ TƯỞNG NHỚ ĐÍNH KÈM</span>
+              </div>
 
             <h3 className="font-display text-xl font-bold text-ink">
               {memorial.name}
@@ -1775,6 +1802,7 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
                 “{memorial.note}”
               </p>
             )}
+            </div>
           </div>
         ) : (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1807,7 +1835,7 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
           <div className="flex items-center gap-3">
             <button
               type="button"
-              disabled={Boolean(error)}
+              disabled={Boolean(error) || incensePending}
               aria-pressed={incenseLit}
               onClick={handleToggleIncense}
               className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md flex items-center gap-2 cursor-pointer ${
@@ -1825,11 +1853,14 @@ export const SanctuaryScene: React.FC<SanctuarySceneProps> = ({
             </button>
 
             <span className="text-xs text-stone-600 dark:text-stone-300 font-medium">
-              {incenseLit
-                ? "Làn hương thanh tịnh đang dâng lên trong không gian."
-                : "Nhấn để dâng nén hương thơm thành kính."}
+              {incensePending
+                ? "Đang ghi nhận lượt thắp hương…"
+                : incenseError || (incenseLit
+                  ? "Làn hương thanh tịnh đang dâng lên trong không gian."
+                  : "Nhấn để dâng nén hương thơm thành kính.")}
             </span>
           </div>
+          {incenseError && <p role="alert" className="text-sm text-danger">{incenseError}</p>}
 
           {/* Camera View Controls */}
           <div

@@ -12,9 +12,8 @@ import {
 } from "../data/adminService";
 import "./admin.css";
 
-type Section = "overview" | "culture" | "calendar" | "xam" | "membership-interests" | "audit-logs";
+type Section = "overview" | "culture" | "calendar" | "xam" | "rituals" | "prayers" | "membership-interests" | "audit-logs";
 import { ContentEditor } from "./ContentEditor";
-type ListSection = Exclude<Section, "overview">;
 type ReviewField = "verified" | "active";
 
 const NAV: Array<{ id: Section; label: string; icon: typeof LayoutDashboard; group: string }> = [
@@ -22,6 +21,8 @@ const NAV: Array<{ id: Section; label: string; icon: typeof LayoutDashboard; gro
   { id: "culture", label: "Kho văn hóa", icon: BookOpenText, group: "NỘI DUNG" },
   { id: "calendar", label: "Lịch sự kiện", icon: CalendarDays, group: "NỘI DUNG" },
   { id: "xam", label: "Danh mục xin xăm", icon: LibraryBig, group: "NỘI DUNG" },
+  { id: "rituals", label: "Nghi lễ", icon: BookOpenText, group: "NỘI DUNG" },
+  { id: "prayers", label: "Văn khấn", icon: FileCheck2, group: "NỘI DUNG" },
   { id: "membership-interests", label: "Quan tâm hội viên", icon: UsersRound, group: "TĂNG TRƯỞNG" },
   { id: "audit-logs", label: "Nhật ký quản trị", icon: FileCheck2, group: "HỆ THỐNG" },
 ];
@@ -31,6 +32,8 @@ const TITLES: Record<Section, { title: string; description: string }> = {
   culture: { title: "Kho văn hóa", description: "Rà soát nguồn và trạng thái xác minh của tư liệu văn hóa." },
   calendar: { title: "Lịch sự kiện", description: "Kiểm tra ngày, loại lịch và nguồn của từng sự kiện." },
   xam: { title: "Danh mục xin xăm", description: "Quản lý danh mục tham khảo và trạng thái thẩm định diễn giải." },
+  rituals: { title: "Nghi lễ", description: "Rà soát nguồn, vùng miền và trạng thái xuất bản của hướng dẫn nghi lễ." },
+  prayers: { title: "Văn khấn", description: "Chỉ xác minh sau khi ghi locator, đối chiếu nội dung và xác nhận quyền sử dụng." },
   "membership-interests": { title: "Quan tâm hội viên", description: "Danh sách email đã tự nguyện đăng ký nhận thông tin gói hội viên." },
   "audit-logs": { title: "Nhật ký quản trị", description: "Lịch sử thay đổi trạng thái nội dung do admin thực hiện." },
 };
@@ -79,6 +82,10 @@ export default function AdminApp() {
   const [reviewField, setReviewField] = useState<ReviewField | null>(null);
   const [reviewValue, setReviewValue] = useState(false);
   const [reviewNote, setReviewNote] = useState("");
+  const [rightsConfirmed, setRightsConfirmed] = useState(false);
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [sourceLocator, setSourceLocator] = useState("");
+  const [usageRights, setUsageRights] = useState<"confirmed" | "public-domain" | "permission-required" | "unknown">("unknown");
   const [editing, setEditing] = useState<{ kind: "culture" | "calendar" | "xam"; id?: string } | null>(null);
   const [savingReview, setSavingReview] = useState(false);
 
@@ -165,6 +172,10 @@ export default function AdminApp() {
     setReviewField(field);
     setReviewValue(!Boolean(record[field]));
     setReviewNote("");
+    setRightsConfirmed(false);
+    setSourceUrl(typeof record.source === "string" ? record.source : "");
+    setSourceLocator("");
+    setUsageRights("unknown");
   };
 
   const saveReview = async (event: FormEvent<HTMLFormElement>) => {
@@ -173,7 +184,8 @@ export default function AdminApp() {
     setSavingReview(true);
     setError("");
     try {
-      await reviewAdminRecord(section, reviewRecord.id, { [reviewField]: reviewValue, reviewNote });
+      const needsRights = (section === "xam" || section === "rituals" || section === "prayers") && reviewField === "verified" && reviewValue;
+      await reviewAdminRecord(section, reviewRecord.id, { [reviewField]: reviewValue, reviewNote, ...(needsRights ? { rightsConfirmed, ...(section === "rituals" || section === "prayers" ? { source: sourceUrl.trim() } : {}), sourceLocator, usageRights } : {}) });
       setReviewRecord(null);
       await fetchSection(section, page, search);
     } catch (saveError) {
@@ -269,10 +281,23 @@ export default function AdminApp() {
             {!loading && rows.length === 0 && !error && <div className="admin-empty"><CircleHelp size={24} /><strong>Chưa có dữ liệu phù hợp</strong><span>Thử đổi từ khóa hoặc quay lại sau.</span></div>}
             {!loading && rows.length > 0 && <RecordList section={section} rows={rows} onReview={beginReview} onEdit={(id) => { if (section === "culture" || section === "calendar" || section === "xam") setEditing({ kind: section, id }); }} />}
             {reviewRecord && reviewField && <form className="admin-review-panel" onSubmit={(event) => void saveReview(event)}>
-              <div><strong>{reviewField === "verified" ? "Cập nhật trạng thái xác minh" : "Cập nhật trạng thái hiển thị"}</strong><p className="admin-muted">Ghi lý do để lưu vào nhật ký quản trị. Việc xác minh cần dựa trên nguồn đã kiểm tra.</p></div>
+<div><strong>{reviewField === "verified" ? "Cập nhật trạng thái xác minh" : "Cập nhật trạng thái hiển thị"}</strong><p className="admin-muted">Ghi lý do để lưu vào nhật ký quản trị. Với quẻ xăm, cần đủ bốn dòng thơ và luận giải; người duyệt phải kiểm tra nội dung, nguồn và quyền sử dụng trước khi xác minh.</p></div>
+              {(section === "xam" || section === "rituals" || section === "prayers") && reviewField === "verified" && reviewValue && <>
+                {(section === "rituals" || section === "prayers") && <>
+                   <label htmlFor="admin-source-url">URL nguồn HTTPS <span aria-hidden="true">*</span></label>
+                   <input id="admin-source-url" type="url" required value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} placeholder="https://…" />
+                  <label htmlFor="admin-source-locator">Vị trí trích dẫn / locator <span aria-hidden="true">*</span></label>
+                  <input id="admin-source-locator" required minLength={2} maxLength={500} value={sourceLocator} onChange={(event) => setSourceLocator(event.target.value)} placeholder="Trang, mục, số hiệu văn bản hoặc mốc thời gian" />
+                  <label htmlFor="admin-usage-rights">Căn cứ quyền sử dụng <span aria-hidden="true">*</span></label>
+                  <select id="admin-usage-rights" value={usageRights} onChange={(event) => setUsageRights(event.target.value as typeof usageRights)}>
+                    <option value="unknown">Chưa xác minh</option><option value="confirmed">Đã có xác nhận quyền</option><option value="public-domain">Đã xác minh thuộc phạm vi công cộng</option><option value="permission-required">Cần xin phép</option>
+                  </select>
+                </>}
+                <label className="admin-review-rights"><input type="checkbox" checked={rightsConfirmed} onChange={(event) => setRightsConfirmed(event.target.checked)} /> Tôi đã kiểm tra nguồn và có căn cứ để xuất bản.</label>
+              </>}
               <label htmlFor="admin-review-note">Ghi chú rà soát <span aria-hidden="true">*</span></label>
               <textarea id="admin-review-note" required minLength={8} maxLength={500} rows={3} value={reviewNote} onChange={(event) => setReviewNote(event.target.value)} placeholder="Nêu nguồn đã đối chiếu và kết quả rà soát…" />
-              <div className="admin-review-actions"><button className="admin-secondary-button" type="button" onClick={() => setReviewRecord(null)}>Hủy</button><button className="admin-primary-button" type="submit" disabled={savingReview || reviewNote.trim().length < 8}>{savingReview ? "Đang lưu…" : "Lưu thay đổi"}</button></div>
+              <div className="admin-review-actions"><button className="admin-secondary-button" type="button" onClick={() => setReviewRecord(null)}>Hủy</button><button className="admin-primary-button" type="submit" disabled={savingReview || reviewNote.trim().length < 8 || (((section === "xam" || section === "rituals" || section === "prayers") && reviewField === "verified" && reviewValue) && (!rightsConfirmed || ((section === "rituals" || section === "prayers") && (!/^https:\/\//i.test(sourceUrl.trim()) || sourceLocator.trim().length < 2 || !["confirmed", "public-domain"].includes(usageRights)))))}>{savingReview ? "Đang lưu…" : "Lưu thay đổi"}</button></div>
             </form>}
             {pageData && pageData.pagination.pageCount > 1 && <div className="admin-pagination"><span>{pageData.pagination.total.toLocaleString("vi-VN")} bản ghi · Trang {page} / {pageData.pagination.pageCount}</span><div><button type="button" aria-label="Trang trước" disabled={page <= 1 || loading} onClick={() => changePage(page - 1)}><ChevronLeft size={18} /></button><button type="button" aria-label="Trang sau" disabled={page >= pageData.pagination.pageCount || loading} onClick={() => changePage(page + 1)}><ChevronRight size={18} /></button></div></div>}
           </section>}
@@ -297,6 +322,8 @@ function OverviewPanel({ overview, loading, onNavigate }: { overview: AdminOverv
     { label: "Bài văn hóa cần rà soát", value: overview.content.articlesAwaitingReview, total: overview.content.activeArticles, target: "culture" as const },
     { label: "Sự kiện lịch cần rà soát", value: overview.content.calendarEventsAwaitingReview, total: overview.content.activeCalendarEvents, target: "calendar" as const },
     { label: "Thẻ xin xăm cần rà soát", value: overview.content.xamLotsAwaitingReview, total: overview.content.activeXamLots, target: "xam" as const },
+    { label: "Nghi lễ cần rà soát", value: overview.content.ritualsAwaitingReview, total: overview.content.activeRituals, target: "rituals" as const },
+    { label: "Văn khấn cần rà soát", value: overview.content.prayersAwaitingReview, total: overview.content.activePrayers, target: "prayers" as const },
   ];
 
   return <div className="admin-overview">
@@ -330,13 +357,17 @@ function RecordList({ section, rows, onReview, onEdit }: { section: Section; row
     const secondary = section === "culture" ? `${displayValue(row.category)} · ${displayValue(row.region)}`
       : section === "calendar" ? `${displayValue(row.calendar)} · ${displayValue(row.day)}/${displayValue(row.month)} · ${displayValue(row.region)}`
         : section === "xam" ? `${displayValue(row.xam_type)} · Số ${displayValue(row.stick_number)} · ${displayValue(row.fortune_level)}`
-          : section === "membership-interests" ? `Đăng ký ${dateValue(row.created_at)}`
+          : section === "rituals" ? `${displayValue(row.occasion)} · ${displayValue(row.region)}`
+            : section === "prayers" ? `${displayValue(row.language_style)} · ${displayValue(row.region)} · ${displayValue(row.ritual_id)}`
+              : section === "membership-interests" ? `Đăng ký ${dateValue(row.created_at)}`
             : `${displayValue(row.target_type)} · ${dateValue(row.created_at)} · ${displayValue((row.users as { full_name?: string } | undefined)?.full_name)}`;
-    const canReview = section === "culture" || section === "calendar" || section === "xam";
+    const canReview = section === "culture" || section === "calendar" || section === "xam" || section === "rituals" || section === "prayers";
+    const canEdit = section === "culture" || section === "calendar" || section === "xam";
+    const requiresExistingSource = section === "culture" || section === "calendar" || section === "xam";
     return <article className="admin-record-card" key={row.id}>
-      {canReview && <button type="button" className="admin-mini-button" onClick={() => onEdit(row.id)}>Biên tập</button>}
+      {canEdit && <button type="button" className="admin-mini-button" onClick={() => onEdit(row.id)}>Biên tập</button>}
       <div className="admin-record-main"><div className="admin-record-title-row"><h2>{title}</h2>{row.verified !== undefined && <StatusBadge label={row.verified ? "Đã xác minh" : "Chưa xác minh"} active={Boolean(row.verified)} />}</div><p>{secondary}</p>{section === "culture" && <small className="admin-record-slug">/{displayValue(row.slug)}</small>}{section === "culture" && row.verified === true && <small className="admin-record-slug">Trạng thái nguồn không đồng nghĩa toàn bộ bài viết đã được thẩm định học thuật.</small>}{section === "audit-logs" && <small className="admin-record-slug">Mã mục tiêu: {displayValue(row.target_id)} · {displayValue(JSON.stringify(row.details))}</small>}{source ? <a className="admin-source-link" href={source} target="_blank" rel="noreferrer">Mở nguồn tham chiếu <ArrowUpRight size={14} /></a> : (section === "culture" || section === "calendar" || section === "xam") && <span className="admin-source-missing">Chưa có liên kết nguồn</span>}</div>
-      <div className="admin-record-side">{row.active !== undefined && <StatusBadge label={row.active ? "Đang hiển thị" : "Đã ẩn"} active={Boolean(row.active)} />}{canReview && <div className="admin-record-actions">{row.verified !== undefined && <button type="button" className="admin-mini-button" disabled={!row.verified && !source} onClick={() => onReview(row, "verified")} title={!row.verified && !source ? "Cần bổ sung nguồn HTTPS trước khi xác minh" : undefined}><Check size={15} />{row.verified ? "Bỏ xác minh" : "Xác minh"}</button>}{row.active !== undefined && <button type="button" className="admin-mini-button" onClick={() => onReview(row, "active")}><X size={15} />{row.active ? "Ẩn mục" : "Hiện lại"}</button>}</div>}</div>
+      <div className="admin-record-side">{row.active !== undefined && <StatusBadge label={row.active ? "Đang hiển thị" : "Đã ẩn"} active={Boolean(row.active)} />}{canReview && <div className="admin-record-actions">{row.verified !== undefined && <button type="button" className="admin-mini-button" disabled={!row.verified && requiresExistingSource && !source} onClick={() => onReview(row, "verified")} title={!row.verified && requiresExistingSource && !source ? "Cần bổ sung nguồn HTTPS trước khi xác minh" : undefined}><Check size={15} />{row.verified ? "Bỏ xác minh" : "Xác minh"}</button>}{row.active !== undefined && <button type="button" className="admin-mini-button" onClick={() => onReview(row, "active")}><X size={15} />{row.active ? "Ẩn mục" : "Hiện lại"}</button>}</div>}</div>
     </article>;
   })}</div>;
 }

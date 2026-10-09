@@ -28,6 +28,7 @@ const memorialSchema = z.object({
 });
 
 const memorialUpdateSchema = memorialSchema.partial();
+const anniversaryParamsSchema = z.object({ id: z.string().uuid(), anniversaryId: z.string().uuid() });
 const incenseSchema = z.object({ message: z.string().trim().max(1000).optional(), incenseCount: z.coerce.number().int().min(1).max(3).default(1) });
 
-module.exports = { memorialSchema, memorialUpdateSchema, incenseSchema };
+module.exports = { memorialSchema, memorialUpdateSchema, anniversaryParamsSchema, incenseSchema };

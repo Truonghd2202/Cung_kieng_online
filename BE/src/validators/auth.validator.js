@@ -18,6 +18,10 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+const googleLoginSchema = z.object({
+  credential: z.string().min(1, "Google credential is required").max(8192),
+});
+
 const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "Current password is required"),
@@ -28,4 +32,19 @@ const changePasswordSchema = z
     message: "New password must be different from current password",
   });
 
-module.exports = { registerSchema, loginSchema, changePasswordSchema };
+const forgotPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Email is invalid").max(255),
+});
+
+const verifyResetCodeSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Email is invalid").max(255),
+  code: z.string().regex(/^\d{6}$/, "Verification code must contain 6 digits"),
+});
+
+const resetPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Email is invalid").max(255),
+  code: z.string().regex(/^\d{6}$/, "Verification code must contain 6 digits"),
+  newPassword: password,
+});
+
+module.exports = { registerSchema, loginSchema, googleLoginSchema, changePasswordSchema, forgotPasswordSchema, verifyResetCodeSchema, resetPasswordSchema, password };

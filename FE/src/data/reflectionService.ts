@@ -1,6 +1,7 @@
 import { apiRequest } from "../lib/api";
 import { trackProductEvent } from "./productAnalytics";
 import type { SavedWishItem, SavedXinXamItem } from "../screens/AccountScreen";
+import type { ContentMetadata } from "./contentMetadata";
 
 export interface SourcedProverb {
   id: string;
@@ -40,9 +41,22 @@ export function saveXam(result: {
 }
 
 export interface XinXamDrawResponse extends SavedXinXamItem {
+  active: boolean;
+  xamType: string;
   classification: string;
   rank: "Thượng Xăm" | "Trung Xăm" | "Hạ Xăm";
   classificationGroup: "CAT" | "NEUTRAL" | "CAUTION";
+  poem: string | null;
+  originalContent: {
+    poem: string | null;
+    meaning: string;
+    advice: string;
+    metadata: ContentMetadata;
+  };
+  aiExplanation: {
+    content: string;
+    metadata: ContentMetadata;
+  } | null;
   meaning: string;
   advice: string;
   disclaimer: string;
@@ -104,10 +118,10 @@ export interface XinKeoCast {
   proverb: SourcedProverb | null;
 }
 
-export function createXinKeoSession(question: string): Promise<{ id: string }> {
+export function createXinKeoSession(question: string, drawId?: string): Promise<{ id: string }> {
   return apiRequest<{ id: string }>("/reflections/xin-keo/sessions", {
     method: "POST",
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({ question, drawId }),
   });
 }
 

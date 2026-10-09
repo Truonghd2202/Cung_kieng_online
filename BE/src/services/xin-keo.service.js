@@ -1,4 +1,5 @@
 const repository = require("../repositories/xin-keo.repository");
+const xinXamRepository = require("../repositories/xin-xam.repository");
 const ApiError = require("../utils/api-error");
 const { pickVerifiedProverb, toProverbDto } = require("./proverb.service");
 
@@ -26,30 +27,39 @@ function toPublicThrow(item) {
 }
 
 function toPublicSession(session) {
-  return { id: session.id, question: session.question, finalResult: session.final_result, createdAt: session.created_at, throws: session.xin_keo_throws.map(toPublicThrow) };
+  return { id: session.id, question: session.question, drawId: session.draw_id || null, finalResult: session.final_result, createdAt: session.created_at, throws: session.xin_keo_throws.map(toPublicThrow) };
 }
 
-async function createSession(userId, question) {
-  return toPublicSession(await repository.createSession({ user_id: userId, question }));
+async function createSession(userId, question, drawId) {
+  if (drawId) {
+    const draw = await xinXamRepository.findDraw(drawId, userId);
+    if (!draw) throw new ApiError(404, "Xin xam draw not found");
+  }
+  return toPublicSession(await repository.createSession({ user_id: userId, question, draw_id: drawId || null }));
 }
 
 async function throwKeo(userId, sessionId) {
   const session = await repository.findSession(sessionId, userId);
   if (!session) throw new ApiError(404, "Xin keo session not found");
-  if (session.xin_keo_throws.length >= 3) throw new ApiError(409, "A xin keo session is limited to three throws");
   const cast = castPieces();
   const proverb = await pickVerifiedProverb({
     categories: PROVERB_CATEGORIES[cast.result],
     excludeIds: session.xin_keo_throws.map((item) => item.proverb_id).filter(Boolean),
   });
-  return toPublicThrow(await repository.createThrowAndUpdateSession(session, {
+  try {
+    return toPublicThrow(await repository.createThrowAndUpdateSession(session, {
     session_id: session.id,
-    throw_number: session.xin_keo_throws.length + 1,
     left_side: cast.left,
     right_side: cast.right,
     result: cast.result,
     proverb_id: proverb?.id || null,
-  }));
+    }));
+  } catch (error) {
+    if (error?.code === "SESSION_MAX_THROWS" || error?.code === "P2002") {
+      throw new ApiError(409, "A xin keo session is limited to three throws");
+    }
+    throw error;
+  }
 }
 
 async function listSessions(userId) { return (await repository.listSessions(userId)).map(toPublicSession); }

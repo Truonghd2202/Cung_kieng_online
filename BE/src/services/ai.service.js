@@ -72,11 +72,13 @@ async function enrichSignal(signal, { mood, contextKey }) {
       aiUsed: true,
       signal: {
         ...signal,
-        reflection: { ...signal.reflection, content: generated.reflection },
-        action: {
-          ...signal.action,
-          title: generated.actionTitle,
-          description: generated.actionDescription,
+        aiExplanation: {
+          provider: "gemini",
+          reflection: generated.reflection,
+          action: {
+            title: generated.actionTitle,
+            description: generated.actionDescription,
+          },
         },
       },
     };

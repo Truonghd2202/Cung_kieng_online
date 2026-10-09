@@ -16,6 +16,11 @@
   font-family: var(--font-body, "Be Vietnam Pro", sans-serif);
 }
 
+.split-login-viewport.register-auth-viewport {
+  height: calc(100dvh - 73px);
+  min-height: calc(100dvh - 73px);
+}
+
 /* ==========================================================================
    1. CỘT TRÁI (~60%): TRANH TIÊN CẢNH NGHỆ THUẬT & LƯ HƯƠNG TAM THẾ
    ========================================================================== */
@@ -209,12 +214,23 @@
   width: 40%;
   height: 100%;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: center;
   overflow-y: auto;
   overflow-x: hidden;
-  background: #f7f0e6;
-  padding: 36px 48px;
+  background:
+    radial-gradient(ellipse at 80% 12%, rgba(245, 205, 140, 0.22) 0%, transparent 50%),
+    radial-gradient(ellipse at 15% 88%, rgba(180, 45, 55, 0.08) 0%, transparent 45%),
+    linear-gradient(165deg, #fdfbf7 0%, #f6f0e4 50%, #f1eae0 100%);
+  padding: 32px 36px;
   box-sizing: border-box;
+}
+
+:is(.dark, .dark *) .split-login-right {
+  background:
+    radial-gradient(ellipse at 80% 12%, rgba(212, 175, 55, 0.14) 0%, transparent 50%),
+    radial-gradient(ellipse at 15% 88%, rgba(143, 32, 43, 0.22) 0%, transparent 45%),
+    linear-gradient(165deg, #181316 0%, #130f11 50%, #161214 100%);
 }
 
 /* Hoa văn mây góc trên bên phải */
@@ -224,7 +240,7 @@
   right: 0;
   width: 140px;
   height: 110px;
-  color: rgba(195, 160, 120, 0.35);
+  color: rgba(195, 160, 120, 0.25);
   pointer-events: none;
 }
 
@@ -235,7 +251,7 @@
   right: 0;
   width: 160px;
   height: 130px;
-  color: rgba(215, 145, 145, 0.35);
+  color: rgba(215, 145, 145, 0.25);
   pointer-events: none;
 }
 
@@ -725,6 +741,10 @@
     overflow-y: auto;
   }
 
+  .split-login-viewport.register-auth-viewport {
+    min-height: calc(100dvh - 73px);
+  }
+
   .split-login-left {
     width: 100%;
     height: 360px;
@@ -773,6 +793,52 @@
   .split-topbar-btn {
     padding: 4px 10px;
     font-size: 12px;
+  }
+}
+
+/* Auth pages share the same responsive split composition on small screens. */
+@media (max-width: 767px) {
+  .split-login-viewport {
+    flex-direction: column;
+    height: auto;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .split-login-viewport .split-login-left {
+    width: 100%;
+    height: clamp(180px, 28dvh, 260px);
+    min-height: 180px;
+    max-height: 260px;
+    flex: 0 0 auto;
+  }
+
+  .split-login-viewport .split-login-right {
+    width: 100%;
+    height: auto;
+    min-height: calc(100dvh - 220px);
+    overflow: visible;
+    padding: 28px 24px 36px;
+  }
+
+  .split-login-viewport .login-cinematic-left {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 767px) {
+  .split-login-viewport.login-success-screen {
+    position: fixed;
+    inset: 0;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .split-login-viewport.login-success-screen .split-login-left {
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
   }
 }
 

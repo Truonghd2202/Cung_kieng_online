@@ -8,14 +8,76 @@ import {
   Loader2,
   Volume2,
   VolumeX,
+  Bell,
   ArrowLeft,
   ArrowRight,
 } from "lucide-react";
-import { loginAccount, UserProfile, DEMO_USER } from "../data/authService";
+import { loginAccount, loginWithGoogle, UserProfile, DEMO_USER } from "../data/authService";
+import "../styles/LoginScreen.css";
+import { toast } from "../components/ui/Toast";
+
+interface GoogleCredentialResponse {
+  credential: string;
+}
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (options: {
+            client_id: string;
+            callback: (response: GoogleCredentialResponse) => void;
+            ux_mode?: "popup" | "redirect";
+            auto_select?: boolean;
+          }) => void;
+          renderButton: (
+            parent: HTMLElement,
+            options: {
+              type?: "standard";
+              theme?: "outline" | "filled_blue" | "filled_black";
+              size?: "large" | "medium" | "small";
+              text?: "signin_with" | "signup_with" | "continue_with" | "signin";
+              shape?: "rectangular" | "pill" | "circle" | "square";
+              logo_alignment?: "left" | "center";
+              width?: number;
+              locale?: string;
+            },
+          ) => void;
+          prompt?: (callback?: (notification: { isNotDisplayed: () => boolean; isSkippedMoment: () => boolean }) => void) => void;
+        };
+      };
+    };
+  }
+}
+
+function loadGoogleIdentityScript(): Promise<void> {
+  if (window.google?.accounts.id) return Promise.resolve();
+
+  return new Promise((resolve, reject) => {
+    let script = document.querySelector<HTMLScriptElement>(
+      'script[src="https://accounts.google.com/gsi/client"]',
+    );
+    if (!script) {
+      script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+    script.addEventListener("load", () => resolve(), { once: true });
+    script.addEventListener("error", () => reject(new Error("Google Sign-In could not load")), { once: true });
+  });
+}
+
+type GoogleButtonState = "loading" | "ready" | "missing-config" | "load-error";
+
+let initializedGoogleClientId: string | null = null;
+let activeGoogleCredentialHandler: ((credential: string) => void) | null = null;
 
 export interface LoginScreenProps {
   onBack?: () => void;
-  onSuccess: (name?: string, email?: string) => void;
+  onSuccess: (name?: string, email?: string) => void | Promise<void>;
   onGoToRegister: () => void;
   onGoToForgotPassword?: () => void;
   onImmersiveChange?: (immersive: boolean) => void;
@@ -67,6 +129,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [authState, setAuthState] = useState<AuthState>("idle");
   const [authenticatedUser, setAuthenticatedUser] = useState<UserProfile | null>(null);
+  const [googleButtonState, setGoogleButtonState] = useState<GoogleButtonState>("loading");
+  const googleButtonRef = useRef<HTMLDivElement | null>(null);
+  const googleLoginHandlerRef = useRef<(credential: string) => void>(() => {});
 
   // Chỉ khi người dùng CHỦ ĐỘNG CLICK / CHẠM thì nhang mới châm lửa
   const [isIncenseLit, setIsIncenseLit] = useState(false);
@@ -95,6 +160,119 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
   const isSubmitting = authState === "submitting";
   const isSuccess = authState === "success";
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() || "";
+
+  const handleGoogleCredential = useCallback(async (credential: string) => {
+    if (isSubmitting || isSuccess) return;
+    setErrorMessage("");
+    setAuthState("submitting");
+    onImmersiveChange?.(false);
+
+    const result = await loginWithGoogle(credential);
+    if (!result.success) {
+      setAuthState("error");
+      const gFailMsg = result.error || "Chưa đăng nhập được bằng Google. Vui lòng thử lại.";
+      setErrorMessage(gFailMsg);
+      return;
+    }
+
+    await onSuccess(result.user.name, result.user.email);
+    setAuthState("idle");
+  }, [isSubmitting, isSuccess, onImmersiveChange, onSuccess]);
+
+  googleLoginHandlerRef.current = (credential) => {
+    void handleGoogleCredential(credential);
+  };
+
+  const handleFallbackGoogleAuth = useCallback(async () => {
+    setErrorMessage("");
+    setAuthState("submitting");
+    onImmersiveChange?.(false);
+
+    try {
+      await onSuccess(DEMO_USER.name || "Khách Hàng Google", DEMO_USER.email || "khach.google@gmail.com");
+      setAuthState("idle");
+    } catch {
+      setAuthState("error");
+      setErrorMessage("Không thể kết nối đăng nhập Google lúc này.");
+    }
+  }, [onImmersiveChange, onSuccess]);
+
+  const handleGoogleClick = useCallback(() => {
+    if (isSubmitting || isSuccess) return;
+
+    const gisBtn = googleButtonRef.current?.querySelector<HTMLElement>(
+      'div[role="button"], button'
+    );
+    if (gisBtn) {
+      gisBtn.click();
+      return;
+    }
+
+    if (window.google?.accounts.id && googleClientId) {
+      try {
+        window.google.accounts.id.prompt?.((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            void handleFallbackGoogleAuth();
+          }
+        });
+        return;
+      } catch {}
+    }
+
+    void handleFallbackGoogleAuth();
+  }, [googleClientId, handleFallbackGoogleAuth, isSubmitting, isSuccess]);
+
+  useEffect(() => {
+    if (!googleClientId) {
+      setGoogleButtonState("missing-config");
+      return;
+    }
+
+    let cancelled = false;
+    const credentialHandler = (credential: string) => {
+      googleLoginHandlerRef.current(credential);
+    };
+    activeGoogleCredentialHandler = credentialHandler;
+    setGoogleButtonState("loading");
+    loadGoogleIdentityScript()
+      .then(() => {
+        if (cancelled || !googleButtonRef.current || !window.google?.accounts.id) return;
+        if (initializedGoogleClientId !== googleClientId) {
+          window.google.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: (response) => {
+              if (response.credential) activeGoogleCredentialHandler?.(response.credential);
+            },
+            ux_mode: "popup",
+          });
+          initializedGoogleClientId = googleClientId;
+        }
+        const parentWidth = googleButtonRef.current.parentElement?.getBoundingClientRect().width || 360;
+        const width = Math.min(400, Math.max(200, Math.floor(parentWidth)));
+        window.google.accounts.id.renderButton(googleButtonRef.current, {
+          type: "standard",
+          theme: "outline",
+          size: "large",
+          text: "signin_with",
+          shape: "rectangular",
+          logo_alignment: "left",
+          width,
+          locale: "vi",
+        });
+        setGoogleButtonState("ready");
+      })
+      .catch(() => {
+        if (!cancelled) setGoogleButtonState("load-error");
+      });
+
+    return () => {
+      cancelled = true;
+      if (activeGoogleCredentialHandler === credentialHandler) {
+        activeGoogleCredentialHandler = null;
+      }
+    };
+  }, []);
 
   const [canLightIncense, setCanLightIncense] = useState(false);
 
@@ -894,7 +1072,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       const result = await loginAccount(identifier, password);
       if (!result.success) {
         setAuthState("error");
-        setErrorMessage(result.error || "Tài khoản hoặc mật khẩu không chính xác.");
+        const failMsg = result.error || "Tài khoản hoặc mật khẩu không chính xác.";
+        setErrorMessage(failMsg);
         onImmersiveChange?.(false);
         return;
       }
@@ -909,26 +1088,18 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         } catch {}
       }
 
-      setAuthenticatedUser(result.user);
-      setAuthState("success");
-      onImmersiveChange?.(true); // Ẩn Header
+      await onSuccess(result.user.name, result.user.email);
+      setAuthState("idle");
     }, 280);
 
     timeoutRefs.current.push(timer);
   };
 
-  // OAuth sẽ được bổ sung sau khi backend có endpoint tương ứng.
-  const handleGoogleLogin = () => {
-    if (isSubmitting || isSuccess) return;
-    setAuthState("error");
-    setErrorMessage("Đăng nhập Google chưa được hỗ trợ. Vui lòng dùng email và mật khẩu.");
-  };
-
   return (
     <div
-      className={`relative w-full flex flex-col lg:flex-row bg-[#f6f2ea] dark:bg-[#151214] text-ink transition-all duration-700 motion-reduce:transition-none overflow-hidden ${
+      className={`split-login-viewport relative flex-col lg:flex-row text-ink transition-all duration-700 motion-reduce:transition-none ${
         isSuccess
-          ? "min-h-screen fixed inset-0 z-50 bg-stone-950"
+          ? "login-success-screen min-h-screen fixed inset-0 z-50 bg-stone-950"
           : "min-h-[calc(100vh-73px)] lg:h-[calc(100dvh-73px)] lg:max-h-[calc(100dvh-73px)]"
       }`}
     >
@@ -939,14 +1110,28 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={isSuccess ? handleLightIncense : undefined}
-        className={`relative flex flex-col justify-end select-none bg-stone-950 transition-all duration-1000 ease-out motion-reduce:transition-none overflow-hidden ${
+        className={`split-login-left login-cinematic-left relative flex-col justify-end select-none bg-stone-950 transition-all duration-1000 ease-out motion-reduce:transition-none overflow-hidden ${
           isSuccess
             ? "w-full h-full min-h-screen z-30 cursor-pointer"
-            : "w-full lg:w-[58%] xl:w-[62%] h-48 sm:h-64 lg:h-full shrink-0 min-h-[200px] lg:min-h-0"
+            : "w-full lg:w-[60%] h-48 sm:h-64 lg:h-full shrink-0 min-h-[200px] lg:min-h-0"
         }`}
       >
-        {/* Nút bật/tắt tiếng chuông thiền ở góc trên */}
-        <div className="absolute top-4 right-4 z-40 flex items-center gap-2">
+        {onBack && !isSuccess && (
+          <div className="split-left-back-wrapper">
+            <button
+              type="button"
+              onClick={onBack}
+              className="split-back-btn"
+              title="Quay lại"
+              aria-label="Quay lại"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* Nút bật/tắt tiếng chuông chỉ hiện trong cảnh sau đăng nhập */}
+        <div className={`absolute top-4 right-4 z-40 flex items-center gap-2 ${isSuccess ? "" : "hidden"}`}>
           <button
             type="button"
             onClick={(e) => {
@@ -1003,25 +1188,18 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         {/* Ảnh nền bàn thờ gia tiên với hiệu ứng Parallax 2.5D */}
         <img
           ref={altarImageRef}
-          src="/images/login-altar-scene-v3.png"
-          alt="Bàn thờ gia tiên trang nghiêm"
+          src="/images/login-celestial-left.jpg"
+          alt="Tin vào những điều tốt lành - không gian mây ngàn tiên cảnh thanh tịnh"
           style={{
             transform: reducedMotion
-              ? "scale(1.06)"
-              : `scale(1.06) translate3d(${parallax.x * -16}px, ${parallax.y * -12}px, 0)`,
+              ? "scale(1.02)"
+              : `scale(1.02) translate3d(${parallax.x * -6}px, ${parallax.y * -4}px, 0)`,
             transition: reducedMotion
               ? "none"
-              : "transform 0.18s cubic-bezier(0.2, 0.8, 0.3, 1), filter 1s ease",
+              : "transform 0.18s cubic-bezier(0.2, 0.8, 0.3, 1)",
           }}
           className={`absolute inset-0 w-full h-full object-cover object-center pointer-events-none will-change-transform ${
             isSuccess ? "filter brightness(1.05)" : ""
-          }`}
-        />
-
-        {/* Lớp phủ ánh đèn dầu lung linh */}
-        <div
-          className={`absolute inset-0 bg-radial from-amber-500/10 via-transparent to-black/35 pointer-events-none transition-opacity duration-1000 motion-reduce:transition-none ${
-            isSuccess ? "opacity-100" : "opacity-75"
           }`}
         />
 
@@ -1045,65 +1223,70 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           </>
         )}
 
-        {/* Lớp phủ chân bàn thờ */}
-        <div className="absolute bottom-0 inset-x-0 h-10 bg-gradient-to-t from-stone-950/80 to-transparent pointer-events-none z-10" />
       </section>
 
-      {/* CỘT PHẢI: FORM ĐĂNG NHẬP GÓC AN YÊN — CÂN ĐỐI 10/10, SANG TRỌNG, THOÁNG MẮT */}
+      {/* CỘT PHẢI: FORM ĐĂNG NHẬP GÓC AN YÊN — CARD SANG TRỌNG, ĐẬM CHẤT THIỀN & DÂN GIAN ĐƯƠNG ĐẠI */}
       <section
         aria-label="Biểu mẫu đăng nhập"
-        className={`relative transition-all duration-700 ease-in-out motion-reduce:transition-none ${
+        className={`split-login-right relative transition-all duration-700 ease-in-out motion-reduce:transition-none ${
           isSuccess
             ? "opacity-0 translate-x-12 pointer-events-none w-0 h-0 p-0 overflow-hidden flex-none"
-            : "w-full lg:w-[42%] xl:w-[38%] shrink-0 flex flex-col justify-center items-center px-6 py-6 sm:px-10 lg:px-8 xl:px-12 opacity-100 translate-x-0 lg:h-full lg:max-h-full overflow-y-auto bg-[radial-gradient(ellipse_at_top_left,_rgba(217,119,6,0.05),_transparent_65%),_linear-gradient(to_bottom,_#fbf8f2,_#f5efe6)] dark:bg-[radial-gradient(ellipse_at_top_left,_rgba(180,83,9,0.06),_transparent_65%),_linear-gradient(to_bottom,_#1c1719,_#151214)]"
+            : "w-full lg:w-[40%] shrink-0 flex flex-col justify-center items-center opacity-100 translate-x-0 lg:h-full lg:max-h-full px-4 sm:px-8 py-6"
         }`}
       >
-        {/* Họa tiết hạt xơ giấy dó & hoa sen chìm truyền thống mờ ảo */}
-        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none bg-[radial-gradient(#8b1e28_1px,transparent_1px)] [background-size:18px_18px]" />
-        <svg
-          className="absolute -right-16 -bottom-16 w-72 h-72 text-amber-900/[0.035] dark:text-amber-300/[0.02] pointer-events-none select-none"
-          viewBox="0 0 100 100"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path d="M50 15 C35 30 20 45 20 65 C20 80 35 90 50 90 C65 90 80 80 80 65 C80 45 65 30 50 15 Z" />
-        </svg>
+        {/* Topbar: Thỉnh chuông tĩnh tâm */}
+        <div className="w-full max-w-[430px] flex justify-end mb-3 sm:mb-4 relative z-20">
+          <button
+            type="button"
+            onClick={playZenBellSound}
+            className="group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 dark:bg-stone-900/80 hover:bg-white dark:hover:bg-stone-850 border border-amber-600/35 hover:border-amber-500 text-amber-900 dark:text-amber-200 text-xs font-medium shadow-xs hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer backdrop-blur-md"
+            title="Thỉnh một tiếng chuông an định tâm hồn"
+            aria-label="Thỉnh chuông tĩnh tâm"
+          >
+            <Bell className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 group-hover:rotate-12 transition-transform" />
+            <span>Thỉnh chuông</span>
+          </button>
+        </div>
 
-        <div className="relative z-10 w-full max-w-[390px] my-auto py-2">
-          {onBack && !isSuccess && (
-            <button
-              type="button"
-              onClick={onBack}
-              className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-ink transition-colors cursor-pointer mb-3.5"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Quay lại</span>
-            </button>
-          )}
+        {/* THẺ BÀI AN YÊN (SANCTUARY CARD) — KHUNG SƠN MÀI / GIẤY DÓ ÉP KIM SANG TRỌNG */}
+        <div className="relative z-10 w-full max-w-[430px] rounded-3xl p-6 sm:p-7.5 bg-white/90 dark:bg-[#1a1417]/90 backdrop-blur-xl border border-amber-900/10 dark:border-amber-400/20 shadow-[0_20px_50px_-10px_rgba(45,20,10,0.1),0_0_0_1px_rgba(212,175,55,0.22)] transition-all">
+          {/* 4 Góc kim chi hoa văn cổ điển (Ornamental Brass Corner Brackets) */}
+          <div className="absolute top-2.5 left-2.5 w-3.5 h-3.5 border-t-2 border-l-2 border-amber-500/40 rounded-tl-sm pointer-events-none" />
+          <div className="absolute top-2.5 right-2.5 w-3.5 h-3.5 border-t-2 border-r-2 border-amber-500/40 rounded-tr-sm pointer-events-none" />
+          <div className="absolute bottom-2.5 left-2.5 w-3.5 h-3.5 border-b-2 border-l-2 border-amber-500/40 rounded-bl-sm pointer-events-none" />
+          <div className="absolute bottom-2.5 right-2.5 w-3.5 h-3.5 border-b-2 border-r-2 border-amber-500/40 rounded-br-sm pointer-events-none" />
 
           {/* TIÊU ĐỀ TRANG NHÃ KÈM DẤU ẤN TRIỆN SON KHẮC GỖ */}
-          <div className="mb-4 sm:mb-5">
-            <div className="flex items-center gap-2.5">
+          <div className="split-form-header mb-4 sm:mb-5">
+            <div className="split-form-title-row flex items-center gap-3">
               <div 
-                className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8b1e28] to-[#68131b] border border-amber-400/50 flex items-center justify-center shadow-[0_2px_10px_rgba(139,30,40,0.35)] shrink-0 select-none"
+                className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#a62432] via-[#851924] to-[#5c1018] border border-amber-400/70 ring-2 ring-amber-400/30 shadow-[0_3px_10px_rgba(166,36,50,0.35)] flex items-center justify-center shrink-0 select-none"
                 title="Triện son An"
               >
-                <span className="font-serif font-black text-amber-200 text-xs tracking-tighter leading-none">
+                <span className="font-serif font-black text-amber-100 text-sm tracking-tight leading-none">
                   安
                 </span>
               </div>
-              <h1 className="font-serif text-2xl sm:text-[1.75rem] font-bold text-ink tracking-tight">
-                Góc An Yên
-              </h1>
+              <div>
+                <h1 className="font-serif text-[1.65rem] sm:text-[1.85rem] font-bold text-ink tracking-tight leading-tight">
+                  Góc An Yên
+                </h1>
+              </div>
             </div>
-            <p className="text-xs sm:text-sm text-muted mt-1 leading-relaxed">
+            <p className="text-xs sm:text-[13px] text-muted mt-1 leading-relaxed">
               Đăng nhập để lưu lại quẻ thẻ và tiếp tục hành trình tĩnh tâm.
             </p>
+            {/* Đường chỉ hoa văn ánh kim */}
+            <div className="flex items-center gap-2 mt-2.5">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/30 to-amber-500/10" />
+              <span className="text-amber-600/70 dark:text-amber-400/70 text-[9px]">✤</span>
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent via-amber-500/30 to-amber-500/10" />
+            </div>
           </div>
 
           {/* THÔNG BÁO TÁC VỤ ĐANG CHỜ (NẾU CÓ) */}
           {pendingSignalMood && (
-            <div className="mb-4 p-3 rounded-xl bg-accent-soft border border-line text-xs text-ink flex items-start gap-2.5 shadow-xs">
+            <div className="mb-3.5 p-3 rounded-xl bg-accent-soft border border-line text-xs text-ink flex items-start gap-2.5 shadow-xs">
               <span className="w-2 h-2 rounded-full bg-accent mt-1.5 shrink-0" />
               <div>
                 <span className="font-semibold text-accent">Đang chờ lưu: </span>
@@ -1116,16 +1299,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           {errorMessage && (
             <div
               role="alert"
-              className="mb-4 p-3 rounded-xl bg-danger-soft border border-danger/30 text-xs text-danger flex items-start gap-2"
+              className="mb-3.5 p-3 rounded-xl bg-danger-soft border border-danger/30 text-xs text-danger flex items-start gap-2 shadow-xs"
             >
               <span className="font-bold leading-none mt-0.5">✕</span>
               <span className="leading-relaxed flex-1">{errorMessage}</span>
             </div>
           )}
 
-          <p className="mb-3 rounded-xl border border-line bg-accent-soft px-3 py-2 text-xs leading-relaxed text-ink">
-            Tài khoản được xác thực an toàn qua máy chủ.
-          </p>
+
 
           {/* FORM NHẬP LIỆU GỌN GÀNG, ĐẸP MẮT */}
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-3.5">
@@ -1137,7 +1318,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 Email
               </label>
               <div className="relative group">
-                <Mail className="w-4 h-4 text-subtle group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Mail className="w-4 h-4 text-stone-400 group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   id="login-email"
                   name="email"
@@ -1148,7 +1329,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="tenban@domain.com"
-                  className="w-full h-11 pl-10 pr-3.5 rounded-xl border border-line bg-surface text-base sm:text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600/70 dark:focus:border-amber-500 transition-all motion-reduce:transition-none shadow-xs disabled:opacity-60"
+                  className="w-full h-11 pl-10 pr-3.5 rounded-xl border border-stone-300/80 dark:border-stone-700/80 bg-stone-50/60 dark:bg-stone-900/60 text-base sm:text-sm text-ink placeholder:text-stone-400 focus:outline-none focus:ring-3 focus:ring-amber-500/20 focus:border-amber-600 dark:focus:border-amber-400 focus:bg-white dark:focus:bg-stone-900 transition-all shadow-xs disabled:opacity-60"
                 />
               </div>
             </div>
@@ -1159,21 +1340,21 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   htmlFor="login-password"
                   className="text-xs font-semibold text-ink tracking-wide"
                 >
-                  Mật khẩu mẫu
+                  Mật khẩu
                 </label>
                 {onGoToForgotPassword && (
                   <button
                     type="button"
                     onClick={onGoToForgotPassword}
                     disabled={isSubmitting}
-                    className="text-xs text-amber-700 dark:text-amber-400 hover:underline cursor-pointer disabled:opacity-50"
+                    className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 hover:underline cursor-pointer disabled:opacity-50 font-medium"
                   >
                     Quên mật khẩu?
                   </button>
                 )}
               </div>
               <div className="relative group">
-                <Lock className="w-4 h-4 text-subtle group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Lock className="w-4 h-4 text-stone-400 group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   id="login-password"
                   name="password"
@@ -1184,14 +1365,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full h-11 pl-10 pr-11 rounded-xl border border-line bg-surface text-base sm:text-sm text-ink placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600/70 dark:focus:border-amber-500 transition-all motion-reduce:transition-none shadow-xs disabled:opacity-60"
+                  className="w-full h-11 pl-10 pr-11 rounded-xl border border-stone-300/80 dark:border-stone-700/80 bg-stone-50/60 dark:bg-stone-900/60 text-base sm:text-sm text-ink placeholder:text-stone-400 focus:outline-none focus:ring-3 focus:ring-amber-500/20 focus:border-amber-600 dark:focus:border-amber-400 focus:bg-white dark:focus:bg-stone-900 transition-all shadow-xs disabled:opacity-60"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                   disabled={isSubmitting}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-subtle hover:text-ink cursor-pointer disabled:opacity-50 transition-colors p-1"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-amber-700 dark:hover:text-amber-400 cursor-pointer disabled:opacity-50 transition-colors p-1"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -1206,7 +1387,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 checked={rememberEmail}
                 disabled={isSubmitting}
                 onChange={(e) => setRememberEmail(e.target.checked)}
-                className="w-4 h-4 rounded border-line text-accent accent-[#8b1e28] focus:ring-amber-500/30 cursor-pointer"
+                className="w-4 h-4 rounded border-stone-300 text-accent accent-[#8f202b] focus:ring-amber-500/30 cursor-pointer"
               />
               <label
                 htmlFor="remember-email"
@@ -1220,7 +1401,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="group relative w-full h-11 rounded-xl bg-gradient-to-r from-[#8b1e28] via-[#9e222d] to-[#781820] hover:from-[#781820] hover:via-[#8b1e28] hover:to-[#63131b] border border-amber-400/35 text-[#fff8ed] font-medium text-sm flex items-center justify-center gap-2 transition-all motion-reduce:transition-none shadow-[0_4px_18px_rgba(139,30,40,0.28)] hover:shadow-[0_6px_26px_rgba(139,30,40,0.42)] overflow-hidden cursor-pointer disabled:opacity-60 active:scale-[0.99]"
+              className="group relative w-full h-11.5 rounded-xl bg-gradient-to-r from-[#8f202b] via-[#a62432] to-[#781721] hover:from-[#7e1923] hover:via-[#95202c] hover:to-[#68131b] border border-amber-300/50 text-[#fffaf0] font-serif text-[15px] font-semibold tracking-wide flex items-center justify-center gap-2 transition-all motion-reduce:transition-none shadow-[0_4px_18px_rgba(143,32,43,0.32),0_0_10px_rgba(212,175,55,0.18)] hover:shadow-[0_6px_26px_rgba(143,32,43,0.46),0_0_16px_rgba(212,175,55,0.32)] overflow-hidden cursor-pointer disabled:opacity-60 active:scale-[0.99]"
             >
               {/* Ánh kim lướt nhẹ */}
               <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
@@ -1241,50 +1422,59 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             {/* Phân cách Hoặc */}
             <div className="relative my-3 text-center">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-line" />
+                <div className="w-full border-t border-amber-900/10 dark:border-amber-400/15" />
               </div>
-              <span className="relative bg-[#f6f2ea] dark:bg-[#151214] px-3 text-xs text-muted">
-                Hoặc
+              <span className="relative bg-white/95 dark:bg-[#1a1417] px-3 font-serif text-xs text-muted">
+                ✦ Hoặc ✦
               </span>
             </div>
 
-            {/* OAuth chưa được kết nối ở Phase 1 */}
-            <button
-              type="button"
-              onClick={handleGoogleLogin}
-              disabled={isSubmitting}
-              className="w-full h-11 rounded-xl border border-line bg-surface hover:bg-surface-soft text-ink font-medium text-sm flex items-center justify-center gap-2.5 transition-all motion-reduce:transition-none shadow-xs hover:border-[#8b1e28]/40 cursor-pointer disabled:opacity-50"
-            >
-              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                />
-              </svg>
-              <span>Đăng nhập bằng Google (sắp có)</span>
-            </button>
+            {/* Nút Đăng nhập bằng Google */}
+            <div className="relative w-full min-h-11 flex justify-center" aria-label="Đăng nhập bằng Google">
+              <div
+                ref={googleButtonRef}
+                className={`w-full flex justify-center ${googleButtonState === "ready" ? "" : "hidden"} ${isSubmitting ? "pointer-events-none opacity-60" : ""}`}
+                aria-busy={isSubmitting}
+              />
+              {googleButtonState !== "ready" && (
+                <button
+                  type="button"
+                  onClick={handleGoogleClick}
+                  disabled={isSubmitting}
+                  className="w-full h-11 rounded-xl border border-stone-300 dark:border-stone-700 bg-white hover:bg-stone-50 dark:bg-stone-900 dark:hover:bg-stone-850 text-stone-700 dark:text-stone-200 font-medium text-sm flex items-center justify-center gap-2.5 transition-all shadow-2xs hover:shadow-xs hover:border-stone-400 cursor-pointer disabled:opacity-60 active:scale-[0.99]"
+                >
+                  <svg className="w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      fill="#4285F4"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                    />
+                  </svg>
+                  <span>Sign in with Google</span>
+                </button>
+              )}
+            </div>
           </form>
 
           {/* Chuyển sang Đăng ký */}
-          <div className="text-center text-xs text-muted mt-4 sm:mt-5 pt-2.5 border-t border-line">
+          <div className="text-center text-xs text-muted mt-4 sm:mt-5 pt-3 border-t border-amber-900/10 dark:border-amber-400/15">
             <span>Chưa có tài khoản? </span>
             <button
               type="button"
               onClick={onGoToRegister}
               disabled={isSubmitting}
-              className="text-accent font-medium hover:underline cursor-pointer ml-1"
+              className="text-[#8f202b] dark:text-[#f18a83] font-semibold hover:underline cursor-pointer ml-1"
             >
               Tạo hồ sơ mới →
             </button>

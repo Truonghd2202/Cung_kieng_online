@@ -8,18 +8,21 @@ function refreshCookieOptions() {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
     sameSite: "lax",
-    path: "/api/auth",
+    path: "/api/v1/auth",
     maxAge: durationToMilliseconds(env.JWT_REFRESH_EXPIRES_IN),
   };
 }
 
 function setRefreshCookie(res, token) {
   res.cookie("refreshToken", token, refreshCookieOptions());
+  // Remove the old cookie scope during migration to the canonical API prefix.
+  res.clearCookie("refreshToken", { ...refreshCookieOptions(), path: "/api/auth" });
 }
 
 function clearRefreshCookie(res) {
   const { maxAge, ...options } = refreshCookieOptions();
   res.clearCookie("refreshToken", options);
+  res.clearCookie("refreshToken", { ...options, path: "/api/auth" });
 }
 
 async function register(req, res) {
@@ -37,6 +40,15 @@ async function login(req, res) {
   setRefreshCookie(res, result.refreshToken);
   return sendSuccess(res, {
     message: "Logged in successfully",
+    data: { user: result.user, accessToken: result.accessToken },
+  });
+}
+
+async function googleLogin(req, res) {
+  const result = await authService.loginWithGoogle(req.body.credential);
+  setRefreshCookie(res, result.refreshToken);
+  return sendSuccess(res, {
+    message: "Logged in with Google successfully",
     data: { user: result.user, accessToken: result.accessToken },
   });
 }
@@ -73,4 +85,22 @@ async function changePassword(req, res) {
   return sendSuccess(res, { message: "Password changed successfully. Please login again." });
 }
 
-module.exports = { register, login, refresh, logout, logoutAll, me, changePassword, refreshCookieOptions };
+async function forgotPassword(req, res) {
+  const result = await authService.requestPasswordReset(req.body.email);
+  return sendSuccess(res, {
+    message: "If the address belongs to an account, password reset instructions will be sent when email delivery is configured.",
+    data: result,
+  });
+}
+
+async function verifyResetCode(req, res) {
+  await authService.verifyResetCode(req.body.email, req.body.code);
+  return sendSuccess(res, { message: "Mã xác minh hợp lệ." });
+}
+
+async function resetPassword(req, res) {
+  await authService.resetPassword(req.body.email, req.body.code, req.body.newPassword);
+  return sendSuccess(res, { message: "Password reset successfully. Please log in again." });
+}
+
+module.exports = { register, login, googleLogin, refresh, logout, logoutAll, me, changePassword, forgotPassword, verifyResetCode, resetPassword, refreshCookieOptions };

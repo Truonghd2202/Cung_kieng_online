@@ -97,6 +97,23 @@ export async function loginAccount(email?: string, password?: string): Promise<A
   }
 }
 
+export async function loginWithGoogle(credential: string): Promise<AuthResult> {
+  const fallback = { name: "", email: "" };
+
+  try {
+    const data = await apiRequest<AuthPayload>("/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ credential }),
+    });
+    setAccessToken(data.accessToken);
+    const user = toProfile(data.user);
+    saveLocalDemoAccount(user);
+    return { success: true, user };
+  } catch (error) {
+    return { success: false, user: fallback, error: authError(error) };
+  }
+}
+
 export async function registerAccount(
   name?: string,
   email?: string,
@@ -148,4 +165,31 @@ export async function logoutAccount(): Promise<void> {
     setAccessToken(null);
     clearStoredUser();
   }
+}
+
+export interface PasswordResetRequestResult {
+  deliveryConfigured: boolean;
+}
+
+export async function requestPasswordReset(email: string): Promise<PasswordResetRequestResult> {
+  const result = await apiRequest<PasswordResetRequestResult>("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email: email.trim().toLowerCase() }),
+  });
+  return result;
+}
+
+export async function verifyResetCode(email: string, code: string): Promise<boolean> {
+  await apiRequest("/auth/verify-reset-code", {
+    method: "POST",
+    body: JSON.stringify({ email: email.trim().toLowerCase(), code: code.trim() }),
+  });
+  return true;
+}
+
+export async function resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+  await apiRequest("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ email: email.trim().toLowerCase(), code: code.trim(), newPassword }),
+  });
 }

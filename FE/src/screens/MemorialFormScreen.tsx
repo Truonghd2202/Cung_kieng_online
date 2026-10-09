@@ -9,7 +9,7 @@ import type { MemorialRecord } from "./MemorialSpaceScreen";
 interface MemorialFormScreenProps {
   initialValue?: MemorialRecord | null;
   onBack: () => void;
-  onSave: (memorial: MemorialRecord) => boolean;
+  onSave: (memorial: MemorialRecord) => Promise<MemorialRecord | null>;
 }
 
 const MAX_MEMORIAL_NAME_LENGTH = 100;
@@ -22,8 +22,10 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
   const [date, setDate] = useState(initialValue?.date || "");
   const [note, setNote] = useState(initialValue?.note || "");
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (saving) return;
     setError("");
 
     if (!name.trim() || !relation.trim() || !date) {
@@ -98,23 +100,23 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
       return;
     }
 
-    let saved = false;
-
+    setSaving(true);
     try {
-      saved = onSave({
+      const saved = await onSave({
+        id: initialValue?.id,
         name: name.trim(),
         relation: relation.trim(),
         date,
         note: note.trim() || undefined,
-      }) === true;
+        avatarUrl: initialValue?.avatarUrl,
+      });
+      if (!saved) throw new Error("Chưa lưu được hồ sơ tưởng niệm.");
     } catch {
-      saved = false;
-    }
-
-    if (!saved) {
       setError(
-        "Chưa lưu được góc tưởng niệm. Bạn hãy thử lại."
+        "Chưa lưu được hồ sơ trên máy chủ. Kiểm tra kết nối rồi thử lại."
       );
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -150,7 +152,7 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
             {initialValue ? "Chỉnh sửa góc tưởng niệm" : "Tạo góc tưởng niệm"}
           </h1>
           <p className="text-sm sm:text-base text-stone-700 dark:text-stone-300 leading-relaxed">
-            Thông tin này được lưu giữ an toàn, bảo mật trên thiết bị của bạn để tạo nên không gian hoài niệm riêng tư.
+            Thông tin được lưu an toàn theo tài khoản của bạn; khi dùng thử với tư cách khách, thông tin chỉ lưu trên thiết bị này.
           </p>
         </header>
 
@@ -158,7 +160,7 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
           <form
             onSubmit={(event) => {
               event.preventDefault();
-              handleSave();
+              void handleSave();
             }}
           >
             <div className="space-y-6">
@@ -259,10 +261,11 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
 
               <Button
                 type="submit"
+                disabled={saving}
                 className="min-h-11 px-6 rounded-xl bg-gradient-to-r from-red-800 via-amber-700 to-amber-900 hover:from-red-700 hover:to-amber-800 text-white font-semibold shadow-md cursor-pointer gap-2"
               >
                 <Check aria-hidden="true" className="h-4 w-4" />
-                <span>{initialValue ? "Lưu thay đổi" : "Lưu góc tưởng niệm"}</span>
+                <span>{saving ? "Đang lưu…" : initialValue ? "Lưu thay đổi" : "Lưu góc tưởng niệm"}</span>
               </Button>
             </div>
           </form>

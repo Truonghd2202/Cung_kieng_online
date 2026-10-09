@@ -31,7 +31,7 @@ interface DayPlan {
 }
 
 interface GoodDayLookupPanelProps {
-  onSaveDayToCalendar: (plan: DayPlan) => boolean;
+  onSaveDayToCalendar: (plan: DayPlan) => Promise<boolean>;
   onGoToCalendar: () => void;
 }
 
@@ -54,6 +54,7 @@ export function GoodDayLookupPanel({
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [savingId, setSavingId] = useState("");
 
   const handleQuickRange = (days: number) => {
     const start = new Date();
@@ -88,7 +89,8 @@ export function GoodDayLookupPanel({
     }
   };
 
-  const saveResult = (result: GoodDayResult) => {
+  const saveResult = async (result: GoodDayResult) => {
+    if (savingId) return;
     const date = parseDateInput(result.date);
 
     if (!date) {
@@ -98,9 +100,10 @@ export function GoodDayLookupPanel({
 
     setError("");
     setMessage("");
+    setSavingId(result.id);
 
     try {
-      const saved = onSaveDayToCalendar({
+      const saved = await onSaveDayToCalendar({
         title: result.title,
         year: date.year,
         month: date.month,
@@ -119,6 +122,8 @@ export function GoodDayLookupPanel({
       setMessage(`✓ Đã lưu ngày ${result.date} vào Lịch văn hóa nếp nhà của bạn.`);
     } catch {
       setError("Chưa lưu được vào lịch. Bạn hãy thử lại.");
+    } finally {
+      setSavingId("");
     }
   };
 
@@ -135,7 +140,7 @@ export function GoodDayLookupPanel({
         <div className="flex items-center gap-2 mb-2">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-400/30">
             <Compass className="w-3.5 h-3.5 text-amber-600" />
-            <span>TRA CỨU THỜI ĐIỂM CÁT LÀNH</span>
+            <span>TRA CỨU NGÀY THAM KHẢO</span>
           </span>
           <span className="text-xs text-stone-500">·</span>
           <span className="text-xs text-stone-500">Nếp nhà hưng thịnh</span>
@@ -149,8 +154,8 @@ export function GoodDayLookupPanel({
         </h2>
 
         <p className="mt-2 text-xs sm:text-sm leading-relaxed text-stone-600 dark:text-stone-300 max-w-2xl">
-          Đối chiếu lịch pháp dân gian, trực ngày và giờ hoàng đạo giúp bạn chuẩn bị việc lớn trong nhà
-          với tâm thế an tâm, chủ động và trọn vẹn hiếu đạo.
+          Bản minh họa tham khảo ngày âm, Can Chi, 12 Trực và giờ theo chi ngày. Đây chưa phải lịch chọn ngày đã thẩm định;
+          đừng dùng làm căn cứ duy nhất cho việc trọng đại.
         </p>
       </div>
 
@@ -257,7 +262,7 @@ export function GoodDayLookupPanel({
             className="min-h-11 px-7 rounded-xl bg-gradient-to-r from-red-800 via-amber-700 to-amber-900 text-white font-semibold cursor-pointer shadow-md gap-2"
           >
             <Sparkles className="w-4 h-4 text-amber-200" />
-            <span>Tra cứu ngày cát lành</span>
+          <span>Xem gợi ý tham khảo</span>
           </Button>
 
           <div className="text-xs text-stone-500 flex items-center gap-1.5 italic">
@@ -297,7 +302,7 @@ export function GoodDayLookupPanel({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h3 className="font-display text-lg sm:text-xl font-bold text-ink">
-                Kết quả ngày cát lành gợi ý ({results.length} ngày)
+                Gợi ý minh họa ({results.length} ngày)
               </h3>
               <p className="text-xs text-stone-500 mt-0.5">
                 Khoảng thời gian: {from} đến {to}
@@ -319,7 +324,7 @@ export function GoodDayLookupPanel({
 
           {results.length === 0 ? (
             <div className="p-8 rounded-2xl bg-surface border border-line text-center text-xs sm:text-sm text-stone-500">
-              Không tìm thấy ngày hoàng đạo phù hợp trong khoảng thời gian này. Bạn hãy thử mở rộng khoảng ngày tra cứu.
+              Không có ngày phù hợp với tiêu chí minh họa trong khoảng này. Bạn có thể chọn khoảng khác.
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4">
@@ -334,7 +339,7 @@ export function GoodDayLookupPanel({
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-400/30">
-                            ✦ NGÀY HOÀNG ĐẠO
+                            ✦ THAM KHẢO MINH HỌA
                           </span>
                           <span className="text-xs text-stone-500">
                             {item.lunarDateStr}
@@ -348,8 +353,8 @@ export function GoodDayLookupPanel({
                       <Button
                         type="button"
                         size="sm"
-                        disabled={isSaved}
-                        onClick={() => saveResult(item)}
+                        disabled={isSaved || Boolean(savingId)}
+                        onClick={() => void saveResult(item)}
                         className={`rounded-xl text-xs min-h-9 px-4 font-semibold cursor-pointer gap-1.5 shrink-0 self-start sm:self-auto ${
                           isSaved
                             ? "bg-emerald-600 text-white"
@@ -384,10 +389,10 @@ export function GoodDayLookupPanel({
                     <div className="pt-2 flex flex-wrap items-center justify-between text-xs text-stone-500 gap-2">
                       <span className="flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5 text-amber-600" />
-                        <span><strong>Giờ hoàng đạo:</strong> {item.auspiciousHours}</span>
+                          <span><strong>Giờ theo chi ngày (chưa thẩm định):</strong> {item.auspiciousHours}</span>
                       </span>
                       <span className="italic text-[11px]">
-                        * Thuận theo điều kiện thực tế của gia đình
+                        * {item.sourceLabel}
                       </span>
                     </div>
                   </div>

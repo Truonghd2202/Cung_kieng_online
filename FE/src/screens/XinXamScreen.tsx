@@ -27,15 +27,14 @@ import { Card } from "../components/ui/card";
 import { AppDialog } from "../components/AppDialog";
 import { ContentProvenance } from "../components/ContentProvenance";
 import { TraditionalXamPreview } from "../components/TraditionalXamPreview";
-import { CULTURE_ARTICLES } from "../data/cultureData";
 import {
   RegionType,
   TopicType,
-  getXinXamResult,
   XinXamResult,
-  XIN_XAM_RESULTS,
 } from "../data/xinXamData";
-import { drawXinXam, loadReflectionProverb } from "../data/reflectionService";
+import { drawXinXam } from "../data/reflectionService";
+import { ApiError } from "../lib/api";
+import { isPublishableXamCard } from "../../../shared/xin-xam-publication.mjs";
 
 export type XinXamDrawResult = XinXamResult & {
   drawId: string;
@@ -48,6 +47,7 @@ interface XinXamScreenProps {
   onGoToLogin?: () => void;
   onGoToExplore?: () => void;
   onGoToWish?: () => void;
+  onGoToXinKeo?: (drawId: string) => void;
   isLoggedIn?: boolean;
   savedXamList?: {
     drawId?: string;
@@ -61,6 +61,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   onGoToLogin,
   onGoToExplore,
   onGoToWish,
+  onGoToXinKeo,
   isLoggedIn = false,
   savedXamList,
 }) => {
@@ -84,10 +85,10 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   const drawTimerRef = useRef<
     ReturnType<typeof setTimeout> | null
   >(null);
+  const requestLockRef = useRef(false);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [currentResult, setCurrentResult] = useState<XinXamResult>(() =>
-    getXinXamResult(selectedRegion, selectedTopic)
-  );
+  const [currentResult, setCurrentResult] = useState<XinXamResult | null>(null);
 
   useEffect(() => {
     if (drawTimerRef.current !== null) {
@@ -95,20 +96,23 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
       drawTimerRef.current = null;
     }
 
-    setCurrentResult(
-      getXinXamResult(selectedRegion, selectedTopic)
-    );
+    setCurrentResult(null);
     setDrawPhase("idle");
     setIsShaking(false);
     setCurrentDrawId(null);
     setIsActionDone(false);
     setSaveError("");
     setDrawNotice("");
+      requestLockRef.current = false;
   }, [selectedRegion, selectedTopic]);
 
   // Hủy lượt đang chạy khi rời bước rút thẻ.
   useEffect(() => {
     if (step !== 2) {
+      if (holdTimerRef.current !== null) {
+        clearTimeout(holdTimerRef.current);
+        holdTimerRef.current = null;
+      }
       if (drawTimerRef.current !== null) {
         clearTimeout(drawTimerRef.current);
         drawTimerRef.current = null;
@@ -116,107 +120,89 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
 
       setIsShaking(false);
       setDrawPhase("idle");
+      requestLockRef.current = false;
     }
   }, [step]);
 
   // Không để timer tiếp tục khi đã rời màn xin xăm.
   useEffect(() => {
     return () => {
+      if (holdTimerRef.current !== null) clearTimeout(holdTimerRef.current);
       if (drawTimerRef.current !== null) {
         clearTimeout(drawTimerRef.current);
       }
+      requestLockRef.current = false;
     };
   }, []);
 
   const handleStartDraw = async () => {
-    if (drawTimerRef.current !== null) return;
+    if (requestLockRef.current || drawTimerRef.current !== null) return;
+    requestLockRef.current = true;
+    setCurrentResult(null);
+    setCurrentDrawId(null);
+    setDrawPhase("idle");
+    setIsShaking(false);
 
-    const matchingResults = Object.values(
-      XIN_XAM_RESULTS
-    ).filter(
-      (result) =>
-        result.region === selectedRegion &&
-        result.topic === selectedTopic
-    );
-
-    if (matchingResults.length === 0) {
+    let remote: Awaited<ReturnType<typeof drawXinXam>>;
+    try {
+      remote = await drawXinXam(selectedRegion, selectedTopic);
+    } catch (error) {
       setDrawNotice(
-        "Chưa có thẻ cho lựa chọn này. Bạn hãy chọn vùng hoặc chủ đề khác."
+        error instanceof ApiError && error.status === 404
+          ? "Hiện chưa có quẻ đủ điều kiện xuất bản cho lựa chọn này."
+          : "Chưa lấy được quẻ từ thư viện. Bạn hãy thử lại khi kết nối ổn định."
       );
+      requestLockRef.current = false;
       return;
     }
 
-    const alternatives = matchingResults.filter(
-      (result) =>
-        result.stickNumber !== currentResult.stickNumber
-    );
-
-    const pool =
-      alternatives.length > 0
-        ? alternatives
-        : matchingResults;
-
-    let chosen =
-      pool[Math.floor(Math.random() * pool.length)];
-    let nextDrawId: string = crypto.randomUUID();
-    let proverbAttached = false;
-
-    {
-      try {
-        const remote = await drawXinXam(selectedRegion, selectedTopic);
-        nextDrawId = remote.drawId || remote.id;
-        const localMatch = matchingResults.find((item) => item.stickNumber === remote.stickNumber) || chosen;
-        chosen = {
-          ...localMatch,
-          stickNumber: remote.stickNumber,
-          title: `Quẻ Quan Âm ${remote.stickNumber} — ${remote.classification}`,
-          poem: {
-            line1: "Văn bản thơ gốc chưa được lưu trong ứng dụng.",
-            line2: "",
-            line3: "",
-            line4: "",
-          },
-          source: remote.source,
-          verified: remote.verified,
-          fortuneType: remote.classification,
-          sealText: remote.classification,
-          insight: remote.classification,
-          quote: remote.quote,
-          reflectionParagraphs: [remote.meaning, remote.disclaimer],
-          tips: [
-            ...(remote.proverb
-              ? [{
-                  title: "Thành ngữ hoặc tục ngữ đi cùng thẻ",
-                  desc: `“${remote.proverb.content}” — ${remote.proverb.meaning} (Nguồn: VIVID)`,
-                }]
-              : []),
-            { title: "Gợi ý chiêm nghiệm", desc: remote.advice },
-            { title: "Lưu ý tham khảo", desc: remote.interpretation.warning },
-          ],
-        };
-        proverbAttached = Boolean(remote.proverb);
-      } catch {
-        setDrawNotice("Chưa lấy được thẻ từ thư viện. Bạn hãy thử lại khi kết nối ổn định.");
-        return;
-      }
+    const poemLines = (remote.poem || "").split(/\r?\n/).map((line) => line.trim());
+    if (!isPublishableXamCard({
+      active: remote.active,
+      verified: remote.verified,
+      xam_type: remote.xamType,
+      source: remote.source,
+      poem: poemLines,
+      interpretations: [remote.meaning, remote.advice],
+    })) {
+      setDrawNotice("Thẻ nhận được chưa đạt điều kiện phát hành. Nội dung chưa được hiển thị.");
+      requestLockRef.current = false;
+      return;
     }
 
-    if (!proverbAttached) {
-      try {
-        const proverb = await loadReflectionProverb("XAM");
-        chosen = {
-          ...chosen,
-          tips: [{
-            title: "Thành ngữ hoặc tục ngữ đi cùng thẻ",
-            desc: `“${proverb.content}” — ${proverb.meaning} (Nguồn: VIVID)`,
-          }, ...chosen.tips],
-        };
-      } catch {
-        // Không thay bằng nội dung tự sinh nếu nguồn dữ liệu tạm thời không khả dụng.
-      }
-    }
+    const nextDrawId = remote.drawId || remote.id;
+    const source = remote.source || "";
+    const chosen: XinXamResult = {
+      metadata: remote.originalContent.metadata,
+      aiExplanation: remote.aiExplanation || undefined,
+      source,
+      verified: remote.verified,
+      stickNumber: remote.stickNumber,
+      region: selectedRegion,
+      regionSub: selectedRegion,
+      topic: selectedTopic,
+      topicTag: remote.category || selectedTopic,
+      title: `Thẻ xin xăm ${remote.stickNumber} — ${remote.classification}`,
+      quote: remote.originalContent.poem || "",
+      poem: { line1: poemLines[0], line2: poemLines[1], line3: poemLines[2], line4: poemLines[3] },
+      sealText: remote.classification,
+      fortuneType: remote.classification,
+      category: remote.category,
+      insight: remote.classification,
+      reflectionParagraphs: [remote.originalContent.meaning, remote.disclaimer],
+      tips: [
+        ...(remote.proverb ? [{ title: "Thành ngữ hoặc tục ngữ đi cùng thẻ", desc: `“${remote.proverb.content}” — ${remote.proverb.meaning} (Nguồn: VIVID)` }] : []),
+        { title: "Gợi ý chiêm nghiệm", desc: remote.originalContent.advice },
+        ...(remote.aiExplanation ? [{ title: "Gợi ý do AI tạo", desc: remote.aiExplanation.content }] : []),
+        { title: "Lưu ý tham khảo", desc: remote.interpretation.warning },
+      ],
+      culturalAspect: "",
+      relatedArticleId: "",
+      relatedArticleTitle: "",
+      microAction: { title: "", desc: "", duration: "" },
+    };
 
-    setDrawNotice("");
+    setDrawNotice(isLoggedIn ? "" : "Kết quả chưa được lưu vào tài khoản.");
 
     setCurrentDrawId(null);
     setSaveError("");
@@ -238,6 +224,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
 
     drawTimerRef.current = setTimeout(() => {
       drawTimerRef.current = null;
+      requestLockRef.current = false;
 
       setCurrentResult(chosen);
       setCurrentDrawId(nextDrawId);
@@ -245,6 +232,52 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
       setIsShaking(false);
       setDrawPhase("dropped");
     }, reducedMotion ? 200 : 1800);
+  };
+
+  const playBambooRattle = () => {
+    try {
+      const AudioContextType = window.AudioContext;
+      if (!AudioContextType) return;
+      const context = new AudioContextType();
+      const startAt = context.currentTime;
+      for (let index = 0; index < 12; index += 1) {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        const at = startAt + index * 0.11;
+        oscillator.type = "triangle";
+        oscillator.frequency.setValueAtTime(620 + Math.random() * 240, at);
+        gain.gain.setValueAtTime(0.055, at);
+        gain.gain.exponentialRampToValueAtTime(0.001, at + 0.045);
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start(at);
+        oscillator.stop(at + 0.05);
+      }
+      window.setTimeout(() => { void context.close(); }, 1800);
+    } catch {
+      // Âm thanh là bổ trợ; thao tác vẫn dùng được khi trình duyệt chặn Web Audio.
+    }
+  };
+
+  const beginHeldDraw = (event: React.PointerEvent<HTMLElement>) => {
+    event.preventDefault();
+    if (requestLockRef.current || holdTimerRef.current !== null) return;
+    holdTimerRef.current = setTimeout(() => {
+      holdTimerRef.current = null;
+      playBambooRattle();
+      void handleStartDraw();
+    }, 1500);
+  };
+
+  const cancelHeldDraw = () => {
+    if (holdTimerRef.current !== null) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+  };
+
+  const handleKeyboardDraw = (event: React.MouseEvent<HTMLElement>) => {
+    if (event.detail === 0) void handleStartDraw();
   };
 
   const isCardSaved =
@@ -259,7 +292,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
 
     setSaveError("");
 
-    if (!currentDrawId) {
+    if (!currentDrawId || !currentResult) {
       setSaveError(
         "Bạn hãy hoàn tất một lượt rút trước khi lưu."
       );
@@ -292,10 +325,6 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
       );
     }
   };
-
-  const relatedArticle = CULTURE_ARTICLES.find(
-    (article) => article.id === currentResult.relatedArticleId
-  );
 
   return (
     <div className="screen-shell">
@@ -357,8 +386,8 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                 Chọn một điều bạn muốn chiêm nghiệm
               </h1>
               <p className="text-sm sm:text-base text-muted leading-relaxed max-w-2xl">
-                Chọn vùng miền và một chủ đề để khám phá thẻ chiêm nghiệm
-                trong bản demo. Nội dung không phải dự báo tương lai.
+                Chọn vùng miền và một chủ đề để tìm thẻ chiêm nghiệm đã qua
+                biên tập. Nội dung không phải dự báo tương lai.
               </p>
             </div>
 
@@ -618,16 +647,28 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                 <div className="relative flex flex-col items-center justify-center z-10 w-full">
                   {/* Ống xăm thuần Việt & Bó xăm 13 que đầy đặn - Chỉ 1 que nhô cao, không rơi ra ngoài */}
                   <div
-                    onClick={drawPhase !== "shaking" ? handleStartDraw : undefined}
-                    className={`relative flex flex-col items-center select-none transition-transform duration-300 cursor-pointer ${
+                    role="button"
+                    tabIndex={0}
+                    onPointerDown={beginHeldDraw}
+                    onPointerUp={cancelHeldDraw}
+                    onPointerCancel={cancelHeldDraw}
+                    onPointerLeave={cancelHeldDraw}
+                    onClick={handleKeyboardDraw}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        void handleStartDraw();
+                      }
+                    }}
+                    className={`relative flex flex-col items-center select-none touch-none transition-transform duration-300 cursor-pointer ${
                       isShaking ? "anim-xam-up-down" : "hover:scale-105 active:scale-95"
                     }`}
                     title={
                       isShaking
                         ? "Đang lắc xăm lên xuống..."
                         : drawPhase === "dropped"
-                        ? `Thẻ số ${currentResult.stickNumber} đã nhô lên`
-                        : "Chạm để lắc ống xăm"
+                    ? `Thẻ số ${currentResult?.stickNumber ?? "—"} đã nhô lên`
+                        : "Chạm giữ 1,5 giây để lắc ống xăm"
                     }
                   >
                     {/* 1. BÓ QUE XĂM: 13 que cắm san sát dày dặn trong miệng ống, nửa trên đỏ son, nửa dưới ngà kem có số */}
@@ -640,7 +681,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                         { num: "21", h: 88, rot: -2 },
                         { num: "07", h: 95, rot: -1 },
                         // QUE CHÍNH Ở GIỮA
-                        { isMain: true, num: currentResult.stickNumber, h: 98, rot: 0 },
+                        { isMain: true, num: currentResult?.stickNumber ?? "—", h: 98, rot: 0 },
                         { num: "16", h: 95, rot: 1 },
                         { num: "28", h: 88, rot: 2 },
                         { num: "45", h: 93, rot: 3 },
@@ -766,14 +807,14 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
               <div className="space-y-2 mb-6">
                 <h3 className="font-display font-bold text-xl sm:text-2xl text-ink">
                   {drawPhase === "dropped"
-                    ? `Đã hiện diện Thẻ xăm số ${currentResult.stickNumber}`
+                    ? `Đã hiện diện Thẻ xăm số ${currentResult?.stickNumber ?? "—"}`
                     : drawPhase === "shaking"
                     ? "Đang lắng lòng lắc ống xăm..."
                     : "Sẵn sàng khởi niệm bình an"}
                 </h3>
                 <p className="text-sm text-muted max-w-md mx-auto leading-relaxed">
                   {drawPhase === "dropped"
-                    ? `Thẻ xăm số ${currentResult.stickNumber} đã ứng hiện nhô cao trong bó xăm. Hãy mở xem lời quẻ chiêm nghiệm và thông điệp dành cho bạn.`
+                    ? `Thẻ xăm số ${currentResult?.stickNumber ?? "—"} đã ứng hiện nhô cao trong bó xăm. Hãy mở xem lời quẻ chiêm nghiệm và thông điệp dành cho bạn.`
                     : "Chạm vào ống xăm hoặc bấm nút bên dưới để rút thẻ tre lưu dấu hôm nay."}
                 </p>
               </div>
@@ -792,30 +833,38 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                       className="w-full py-3.5 font-semibold shadow-md gap-2 text-base cursor-pointer"
                     >
                       <Sparkles className="w-4 h-4 shrink-0" />
-                      <span>Xem chiêm nghiệm thẻ số {currentResult.stickNumber}</span>
+                      <span>Xem chiêm nghiệm thẻ số {currentResult?.stickNumber ?? "—"}</span>
                       <ArrowRight className="w-4 h-4 shrink-0" />
                     </Button>
 
                     <button
                       type="button"
-                      onClick={handleStartDraw}
+                      onPointerDown={beginHeldDraw}
+                      onPointerUp={cancelHeldDraw}
+                      onPointerCancel={cancelHeldDraw}
+                      onPointerLeave={cancelHeldDraw}
+                      onClick={handleKeyboardDraw}
                       disabled={isShaking}
                       className="text-xs text-muted hover:text-accent font-medium py-1 transition-colors cursor-pointer flex items-center gap-1.5"
                     >
                       <RotateCcw className="w-3 h-3" />
-                      <span>Lắc lại thẻ khác</span>
+                      <span>Giữ 1,5 giây để lắc lại</span>
                     </button>
                   </div>
                 ) : (
                   <Button
                     variant="default"
                     size="lg"
-                    onClick={handleStartDraw}
+                    onPointerDown={beginHeldDraw}
+                    onPointerUp={cancelHeldDraw}
+                    onPointerCancel={cancelHeldDraw}
+                    onPointerLeave={cancelHeldDraw}
+                    onClick={handleKeyboardDraw}
                     disabled={isShaking}
                     className="w-full sm:w-auto px-8 py-3.5 font-semibold shadow-md gap-2 text-base cursor-pointer mx-auto"
                   >
                     <Sparkles className="w-4 h-4 shrink-0" />
-                    <span>{isShaking ? "Đang lắng đọng rút thẻ..." : "Thành tâm lắc ống xăm"}</span>
+                    <span>{isShaking ? "Đang lắng đọng rút thẻ..." : "Giữ 1,5 giây để lắc ống xăm"}</span>
                   </Button>
                 )}
 
@@ -900,7 +949,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
         {/* =========================================================================
             BƯỚC 3: KẾT QUẢ CHIÊM NGHIỆM (IMAGE 3)
            ========================================================================= */}
-        {step === 3 && (
+        {step === 3 && currentResult && (
           <div>
             {/* Top Breadcrumb & Step Badge */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-muted">
@@ -969,7 +1018,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                   {/* Card Header */}
                   <div className="relative z-10">
                     <div className="flex items-center justify-between text-xs uppercase tracking-wider text-muted font-medium mb-4 border-b border-line/60 pb-3">
-                      <span>XĂM VIỆT ĐƯƠNG ĐẠI</span>
+                      <span>THẺ XIN XĂM</span>
                       <span className="flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-accent-soft" />
                         <span className="w-1.5 h-1.5 rounded-full bg-action" />
@@ -1046,6 +1095,15 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                           : "Đăng nhập để lưu"}
                     </span>
                   </button>
+                  {isLoggedIn && currentDrawId && onGoToXinKeo && (
+                    <button
+                      type="button"
+                      onClick={() => onGoToXinKeo(currentDrawId)}
+                      className="min-h-11 text-accent hover:text-action font-semibold"
+                    >
+                      Nối quẻ với xin keo
+                    </button>
+                  )}
                 </div>
                 {currentResult.source && (
                   <div className="px-2 text-xs text-muted space-y-1">
@@ -1119,6 +1177,11 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                             <p className="text-sm text-muted leading-relaxed">
                               {tip.desc}
                             </p>
+                            {tip.title === "Gợi ý do AI tạo" && currentResult.aiExplanation?.metadata.editorialNote && (
+                              <p className="mt-2 text-xs text-muted">
+                                {currentResult.aiExplanation.metadata.editorialNote}
+                              </p>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -1129,6 +1192,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                 <div className="w-full h-px bg-line/60" />
 
                 {/* Essay Section 2: Thực hành an yên & Nuôi dưỡng tâm lành */}
+                {currentResult.microAction.title && currentResult.microAction.desc && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
@@ -1167,6 +1231,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                     </button>
                   </div>
                 </div>
+                )}
 
                 <div className="w-full h-px bg-line/60" />
 
@@ -1185,7 +1250,8 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                   </div>
                 </details>
 
-                {/* Góc nhìn văn hóa */}
+                {/* Góc nhìn văn hóa chỉ hiện khi được biên tập trong dữ liệu phát hành. */}
+                {currentResult.culturalAspect && (
                 <details className="group rounded-card border border-line bg-surface p-4">
                   <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-control text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
                     <span className="inline-flex items-center gap-2">
@@ -1199,33 +1265,11 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                     />
                   </summary>
 
-                  <p className="mt-4 text-xs text-muted leading-relaxed">
-                    Phần giới thiệu văn hóa đang được biên soạn và chờ
-                    đối chiếu tài liệu. Vùng được chọn là nhóm trải nghiệm
-                    trong bản mẫu, chưa xác nhận xuất xứ của câu thẻ.
-                  </p>
-
                   <p className="mt-4 text-sm sm:text-base text-muted leading-relaxed">
                     {currentResult.culturalAspect}
                   </p>
-
-                  {onGoToArticle && relatedArticle && (
-                    <button
-                      type="button"
-                      onClick={() => onGoToArticle(relatedArticle.id)}
-                      className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-control text-left text-sm font-semibold text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                    >
-                      <span>
-                        Đọc bài liên quan: {relatedArticle.title}
-                      </span>
-
-                      <ArrowRight
-                        aria-hidden="true"
-                        className="h-4 w-4 shrink-0"
-                      />
-                    </button>
-                  )}
                 </details>
+                )}
 
                 {/* Final Primary Action Buttons (Clear, decisive focal point) */}
                 <div className="pt-6 border-t border-line flex flex-col sm:flex-row items-center gap-3">
@@ -1276,9 +1320,8 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
             <div className="p-4 rounded-xl bg-surface/60 border border-line flex items-center gap-3 text-xs text-muted leading-relaxed mb-12">
               <ShieldCheck className="w-4 h-4 text-accent flex-shrink-0" />
               <span>
-                Đây là nội dung chiêm nghiệm trong bản demo, không phải
-                dự báo tương lai. Bạn có thể chọn điều phù hợp với hoàn
-                cảnh của mình.
+                Thông tin dùng để tham khảo và chiêm nghiệm văn hóa, không
+                dự báo tương lai hay quyết định thay bạn.
               </span>
             </div>
           </div>
@@ -1330,8 +1373,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
             </ol>
 
             <p className="mt-5 rounded-xl bg-surface-soft p-4 text-sm leading-relaxed text-muted">
-              Bản thử nghiệm hiện có một thẻ cho mỗi vùng và chủ đề.
-              Rút lại có thể nhận cùng nội dung.
+              Số thẻ có thể thay đổi theo thư viện nội dung đã được duyệt.
             </p>
 
             <Button

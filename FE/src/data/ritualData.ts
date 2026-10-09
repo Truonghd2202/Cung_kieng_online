@@ -1,4 +1,5 @@
 import type { ContentMetadata } from "./contentMetadata";
+import type { RemoteContentItem } from "./contentService";
 
 export type RitualOccasionKey =
   | "all"
@@ -42,6 +43,7 @@ export interface RitualRegionalDetail {
 
 export interface RitualPrayer {
   id: string;
+  preview?: boolean;
   title: string;
   kind: "Văn khấn" | "Văn khấn nôm";
   applicableTo: string;
@@ -73,6 +75,7 @@ export interface RitualDetailContent {
 
 export interface RitualGuideItem {
   id: string;
+  preview?: boolean;
   title: string;
   badge?: string;
   badgeType?: "featured" | "occasion" | "family";
@@ -94,6 +97,10 @@ const createPrayerMeta = (sourceTitle: string, author: string, note: string): Co
   contentKind: "editorial",
   editorialStatus: "in-review",
   quotationVerified: false,
+  usageRights: {
+    status: "unknown",
+    note: "Chưa xác minh quyền sử dụng; không phát hành như văn khấn đã thẩm định.",
+  },
   sources: [
     {
       id: "src-" + sourceTitle.toLowerCase().replace(/[^a-z0-9]/g, "-"),
@@ -1108,4 +1115,153 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
 
 export function getRitualById(id: string): RitualGuideItem | undefined {
   return RITUAL_GUIDES.find((item) => item.id === id);
+}
+
+const asText = (value: unknown, fallback = ""): string =>
+  typeof value === "string" && value.trim() ? value.trim() : fallback;
+
+const asRecord = (value: unknown): Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+
+const asArray = (value: unknown): unknown[] => Array.isArray(value) ? value : [];
+
+const slugify = (value: string) => value.normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "")
+  .replace(/[đĐ]/g, "d")
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, "-")
+  .replace(/^-|-$/g, "");
+
+export function adaptRemoteRitual(item: RemoteContentItem): RitualGuideItem {
+  const id = asText(item.slug, item.id);
+  const local = getRitualById(id);
+  const details = asRecord(item.detail);
+  const rawOfferings = asArray(item.offerings);
+  const rawSteps = asArray(item.steps);
+  const rawPrayers = asArray(item.prayers);
+  const offerings: RitualOfferingItem[] = rawOfferings.map((value, index) => {
+    const offering = asRecord(value);
+    const name = asText(offering.name, `Lễ vật ${index + 1}`);
+    return {
+      id: asText(offering.id, `${id}-offering-${slugify(name) || index + 1}`),
+      name,
+      subname: asText(offering.quantity),
+      desc: asText(offering.desc, "Chuẩn bị tùy điều kiện gia đình."),
+    };
+  });
+  const checklists: RitualChecklistItem[] = offerings.map((offering) => ({
+    id: `${id}-check-${slugify(offering.id)}`,
+    label: [offering.name, offering.subname].filter(Boolean).join(" · "),
+  }));
+  const steps: RitualStep[] = rawSteps.map((value, index) => {
+    const step = asRecord(value);
+    return {
+      stepNumber: asText(step.stepNumber, String(index + 1)),
+      title: asText(step.title, `Bước ${index + 1}`),
+      desc: asText(step.desc, "Thực hiện nhẹ nhàng theo điều kiện thực tế."),
+    };
+  });
+  const prayers: RitualPrayer[] = rawPrayers.map((value, index) => {
+    const prayer = asRecord(value);
+    const review = asRecord(prayer.reviewMetadata);
+    const title = asText(prayer.title, "Văn khấn tham khảo");
+    const content = asText(prayer.content);
+    const sourceUrl = asText(prayer.source);
+    const hasReview = prayer.verified === true && Boolean(review.sourceLocator);
+    const rightsStatus = asText(review.usageRights, "unknown") as NonNullable<ContentMetadata["usageRights"]>["status"];
+    return {
+      id: `${id}-prayer-${slugify(title) || index + 1}`,
+      preview: prayer.preview === true,
+      title,
+      kind: "Văn khấn",
+      applicableTo: asText(prayer.applicableTo, asText(item.title)),
+      paragraphs: content.split(/\r?\n/).map((line) => line.trim()).filter(Boolean),
+      usageNote: asText(prayer.usageNote),
+      metadata: {
+        contentKind: "editorial",
+        editorialStatus: hasReview ? "approved" : "in-review",
+        quotationVerified: hasReview,
+        reviewedBy: asText(review.reviewedBy) || undefined,
+        reviewedOn: asText(review.reviewedOn) || undefined,
+        usageRights: { status: rightsStatus, note: asText(review.reviewNote, "Chưa có hồ sơ xác nhận quyền sử dụng.") },
+        sources: [{
+          id: `${id}-prayer-source-${index + 1}`,
+          title: sourceUrl || "Tư liệu do BE cung cấp",
+          authorOrOrganization: "Nguồn cẩm nang nghi lễ",
+          ...(sourceUrl ? { url: sourceUrl } : {}),
+          ...(asText(review.sourceLocator) ? { locator: asText(review.sourceLocator) } : {}),
+        }],
+        editorialNote: hasReview ? asText(review.reviewNote, "Nguồn và quyền sử dụng đã được duyệt.") : "Nội dung do BE cung cấp; đang chờ biên tập và thẩm định.",
+      },
+    };
+  });
+  const regionName = asText(item.region);
+  const region: RitualRegionKey = regionName === "Toàn quốc" || regionName === "NATIONWIDE"
+    ? "Thích ứng đa vùng"
+    : (["Bắc Bộ", "Trung Bộ", "Nam Bộ"].includes(regionName) ? regionName as RitualRegionKey : "Thích ứng đa vùng");
+  const occasionName = asText(item.occasion);
+  const occasion: RitualOccasionKey = (["Rằm", "Mùng một", "Tết Nguyên Đán", "Dịp gia đình", "Động thổ"].includes(occasionName)
+    ? occasionName
+    : "Dịp gia đình") as RitualOccasionKey;
+  const image = asText(item.image, local?.image || "/images/ritual_ram.jpg");
+  const title = asText(item.title, local?.title || "Hướng dẫn nghi lễ");
+  const desc = asText(item.desc, local?.desc || title);
+  const verified = item.verified === true;
+  const ritualReview = asRecord(item.reviewMetadata);
+  const hasRitualReview = verified && Boolean(ritualReview.sourceLocator);
+  const ritualRights = asText(ritualReview.usageRights, "unknown") as NonNullable<ContentMetadata["usageRights"]>["status"];
+  const metadata: ContentMetadata = {
+    contentKind: "editorial",
+    editorialStatus: hasRitualReview ? "approved" : "in-review",
+    quotationVerified: false,
+    reviewedBy: asText(ritualReview.reviewedBy) || undefined,
+    reviewedOn: asText(ritualReview.reviewedOn) || undefined,
+    usageRights: { status: ritualRights, note: asText(ritualReview.reviewNote, "Chưa có hồ sơ xác nhận quyền sử dụng.") },
+    sources: [{ id: `${id}-source`, title: asText(item.source, "Tư liệu biên tập"), authorOrOrganization: "Nguồn cẩm nang nghi lễ", ...(asText(item.source).startsWith("https://") ? { url: asText(item.source) } : {}), ...(asText(ritualReview.sourceLocator) ? { locator: asText(ritualReview.sourceLocator) } : {}) }],
+    editorialNote: hasRitualReview ? asText(ritualReview.reviewNote, "Nguồn và quyền sử dụng đã được duyệt.") : "Nội dung chưa có hồ sơ thẩm định và quyền sử dụng đầy đủ.",
+  };
+  const stepCount = steps.length;
+  return {
+    id,
+    title,
+    preview: item.preview === true,
+    badge: local?.badge,
+    badgeType: local?.badgeType,
+    subBadgeOccasion: local?.subBadgeOccasion || occasion,
+    tagOnImage: region === "Thích ứng đa vùng" ? "Đa vùng thích ứng" : region,
+    stepsCount: `${stepCount} bước`,
+    timeEstimate: local?.timeEstimate || "Tùy thời gian chuẩn bị",
+    desc,
+    image,
+    tagPill: local?.tagPill || "THAM KHẢO VĂN HÓA",
+    actionText: "Xem hướng dẫn",
+    occasion,
+    region,
+    metadata,
+    detail: {
+      fullTitle: title,
+      subtitle: desc,
+      heroImage: image,
+      heroCaption: asText(details.heroCaption, "Hình ảnh minh họa cho nội dung nghi lễ."),
+      heroArtCredit: asText(details.heroArtCredit, "Ảnh minh họa"),
+      meaningTitle: asText(details.meaningTitle, "Ý nghĩa và lưu ý thực hành"),
+      meaningParagraphs: asArray(details.meaningParagraphs).map((value) => asText(value)).filter(Boolean),
+      meaningQuote: asText(details.meaningQuote),
+      checklists,
+      safetyTip: asText(details.safetyTip, "Thực hành an toàn, tuân thủ quy định nơi ở; không sử dụng lửa nếu điều kiện không phù hợp."),
+      offeringsTitle: "Lễ vật tham khảo",
+      offeringAdvice: asText(details.offeringAdvice, "Lễ vật có thể điều chỉnh theo nếp nhà và điều kiện thực tế."),
+      offerings,
+      steps,
+      regionalDetails: asArray(details.regionalDetails).map((value) => {
+        const detail = asRecord(value);
+        return { region: asText(detail.region, region), desc: asText(detail.desc) };
+      }),
+      fireSafetyRules: asArray(details.fireSafetyRules).map((value) => asText(value)).filter(Boolean),
+      closingQuote: asText(details.closingQuote),
+      prayers,
+    },
+  };
 }

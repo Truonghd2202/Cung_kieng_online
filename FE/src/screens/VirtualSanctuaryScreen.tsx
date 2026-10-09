@@ -36,6 +36,7 @@ interface VirtualSanctuaryScreenProps {
   onGoToAltar: () => void;
   onGoToMemorial: () => void;
   onGoToZen: () => void;
+  onRecordIncense?: () => Promise<void>;
 }
 
 export const VirtualSanctuaryScreen: React.FC<
@@ -48,6 +49,7 @@ export const VirtualSanctuaryScreen: React.FC<
   onGoToAltar,
   onGoToMemorial,
   onGoToZen,
+  onRecordIncense,
 }) => {
   const [show3D, setShow3D] = useState(false);
   const [decoration, setDecoration] =
@@ -208,6 +210,7 @@ export const VirtualSanctuaryScreen: React.FC<
                   <SanctuaryScene
                     memorial={memorial}
                     onOpenMemorial={onGoToMemorial}
+                    onRecordIncense={onRecordIncense}
                     decoration={
                       decoration === "lotus-vase" ||
                       decoration === "river-lantern"

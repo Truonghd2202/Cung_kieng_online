@@ -179,7 +179,7 @@ export const MoodJourneyScreen: React.FC<MoodJourneyScreenProps> = ({
           </h1>
 
           <p className="text-base sm:text-lg text-muted leading-relaxed max-w-2xl">
-            Tập hợp những lời ca dao và dòng suy tư bạn đã trân quý lưu giữ,
+            Tập hợp những lời gợi mở và dòng suy tư bạn đã trân quý lưu giữ,
             ghi dấu những khoảnh khắc dừng lại để vỗ về tâm hồn.
           </p>
 
@@ -208,7 +208,7 @@ export const MoodJourneyScreen: React.FC<MoodJourneyScreenProps> = ({
 
             <p className="text-base text-muted leading-relaxed max-w-md mx-auto mb-6">
               Bạn chưa lưu lời chiêm nghiệm nào. Hãy bắt đầu từ việc chọn tâm
-              trạng hôm nay, đón nhận lời khuyên từ ca dao và bấm lưu lại ở màn kết quả.
+              trạng hôm nay, đón nhận lời gợi mở và bấm lưu lại ở màn kết quả.
             </p>
 
             <button
@@ -295,7 +295,7 @@ export const MoodJourneyScreen: React.FC<MoodJourneyScreenProps> = ({
                         </span>
                       </div>
 
-                      {/* Hai câu ca dao thư pháp */}
+                      {/* Hai câu gợi mở đã lưu */}
                       <blockquote className="journey-entry-poem">
                         <p className="m-0">{item.poemLine1}</p>
                         <p className="m-0 mt-1">{item.poemLine2}</p>

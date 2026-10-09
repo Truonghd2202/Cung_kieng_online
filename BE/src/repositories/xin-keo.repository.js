@@ -14,7 +14,17 @@ function listSessions(userId, client = prisma) {
 
 function createThrowAndUpdateSession(session, throwData) {
   return prisma.$transaction(async (transaction) => {
-    const created = await transaction.xin_keo_throws.create({ data: throwData, include: { proverbs: true } });
+    await transaction.$queryRawUnsafe(
+      'SELECT "id" FROM "xin_keo_sessions" WHERE "id" = $1::uuid FOR UPDATE',
+      session.id,
+    );
+    const throwNumber = await transaction.xin_keo_throws.count({ where: { session_id: session.id } });
+    if (throwNumber >= 3) {
+      const error = new Error("SESSION_MAX_THROWS");
+      error.code = "SESSION_MAX_THROWS";
+      throw error;
+    }
+    const created = await transaction.xin_keo_throws.create({ data: { ...throwData, throw_number: throwNumber + 1 }, include: { proverbs: true } });
     await transaction.xin_keo_sessions.update({ where: { id: session.id }, data: { final_result: throwData.result } });
     return created;
   });

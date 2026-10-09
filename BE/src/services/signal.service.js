@@ -52,6 +52,7 @@ function parseContent(row) {
 }
 
 function toPublicSignal(row) {
+  const content = parseContent(row);
   return {
     id: row.source || row.id,
     dbId: row.id,
@@ -60,7 +61,14 @@ function toPublicSignal(row) {
     title: row.title,
     category: row.category,
     source: row.source,
-    ...parseContent(row),
+    ...content,
+    metadata: content.metadata || {
+      contentKind: "editorial",
+      editorialStatus: "approved",
+      sources: [],
+      quotationVerified: true,
+      editorialNote: "Thông điệp đã được duyệt biên tập.",
+    },
   };
 }
 
@@ -102,9 +110,16 @@ async function listSignals({ mood, limit, contextKey = "general" }) {
   return rows.map(toPublicSignal);
 }
 
-async function analyzeForMood({ mood, contextKey = "general" }) {
-  const row = await signalRepository.findForMoodContext(toDbMood(mood), contextKey);
-  if (!row) throw new ApiError(503, "No curated signal is available for this mood and context");
+async function analyzeForMood({ mood, contextKey = "general", signalId, excludeSignalId }) {
+  const row = signalId
+    ? await signalRepository.findActiveByIdOrSource(signalId)
+    : excludeSignalId
+      ? await signalRepository.findNextForMoodContext(toDbMood(mood), contextKey, excludeSignalId)
+      : await signalRepository.findForMoodContext(toDbMood(mood), contextKey);
+  if (!row) throw new ApiError(signalId ? 404 : 503, signalId ? "Signal not found" : "No curated signal is available for this mood and context");
+  if (row.mood !== toDbMood(mood) || (row.context_key || "general") !== contextKey) {
+    throw new ApiError(422, "Signal does not match the selected mood and context");
+  }
   const enriched = await aiService.enrichSignal(toPublicSignal(row), { mood, contextKey });
   return { signal: enriched.signal, aiUsed: enriched.aiUsed };
 }
@@ -115,12 +130,14 @@ async function getSignal(id) {
   return toPublicSignal(row);
 }
 
-async function resolveForMood(mood, signalId) {
+async function resolveForMood(mood, signalId, contextKey = "general") {
   let row;
   if (signalId) row = await signalRepository.findActiveByIdOrSource(signalId);
-  if (!row) row = await signalRepository.findFirstByMood(toDbMood(mood));
+  if (signalId && !row) throw new ApiError(404, "Signal not found");
+  if (!row) row = await signalRepository.findForMoodContext(toDbMood(mood), contextKey);
   if (!row) throw new ApiError(404, "No signal is available for this mood");
   if (mood && row.mood !== toDbMood(mood)) throw new ApiError(422, "Signal does not match the selected mood");
+  if ((row.context_key || "general") !== contextKey) throw new ApiError(422, "Signal does not match the selected context");
   return row;
 }
 
@@ -133,14 +150,25 @@ async function getSavedSignals(userId, limit = 100) {
 }
 
 async function saveSignal(userId, signalId, input) {
-  const signal = await resolveForMood(undefined, signalId);
+  const mood = input.mood ? toDbMood(input.mood) : undefined;
+  const contextKey = input.contextKey || "general";
+  const row = await resolveForMood(mood, signalId, contextKey);
+  const snapshot = input.signalSnapshot;
+  if (snapshot && (snapshot.mood !== toMoodLabel(row.mood) || snapshot.contextKey !== contextKey || (snapshot.id && snapshot.id !== (row.source || row.id)))) {
+    throw new ApiError(422, "Signal snapshot does not match the selected signal");
+  }
+  const enriched = snapshot
+    ? { signal: snapshot }
+    : await aiService.enrichSignal(toPublicSignal(row), { mood: toMoodLabel(row.mood), contextKey });
+  const signal = enriched.signal;
   let checkIn;
 
   if (input.checkInId) {
     checkIn = await moodRepository.findByIdForUser(input.checkInId, userId);
     if (!checkIn) throw new ApiError(404, "Check-in not found");
-    if (!checkIn.signals || checkIn.signals.id !== signal.id) throw new ApiError(422, "Check-in does not match the signal");
+    if (!checkIn.signals || checkIn.signals.id !== row.id) throw new ApiError(422, "Check-in does not match the signal");
     const updated = await moodRepository.update(input.checkInId, userId, {
+      saved_at: checkIn.saved_at || new Date(),
       ...(input.note !== undefined ? { note: input.note || null } : {}),
       ...(input.actionDone !== undefined ? { action_done: input.actionDone } : {}),
     });
@@ -150,10 +178,13 @@ async function saveSignal(userId, signalId, input) {
   } else {
     checkIn = await moodRepository.create({
       user_id: userId,
-      mood: signal.mood,
-      signal_id: signal.id,
+      mood: row.mood,
+      context_key: contextKey,
+      signal_id: row.id,
+      signal_snapshot: signal,
       note: input.note || null,
       action_done: Boolean(input.actionDone),
+      saved_at: new Date(),
     });
   }
 
@@ -162,7 +193,7 @@ async function saveSignal(userId, signalId, input) {
 
 async function updateSavedSignal(userId, checkInId, starred) {
   const checkIn = await moodRepository.findByIdForUser(checkInId, userId);
-  if (!checkIn || !checkIn.signals) throw new ApiError(404, "Saved signal not found");
+  if (!checkIn || !checkIn.signals || !checkIn.saved_at) throw new ApiError(404, "Saved signal not found");
   if (starred) await signalRepository.addFavorite(userId, checkIn.signals.id);
   else await signalRepository.removeFavorite(userId, checkIn.signals.id);
   return toSavedSignal(checkIn, starred ? new Set([checkIn.signals.id]) : new Set());
@@ -170,7 +201,7 @@ async function updateSavedSignal(userId, checkInId, starred) {
 
 async function deleteSavedSignal(userId, checkInId) {
   const checkIn = await moodRepository.findByIdForUser(checkInId, userId);
-  if (!checkIn) throw new ApiError(404, "Saved signal not found");
+  if (!checkIn || !checkIn.saved_at) throw new ApiError(404, "Saved signal not found");
   await prisma.$transaction(async (transaction) => {
     if (checkIn.signals) await signalRepository.removeFavoriteForCheckIn(userId, checkIn.signals.id, transaction);
     const removed = await moodRepository.remove(checkInId, userId, transaction);

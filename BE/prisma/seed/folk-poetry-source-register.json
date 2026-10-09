@@ -1,0 +1,116 @@
+{
+  "purpose": "Editorial research leads for a reviewed Vietnamese folk-poetry corpus. This register contains bibliographic leads only; it does not grant reuse rights or approve quotations.",
+  "sources": [
+    {
+      "id": "kho-tang-ca-dao-nguoi-viet-2001",
+      "title": "Kho tàng ca dao người Việt",
+      "contributors": [
+        "Nguyễn Xuân Kính",
+        "Phan Đăng Nhật"
+      ],
+      "role": "co-editors",
+      "publisher": "Nhà xuất bản Văn hóa Thông tin",
+      "year": 2001,
+      "sourceType": "scholarly printed collection",
+      "bibliographicReferences": [
+        "https://tttv.hdu.edu.vn/gioi-thieu-sach-kho-tang-ca-dao-nguoi-viet-i-tu-a-z",
+        "https://lib.ajc.edu.vn/OPAC/DmdInfo.aspx?dmd_id=9463&mnuid=141&search_field=author&search_id=17615",
+        "https://books.google.com/books?id=-KJkAAAAMAAJ"
+      ],
+      "researchValue": "The university-hosted introduction describes a compilation based on 37 earlier collections, with source references and variants. Google Books exposes bibliographic details and snippets, not enough to verify a particular entry or page.",
+      "accessStatus": "full text not inspected",
+      "rightsStatus": "not reviewed",
+      "approvedForPublication": false
+    },
+    {
+      "id": "tong-tap-vhdg-tap-16-2002",
+      "title": "Tổng tập văn học dân gian người Việt, Tập 16: Ca dao tình yêu lứa đôi",
+      "contributors": [
+        "Nguyễn Xuân Kính"
+      ],
+      "role": "editor",
+      "publisher": "Nhà xuất bản Khoa học xã hội",
+      "year": 2002,
+      "sourceType": "scholarly printed collection",
+      "bibliographicReferences": [
+        "https://thuvien.vov.gov.vn/Book.aspx?id=831"
+      ],
+      "researchValue": "The VOV library catalog describes sections for different relationship situations and offers the volume for library borrowing. The catalog is not the full text.",
+      "accessStatus": "library loan required",
+      "rightsStatus": "not reviewed",
+      "approvedForPublication": false
+    },
+    {
+      "id": "ha-dinh-thanh-tinh-gia-2011",
+      "title": "Một số thể loại văn học dân gian Tĩnh Gia",
+      "contributors": [
+        "Hà Đình Thành"
+      ],
+      "role": "author",
+      "publisher": "Tạp chí Văn hóa Nghệ thuật",
+      "issue": "325",
+      "year": 2011,
+      "sourceType": "scholarly journal article",
+      "bibliographicReferences": [
+        "https://vanhoanghethuat.vn/mot-so-the-loai-van-hoc-dan-gian-tinh-gia-77747750.html"
+      ],
+      "researchValue": "The article discusses love and family themes and marks local collection origins for examples. Its notes cite a 2002 research article and an unpublished Hải Bình local gazette manuscript for some examples.",
+      "accessStatus": "article inspected",
+      "rightsStatus": "written permission required for reuse of the journal's published content",
+      "approvedForPublication": false
+    },
+    {
+      "id": "nguyen-van-ngoc-tuc-ngu-phong-dao-1928-digital-transcription",
+      "title": "Tục ngữ phong dao",
+      "contributors": [
+        "Nguyễn Văn Ngọc"
+      ],
+      "role": "compiler",
+      "publisher": "Việt Văn Thư Xã / Vĩnh Hưng Long Thư Quán",
+      "year": 1928,
+      "sourceType": "historical printed folk-literature collection; consulted through a later digital transcription",
+      "bibliographicReferences": [
+        "https://vietbrooms.com/2022/03/28/tuyen-tap-tuc-ngu-phong-dao-viet-nam/",
+        "https://vannghiep.vn/inc/uploads/2016/02/Tuc-ngu-Phong-Dao-1928-1.pdf",
+        "https://ci.nii.ac.jp/ncid/BA55827102"
+      ],
+      "researchValue": "The transcription page says its text was transcribed from the 1928 collection and identifies the digitization project/contributors. The scanned-source link is listed but could not be opened in this research session. The compiler’s preface says the collection prioritizes gathering material, mixes forms, and may contain imperfect classifications; do not treat every item as an independently verified ca dao attribution.",
+      "accessStatus": "web transcription inspected; corresponding scanned page not collated",
+      "rightsStatus": "not reviewed; digital transcription has no explicit reuse grant on the inspected page",
+      "provenanceStatus": "the collection item inspected does not state a locality/community of origin",
+      "approvedForPublication": false
+    }
+  ],
+  "publicationChecklist": [
+    "Store the exact selected variant and its book/page or article locator; compare the transcription against a scan or library copy.",
+    "Record the locality/community of origin when the source provides it; do not generalize a local variant as nationally representative.",
+    "Record a reviewer, a source URL, and an explicit reuse-rights decision before publication.",
+    "Keep AI reflection and action text separate from the unchanged folk quotation."
+  ],
+  "candidateIndex": [
+    {
+      "candidateId": "nguyen-van-ngoc-1928-b-14-chu-288",
+      "sourceId": "nguyen-van-ngoc-tuc-ngu-phong-dao-1928-digital-transcription",
+      "locator": "Section B, 14 chữ, entry 288 (transcription page; extracted lines 1552–1554)",
+      "textStored": false,
+      "theme": "solidarity / care for others",
+      "editorialAssessment": "The two-line item fits a supportive mood reflection, but the source’s form labels are heterogeneous and do not establish local provenance.",
+      "verificationStatus": "candidate only; compare with scan and a scholarly ca dao collection",
+      "rightsStatus": "unreviewed",
+      "localityStatus": "not stated in inspected source",
+      "approvedForPublication": false
+    },
+    {
+      "candidateId": "haibinh-community-togetherness-two-line",
+      "sourceId": "ha-dinh-thanh-tinh-gia-2011",
+      "locator": "Article section on local ca dao, lines 292–296 in web transcription; source note says collected at Hải Bình commune",
+      "textStored": false,
+      "theme": "belonging / mutual support",
+      "editorialAssessment": "The article presents this as a standalone two-line folk verse and explicitly attributes its collection to Hải Bình. It is a stronger provenance lead for a support mood than the 1928 nationwide compilation.",
+      "verificationStatus": "transcribed in a scholarly journal article; needs collation with the cited source or a second scholarly edition",
+      "rightsStatus": "publisher page requires written permission to reuse article content; unresolved for this exact quotation",
+      "localityStatus": "Hải Bình commune, Tĩnh Gia (as attributed by the article)",
+      "approvedForPublication": false
+    }
+  ]
+}

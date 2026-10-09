@@ -6,6 +6,9 @@ function updateMemorial(id, userId, data, client = prisma) { return client.memor
 function listNotes(userId, client = prisma) { return client.calendar_notes.findMany({ where: { user_id: userId }, orderBy: { event_date: "desc" } }); }
 function findNote(id, userId, client = prisma) { return client.calendar_notes.findFirst({ where: { id, user_id: userId } }); }
 function createNote(data, client = prisma) { return client.calendar_notes.create({ data }); }
+function findNoteByDateAndTitle(userId, title, eventDate, client = prisma) {
+  return client.calendar_notes.findFirst({ where: { user_id: userId, title, event_date: eventDate } });
+}
 function removeNote(id, userId, client = prisma) { return client.calendar_notes.deleteMany({ where: { id, user_id: userId } }); }
 
-module.exports = { findMemorial, createMemorial, updateMemorial, listNotes, findNote, createNote, removeNote };
+module.exports = { findMemorial, createMemorial, updateMemorial, listNotes, findNote, findNoteByDateAndTitle, createNote, removeNote };

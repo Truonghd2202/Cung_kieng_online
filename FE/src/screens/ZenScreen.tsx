@@ -54,7 +54,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
   // Canvas ref for 3D Perspective Scene
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Web Audio Context for authentic harmonic singing bowl & ambient breeze
+  // Web Audio Context for a synthesized 432 Hz tone and ambient breeze
   const audioContextRef = useRef<AudioContext | null>(null);
   const activeNodesRef = useRef<{ [key: string]: any }>({});
 
@@ -99,11 +99,13 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
       noiseGain.connect(masterGain);
       whiteNoise.start();
 
-      // 2. Gentle Singing Bowl Resonance (Fundamental 108Hz + 216Hz + 432Hz harmonics)
+      // 2. Low ambient tones plus an explicit 432 Hz component.
       const osc1 = ctx.createOscillator();
       const osc2 = ctx.createOscillator();
+      const osc3 = ctx.createOscillator();
       const bowlGain1 = ctx.createGain();
       const bowlGain2 = ctx.createGain();
+      const bowlGain3 = ctx.createGain();
 
       osc1.type = "sine";
       osc1.frequency.setValueAtTime(108, ctx.currentTime);
@@ -113,27 +115,71 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
       osc2.frequency.setValueAtTime(216.5, ctx.currentTime); // Slight detune for natural vibrato beat
       bowlGain2.gain.setValueAtTime(0.02, ctx.currentTime);
 
+      osc3.type = "sine";
+      osc3.frequency.setValueAtTime(432, ctx.currentTime);
+      bowlGain3.gain.setValueAtTime(0.008, ctx.currentTime);
+
       osc1.connect(bowlGain1);
       osc2.connect(bowlGain2);
+      osc3.connect(bowlGain3);
       bowlGain1.connect(masterGain);
       bowlGain2.connect(masterGain);
+      bowlGain3.connect(masterGain);
 
       osc1.start();
       osc2.start();
+      osc3.start();
 
       activeNodesRef.current = {
         whiteNoise,
         osc1,
         osc2,
+        osc3,
         masterGain,
       };
     } catch {}
+  };
+
+  const handleStrikeBell = async () => {
+    let temporaryContext: AudioContext | null = null;
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = audioContextRef.current || new AudioCtx();
+      if (!audioContextRef.current) temporaryContext = ctx;
+      await ctx.resume();
+      const now = ctx.currentTime;
+      const bell = ctx.createGain();
+      bell.gain.setValueAtTime(0.0001, now);
+      bell.gain.exponentialRampToValueAtTime(0.035, now + 0.04);
+      bell.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
+      bell.connect(ctx.destination);
+
+      for (const [frequency, level] of [[432, 1], [864, 0.22]] as const) {
+        const tone = ctx.createOscillator();
+        const partialGain = ctx.createGain();
+        tone.type = "sine";
+        tone.frequency.setValueAtTime(frequency, now);
+        partialGain.gain.setValueAtTime(level, now);
+        tone.connect(partialGain);
+        partialGain.connect(bell);
+        tone.start(now);
+        tone.stop(now + 3.25);
+      }
+
+      if (temporaryContext) {
+        window.setTimeout(() => void temporaryContext?.close().catch(() => {}), 3500);
+      }
+    } catch {
+      if (temporaryContext) void temporaryContext.close().catch(() => {});
+    }
   };
 
   const stopAmbientSound = () => {
     try {
       if (activeNodesRef.current.osc1) activeNodesRef.current.osc1.stop();
       if (activeNodesRef.current.osc2) activeNodesRef.current.osc2.stop();
+      if (activeNodesRef.current.osc3) activeNodesRef.current.osc3.stop();
       if (activeNodesRef.current.whiteNoise) activeNodesRef.current.whiteNoise.stop();
       if (audioContextRef.current) {
         audioContextRef.current.close();
@@ -464,12 +510,12 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
               {soundEnabled ? (
                 <>
                   <Volume2 className="w-3.5 h-3.5 text-amber-200" />
-                  <span>Chuông thiền & Gió: Bật</span>
+                  <span>Âm nền 432 Hz & gió: Bật</span>
                 </>
               ) : (
                 <>
                   <VolumeX className="w-3.5 h-3.5 text-muted" />
-                  <span>Chuông thiền & Gió: Tắt</span>
+                  <span>Âm nền 432 Hz & gió: Tắt</span>
                 </>
               )}
             </button>
@@ -621,6 +667,16 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
 
                 {/* Active Controls */}
                 <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => void handleStrikeBell()}
+                    className="min-h-11 px-4 py-2.5 rounded-xl bg-amber-400/15 hover:bg-amber-400/25 text-xs font-semibold text-amber-100 backdrop-blur-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                    aria-label="Gõ chuông âm tổng hợp 432 hertz"
+                  >
+                    <Volume2 className="w-3.5 h-3.5" />
+                    <span>Gõ chuông 432 Hz</span>
+                  </button>
+
                   <button
                     type="button"
                     aria-pressed={isPaused}

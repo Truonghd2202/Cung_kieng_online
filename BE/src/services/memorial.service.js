@@ -85,8 +85,23 @@ async function update(userId, id, input) {
 }
 
 async function remove(userId, id) {
-  const removed = await repository.remove(id, userId);
-  if (removed.count !== 1) throw new ApiError(404, "Memorial not found");
+  const removedCount = await prisma.$transaction(async (transaction) => {
+    const existing = await repository.findByIdForUser(id, userId, transaction);
+    if (!existing) return 0;
+    await transaction.incense_sessions.deleteMany({ where: { user_id: userId, memorial_id: id } });
+    const removed = await repository.remove(id, userId, transaction);
+    return removed.count;
+  });
+  if (removedCount !== 1) throw new ApiError(404, "Memorial not found");
+}
+
+async function removeAnniversary(userId, memorialId, anniversaryId) {
+  const memorial = await repository.findByIdForUser(memorialId, userId);
+  if (!memorial) throw new ApiError(404, "Memorial not found");
+  const result = await prisma.memorial_anniversaries.deleteMany({
+    where: { id: anniversaryId, memorial_id: memorialId },
+  });
+  if (result.count !== 1) throw new ApiError(404, "Memorial anniversary not found");
 }
 
 async function lightIncense(userId, id, input) {
@@ -95,4 +110,4 @@ async function lightIncense(userId, id, input) {
   return { id: session.id, memorialId: id, incenseCount: session.incense_count, createdAt: session.created_at };
 }
 
-module.exports = { list, create, update, remove, lightIncense };
+module.exports = { list, create, update, remove, removeAnniversary, lightIncense };

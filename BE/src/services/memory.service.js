@@ -2,7 +2,7 @@ const repository = require("../repositories/memory.repository");
 const ApiError = require("../utils/api-error");
 
 function toDate(value) { return new Date(`${value}T00:00:00.000Z`); }
-function toDateString(value) { return value.toISOString().slice(0, 10); }
+function toDateString(value) { return value ? value.toISOString().slice(0, 10) : ""; }
 
 function toMemorial(record) {
   if (!record) return null;
@@ -25,7 +25,12 @@ async function saveMemorial(userId, input) {
   return toMemorial(await repository.createMemorial({ user_id: userId, ...data }));
 }
 async function listNotes(userId) { return (await repository.listNotes(userId)).map(toNote); }
-async function createNote(userId, input) { return toNote(await repository.createNote({ user_id: userId, title: input.title, note: input.note || null, event_date: new Date(Date.UTC(input.year, input.month - 1, input.day)) })); }
+async function createNote(userId, input) {
+  const eventDate = new Date(Date.UTC(input.year, input.month - 1, input.day));
+  const existing = await repository.findNoteByDateAndTitle(userId, input.title, eventDate);
+  if (existing) return toNote(existing);
+  return toNote(await repository.createNote({ user_id: userId, title: input.title, note: input.note || null, event_date: eventDate }));
+}
 async function deleteNote(userId, id) { const removed = await repository.removeNote(id, userId); if (removed.count !== 1) throw new ApiError(404, "Calendar note not found"); }
 
 module.exports = { getMemorial, saveMemorial, listNotes, createNote, deleteNote };

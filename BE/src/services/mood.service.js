@@ -19,10 +19,10 @@ function toPublicCheckIn(checkIn) {
 
 async function createCheckIn(userId, input) {
   const contextKey = input.contextKey || "general";
-  const { signal } = await signalService.analyzeForMood({ mood: input.mood, contextKey });
+  const { signal } = await signalService.analyzeForMood({ mood: input.mood, contextKey, signalId: input.signalId, excludeSignalId: input.excludeSignalId });
   const checkIn = await moodRepository.create({
     user_id: userId,
-    mood: signal.mood,
+    mood: signalService.toDbMood(signal.mood),
     context_key: contextKey,
     note: input.note || null,
     intensity: input.intensity === undefined ? null : input.intensity,

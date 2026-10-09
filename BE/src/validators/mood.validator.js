@@ -22,10 +22,12 @@ const checkInSchema = z.object({
   note: z.string().trim().max(2000).optional(),
   intensity: z.coerce.number().int().min(1).max(5).optional(),
   signalId: z.string().trim().min(1).optional(),
+  excludeSignalId: z.string().trim().min(1).optional(),
   actionDone: z.boolean().optional(),
 });
 
 const analyzeSignalSchema = checkInSchema.pick({ mood: true, contextKey: true }).extend({
+  excludeSignalId: z.string().trim().min(1).optional(),
   note: z.string().trim().max(2000).optional(),
 });
 
@@ -36,6 +38,9 @@ const checkInQuerySchema = z.object({
 
 const savedSignalSchema = z.object({
   checkInId: z.string().uuid().optional(),
+  mood: moodSchema.optional(),
+  contextKey: z.enum(["general", "study", "work", "family", "relationship"]).default("general"),
+  signalSnapshot: z.record(z.string(), z.unknown()).optional(),
   note: z.string().trim().max(2000).optional(),
   actionDone: z.boolean().optional(),
 });

@@ -1,3 +1,4 @@
+import { toast } from "./ui/Toast";
 import { useState, useRef, useEffect } from "react";
 import {
   Sparkles,
@@ -94,7 +95,7 @@ export function PhysiognomyDemoPanel() {
     if (!file) return;
 
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      alert("Bạn vui lòng chọn file ảnh JPG, PNG hoặc WEBP.");
+      toast.warning("Bạn vui lòng chọn file ảnh JPG, PNG hoặc WEBP.", "Định dạng tệp");
       return;
     }
 

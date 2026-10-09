@@ -8,6 +8,10 @@ const idParamsSchema = z.object({ id: z.string().uuid() });
 const reviewSchema = z.object({
   active: z.boolean().optional(),
   verified: z.boolean().optional(),
+  rightsConfirmed: z.boolean().optional(),
+  source: z.string().trim().url().refine((value) => /^https:\/\//i.test(value), "Source must use HTTPS").optional(),
+  sourceLocator: z.string().trim().max(500).optional(),
+  usageRights: z.enum(["confirmed", "public-domain", "permission-required", "unknown"]).optional(),
   reviewNote: z.string().trim().min(8).max(500),
 }).strict().refine((value) => value.active !== undefined || value.verified !== undefined, {
   message: "Choose at least one status to update",

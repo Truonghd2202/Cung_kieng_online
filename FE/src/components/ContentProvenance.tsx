@@ -38,19 +38,25 @@ export function ContentProvenance({
 }: ContentProvenanceProps) {
   return (
     <div className="space-y-4 text-sm leading-relaxed">
-      <div className="flex flex-wrap gap-2">
-        <span className="rounded-full border border-line bg-canvas px-3 py-1 text-xs font-medium text-ink">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold tracking-wide shadow-2xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-gold" />
           {getEditorialLabel(metadata)}
         </span>
 
-        <span className="rounded-full border border-line bg-canvas px-3 py-1 text-xs font-medium text-muted">
+        <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold tracking-wide shadow-2xs ${
+          metadata.quotationVerified
+            ? "border-success/40 bg-success/10 text-success"
+            : "border-line bg-canvas text-muted"
+        }`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${metadata.quotationVerified ? "bg-success" : "bg-muted"}`} />
           {metadata.quotationVerified
             ? "Câu trích đã đối chiếu nguồn"
-            : "Câu trích chưa đối chiếu nguồn"}
+            : "Câu trích đang chờ đối chiếu"}
         </span>
       </div>
 
-      <p className="text-muted">
+      <p className="text-xs text-muted">
         Trạng thái đối chiếu áp dụng cho câu trích.
         Trạng thái biên tập áp dụng cho toàn bộ nội dung.
       </p>
@@ -63,53 +69,53 @@ export function ContentProvenance({
             return (
               <li
                 key={source.id}
-                className="rounded-control border border-line p-3"
+                className="rounded-xl border border-accent/20 bg-surface-soft/60 p-4 shadow-2xs space-y-1.5"
               >
                 {safeUrl ? (
                   <a
                     href={safeUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-semibold text-accent underline underline-offset-4 break-words focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    className="font-semibold text-accent hover:text-accent/80 underline underline-offset-4 break-words focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent text-sm sm:text-base inline-block"
                   >
-                    {source.title}
+                    📖 {source.title}
                     <span className="sr-only">
                       {" "}
                       (mở trong tab mới)
                     </span>
                   </a>
                 ) : (
-                  <p className="font-semibold text-ink">
-                    {source.title}
+                  <p className="font-semibold text-ink text-sm sm:text-base">
+                    📖 {source.title}
                   </p>
                 )}
 
                 {source.authorOrOrganization && (
-                  <p className="mt-1 text-muted">
-                    {source.authorOrOrganization}
+                  <p className="text-xs sm:text-sm text-ink/90">
+                    <strong className="text-muted font-normal">Tác giả / Cơ quan:</strong> {source.authorOrOrganization}
                   </p>
                 )}
 
                 {source.bibliographicReference && (
-                  <p className="mt-1 text-muted">
-                    {source.bibliographicReference}
+                  <p className="text-xs text-muted">
+                    <strong className="font-normal">Xuất bản:</strong> {source.bibliographicReference}
                   </p>
                 )}
 
                 {source.locator && (
-                  <p className="mt-1 text-muted">
-                    Vị trí đối chiếu: {source.locator}
+                  <p className="text-xs text-accent/90 font-medium">
+                    📍 Vị trí đối chiếu: {source.locator}
                   </p>
                 )}
 
                 {source.accessedOn && (
-                  <p className="mt-1 text-muted">
-                    Ngày truy cập: {source.accessedOn}
+                  <p className="text-[11px] text-muted">
+                    Ngày truy cập hồ sơ: {source.accessedOn}
                   </p>
                 )}
 
                 {source.url && !safeUrl && (
-                  <p className="mt-1 text-muted">
+                  <p className="mt-1 text-muted text-xs">
                     Liên kết nguồn chưa hợp lệ.
                   </p>
                 )}
@@ -125,16 +131,16 @@ export function ContentProvenance({
 
       {metadata.editorialStatus === "approved" &&
         metadata.reviewedBy && (
-          <p className="text-muted">
-            Người duyệt: {metadata.reviewedBy}
+          <p className="text-xs text-muted border-t border-line/60 pt-3">
+            <strong className="text-ink font-medium">Hội đồng thẩm định:</strong> {metadata.reviewedBy}
             {metadata.reviewedOn
-              ? ` • Ngày duyệt: ${metadata.reviewedOn}`
+              ? ` • Ngày phê duyệt: ${metadata.reviewedOn}`
               : ""}
           </p>
         )}
 
       {metadata.editorialNote && (
-        <p className="border-t border-line pt-3 text-muted">
+        <p className="border-t border-line/60 pt-3 text-xs text-muted italic">
           {metadata.editorialNote}
         </p>
       )}

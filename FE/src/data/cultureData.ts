@@ -440,7 +440,7 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
       "Trung tâm sinh hoạt văn hóa tinh thần lớn bậc nhất phương Nam, nơi hội tụ lòng từ bi, sự chở che và khí chất hào sảng miền sông nước.",
     region: "Nam Bộ",
     category: "Không gian tín ngưỡng",
-    image: "/images/mekong_nam_bo.jpg",
+    image: "/images/mieu_ba_chua_xu.jpg",
     caption:
       "Miếu Bà Chúa Xứ núi Sam lộng lẫy dưới ánh hoàng hôn vùng biên viễn Châu Đốc, An Giang.",
     readingTime: "~5 phút",
@@ -517,7 +517,7 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
       "Biểu tượng tâm linh chở che vùng đất phương Nam, điểm tựa đức tin vượt qua gian khó và bài học về lòng kiên trinh, hướng thiện qua bao thế hệ.",
     region: "Nam Bộ",
     category: "Lễ hội truyền thống",
-    image: "/images/mekong_nam_bo.jpg",
+    image: "/images/nui_ba_den.jpg",
     caption:
       "Núi Bà Đen hùng vĩ ẩn hiện trong biển mây bồng bềnh, nóc nhà Nam Bộ ngát hương khói chiêm bái.",
     readingTime: "~5 phút",
@@ -588,7 +588,7 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
       "Đỉnh cao của đạo lý 'Uống nước nhớ nguồn', tôn vinh Người Mẹ tự nhiên chở che ba cõi Trời - Đất - Nước và dung hòa tinh hoa văn hóa đa dân tộc.",
     region: "Bắc Bộ",
     category: "Không gian tín ngưỡng",
-    image: "/images/temple_bac_bo.jpg",
+    image: "/images/dien_tho_tam_phu.jpg",
     caption:
       "Điện thờ Tứ Phủ uy nghiêm, rực rỡ sắc màu tượng trưng cho ba cõi non sông đất nước.",
     readingTime: "~6 phút",
@@ -659,7 +659,7 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
       "Chốn linh thiêng bên sóng nước hồ Tây, nơi hội tụ huyền tích giáng trần của Thánh Mẫu Liễu Hạnh và thi khúc Tao Đàn vang vọng ngàn xưa.",
     region: "Bắc Bộ",
     category: "Không gian tín ngưỡng",
-    image: "/images/temple_bac_bo.jpg",
+    image: "/images/phu_tay_ho.jpg",
     caption:
       "Phủ Tây Hồ nghiêng bóng xuống mặt nước mênh mông, chốn an yên tĩnh tại giữa lòng thủ đô.",
     readingTime: "~5 phút",
@@ -730,7 +730,7 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
       "Cội nguồn sức mạnh ba lần đại thắng Nguyên Mông, nơi hội tụ tinh thần 'Vua tôi đồng lòng, anh em hòa thuận, cả nước góp sức' của vương triều Trần rực rỡ.",
     region: "Bắc Bộ",
     category: "Không gian tín ngưỡng",
-    image: "/images/ancestor_portrait.jpg",
+    image: "/images/den_tran_nam_dinh.jpg",
     caption:
       "Đền Trần Nam Định uy nghiêm, nơi lưu giữ hồn thiêng sông núi và hào khí Đông A bất diệt.",
     readingTime: "~6 phút",
@@ -801,7 +801,7 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
       "Di sản văn hóa phi vật thể của nhân loại, khúc ca dao rộn rã gắn kết cộng đồng nơi phố cổ rêu phong và bài học ứng xử mộc mạc, hóm hỉnh của tiền nhân.",
     region: "Trung Bộ",
     category: "Sinh hoạt văn hóa",
-    image: "/images/hue_trung_bo.jpg",
+    image: "/images/hoi_an_bai_choi.jpg",
     caption:
       "Sân chơi Bài Chòi rộn rã tiếng cười bên dòng sông Hoài thơ mộng, hồn cốt dân gian phố cổ Hội An.",
     readingTime: "~5 phút",
@@ -872,7 +872,7 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
       "Vị thần bảo hộ xóm ấp (Phum Sóc), biểu tượng của sự hòa hợp giữa con người với đất đai màu mỡ và giao lưu văn hóa Kinh - Khmer - Hoa bền chặt.",
     region: "Nam Bộ",
     category: "Không gian tín ngưỡng",
-    image: "/images/pottery_artisan.jpg",
+    image: "/images/neak_ta_khmer.jpg",
     caption:
       "Miếu Néak Tà mộc mạc nép dưới bóng thốt nốt, điểm tựa bình yên cho đời sống phum sóc người Khmer.",
     readingTime: "~5 phút",
@@ -944,7 +944,7 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
       "Bản hòa tấu tráng lệ giữa âm nhạc, vũ đạo, trang phục dân tộc và đức tin thánh thiện tôn vinh các anh hùng mở nước, chở che vận mệnh non sông.",
     region: "Bắc Bộ",
     category: "Phong tục & Nghi lễ",
-    image: "/images/zen_meditation.jpg",
+    image: "/images/hau_dong_chau_van.jpg",
     caption:
       "Chiếu hầu linh thiêng trong tiếng đàn nguyệt réo rắt, nghệ thuật diễn xướng độc bản của Đạo Mẫu Việt Nam.",
     readingTime: "~6 phút",
@@ -1015,7 +1015,7 @@ export const CULTURE_ARTICLES: CultureArticle[] = [
       "Ánh sáng lung linh trên dòng sông Hậu, gửi gắm ước nguyện bình an, thịnh vượng và tôn vinh nét đẹp văn minh miệt vườn trù phú của đồng bằng sông Cửu Long.",
     region: "Nam Bộ",
     category: "Sinh hoạt văn hóa",
-    image: "/images/mekong_nam_bo.jpg",
+    image: "/images/hoa_dang_ninh_kieu.jpg",
     caption:
       "Bến Ninh Kiều huyền ảo trong đêm hội hoa đăng, hàng ngàn ngọn nến soi bóng xuống dòng sông Hậu hiền hòa.",
     readingTime: "~5 phút",

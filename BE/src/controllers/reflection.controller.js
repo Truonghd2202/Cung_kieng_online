@@ -11,13 +11,13 @@ async function listWishes(req, res) { return sendSuccess(res, { message: "Saved 
 async function createWish(req, res) { return sendSuccess(res, { statusCode: 201, message: "Wish saved", data: await reflectionService.createWish(req.user.id, req.body) }); }
 async function updateWish(req, res) { return sendSuccess(res, { message: "Wish updated", data: await reflectionService.updateWishStar(req.user.id, req.params.id, req.body.starred) }); }
 async function deleteWish(req, res) { await reflectionService.deleteWish(req.user.id, req.params.id); return sendSuccess(res, { message: "Wish deleted" }); }
-async function createKeoSession(req, res) { return sendSuccess(res, { statusCode: 201, message: "Xin keo session created", data: await xinKeoService.createSession(req.user.id, req.body.question) }); }
+async function createKeoSession(req, res) { return sendSuccess(res, { statusCode: 201, message: "Xin keo session created", data: await xinKeoService.createSession(req.user.id, req.body.question, req.body.drawId) }); }
 async function throwKeo(req, res) { return sendSuccess(res, { statusCode: 201, message: "Xin keo cast", data: await xinKeoService.throwKeo(req.user.id, req.params.id) }); }
 async function listKeoSessions(req, res) { return sendSuccess(res, { message: "Xin keo sessions retrieved", data: { items: await xinKeoService.listSessions(req.user.id) } }); }
 async function tossKeo(req, res) {
   const session = req.body.sessionId
     ? { id: req.body.sessionId }
-    : await xinKeoService.createSession(req.user.id, req.body.question);
+    : await xinKeoService.createSession(req.user.id, req.body.question, req.body.drawId);
   const result = await xinKeoService.throwKeo(req.user.id, session.id);
   return sendSuccess(res, { statusCode: 201, message: "Xin keo cast", data: { sessionId: session.id, ...result } });
 }

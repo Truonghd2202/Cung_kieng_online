@@ -35,7 +35,7 @@ export function MembershipCheckout({ email, onLogin }: { email?: string; onLogin
     {status?.subscription && <p className="my-3">Đang hoạt động đến {new Date(status.subscription.expires_at).toLocaleDateString("vi-VN")}. Gia hạn sẽ cộng thêm một tháng vào thời hạn hiện tại.</p>}
     {status && !status.checkoutAvailable && <p className="my-3">Cổng thanh toán đang được chuẩn bị. Chưa thể đăng ký trả phí.</p>}
     <div className="flex flex-wrap gap-3">
-      <button type="button" className="rounded-xl bg-accent px-5 py-3 text-white disabled:opacity-50" disabled={busy || !status?.checkoutAvailable} onClick={() => void checkout()}>{busy ? "Đang chuyển đến VNPay…" : !email ? "Đăng nhập để đăng ký" : status?.subscription ? "Gia hạn qua VNPay" : "Đăng ký qua VNPay"}</button>
+      <button type="button" className="rounded-xl bg-accent px-5 py-3 text-white disabled:opacity-50" disabled={busy || (Boolean(email) && !status?.checkoutAvailable)} onClick={() => void checkout()}>{busy ? "Đang chuyển đến VNPay…" : !email ? "Đăng nhập để đăng ký" : status?.subscription ? "Gia hạn qua VNPay" : "Đăng ký qua VNPay"}</button>
       <button type="button" className="rounded-xl border border-line px-4 py-3" onClick={() => void refresh()}>Kiểm tra trạng thái</button>
     </div>
     {message && <p role="status" className="mt-3">{message}</p>}

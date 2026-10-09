@@ -1,9 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
-  Bell,
-  Calendar,
-  Sparkles,
   Heart,
   Plus,
   Trash2,
@@ -17,7 +14,6 @@ import { Badge } from "../components/ui/badge";
 import { Card } from "../components/ui/card";
 import {
   getStorageKey,
-  isValidAnniversaryDay,
   loadSettings,
   type ReminderSettings,
   type AnniversaryCalendar,
@@ -25,10 +21,17 @@ import {
   type MissingDayPolicy,
 } from "../data/reminderData";
 import {
+  MEMORIAL_PROFILES_CHANGED_EVENT,
   REMINDERS_CHANGED_EVENT,
   useReminderOverview,
 } from "../hooks/useReminderOverview";
 import { useReminderSettings } from "../hooks/useReminderSettings";
+import {
+  createMemorialProfile,
+  deleteMemorialAnniversary,
+  loadMemorialProfiles,
+  type MemorialProfile,
+} from "../data/memoryService";
 
 interface NotificationScreenProps {
   currentUserEmail?: string;
@@ -55,8 +58,25 @@ export function NotificationScreen({
 
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [savedProfiles, setSavedProfiles] = useState<MemorialProfile[]>([]);
+  const [savingAnniversary, setSavingAnniversary] = useState(false);
+  const [migratingAnniversaries, setMigratingAnniversaries] = useState(false);
+  const migrationLock = useRef(false);
+  const [deletingAnniversaryId, setDeletingAnniversaryId] = useState<string | null>(null);
 
   const upcoming = useReminderOverview(currentUserEmail);
+
+  useEffect(() => {
+    let active = true;
+    if (!currentUserEmail) {
+      setSavedProfiles([]);
+      return () => { active = false; };
+    }
+    loadMemorialProfiles()
+      .then((profiles) => { if (active) setSavedProfiles(profiles); })
+      .catch(() => { if (active) setError("Chưa tải được ngày giỗ đã lưu trên tài khoản."); });
+    return () => { active = false; };
+  }, [currentUserEmail]);
 
   const commit = (
     update: (latest: ReminderSettings) => ReminderSettings
@@ -87,7 +107,7 @@ export function NotificationScreen({
     return true;
   };
 
-  const addAnniversary = () => {
+  const addAnniversary = async () => {
     setError("");
     setNotice("");
 
@@ -127,14 +147,114 @@ export function NotificationScreen({
       missingDayPolicy,
     };
 
-    const saved = commit((latest) => ({
-      ...latest,
-      anniversaries: [newItem, ...latest.anniversaries],
-    }));
+    if (currentUserEmail) {
+      setSavingAnniversary(true);
+      try {
+        const profile = await createMemorialProfile({
+          fullName: cleanName,
+          relationship: "Người thân",
+          deathDate: calendar === "solar" ? dateInput : null,
+          anniversary: {
+            calendar: calendar === "solar" ? "SOLAR" : "LUNAR",
+            day: itemDay,
+            month: itemMonth,
+            year: itemYear,
+            repeatYearly: true,
+          },
+        });
+        setSavedProfiles((profiles) => [profile, ...profiles]);
+        window.dispatchEvent(new Event(MEMORIAL_PROFILES_CHANGED_EVENT));
+        setNotice("Đã lưu ngày giỗ vào tài khoản. Worker có thể gửi nhắc đẩy khi push được cấu hình và bật.");
+        setName("");
+        setDateInput("");
+      } catch {
+        setError("Chưa lưu được ngày giỗ vào tài khoản. Hãy kiểm tra kết nối rồi thử lại.");
+      } finally {
+        setSavingAnniversary(false);
+      }
+      return;
+    }
+
+    const saved = commit((latest) => ({ ...latest, anniversaries: [newItem, ...latest.anniversaries] }));
 
     if (saved) {
       setName("");
       setDateInput("");
+    }
+  };
+
+  const removeSavedAnniversary = async (profileId: string, anniversaryId: string) => {
+    setError("");
+    setNotice("");
+    setDeletingAnniversaryId(anniversaryId);
+    try {
+      await deleteMemorialAnniversary(profileId, anniversaryId);
+      setSavedProfiles((profiles) => profiles.map((profile) => profile.id === profileId
+        ? { ...profile, anniversaries: profile.anniversaries.filter((anniversary) => anniversary.id !== anniversaryId) }
+        : profile));
+      window.dispatchEvent(new Event(MEMORIAL_PROFILES_CHANGED_EVENT));
+      setNotice("Đã xóa ngày giỗ khỏi tài khoản.");
+    } catch {
+      setError("Chưa xóa được ngày giỗ. Hãy thử lại.");
+    } finally {
+      setDeletingAnniversaryId(null);
+    }
+  };
+
+  const migrateLocalAnniversaries = async () => {
+    if (!currentUserEmail || migrationLock.current || !settings.anniversaries.length) return;
+    migrationLock.current = true;
+    setMigratingAnniversaries(true);
+    setError("");
+    setNotice("");
+    const movedIds = new Set<string>();
+    let profiles = savedProfiles;
+    let failed = 0;
+    try {
+      profiles = await loadMemorialProfiles();
+      for (const item of settings.anniversaries) {
+        const calendar = item.calendar === "lunar" ? "LUNAR" : "SOLAR";
+        const alreadySaved = profiles.some((profile) =>
+          profile.fullName.trim().toLocaleLowerCase() === item.name.trim().toLocaleLowerCase() &&
+          profile.anniversaries.some((anniversary) => anniversary.calendar === calendar && anniversary.day === item.day && anniversary.month === item.month)
+        );
+        if (alreadySaved) {
+          movedIds.add(item.id);
+          continue;
+        }
+        try {
+          const profile = await createMemorialProfile({
+            fullName: item.name,
+            relationship: "Người thân",
+            deathDate: calendar === "SOLAR" && item.year
+              ? `${item.year}-${String(item.month).padStart(2, "0")}-${String(item.day).padStart(2, "0")}`
+              : null,
+            anniversary: { calendar, day: item.day, month: item.month, year: item.year, repeatYearly: true },
+          });
+          profiles = [profile, ...profiles];
+          movedIds.add(item.id);
+        } catch {
+          failed += 1;
+        }
+      }
+
+      if (movedIds.size) {
+        const latest = loadSettings(currentUserEmail);
+        localStorage.setItem(getStorageKey(currentUserEmail), JSON.stringify({
+          ...latest,
+          anniversaries: latest.anniversaries.filter((item) => !movedIds.has(item.id)),
+        }));
+        setSavedProfiles(profiles);
+        window.dispatchEvent(new Event(REMINDERS_CHANGED_EVENT));
+        window.dispatchEvent(new Event(MEMORIAL_PROFILES_CHANGED_EVENT));
+      }
+      if (failed) setError(`${failed} ngày giỗ chưa chuyển được; chúng vẫn còn lưu trên thiết bị.`);
+      if (movedIds.size) setNotice(`Đã chuyển ${movedIds.size} ngày giỗ vào tài khoản để worker có thể xử lý nhắc lịch.`);
+    } catch {
+      setError("Chưa cập nhật được dữ liệu nhắc lịch trên thiết bị. Hãy thử lại.");
+    } finally {
+      migrationLock.current = false;
+      setMigratingAnniversaries(false);
     }
   };
 
@@ -383,19 +503,25 @@ export function NotificationScreen({
 
               <Button
                 type="submit"
+                disabled={savingAnniversary}
                 className="rounded-xl bg-gradient-to-r from-red-800 to-amber-700 hover:from-red-700 hover:to-amber-800 text-white font-semibold text-xs px-5 min-h-10 cursor-pointer shadow-xs gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Thêm ngày giỗ vào lịch</span>
+                <span>{savingAnniversary ? "Đang lưu…" : "Thêm ngày giỗ vào lịch"}</span>
               </Button>
             </form>
 
             {/* Danh sách ngày giỗ đã lưu */}
             {settings.anniversaries.length > 0 && (
               <div className="mt-5 pt-4 border-t border-line">
-                <span className="text-xs font-bold uppercase text-stone-500 tracking-wider block mb-3">
-                  Danh sách ngày giỗ nếp nhà ({settings.anniversaries.length})
-                </span>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs font-bold uppercase text-stone-500 tracking-wider">
+                    Danh sách ngày giỗ nếp nhà ({settings.anniversaries.length})
+                  </span>
+                  {currentUserEmail && <Button type="button" size="sm" variant="outline" disabled={migratingAnniversaries || savingAnniversary} onClick={() => void migrateLocalAnniversaries()}>
+                    {migratingAnniversaries ? "Đang chuyển…" : "Chuyển ngày giỗ vào tài khoản"}
+                  </Button>}
+                </div>
 
                 <ul className="divide-y divide-line text-xs">
                   {settings.anniversaries.map((item) => (
@@ -425,6 +551,37 @@ export function NotificationScreen({
                       </Button>
                     </li>
                   ))}
+                </ul>
+              </div>
+            )}
+
+            {currentUserEmail && savedProfiles.some((profile) => profile.anniversaries.length > 0) && (
+              <div className="mt-5 pt-4 border-t border-line">
+                <span className="text-xs font-bold uppercase text-stone-500 tracking-wider block mb-3">
+                  Ngày giỗ đã lưu trong tài khoản
+                </span>
+                <ul className="divide-y divide-line text-xs">
+                  {savedProfiles.flatMap((profile) => profile.anniversaries.map((anniversary) => (
+                    <li key={anniversary.id} className="py-3 flex items-center justify-between gap-3">
+                      <div>
+                        <strong className="text-ink font-bold text-sm block">{profile.fullName}</strong>
+                        <span className="text-stone-500">
+                          Ngày {anniversary.day} tháng {anniversary.month} ({anniversary.calendar === "LUNAR" ? "Âm lịch" : "Dương lịch"})
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        disabled={deletingAnniversaryId === anniversary.id}
+                        aria-label={`Xóa ngày giỗ ${profile.fullName}`}
+                        className="text-stone-400 hover:text-red-600 cursor-pointer p-2 rounded-xl"
+                        onClick={() => void removeSavedAnniversary(profile.id, anniversary.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </li>
+                  )))}
                 </ul>
               </div>
             )}

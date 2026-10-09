@@ -22,6 +22,10 @@ export interface AdminOverview {
     calendarEventsAwaitingReview: number;
     activeXamLots: number;
     xamLotsAwaitingReview: number;
+    activeRituals: number;
+    ritualsAwaitingReview: number;
+    activePrayers: number;
+    prayersAwaitingReview: number;
   };
   membershipInterestCount: number;
 }
@@ -43,7 +47,7 @@ export function loadAdminList<T extends AdminRecord>(section: string, page: numb
   return apiRequest<AdminPage<T>>(`/admin/${section}?${params.toString()}`);
 }
 
-export function reviewAdminRecord(section: "culture" | "calendar" | "xam", id: string, input: { verified?: boolean; active?: boolean; reviewNote: string }) {
+export function reviewAdminRecord(section: "culture" | "calendar" | "xam" | "rituals" | "prayers", id: string, input: { verified?: boolean; active?: boolean; reviewNote: string; rightsConfirmed?: boolean; source?: string; sourceLocator?: string; usageRights?: "confirmed" | "public-domain" | "permission-required" | "unknown" }) {
   return apiRequest<AdminRecord>(`/admin/${section}/${encodeURIComponent(id)}/review`, {
     method: "PATCH",
     body: JSON.stringify(input),

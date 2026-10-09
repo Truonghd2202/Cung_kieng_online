@@ -5,6 +5,7 @@ const listQuerySchema = z.object({
   category: z.string().trim().max(120).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
   offset: z.coerce.number().int().min(0).max(5000).default(0),
+  preview: z.enum(["true", "false"]).optional().transform((value) => value === "true"),
 });
 
 const calendarQuerySchema = z.object({

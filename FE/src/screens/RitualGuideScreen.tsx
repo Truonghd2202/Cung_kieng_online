@@ -17,12 +17,14 @@ import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import {
   RITUAL_GUIDES,
+  adaptRemoteRitual,
   RitualOccasionKey,
   RitualRegionKey,
   RitualGuideItem,
 } from "../data/ritualData";
 import { DiscoveryNav } from "../components/DiscoveryNav";
 import { loadRituals } from "../data/contentService";
+import { ApiError } from "../lib/api";
 
 const normalizeRitualSearch = (value: string) =>
   value
@@ -54,15 +56,29 @@ export const RitualGuideScreen: React.FC<
   const [selectedOccasion, setSelectedOccasion] = useState<RitualOccasionKey>("all");
   const [selectedRegion, setSelectedRegion] = useState<RitualRegionKey>("all");
   const [visibleCount, setVisibleCount] = useState(4);
-  const [rituals, setRituals] = useState(RITUAL_GUIDES);
+  const [rituals, setRituals] = useState<RitualGuideItem[]>([]);
+  const [usingFallback, setUsingFallback] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
+    let active = true;
     void loadRituals().then((remote) => {
-      setRituals(RITUAL_GUIDES.map((local) => {
-        const item = remote.find((candidate) => candidate.id === local.id);
-        return item ? { ...local, title: String(item.title || local.title), desc: String(item.desc || local.desc) } : local;
-      }));
-    }).catch(() => {});
+      if (!active) return;
+      setRituals(remote.map(adaptRemoteRitual));
+      setUsingFallback(false);
+    }).catch((cause: unknown) => {
+      if (!active) return;
+      if (cause instanceof ApiError && cause.status === 0) {
+        setRituals(RITUAL_GUIDES);
+        setUsingFallback(true);
+      } else {
+        setLoadError(cause instanceof Error ? cause.message : "Chưa tải được danh sách nghi lễ.");
+      }
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
   }, []);
 
   const OCCASIONS: { key: RitualOccasionKey; label: string }[] = [
@@ -128,6 +144,13 @@ export const RitualGuideScreen: React.FC<
   return (
     <div className="screen-shell">
       <main className="page-container max-w-6xl">
+        {loading && <p role="status" className="mb-5 text-sm text-muted">Đang tải danh sách nghi lễ từ thư viện…</p>}
+        {loadError && <p role="alert" className="mb-5 rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted">{loadError}</p>}
+        {usingFallback && (
+          <p role="status" className="mb-5 rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted">
+            Không kết nối được thư viện. Đang hiển thị cẩm nang dự phòng có sẵn trong ứng dụng.
+          </p>
+        )}
         {/* Top Breadcrumb & Tag */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-muted">
           <div className="flex items-center gap-2">
@@ -179,6 +202,12 @@ export const RitualGuideScreen: React.FC<
           onGoToPlan={onGoToPlan}
           onGoToMap={onGoToMap}
         />
+
+        {import.meta.env.DEV && rituals.some((item) => item.preview) && (
+          <aside role="note" className="mb-5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
+            Đang xem dữ liệu seed để demo. Các nghi lễ này chưa được thẩm định để phát hành chính thức.
+          </aside>
+        )}
 
         {/* Search & Filter Toolbar */}
         <div className="py-6 border-y border-line mb-10 space-y-5">
@@ -325,6 +354,7 @@ export const RitualGuideScreen: React.FC<
                           <span aria-hidden="true"> · </span>
                           {item.region}
                         </p>
+                        {item.preview && <span className="mb-2 inline-flex rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold text-amber-900 dark:text-amber-200">Bản demo · chưa duyệt</span>}
 
                         <h2 className="mb-2 font-display text-base font-bold leading-snug text-ink md:text-xl">
                           <a
@@ -403,7 +433,9 @@ export const RitualGuideScreen: React.FC<
         ) : (
           <div className="p-12 text-center rounded-card bg-surface border border-line mb-16">
             <p className="text-base text-muted mb-4">
-              Không tìm thấy nghi thức phù hợp với bộ lọc đã chọn.
+              {rituals.length === 0
+                ? "Chưa có hướng dẫn nghi lễ được duyệt để phát hành."
+                : "Không tìm thấy nghi thức phù hợp với bộ lọc đã chọn."}
             </p>
             <Button
               variant="outline"

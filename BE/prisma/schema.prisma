@@ -221,6 +221,7 @@ model horoscope_readings {
   advice               String?
   model                String?             @db.VarChar(100)
   prompt_version       String?             @db.VarChar(100)
+  status               String              @default("SUCCEEDED") @db.VarChar(20)
   created_at           DateTime            @default(now()) @db.Timestamptz(6)
   astrology_profiles   astrology_profiles? @relation(fields: [astrology_profile_id], references: [id], onUpdate: NoAction)
   users                users               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -309,12 +310,14 @@ model mood_checkins {
   intensity   Int?      @db.SmallInt
   signal_id   String?   @db.Uuid
   action_done Boolean   @default(false)
+  saved_at    DateTime? @db.Timestamptz(6)
   created_at  DateTime  @default(now()) @db.Timestamptz(6)
   signals     signals?  @relation(fields: [signal_id], references: [id], onUpdate: NoAction)
   users       users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([created_at(sort: Desc)], map: "idx_mood_checkins_created_at")
   @@index([user_id], map: "idx_mood_checkins_user_id")
+  @@index([user_id, saved_at])
 }
 
 model notifications {
@@ -407,6 +410,19 @@ model refresh_tokens {
   users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([user_id], map: "idx_refresh_tokens_user_id")
+}
+
+model password_reset_tokens {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String    @db.Uuid
+  token_hash String    @unique
+  expires_at DateTime  @db.Timestamptz(6)
+  used_at    DateTime? @db.Timestamptz(6)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id, used_at])
+  @@index([expires_at])
 }
 
 model reminders {
@@ -593,6 +609,7 @@ model users {
   notifications        notifications[]
   physiognomy_analyses physiognomy_analyses[]
   refresh_tokens       refresh_tokens[]
+  password_reset_tokens password_reset_tokens[]
   reminders            reminders[]
   subscriptions        subscriptions[]
   payment_orders       payment_orders[]
@@ -704,11 +721,15 @@ model xin_keo_sessions {
   id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id        String           @db.Uuid
   question       String
+  draw_id        String?          @db.Uuid
   final_result   xin_keo_result?
   ai_explanation String?
   created_at     DateTime         @default(now()) @db.Timestamptz(6)
   users          users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  xin_xam_draws  xin_xam_draws?   @relation(fields: [draw_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   xin_keo_throws xin_keo_throws[]
+
+  @@index([draw_id])
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -757,13 +778,16 @@ model xin_xam_draws {
   question       String?
   ai_explanation String?
   starred        Boolean   @default(false)
+  saved_at       DateTime? @db.Timestamptz(6)
   created_at     DateTime  @default(now()) @db.Timestamptz(6)
   proverb_id     String?   @db.Uuid
   proverbs       proverbs? @relation(fields: [proverb_id], references: [id], onUpdate: NoAction)
   users          users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   xin_xam        xin_xam   @relation(fields: [xin_xam_id], references: [id], onUpdate: NoAction)
+  xin_keo_sessions xin_keo_sessions[]
 
   @@index([user_id], map: "idx_xin_xam_draws_user_id")
+  @@index([user_id, saved_at])
   @@index([proverb_id], map: "idx_xin_xam_draws_proverb_id")
 }
 

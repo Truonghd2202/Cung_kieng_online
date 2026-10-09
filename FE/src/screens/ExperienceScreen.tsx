@@ -78,11 +78,11 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
           id: "wish",
           title: "Lời nguyện hoa đăng",
           description:
-            "Viết điều bạn đang mong mỏi lên cánh hoa đăng số và thả trôi gửi gắm điều thiện lành.",
-          label: "Thả hoa đăng nguyện ước",
+            "Viết điều bạn mong mỏi và chọn lưu vào nhật ký; thao tác buông bỏ trong Wish là hiệu ứng biểu tượng, chưa nối với hoa đăng WebGL.",
+          label: "Viết lời nguyện",
           icon: PenLine,
           image: "/images/do_paper_still_life.jpg",
-          badge: "Hoa đăng số",
+          badge: "Lời nguyện",
           tag: "Giấy dó · Nguyện ước",
           onClick: onGoToWish,
         },
@@ -195,8 +195,8 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
           </h1>
 
           <p className="text-base sm:text-lg text-muted leading-relaxed">
-            Một khoảng dừng an yên, một cánh hoa đăng gửi gắm ước nguyện hay
-            dạo bước qua những nghi thức cổ phong. Bạn hoàn toàn tự do lựa chọn
+            Một khoảng dừng an yên, một lời nguyện riêng hay dạo bước qua những
+            nghi thức cổ phong. Bạn hoàn toàn tự do lựa chọn
             theo cảm xúc của mình.
           </p>
 

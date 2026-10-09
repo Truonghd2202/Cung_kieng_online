@@ -1,4 +1,4 @@
-const configuredApiUrl = (import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1").replace(/\/$/, "");
+const configuredApiUrl = (import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1").replace(/\/$/, "");
 const API_URL = configuredApiUrl.endsWith("/api")
   ? `${configuredApiUrl}/v1`
   : configuredApiUrl;
@@ -59,7 +59,7 @@ async function request<T>(path: string, init: RequestInit = {}, retryAuth = true
     throw new ApiError(0, "Không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối và thử lại.");
   }
 
-  const createsSession = ["/auth/login", "/auth/register", "/auth/refresh"].includes(path);
+  const createsSession = ["/auth/login", "/auth/google", "/auth/register", "/auth/refresh"].includes(path);
   if (response.status === 401 && retryAuth && !createsSession) {
     const token = await refreshAccessToken();
     if (token) return request<T>(path, init, false);

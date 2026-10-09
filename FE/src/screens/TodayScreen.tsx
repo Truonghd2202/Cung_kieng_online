@@ -310,7 +310,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
         {/* 2. KHU VỰC TRỌNG TÂM: ĐÃ CHECK-IN HOẶC CHƯA CHECK-IN       */}
         {/* ========================================================= */}
         {isCheckedIn ? (
-          /* TRƯỜNG HỢP A: BỨC TRƯỚNG THƯ PHÁP CA DAO CHIÊM NGHIỆM */
+          /* TRƯỜNG HỢP A: BỨC TRƯỚNG LỜI GỢI MỞ CHIÊM NGHIỆM */
           <section
             aria-labelledby="today-signal-title"
             className="today-scroll-card"
@@ -331,7 +331,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
               </span>
             </div>
 
-            {/* Hai câu ca dao thư pháp trang nhã */}
+            {/* Hai câu biên soạn minh họa */}
             <blockquote className="today-poem-quote">
               <p className="mb-1">{signal.poem.line1}</p>
               <p>{signal.poem.line2}</p>
@@ -417,7 +417,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
               </h2>
 
               <p className="text-base text-muted leading-relaxed max-w-lg mb-6">
-                Chạm vào cảm xúc để nhận một lời khuyên từ ca dao tục ngữ dân gian
+                Chạm vào cảm xúc để nhận một lời gợi mở được biên soạn
                 và một hành động nhỏ dịu dàng nuôi dưỡng tâm hồn bạn.
               </p>
 

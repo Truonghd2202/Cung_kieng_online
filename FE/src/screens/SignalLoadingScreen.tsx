@@ -27,10 +27,6 @@ export const SignalLoadingScreen = ({
 
     setStatus("loading");
 
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-
     const timer = window.setTimeout(async () => {
       if (cancelled) return;
 
@@ -45,7 +41,7 @@ export const SignalLoadingScreen = ({
           setStatus("error");
         }
       }
-    }, reducedMotion ? 200 : 700);
+    }, 0);
 
     return () => {
       cancelled = true;
@@ -120,7 +116,7 @@ export const SignalLoadingScreen = ({
 
           <p className="mt-6 text-xs leading-relaxed text-muted">
             Bạn có thể nhận gợi ý biên soạn sẵn hoặc hỗ trợ AI theo tâm trạng và chủ đề đã chọn.
-            Nội dung tâm sự riêng không được gửi đi.
+            Khi bạn đăng nhập, tâm sự được gửi tới máy chủ để lưu vào tài khoản. Dịch vụ AI nhận tâm trạng và chủ đề bạn chọn, không nhận nội dung tâm sự.
           </p>
 
           <Button

@@ -28,7 +28,7 @@ interface GoodDayScreenProps {
   onGoToHome?: () => void;
   onGoToCalendar: () => void;
   onGoToRituals: () => void;
-  onSaveDayToCalendar: (plan: DayPlan) => boolean;
+  onSaveDayToCalendar: (plan: DayPlan) => Promise<boolean>;
 }
 
 export const GoodDayScreen: React.FC<GoodDayScreenProps> = ({
@@ -41,13 +41,14 @@ export const GoodDayScreen: React.FC<GoodDayScreenProps> = ({
   const [title, setTitle] = useState("");
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const resetStatus = () => {
     setSaveStatus("idle");
     setErrorMessage("");
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     resetStatus();
 
@@ -74,12 +75,15 @@ export const GoodDayScreen: React.FC<GoodDayScreenProps> = ({
       return;
     }
 
-    const saved = onSaveDayToCalendar({
-      title: title.trim(),
-      day,
-      month,
-      year,
-    });
+    setSaving(true);
+    let saved = false;
+    try {
+      saved = await onSaveDayToCalendar({ title: title.trim(), day, month, year });
+    } catch {
+      saved = false;
+    } finally {
+      setSaving(false);
+    }
 
     if (!saved) {
       setErrorMessage("Chưa lưu được ghi chú. Bạn hãy thử lại.");
@@ -227,7 +231,7 @@ export const GoodDayScreen: React.FC<GoodDayScreenProps> = ({
             {saveStatus === "success" && (
               <p className="p-3 rounded-xl bg-emerald-500/10 text-xs text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 font-medium flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>✓ Đã lưu ngày dự định vào Lịch văn hóa trên trình duyệt của bạn thành công.</span>
+                <span>✓ Đã lưu ngày dự định vào Lịch văn hóa cá nhân thành công.</span>
               </p>
             )}
           </div>
@@ -235,14 +239,15 @@ export const GoodDayScreen: React.FC<GoodDayScreenProps> = ({
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
             <Button
               type="submit"
+              disabled={saving}
               className="min-h-11 px-6 rounded-xl bg-gradient-to-r from-red-800 to-amber-700 hover:from-red-700 hover:to-amber-800 text-white font-semibold cursor-pointer shadow-md gap-2"
             >
               <CalendarDays className="w-4 h-4" />
-              <span>Lưu ngày dự định vào lịch</span>
+              <span>{saving ? "Đang lưu…" : "Lưu ngày dự định vào lịch"}</span>
             </Button>
 
             <span className="text-xs text-stone-500 italic">
-              * Dữ liệu được lưu an toàn trên máy của bạn
+              * Khách lưu trên thiết bị; tài khoản cần kết nối máy chủ để đồng bộ
             </span>
           </div>
         </form>

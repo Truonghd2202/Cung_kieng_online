@@ -1,3 +1,4 @@
+import { toast } from "../components/ui/Toast";
 import React, { useState, useEffect, useMemo } from "react";
 import {
   ArrowLeft,
@@ -25,7 +26,9 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
-import { RITUAL_GUIDES, getRitualById } from "../data/ritualData";
+import { RITUAL_GUIDES, getRitualById, adaptRemoteRitual, type RitualGuideItem } from "../data/ritualData";
+import { ApiError } from "../lib/api";
+import { loadRitual } from "../data/contentService";
 import { DetailNotFound } from "../components/DetailNotFound";
 import {
   setReadingBookmark,
@@ -50,10 +53,15 @@ interface RitualDetailScreenProps {
   onGoToZen?: () => void;
 }
 
+interface RitualDetailLoaderProps extends RitualDetailScreenProps {
+  ritual: RitualGuideItem;
+}
+
 type TextSize = "normal" | "medium" | "large";
 
-const RitualDetailContent: React.FC<RitualDetailScreenProps> = ({
+const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
   ritualId = "chuan-bi-ngay-ram",
+  ritual,
   currentUserEmail,
   onBackToRitualList,
   onSelectRelatedRitual,
@@ -63,7 +71,6 @@ const RitualDetailContent: React.FC<RitualDetailScreenProps> = ({
   onGoToGoodDay,
   onGoToZen,
 }) => {
-  const ritual = getRitualById(ritualId)!;
   const detail = ritual.detail!;
 
   const accountId = currentUserEmail?.trim().toLowerCase() || "guest";
@@ -173,7 +180,8 @@ const RitualDetailContent: React.FC<RitualDetailScreenProps> = ({
       "ritual",
       ritual.id,
       !isBookmarked,
-      currentUserEmail
+      currentUserEmail,
+      ritual.title
     );
 
     if (!saved) {
@@ -189,7 +197,7 @@ const RitualDetailContent: React.FC<RitualDetailScreenProps> = ({
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2500);
     } catch {
-      window.alert("Bạn có thể sao chép liên kết từ thanh địa chỉ trình duyệt.");
+      toast.info("Bạn có thể sao chép liên kết từ thanh địa chỉ trình duyệt.", "Chia sẻ");
     }
   };
 
@@ -312,6 +320,11 @@ const RitualDetailContent: React.FC<RitualDetailScreenProps> = ({
       />
 
       <main className="page-container max-w-6xl pt-4 pb-20">
+        {import.meta.env.DEV && ritual.preview && (
+          <aside role="note" className="mb-5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
+            Bản demo từ dữ liệu seed, chưa được thẩm định để dùng như hướng dẫn nghi lễ chính thức.
+          </aside>
+        )}
         {ritualSaveError && (
           <p
             role="alert"
@@ -933,21 +946,55 @@ const RitualDetailContent: React.FC<RitualDetailScreenProps> = ({
 
 export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = (props) => {
   const ritualId = props.ritualId ?? "chuan-bi-ngay-ram";
-  const ritual = getRitualById(ritualId);
+  const [ritual, setRitual] = useState<RitualGuideItem | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [usingFallback, setUsingFallback] = useState(false);
 
-  if (!ritual || !ritual.detail) {
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+    setUsingFallback(false);
+    setRitual(null);
+    void loadRitual(ritualId).then((remote) => {
+      if (!active) return;
+      setRitual(adaptRemoteRitual(remote));
+    }).catch((cause: unknown) => {
+      if (!active) return;
+      if (cause instanceof ApiError && cause.status === 0) {
+        const local = getRitualById(ritualId);
+        if (local?.detail) {
+          setRitual(local);
+          setUsingFallback(true);
+          return;
+        }
+      }
+      setError(cause instanceof ApiError && cause.status === 404
+        ? "Không tìm thấy hướng dẫn nghi lễ này."
+        : "Chưa tải được hướng dẫn nghi lễ. Vui lòng thử lại.");
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
+  }, [ritualId]);
+
+  if (loading) {
+    return <div className="page-container py-16 text-center text-muted" role="status">Đang tải hướng dẫn nghi lễ…</div>;
+  }
+
+  if (error || !ritual || !ritual.detail) {
     return (
       <DetailNotFound
-        title={
-          ritual
-            ? "Hướng dẫn này chưa có nội dung chi tiết"
-            : "Không tìm thấy hướng dẫn nghi lễ"
-        }
+        title={error || "Hướng dẫn này chưa có nội dung chi tiết"}
         backLabel="Về Cẩm nang nghi lễ"
         onBack={props.onBackToRitualList}
       />
     );
   }
 
-  return <RitualDetailContent {...props} ritualId={ritualId} key={ritualId} />;
+  return <>
+    {usingFallback && <p role="status" className="mx-auto mt-4 max-w-5xl rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted">Không kết nối được máy chủ. Đang hiển thị bản dự phòng có sẵn trong ứng dụng.</p>}
+    <RitualDetailContent {...props} ritualId={ritualId} ritual={ritual} key={`${ritualId}-${ritual.id}`} />
+  </>;
 };

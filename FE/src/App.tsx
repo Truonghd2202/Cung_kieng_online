@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { readPrivateJson, writePrivateJson } from "./lib/privateStorage";
 import { apiRequest, ApiError } from "./lib/api";
 import { clearPersonalStorage } from "./lib/clearPersonalStorage";
@@ -6,6 +6,8 @@ import { AppHeader, NavScreen } from "./components/AppHeader";
 import { AppFooter } from "./components/AppFooter";
 import { ScreenFocus } from "./components/ScreenFocus";
 import { SavedSignalDialog } from "./components/SavedSignalDialog";
+import { toast, ToastContainer } from "./components/ui/Toast";
+import { LogoutConfirmDialog } from "./components/LogoutConfirmDialog";
 import { useTheme } from "./hooks/useTheme";
 import type { MemorialRecord } from "./screens/MemorialSpaceScreen";
 import type { CultureRegionSlug } from "./screens/CulturalMapScreen";
@@ -19,7 +21,6 @@ import {
   getSignalById,
   getDefaultSignalForMood,
   getSignalForMoodContext,
-  getNextSignalForMood,
   type MoodContextKey,
   type SignalData,
 } from "./data/demoSignals";
@@ -32,6 +33,7 @@ import {
   saveLocalDemoAccount,
 } from "./data/authService";
 import {
+  CALENDAR_NOTES_CHANGED_EVENT,
   getCalendarNotesStorageKey,
   getReliableLunarDate,
   loadCalendarPersonalNotes,
@@ -51,7 +53,6 @@ import {
   analyzeMoodSignal,
   deleteSavedSignal,
   loadSavedSignals,
-  loadSignals,
   saveSignal,
   updateMoodAction,
   updateSavedSignal,
@@ -69,10 +70,12 @@ import {
 import {
   deleteCalendarNote,
   loadCalendarNotes,
-  loadMemorial,
+  loadMemorialProfiles,
+  memorialProfileToRecord,
+  createMemorialProfile,
+  updateMemorialProfile,
   recordIncense,
   saveCalendarNote,
-  saveMemorial,
 } from "./data/memoryService";
 
 const MoodCheckInScreen = lazy(() => import("./screens/MoodCheckInScreen").then((module) => ({ default: module.MoodCheckInScreen })));
@@ -82,6 +85,7 @@ const LoginScreen = lazy(() => import("./screens/LoginScreen").then((module) => 
 const RegisterScreen = lazy(() => import("./screens/RegisterScreen").then((module) => ({ default: module.RegisterScreen })));
 const CompletionScreen = lazy(() => import("./screens/CompletionScreen").then((module) => ({ default: module.CompletionScreen })));
 const ForgotPasswordScreen = lazy(() => import("./screens/ForgotPasswordScreen").then((module) => ({ default: module.ForgotPasswordScreen })));
+const ResetPasswordScreen = lazy(() => import("./screens/ResetPasswordScreen").then((module) => ({ default: module.ResetPasswordScreen })));
 const ExperienceScreen = lazy(() => import("./screens/ExperienceScreen").then((module) => ({ default: module.ExperienceScreen })));
 const CultureScreen = lazy(() => import("./screens/CultureScreen").then((module) => ({ default: module.CultureScreen })));
 const CultureDetailScreen = lazy(() => import("./screens/CultureDetailScreen").then((module) => ({ default: module.CultureDetailScreen })));
@@ -116,6 +120,14 @@ export interface UserProfile {
   name: string;
   email: string;
 }
+
+interface MoodSubmissionOutcome {
+  signal: SignalData;
+  checkInId: string | null;
+  notice: string | null;
+}
+
+const MOOD_REQUEST_DEADLINE_MS = 1700;
 
 export interface UserCornerData {
   signals: SavedSignalItem[];
@@ -762,12 +774,14 @@ export default function App() {
   const initialUrlCalendarEventId = new URLSearchParams(window.location.search).get("eventId") || "le-soc-vong-ngay-ram";
 
   const [screen, setScreen] = useState<NavScreen>(getInitialScreen);
+  const returnScreenRef = useRef<NavScreen | null>(null);
   const [selectedArticleId, setSelectedArticleId] = useState<string>(initialUrlArticleId);
   const [selectedCultureRegion, setSelectedCultureRegion] =
     useState<CultureRegionSlug>(
       getCultureRegionFromLocation
     );
   const [selectedRitualId, setSelectedRitualId] = useState<string>(initialUrlRitualId);
+  const [xinKeoDrawId, setXinKeoDrawId] = useState<string | null>(null);
   const [selectedCalendarEventId, setSelectedCalendarEventId] = useState<string>(initialUrlCalendarEventId);
   const [journalText, setJournalText] = useState("");
   const {
@@ -837,12 +851,18 @@ export default function App() {
         }
 
         try {
-          const [remoteMemorial, remoteNotes] = await Promise.all([
-            loadMemorial(),
+          const [remoteMemorials, remoteNotes] = await Promise.all([
+            loadMemorialProfiles(),
             loadCalendarNotes(),
           ]);
           if (active) {
-            if (remoteMemorial) setMemorial(remoteMemorial);
+            if (remoteMemorials.length) {
+              const preferredId = localStorage.getItem(`tltl-selected-memorial-${user.email.trim().toLowerCase()}`);
+              const selected = remoteMemorials.find((profile) => profile.id === preferredId) || remoteMemorials[0];
+              setMemorial(memorialProfileToRecord(selected));
+            } else {
+              setMemorial(null);
+            }
             if (remoteNotes.length > 0) {
               for (const note of remoteNotes) {
                 try {
@@ -896,6 +916,7 @@ export default function App() {
     getSignalById(initialUrlSignal?.id || initialSession.signalId)?.contextKey || "general"
   );
   const [analyzedSignal, setAnalyzedSignal] = useState<SignalData | null>(null);
+  const [moodRequestNotice, setMoodRequestNotice] = useState<string | null>(null);
 
   // Current signal theo tài khoản
   const [currentSignalId, setCurrentSignalId] = useState<string>(() => {
@@ -905,6 +926,9 @@ export default function App() {
     return initialSession.signalId;
   });
   const [pendingMoodCheckInId, setPendingMoodCheckInId] = useState<string | null>(null);
+  const moodResolutionRef = useRef<Promise<MoodSubmissionOutcome> | null>(null);
+  const moodRequestControllerRef = useRef<AbortController | null>(null);
+  const moodRequestVersionRef = useRef(0);
 
   // Trạng thái hành động hoàn thành theo từng tài khoản
   const [isActionDone, setIsActionDone] =
@@ -932,6 +956,13 @@ export default function App() {
 
   // Tách biệt dữ liệu Góc của tôi (tín hiệu, thẻ xăm, điều ước) theo từng tài khoản
   const [userCornerData, setUserCornerData] = useState<UserCornerData>({ signals: [], xam: [], wishes: [] });
+  const userCornerDataRef = useRef(userCornerData);
+  const favoriteLocksRef = useRef(new Set<string>());
+  const favoriteCacheQueueRef = useRef(Promise.resolve());
+
+  useEffect(() => {
+    userCornerDataRef.current = userCornerData;
+  }, [userCornerData]);
 
   const [openedSavedSignal, setOpenedSavedSignal] =
     useState<SavedSignalItem | null>(null);
@@ -942,9 +973,7 @@ export default function App() {
     );
 
     if (!entry) {
-      window.alert(
-        "Nội dung này không còn trong danh sách đã lưu."
-      );
+      toast.warning("Nội dung này không còn trong danh sách đã lưu.");
       return;
     }
 
@@ -959,6 +988,17 @@ export default function App() {
     useState<MemorialRecord | null>(() =>
       loadMemorialRecord(initialUser?.email)
     );
+  const handleSelectMemorial = (record: MemorialRecord | null) => {
+    setMemorial(record);
+    if (!currentUser) return;
+    const key = `tltl-selected-memorial-${currentUser.email.trim().toLowerCase()}`;
+    try {
+      if (record?.id) localStorage.setItem(key, record.id);
+      else localStorage.removeItem(key);
+    } catch {
+      // Hồ sơ vẫn được chọn trong phiên hiện tại nếu storage không khả dụng.
+    }
+  };
 
   // Active signal computed from currentSignalId
   const activeSignal = analyzedSignal?.id === currentSignalId
@@ -1172,6 +1212,10 @@ export default function App() {
     ) {
       targetScreen = "login";
     }
+
+    if (["login", "register"].includes(targetScreen) && !["login", "register", "forgot"].includes(screen)) {
+      returnScreenRef.current = screen;
+    }
     setScreen(targetScreen);
     let url = targetScreen === "guest" ? "/" : `/${targetScreen}`;
     let resolvedSignalId = undefined;
@@ -1251,9 +1295,7 @@ export default function App() {
         localStorage.removeItem(key);
       }
     } catch {
-      window.alert(
-        "Chưa lưu được trạng thái hành động. Bạn hãy thử lại."
-      );
+      toast.error("Chưa lưu được trạng thái hành động. Bạn hãy thử lại.");
 
       return false;
     }
@@ -1262,7 +1304,7 @@ export default function App() {
 
     if (currentUser && pendingMoodCheckInId) {
       void updateMoodAction(pendingMoodCheckInId, completed).catch(() => {
-        window.alert("Chưa đồng bộ được trạng thái hành động. Bạn hãy thử lại.");
+        toast.error("Chưa đồng bộ được trạng thái hành động. Bạn hãy thử lại.");
       });
     }
 
@@ -1278,36 +1320,72 @@ export default function App() {
 
     const nextSignal = getSignalForMoodContext(selectedMood, contextKey);
     setSelectedContextKey(contextKey);
+    setAnalyzedSignal(nextSignal);
+    setCurrentSignalId(nextSignal.id);
+    setPendingMoodCheckInId(null);
+    setMoodRequestNotice(null);
 
-    if (currentUser) {
-      try {
-        const result = await createMoodCheckIn({
-          mood: selectedMood,
-          contextKey,
-          note: journalText.trim() || undefined,
+    const requestVersion = ++moodRequestVersionRef.current;
+    const controller = new AbortController();
+    moodRequestControllerRef.current?.abort();
+    moodRequestControllerRef.current = controller;
+
+    const request = currentUser
+      ? createMoodCheckIn({
+        mood: selectedMood,
+        contextKey,
+        note: journalText.trim() || undefined,
+      }, { signal: controller.signal }).then((result): MoodSubmissionOutcome => ({
+        signal: result.signal,
+        checkInId: result.checkIn.id,
+        notice: null,
+      }))
+      : analyzeMoodSignal({ mood: selectedMood, contextKey }, { signal: controller.signal }).then((result): MoodSubmissionOutcome => ({
+        signal: result.signal,
+        checkInId: null,
+        notice: null,
+      }));
+
+    let deadlineTimer = 0;
+    const deadline = new Promise<MoodSubmissionOutcome>((resolve) => {
+      deadlineTimer = window.setTimeout(() => {
+        controller.abort();
+        resolve({
+          signal: nextSignal,
+          checkInId: null,
+          notice: currentUser
+            ? "Máy chủ chưa xác nhận check-in kịp thời. Đang hiển thị nội dung mẫu; trạng thái lưu tâm sự chưa được xác nhận."
+            : "Máy chủ phản hồi chậm. Đang hiển thị nội dung mẫu đã được ghi nhãn; bạn có thể thử lại sau.",
         });
-        setPendingMoodCheckInId(result.checkIn.id);
-        setAnalyzedSignal({ ...nextSignal, ...result.signal, metadata: nextSignal.metadata });
-        setCurrentSignalId(nextSignal.id);
-      } catch {
-        window.alert("Chưa ghi nhận được cảm xúc. Bạn hãy thử lại.");
-        return;
+      }, MOOD_REQUEST_DEADLINE_MS);
+    });
+
+    moodResolutionRef.current = Promise.race([
+      request.catch((): MoodSubmissionOutcome => ({
+        signal: nextSignal,
+        checkInId: null,
+        notice: currentUser
+          ? "Chưa kết nối được máy chủ. Đang hiển thị nội dung mẫu; check-in chưa được xác nhận lưu."
+          : "Chưa kết nối được máy chủ. Đang hiển thị nội dung mẫu đã được ghi nhãn.",
+      })),
+      deadline,
+    ]).then((outcome) => {
+      window.clearTimeout(deadlineTimer);
+      if (requestVersion === moodRequestVersionRef.current) {
+        setAnalyzedSignal(outcome.signal);
+        setCurrentSignalId(outcome.signal.id);
+        setPendingMoodCheckInId(outcome.checkInId);
+        setMoodRequestNotice(outcome.notice);
       }
-    } else {
-      try {
-        const result = await analyzeMoodSignal({ mood: selectedMood, contextKey });
-        setAnalyzedSignal({ ...nextSignal, ...result.signal, metadata: nextSignal.metadata });
-      } catch {
-        // Dữ liệu biên tập theo mood và context tiếp tục dùng được khi API offline.
-        setAnalyzedSignal(nextSignal);
-      }
-      setCurrentSignalId(nextSignal.id);
-    }
+      return outcome;
+    });
+
     navigateTo("loading");
   };
 
   const handleChangeSignalContext = async (contextKey: MoodContextKey) => {
     const nextSignal = getSignalForMoodContext(selectedMood, contextKey);
+    setMoodRequestNotice(null);
     setSelectedContextKey(contextKey);
     setAnalyzedSignal(nextSignal);
     setCurrentSignalId(nextSignal.id);
@@ -1321,14 +1399,16 @@ export default function App() {
           note: journalText.trim() || undefined,
         });
         setPendingMoodCheckInId(result.checkIn.id);
-        setAnalyzedSignal({ ...nextSignal, ...result.signal, metadata: nextSignal.metadata });
+        setAnalyzedSignal(result.signal);
+        setCurrentSignalId(result.signal.id);
       } catch {
-        window.alert("Chưa đồng bộ được ngữ cảnh. Kết quả hiện tại vẫn được giữ trên màn hình.");
+        toast.info("Chưa đồng bộ được ngữ cảnh. Kết quả hiện tại vẫn được giữ trên màn hình.");
       }
     } else {
       try {
         const result = await analyzeMoodSignal({ mood: selectedMood, contextKey });
-        setAnalyzedSignal({ ...nextSignal, ...result.signal, metadata: nextSignal.metadata });
+        setAnalyzedSignal(result.signal);
+        setCurrentSignalId(result.signal.id);
       } catch {
         // Giữ nội dung biên tập cục bộ làm phương án dự phòng.
       }
@@ -1336,120 +1416,86 @@ export default function App() {
   };
 
   const handleFinishLoading = () => {
-    setIsCheckedIn(true);
-    try {
-      const email = currentUser?.email;
-      localStorage.setItem(getAccountScopedKey("tltl-last-checkin-date", email), todayDateString);
-      localStorage.setItem(getAccountScopedKey("tltl-today-mood", email), selectedMood);
-      localStorage.setItem(getAccountScopedKey("tltl-current-signal-id", email), activeSignal.id);
-    } catch {}
-    navigateTo("result", activeSignal.id);
-    return true;
+    const requestVersion = moodRequestVersionRef.current;
+    return (async () => {
+      const outcome = await moodResolutionRef.current;
+      if (requestVersion !== moodRequestVersionRef.current) return false;
+
+      const resultSignal = outcome?.signal || activeSignal;
+      const checkInId = outcome?.checkInId || null;
+      setAnalyzedSignal(resultSignal);
+      setCurrentSignalId(resultSignal.id);
+      setPendingMoodCheckInId(checkInId);
+      setMoodRequestNotice(outcome?.notice || null);
+      setIsCheckedIn(!currentUser || Boolean(checkInId));
+      try {
+        const email = currentUser?.email;
+        if (!currentUser || checkInId) {
+          localStorage.setItem(getAccountScopedKey("tltl-last-checkin-date", email), todayDateString);
+          localStorage.setItem(getAccountScopedKey("tltl-today-mood", email), selectedMood);
+        }
+        localStorage.setItem(getAccountScopedKey("tltl-current-signal-id", email), resultSignal.id);
+      } catch {}
+      navigateTo("result", resultSignal.id);
+      return true;
+    })();
+  };
+
+  const handleCancelMoodLoading = () => {
+    moodRequestVersionRef.current += 1;
+    moodRequestControllerRef.current?.abort();
+    moodRequestControllerRef.current = null;
+    moodResolutionRef.current = null;
+    navigateTo("mood");
   };
 
   const handleRefreshSignal = async () => {
     if (currentUser) {
       try {
-        const result = await loadSignals(activeSignal.mood);
-        const currentIndex = result.items.findIndex((item) => item.id === activeSignal.id);
-        const nextSignal = result.items[(currentIndex + 1) % result.items.length];
-        if (!nextSignal) return;
-
+        const contextKey = activeSignal.contextKey || selectedContextKey;
         const checkIn = await createMoodCheckIn({
           mood: activeSignal.mood,
-          contextKey: activeSignal.contextKey || selectedContextKey,
+          contextKey,
           note: journalText.trim() || undefined,
+          excludeSignalId: activeSignal.id,
         });
         setPendingMoodCheckInId(checkIn.checkIn.id);
         setIsActionDone(false);
         setSelectedMood(activeSignal.mood);
-        const localSignal = getSignalForMoodContext(activeSignal.mood, activeSignal.contextKey || selectedContextKey);
-        setAnalyzedSignal({ ...localSignal, ...checkIn.signal, metadata: localSignal.metadata });
-        setCurrentSignalId(localSignal.id);
+        setAnalyzedSignal(checkIn.signal);
+        setCurrentSignalId(checkIn.signal.id);
         window.history.replaceState(
           { screen: "result", signalId: checkIn.signal.id, mood: activeSignal.mood },
           "",
           `/result?signalId=${encodeURIComponent(checkIn.signal.id)}`
         );
       } catch {
-        window.alert("Chưa đổi được lời chiêm nghiệm. Bạn hãy thử lại.");
+        toast.error("Chưa đổi được lời chiêm nghiệm. Bạn hãy thử lại.");
       }
       return;
     }
 
-    const nextSignal = getNextSignalForMood(
-      activeSignal.id,
-      activeSignal.mood
-    );
-
-    const signalKey = getAccountScopedKey(
-      "tltl-current-signal-id",
-      undefined
-    );
-
-    const actionKey = getAccountScopedKey(
-      "tltl-action-done-date",
-      undefined
-    );
-
-    let previousSignal: string | null;
-    let previousAction: string | null;
-
     try {
-      previousSignal = localStorage.getItem(signalKey);
-      previousAction = localStorage.getItem(actionKey);
-    } catch {
-      window.alert(
-        "Chưa đọc được dữ liệu trên trình duyệt. Bạn hãy thử lại."
-      );
-      return;
-    }
-
-    try {
-      localStorage.setItem(signalKey, nextSignal.id);
-      localStorage.removeItem(actionKey);
-    } catch {
+      const contextKey = activeSignal.contextKey || selectedContextKey;
+      const analyzed = await analyzeMoodSignal({ mood: activeSignal.mood, contextKey, excludeSignalId: activeSignal.id });
+      setAnalyzedSignal(analyzed.signal);
+      setSelectedContextKey(contextKey);
+      setIsActionDone(false);
+      setSelectedMood(activeSignal.mood);
+      setCurrentSignalId(analyzed.signal.id);
+      setPendingMoodCheckInId(null);
       try {
-        if (previousSignal === null) {
-          localStorage.removeItem(signalKey);
-        } else {
-          localStorage.setItem(
-            signalKey,
-            previousSignal
-          );
-        }
-
-        if (previousAction === null) {
-          localStorage.removeItem(actionKey);
-        } else {
-          localStorage.setItem(
-            actionKey,
-            previousAction
-          );
-        }
-      } catch {
-        // Việc khôi phục cũng có thể bị trình duyệt chặn.
-      }
-
-      window.alert(
-        "Chưa hoàn tất việc đổi lời chiêm nghiệm. Bạn hãy tải lại trang để kiểm tra trước khi thử lại."
+        localStorage.setItem(getAccountScopedKey("tltl-current-signal-id", undefined), analyzed.signal.id);
+        localStorage.removeItem(getAccountScopedKey("tltl-action-done-date", undefined));
+      } catch {}
+      window.history.replaceState(
+        { screen: "result", signalId: analyzed.signal.id, mood: activeSignal.mood },
+        "",
+        `/result?signalId=${encodeURIComponent(analyzed.signal.id)}`
       );
-      return;
+    } catch {
+      toast.error("Chưa đổi được lời chiêm nghiệm từ máy chủ. Bạn hãy thử lại.");
     }
-
-    setIsActionDone(false);
-    setSelectedMood(nextSignal.mood);
-    setCurrentSignalId(nextSignal.id);
-
-    window.history.replaceState(
-      {
-        screen: "result",
-        signalId: nextSignal.id,
-        mood: nextSignal.mood,
-      },
-      "",
-      `/result?signalId=${encodeURIComponent(nextSignal.id)}`
-    );
   };
 
   const handleSaveResult = async () => {
@@ -1467,6 +1513,8 @@ export default function App() {
       id: crypto.randomUUID(),
       signalId: activeSignal.id,
       mood: activeSignal.mood,
+      contextKey: activeSignal.contextKey || selectedContextKey,
+      signalSnapshot: activeSignal,
       createdAt,
       date: new Date(createdAt).toLocaleDateString("vi-VN"),
       journal: journalText.trim() || undefined,
@@ -1491,26 +1539,21 @@ export default function App() {
         checkInId: pendingMoodCheckInId || undefined,
         note: journalText.trim() || undefined,
         actionDone: isActionDone,
+        mood: activeSignal.mood,
+        contextKey: activeSignal.contextKey || selectedContextKey,
+        signalSnapshot: activeSignal,
       });
-      setUserCornerData((previous) => ({
-        ...previous,
-        signals: [
-          remoteEntry,
-          ...previous.signals.filter((entry) => entry.id !== remoteEntry.id),
-        ],
-      }));
+      setUserCornerData((previous) => ({ ...previous, signals: [remoteEntry, ...previous.signals.filter((entry) => entry.id !== remoteEntry.id)] })); toast.success("Đã lưu lời chiêm nghiệm vào hồ sơ của bạn.", "Lưu thành công");
       return;
     } catch {
-      window.alert("Chưa lưu được lời chiêm nghiệm. Bạn hãy thử lại.");
+      toast.error("Chưa lưu được lời chiêm nghiệm. Bạn hãy thử lại.");
       return;
     }
 
     return;
 
     /* if (!saved) {
-      window.alert(
-        "Chưa lưu được lời chiêm nghiệm. Trình duyệt có thể hết dung lượng hoặc đang chặn lưu dữ liệu. Bạn hãy thử lại."
-      );
+      toast.error("Chưa lưu được lời chiêm nghiệm. Bạn hãy thử lại.");
 
       return;
     }
@@ -1542,7 +1585,7 @@ export default function App() {
     // Save on the server before hydration so cached items use canonical IDs.
     try {
       if (pending?.type === "signal") {
-        const item = await saveSignal(pending.item.signalId, { note: pending.item.journal, actionDone: isActionDone });
+        const item = await saveSignal(pending.item.signalId, { note: pending.item.journal, actionDone: isActionDone, mood: pending.item.mood, contextKey: pending.item.contextKey || "general", signalSnapshot: pending.item.signalSnapshot });
         nextData.signals = [item, ...nextData.signals.filter((entry) => entry.id !== item.id)];
       } else if (pending?.type === "xam") {
         const item = await saveXam({
@@ -1556,7 +1599,7 @@ export default function App() {
         nextData.wishes = [item, ...nextData.wishes.filter((entry) => entry.id !== item.id)];
       }
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : "Chưa lưu được nội dung đang chờ. Vui lòng thử lại.");
+      toast.error(error instanceof Error ? error.message : "Chưa lưu được nội dung đang chờ. Vui lòng thử lại.");
       return;
     }
     await saveUserCornerData(user.email, nextData);
@@ -1608,9 +1651,15 @@ export default function App() {
         // Giữ cache local nếu API reflection chưa sẵn sàng.
       });
 
-    void Promise.all([loadMemorial(), loadCalendarNotes()])
-      .then(([remoteMemorial, remoteNotes]) => {
-        if (remoteMemorial) setMemorial(remoteMemorial);
+    void Promise.all([loadMemorialProfiles(), loadCalendarNotes()])
+      .then(([remoteMemorials, remoteNotes]) => {
+        if (remoteMemorials.length) {
+          const preferredId = localStorage.getItem(`tltl-selected-memorial-${user.email.trim().toLowerCase()}`);
+          const selected = remoteMemorials.find((profile) => profile.id === preferredId) || remoteMemorials[0];
+          setMemorial(memorialProfileToRecord(selected));
+        } else {
+          setMemorial(null);
+        }
         if (remoteNotes.length > 0) {
           try {
             localStorage.setItem(getCalendarNotesStorageKey(user.email), JSON.stringify(remoteNotes));
@@ -1697,7 +1746,27 @@ export default function App() {
     setJournalText("");
     setPendingSave(null);
 
-    navigateTo("account", undefined, user);
+    toast.success("Chào mừng " + user.name + " trở lại góc an yên!", "Đăng nhập thành công");
+    const targetScreen = returnScreenRef.current && !["login", "register", "forgot", "guest"].includes(returnScreenRef.current)
+      ? returnScreenRef.current
+      : "today";
+    returnScreenRef.current = null;
+    navigateTo(targetScreen, undefined, user);
+  };
+
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleRequestLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleCancelLogout = () => {
+    setShowLogoutConfirm(false);
+  };
+
+  const handleConfirmLogout = async () => {
+    setShowLogoutConfirm(false);
+    await handleLogout();
   };
 
   const handleLogout = async () => {
@@ -1729,7 +1798,7 @@ export default function App() {
     setPendingSave(null);
 
     // Truyền null rõ ràng để không dùng hồ sơ của lần render cũ.
-    navigateTo("guest", undefined, null);
+    toast.info("Đã đăng xuất tài khoản an toàn. Hẹn gặp lại bạn!", "Đăng xuất"); navigateTo("guest", undefined, null);
   };
 
   const handleUpdateProfile = async (
@@ -1825,9 +1894,7 @@ export default function App() {
 
     if (!saved) {
       if (showErrorAlert) {
-        window.alert(
-          "Chưa lưu được thay đổi. Nội dung trên màn hình vẫn được giữ nguyên. Bạn hãy thử lại."
-        );
+        toast.error("Chưa lưu được thay đổi. Nội dung trên màn hình vẫn được giữ nguyên. Bạn hãy thử lại.");
       }
 
       return false;
@@ -1843,7 +1910,7 @@ export default function App() {
     if (!currentUser) return false;
     try { await remove(id); } catch (error) {
       if (!(error instanceof ApiError && error.status === 404)) {
-        window.alert(error instanceof Error ? error.message : "Máy chủ chưa xóa được dữ liệu. Vui lòng thử lại.");
+        toast.error(error instanceof Error ? error.message : "Máy chủ chưa xóa được dữ liệu. Vui lòng thử lại.");
         return false;
       }
     }
@@ -1857,52 +1924,60 @@ export default function App() {
   const handleDeleteXam = (id: string) => deleteCornerItem("xam", id, deleteSavedXam);
   const handleDeleteWish = (id: string) => deleteCornerItem("wishes", id, deleteSavedWish);
 
-  const handleToggleStarSignal = (id: string) => {
-    const entry = userCornerData.signals.find((item) => item.id === id);
-    commitCornerData({
-      ...userCornerData,
-      signals: userCornerData.signals.map(
-        (item) =>
-          item.id === id
-            ? { ...item, starred: !item.starred }
-            : item
-      ),
-    });
+  const handleToggleFavorite = async (
+    kind: "signals" | "xam" | "wishes",
+    id: string,
+  ) => {
+    const lockId = `${kind}:${id}`;
+    if (favoriteLocksRef.current.has(lockId)) return;
+    favoriteLocksRef.current.add(lockId);
+    const entry = userCornerDataRef.current[kind].find((item) => item.id === id);
+    if (!entry) {
+      favoriteLocksRef.current.delete(lockId);
+      return;
+    }
+    const nextStarred = !entry.starred;
 
-    if (currentUser && entry) {
-      void updateSavedSignal(id, !entry.starred).catch(() => {
-        // Optimistic local update; server remains the source of truth on reload.
+    try {
+      let remoteStarred = nextStarred;
+      if (currentUser) {
+        const updated = kind === "signals"
+          ? await updateSavedSignal(id, nextStarred)
+          : kind === "xam"
+            ? await updateSavedXam(id, nextStarred)
+            : await updateSavedWish(id, nextStarred);
+        remoteStarred = updated.starred ?? nextStarred;
+      }
+
+      const cacheWrite = favoriteCacheQueueRef.current.then(async () => {
+        const current = userCornerDataRef.current;
+        const updated: UserCornerData = {
+          ...current,
+          [kind]: current[kind].map((item) =>
+            item.id === id ? { ...item, starred: remoteStarred } : item
+          ),
+        };
+        const cached = currentUser
+          ? await saveUserCornerData(currentUser.email, updated)
+          : true;
+        userCornerDataRef.current = updated;
+        setUserCornerData(updated);
+        if (!cached) {
+          toast.info("Yêu thích đã cập nhật trên máy chủ, nhưng chưa lưu được bản cache trên thiết bị.");
+        }
       });
+      favoriteCacheQueueRef.current = cacheWrite.then(() => undefined, () => undefined);
+      await cacheWrite;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Chưa cập nhật được yêu thích. Trạng thái cũ vẫn được giữ.");
+    } finally {
+      favoriteLocksRef.current.delete(lockId);
     }
   };
 
-  const handleToggleStarXam = (id: string) => {
-    const entry = userCornerData.xam.find((item) => item.id === id);
-    commitCornerData({
-      ...userCornerData,
-      xam: userCornerData.xam.map(
-        (item) =>
-          item.id === id
-            ? { ...item, starred: !item.starred }
-            : item
-      ),
-    });
-    if (currentUser && entry) void updateSavedXam(id, !entry.starred).catch(() => {});
-  };
-
-  const handleToggleStarWish = (id: string) => {
-    const entry = userCornerData.wishes.find((item) => item.id === id);
-    commitCornerData({
-      ...userCornerData,
-      wishes: userCornerData.wishes.map(
-        (item) =>
-          item.id === id
-            ? { ...item, starred: !item.starred }
-            : item
-      ),
-    });
-    if (currentUser && entry) void updateSavedWish(id, !entry.starred).catch(() => {});
-  };
+  const handleToggleStarSignal = (id: string) => { void handleToggleFavorite("signals", id); };
+  const handleToggleStarXam = (id: string) => { void handleToggleFavorite("xam", id); };
+  const handleToggleStarWish = (id: string) => { void handleToggleFavorite("wishes", id); };
 
   const handleSavePrivateWish = async (
     content: string,
@@ -1952,26 +2027,22 @@ export default function App() {
   };
 
 
-  const handleSaveDayToCalendar = (dayData: {
+  const handleSaveDayToCalendar = async (dayData: {
     title: string;
     day: number;
     month: number;
     year: number;
-  }): boolean => {
+  }): Promise<boolean> => {
     try {
       const currentList = loadCalendarPersonalNotes(
         currentUser?.email
       );
 
-      const exists = currentList.some(
-        (note) =>
-          note.title === dayData.title &&
-          note.day === dayData.day &&
-          note.month === dayData.month &&
-          note.year === dayData.year
+      const exists = currentList.some((note) =>
+        note.title === dayData.title && note.day === dayData.day &&
+        note.month === dayData.month && note.year === dayData.year
       );
-
-      if (exists) return true;
+      if (exists && !currentUser) return true;
 
       const lunarInfo = getReliableLunarDate(
         dayData.day,
@@ -1994,16 +2065,13 @@ export default function App() {
         type: "personal" as const,
       };
 
-      localStorage.setItem(
-        getCalendarNotesStorageKey(currentUser?.email),
-        JSON.stringify([newNote, ...currentList])
-      );
-
-      if (currentUser) {
-        void saveCalendarNote(dayData).catch(() => {
-          // Local cache keeps the calendar usable if the API is temporarily unavailable.
-        });
-      }
+      const savedNote = currentUser ? await saveCalendarNote(dayData) : newNote;
+      const nextList = [savedNote, ...currentList.filter((note) =>
+        !(note.title === dayData.title && note.day === dayData.day &&
+          note.month === dayData.month && note.year === dayData.year)
+      )];
+      localStorage.setItem(getCalendarNotesStorageKey(currentUser?.email), JSON.stringify(nextList));
+      window.dispatchEvent(new Event(CALENDAR_NOTES_CHANGED_EVENT));
 
       return true;
     } catch {
@@ -2025,7 +2093,7 @@ export default function App() {
   );
 
   return (
-    <div className={`app-shell ${dark ? "dark" : ""} ${["login", "register", "forgot"].includes(screen) ? "lg:h-screen lg:max-h-screen lg:overflow-hidden" : ""}`}>
+    <div className={`app-shell ${dark ? "dark" : ""} ${["login", "register", "forgot", "reset-password"].includes(screen) ? "lg:h-screen lg:max-h-screen lg:overflow-hidden" : ""}`}>
       {/* Universal Header - tự động ẩn khi ấn đăng nhập tại LoginScreen */}
       {!isLoginImmersive && (
         <AppHeader
@@ -2035,7 +2103,7 @@ export default function App() {
           onToggleDark={handleToggleTheme}
           onLoginClick={() => navigateTo("login")}
           user={currentUser}
-          onLogout={handleLogout}
+          onLogout={handleRequestLogout}
         />
       )}
 
@@ -2102,13 +2170,14 @@ export default function App() {
           <SignalLoadingScreen
             signal={activeSignal}
             onFinishLoading={handleFinishLoading}
-            onCancel={() => navigateTo("mood")}
+            onCancel={handleCancelMoodLoading}
           />
         )}
 
         {screen === "result" && (
           <SignalResultScreen
             journalText={journalText}
+            requestNotice={moodRequestNotice || undefined}
             mood={selectedMood}
             signal={activeSignal}
             isActionDone={isActionDone}
@@ -2139,11 +2208,16 @@ export default function App() {
         {screen === "sanctuary" && (
           <VirtualSanctuaryScreen
             memorial={memorial}
+            currentUserEmail={currentUser?.email}
             onBackToExperience={() => navigateTo("experience")}
             onGoToAltar={() => navigateTo("ancestor-altar")}
             onGoToMemorial={() => navigateTo("memorial")}
             onGoToZen={() => navigateTo("zen")}
             onGoToLogin={() => navigateTo("login")}
+            onRecordIncense={async () => {
+              if (!currentUser || !memorial?.id) throw new Error("Hãy đăng nhập và chọn hồ sơ tưởng niệm.");
+              await recordIncense(memorial.id);
+            }}
           />
         )}
 
@@ -2171,7 +2245,7 @@ export default function App() {
 
         {screen === "memorial" && (
           <MemorialSpaceScreen
-            onSelect={setMemorial}
+            onSelect={handleSelectMemorial}
             memorial={memorial}
             onBack={() => navigateTo("sanctuary")}
             onCreate={() => navigateTo("memorial-form")}
@@ -2185,27 +2259,55 @@ export default function App() {
           <MemorialFormScreen
             initialValue={memorial}
             onBack={() => navigateTo("memorial")}
-            onSave={(nextMemorial) => {
+            onSave={async (nextMemorial) => {
               const accountId =
                 currentUser?.email?.trim().toLowerCase() || "guest";
-
+              let savedMemorial = nextMemorial;
+              if (currentUser) {
+                const input = {
+                  fullName: nextMemorial.name,
+                  relationship: nextMemorial.relation,
+                  deathDate: nextMemorial.date,
+                  avatarUrl: nextMemorial.avatarUrl || null,
+                  note: nextMemorial.note || null,
+                };
+                let profile;
+                if (nextMemorial.id) {
+                  // This form has no calendar selector; keep the current anniversary on edit.
+                  profile = await updateMemorialProfile(nextMemorial.id, input);
+                } else {
+                  const [, month, day] = nextMemorial.date.split("-").map(Number);
+                  profile = await createMemorialProfile({
+                    ...input,
+                    anniversary: {
+                      calendar: "SOLAR",
+                      day,
+                      month,
+                      repeatYearly: true,
+                    },
+                  });
+                }
+                savedMemorial = memorialProfileToRecord(profile);
+                window.dispatchEvent(new Event("tltl-memorial-profiles-change"));
+              }
               try {
                 localStorage.setItem(
                   `tltl-memorial-${accountId}`,
-                  JSON.stringify(nextMemorial)
+                  JSON.stringify(savedMemorial)
                 );
               } catch {
-                return false;
+                // API result remains authoritative if the local cache cannot be written.
               }
-
-              setMemorial(nextMemorial);
-              if (currentUser) {
-                void saveMemorial(nextMemorial).then(setMemorial).catch(() => {
-                  // Local cache keeps the form usable if the API is temporarily unavailable.
-                });
+              setMemorial(savedMemorial);
+              if (currentUser && savedMemorial.id) {
+                try {
+                  localStorage.setItem(`tltl-selected-memorial-${accountId}`, savedMemorial.id);
+                } catch {
+                  // Keep the selection in memory for this session.
+                }
               }
               navigateTo("memorial");
-              return true;
+              return savedMemorial;
             }}
           />
         )}
@@ -2279,6 +2381,7 @@ export default function App() {
         {screen === "culture-detail" && (
           <CultureDetailScreen
             articleId={selectedArticleId}
+            currentUserEmail={currentUser?.email}
             onBackToCulture={() => navigateTo("culture")}
             onSelectRelatedArticle={(id) => {
               setSelectedArticleId(id);
@@ -2291,6 +2394,10 @@ export default function App() {
 
         {screen === "xinxam" && (
           <XinXamScreen
+            onGoToXinKeo={(drawId) => {
+              setXinKeoDrawId(drawId);
+              navigateTo("xinkeo");
+            }}
             onBackToExperienceHome={() => navigateTo("experience")}
             onGoToArticle={(articleId) => {
               setSelectedArticleId(articleId);
@@ -2396,6 +2503,11 @@ export default function App() {
               setSelectedRitualId(id);
               navigateTo("ritual-detail", id);
             }}
+            onGoToExperience={() => navigateTo("experience")}
+            onGoToRegionalExperience={(kind) => navigateTo(kind)}
+            onGoToAncestorAltar={() => navigateTo("ancestor-altar")}
+            onGoToGoodDay={() => navigateTo("good-days")}
+            onGoToZen={() => navigateTo("zen")}
           />
         )}
 
@@ -2448,6 +2560,10 @@ export default function App() {
           />
         )}
 
+        {screen === "reset-password" && (
+          <ResetPasswordScreen onBackToLogin={() => navigateTo("login")} />
+        )}
+
         {screen === "login" && (
           <LoginScreen
             onBack={() => {
@@ -2458,7 +2574,11 @@ export default function App() {
               } else if (pendingSave?.type === "wish") {
                 navigateTo("wish");
               } else {
-                navigateTo("guest");
+                const backTarget = returnScreenRef.current && !["login", "register", "forgot"].includes(returnScreenRef.current)
+                  ? returnScreenRef.current
+                  : (currentUser ? "today" : "guest");
+                returnScreenRef.current = null;
+                navigateTo(backTarget);
               }
             }}
             onSuccess={handleAuthenticated}
@@ -2543,6 +2663,7 @@ export default function App() {
 
         {screen === "notifications" && (
           <NotificationScreen
+            currentUserEmail={currentUser?.email}
             onBack={() => navigateTo("account")}
             onGoToCalendar={() => navigateTo("calendar")}
           />
@@ -2550,6 +2671,8 @@ export default function App() {
 
         {screen === "xinkeo" && (
           <XinKeoScreen
+            drawId={xinKeoDrawId}
+            isLoggedIn={Boolean(currentUser)}
             onBackToExperience={() => navigateTo("experience")}
             onGoToCulture={() => navigateTo("culture")}
             onGoToHome={() => navigateTo("today")}
@@ -2583,6 +2706,7 @@ export default function App() {
 
         {screen === "membership" && (
           <MembershipScreen
+            currentUserEmail={currentUser?.email}
             onBackToHome={() => navigateTo("today")}
             onGoToExperience={() => navigateTo("experience")}
             onGoToLogin={() => navigateTo("login")}
@@ -2601,7 +2725,7 @@ export default function App() {
             onChangeNotifications={handleChangeNotifications}
             user={currentUser}
             onUpdateProfile={handleUpdateProfile}
-            onLogout={handleLogout}
+            onLogout={handleRequestLogout}
             onClearAllLocalData={async () => {
               if (!currentUser) return false;
               try { await apiRequest("/users/me/personal-content", { method: "DELETE" }); }
@@ -2629,6 +2753,13 @@ export default function App() {
         entry={openedSavedSignal}
         onClose={() => setOpenedSavedSignal(null)}
       />
+      <LogoutConfirmDialog
+        open={showLogoutConfirm}
+        userName={currentUser?.name}
+        onConfirm={handleConfirmLogout}
+        onCancel={handleCancelLogout}
+      />
+      <ToastContainer />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { toast } from "../components/ui/Toast";
 import React, { useState, useEffect, useMemo } from "react";
 import {
   ArrowLeft,
@@ -180,7 +181,7 @@ const EventDetailContent: React.FC<EventDetailScreenProps> = ({
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2500);
     } catch {
-      window.alert("Bạn có thể sao chép liên kết từ thanh địa chỉ trình duyệt.");
+      toast.info("Bạn có thể sao chép liên kết từ thanh địa chỉ trình duyệt.", "Chia sẻ");
     }
   };
 

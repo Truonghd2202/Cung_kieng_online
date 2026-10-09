@@ -29,11 +29,49 @@ function proverbCategoriesForFortune(level) {
   return ["Bài học cuộc sống", "Đức tính"];
 }
 
+function toXamMetadata(xam) {
+  const source = typeof xam.source === "string" ? xam.source.trim() : "";
+  const approved = xam.verified === true;
+  const stickNumber = String(xam.stick_number).padStart(2, "0");
+  return {
+    contentKind: approved ? "editorial" : "demo",
+    editorialStatus: approved ? "approved" : "draft",
+    sources: source
+      ? [{
+        id: `xin-xam-${xam.id}-source`,
+        title: `Trang tham chiếu được khai báo cho thẻ số ${stickNumber}`,
+        url: source,
+        locator: `Bản ghi thẻ số ${stickNumber}`,
+      }]
+      : [],
+    quotationVerified: approved && Boolean(xam.poem),
+    ...(approved && xam.reviewMetadata?.reviewedBy ? { reviewedBy: xam.reviewMetadata.reviewedBy } : {}),
+    ...(approved && xam.reviewMetadata?.reviewedOn ? { reviewedOn: xam.reviewMetadata.reviewedOn } : {}),
+    editorialNote: approved
+      ? xam.reviewMetadata?.reviewNote || "Trạng thái duyệt áp dụng cho nội dung quẻ và nguồn đã khai báo."
+      : "Nội dung này chưa được duyệt để phát hành.",
+  };
+}
+
 function toXamItem(draw) {
+  const xam = draw.xin_xam;
   const classification = draw.xin_xam.fortune_level || "Bình";
   const warning = fortuneGroup(classification) === "CAUTION"
     ? "Đây là lời nhắc thận trọng, không phải dự báo tai họa. Không đưa ra quyết định sức khỏe, pháp lý, tài chính hoặc an toàn chỉ dựa trên thẻ xăm."
     : "Hãy đối chiếu lời luận với hoàn cảnh thực tế và không xem kết quả là lời phán quyết.";
+  const originalContentMetadata = toXamMetadata(xam);
+  const aiExplanation = draw.ai_explanation && draw.ai_explanation !== xam.advice
+    ? {
+      content: draw.ai_explanation,
+      metadata: {
+        contentKind: "ai-generated",
+        editorialStatus: "draft",
+        sources: [],
+        quotationVerified: false,
+        editorialNote: "Lời gợi mở do AI tạo; không phải thơ gốc hoặc trích dẫn từ nguồn dân gian.",
+      },
+    }
+    : null;
   return {
     id: draw.id,
     drawId: draw.id,
@@ -42,19 +80,29 @@ function toXamItem(draw) {
     classification,
     rank: fortuneRank(classification),
     classificationGroup: fortuneGroup(classification),
-    category: draw.xin_xam.category || draw.xin_xam.xam_type,
-    region: DB_TO_REGION[draw.xin_xam.region] || draw.xin_xam.region,
-    quote: draw.xin_xam.poem || draw.xin_xam.meaning || "",
-    meaning: draw.xin_xam.meaning || "",
-    advice: draw.xin_xam.advice || "",
+    category: xam.category || xam.xam_type,
+    xamType: xam.xam_type,
+    region: DB_TO_REGION[xam.region] || xam.region,
+    quote: xam.poem || xam.meaning || "",
+    poem: xam.poem || null,
+    meaning: xam.meaning || "",
+    advice: xam.advice || "",
+    originalContent: {
+      poem: xam.poem || null,
+      meaning: xam.meaning || "",
+      advice: xam.advice || "",
+      metadata: originalContentMetadata,
+    },
+    aiExplanation,
     interpretation: {
       summary: draw.xin_xam.meaning || "",
       recommendation: draw.xin_xam.advice || "",
       warning,
     },
     proverb: toProverbDto(draw.proverbs),
-    source: draw.xin_xam.source,
-    verified: draw.xin_xam.verified,
+    source: xam.source,
+    verified: xam.verified,
+    active: xam.active,
     disclaimer: "Thông tin chỉ dùng để tham khảo và chiêm nghiệm văn hóa; không cổ súy mê tín, không dự đoán chắc chắn tương lai.",
     date: new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }).format(draw.created_at),
     createdAt: draw.created_at.getTime(),
@@ -78,6 +126,8 @@ async function saveXamDraw(userId, input) {
   if (input.drawId) {
     const existing = await xinXamRepository.findDraw(input.drawId, userId);
     if (!existing) throw new ApiError(404, "Xin xam draw not found");
+    const saved = await xinXamRepository.markDrawSaved(input.drawId, userId);
+    if (saved.count !== 1) throw new ApiError(404, "Xin xam draw not found");
     return toXamItem(existing);
   }
   const region = REGION_TO_DB[input.region] || "NATIONWIDE";
@@ -90,6 +140,7 @@ async function saveXamDraw(userId, input) {
     xin_xam_id: catalog.id,
     proverb_id: proverb?.id || null,
     question: input.question || null,
+    saved_at: new Date(),
   });
   return toXamItem(draw);
 }
@@ -103,7 +154,7 @@ async function drawXam(userId, input) {
   if (!userId) {
     return toXamItem({ id: `guest:${require("node:crypto").randomUUID()}`, xin_xam: card, proverbs: proverb, created_at: new Date(), starred: false });
   }
-  const draw = await xinXamRepository.createDraw({ user_id: userId, xin_xam_id: card.id, proverb_id: proverb?.id || null, question: input.question || null, ai_explanation: card.advice });
+    const draw = await xinXamRepository.createDraw({ user_id: userId, xin_xam_id: card.id, proverb_id: proverb?.id || null, question: input.question || null });
   return {
     ...toXamItem(draw),
   };
@@ -114,9 +165,11 @@ async function listSavedXam(userId) {
 }
 
 async function updateXamStar(userId, id, starred) {
+  const existing = await xinXamRepository.findDraw(id, userId);
+  if (!existing) throw new ApiError(404, "Saved xin xam not found");
   const updated = await xinXamRepository.updateStar(id, userId, starred);
   if (updated.count !== 1) throw new ApiError(404, "Saved xin xam not found");
-  return toXamItem(await xinXamRepository.findDraw(id, userId));
+  return toXamItem({ ...existing, starred });
 }
 
 async function deleteXam(userId, id) {

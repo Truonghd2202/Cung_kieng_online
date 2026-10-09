@@ -27,7 +27,7 @@ function findLatestForUser(userId, client = prisma) {
 
 function listForUser(userId, { limit, mood } = {}, client = prisma) {
   return client.mood_checkins.findMany({
-    where: { user_id: userId, ...(mood ? { mood } : {}) },
+    where: { user_id: userId, saved_at: { not: null }, ...(mood ? { mood } : {}) },
     orderBy: { created_at: "desc" },
     take: limit,
     include: { signals: true },

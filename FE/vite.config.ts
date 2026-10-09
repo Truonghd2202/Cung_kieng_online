@@ -6,12 +6,18 @@ import {defineConfig} from 'vite';
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
+    // Keep local VITE_* credentials tied to this frontend even when Vite is launched elsewhere.
+    envDir: import.meta.dirname,
     resolve: {
       alias: {
         '@': path.resolve(import.meta.dirname, '.'),
       },
     },
     server: {
+      headers: {
+        // Google Identity Services uses postMessage across its popup window.
+        "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+      },
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',

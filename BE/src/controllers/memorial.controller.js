@@ -18,8 +18,13 @@ async function remove(req, res) {
   return sendSuccess(res, { message: "Memorial deleted" });
 }
 
+async function removeAnniversary(req, res) {
+  await service.removeAnniversary(req.user.id, req.params.id, req.params.anniversaryId);
+  return sendSuccess(res, { message: "Memorial anniversary deleted" });
+}
+
 async function lightIncense(req, res) {
   return sendSuccess(res, { statusCode: 201, message: "Incense session recorded", data: await service.lightIncense(req.user.id, req.params.id, req.body) });
 }
 
-module.exports = { list, create, update, remove, lightIncense };
+module.exports = { list, create, update, remove, removeAnniversary, lightIncense };

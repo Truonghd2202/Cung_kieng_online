@@ -109,7 +109,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
   const featureMatrix = [
     {
       name: "Check-in tâm trạng & Lắng nghe cảm xúc",
-      desc: "Lắng nghe tâm tư, nhận thông điệp an yên và câu ca dao ngẫm",
+      desc: "Lắng nghe tâm tư và nhận lời gợi mở an yên để chiêm nghiệm",
       currentDemo: "Đang hoạt động",
       futureVision: "Định hướng bổ sung thống kê nhịp điệu tâm hồn",
       status: "Đang mở miễn phí",
@@ -260,14 +260,14 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
               <p className="text-xs text-stone-500 mb-4">Dành cho mọi người dùng tìm kiếm sự an yên</p>
 
               <div className="p-3.5 rounded-2xl bg-surface-soft border border-line text-xs text-stone-700 dark:text-stone-300 leading-relaxed mb-5">
-                Các tính năng cơ bản hiện có được dùng miễn phí. Diễn giải AI theo năm yêu cầu hội viên và chỉ mở khi dịch vụ được cấu hình.
+                Các tính năng cơ bản hiện có được dùng miễn phí. Diễn giải AI theo năm là quyền lợi dự kiến; hiện chưa mở hội viên, và chỉ có thể chạy khi Gemini được cấu hình.
               </div>
 
               <div className="space-y-3 text-xs text-stone-700 dark:text-stone-300 mb-6">
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Check-in tâm trạng:</strong> Nhận thông điệp an yên và câu ca dao chiêm nghiệm mỗi ngày.
+                    <strong>Check-in tâm trạng:</strong> Nhận lời gợi mở an yên để chiêm nghiệm mỗi ngày.
                   </span>
                 </div>
 
@@ -281,7 +281,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Gieo hoa đăng & Nguyện cầu:</strong> Lưu lại suy ngẫm riêng trong Góc của tôi trên máy.
+                  <strong>Lời nguyện:</strong> Lưu vào Góc của tôi qua tài khoản; thao tác buông bỏ trong Wish chỉ là hiệu ứng biểu tượng.
                   </span>
                 </div>
 
@@ -310,32 +310,32 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
             </Button>
           </Card>
 
-          {/* Card 2: Current paid service */}
+          {/* Card 2: Planned membership offer; checkout is not active */}
           <Card className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-surface via-surface to-amber-500/[0.06] border-2 border-amber-500/40 shadow-md flex flex-col justify-between relative overflow-hidden">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
-                  HỘI VIÊN
+                  ĐỊNH HƯỚNG HỘI VIÊN
                 </span>
                 <Badge variant="outline" className="text-xs border-amber-500/40 text-amber-800 dark:text-amber-300 bg-amber-500/10 font-semibold">
-                  29.000đ/tháng · VNPay
+                  Dự kiến 29.000đ/tháng
                 </Badge>
               </div>
 
               <h2 className="font-display font-bold text-2xl text-ink mb-1">
-                Gói Hội Viên Tâm An
+                Gói Hội Viên Tâm An · Chưa mở đăng ký
               </h2>
-              <p className="text-xs text-stone-500 mb-4">29.000đ/tháng · Thanh toán qua VNPay khi cổng đã sẵn sàng</p>
+              <p className="text-xs text-stone-500 mb-4">Mức giá đề xuất; thanh toán và kích hoạt quyền lợi chưa khả dụng.</p>
 
               <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-stone-700 dark:text-stone-300 leading-relaxed mb-5">
-                Quyền lợi hiện có là diễn giải AI theo năm để tự suy ngẫm. Nội dung chưa phải lá số tử vi được tính toán; thư viện độc quyền và không gian 3D chưa khả dụng.
+                Đây là gói dự kiến, chưa thể mua hoặc kích hoạt. Diễn giải AI theo năm chỉ có thể thử khi Gemini được cấu hình; nội dung không phải lá số tử vi. Thư viện độc quyền và quyền lợi 3D chưa khả dụng.
               </div>
 
               <div className="space-y-3 text-xs text-stone-700 dark:text-stone-300 mb-6">
                 <div className="flex items-start gap-2.5">
                   <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Nội dung văn hóa chuyên sâu:</strong> Kế hoạch khảo cứu chi tiết về đình làng,
+                    <strong>Lộ trình · Nội dung văn hóa chuyên sâu:</strong> Kế hoạch khảo cứu chi tiết về đình làng,
                     phong tục ba miền biên soạn cùng các nhà nghiên cứu Hán Nôm.
                   </span>
                 </div>
@@ -343,7 +343,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
                 <div className="flex items-start gap-2.5">
                   <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Kho tư liệu số hóa di sản:</strong> Tiếp cận tư liệu số hóa văn bia, bản dịch cổ truyền
+                    <strong>Lộ trình · Kho tư liệu số hóa di sản:</strong> Tiếp cận tư liệu số hóa văn bia, bản dịch cổ truyền
                     và diễn xướng âm nhạc tâm linh độc quyền.
                   </span>
                 </div>
@@ -351,7 +351,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
                 <div className="flex items-start gap-2.5">
                   <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Đồng bộ đa thiết bị:</strong> Lưu trữ lịch trình nhịp điệu tâm trạng và góc riêng tư
+                    <strong>Lộ trình · Đồng bộ đa thiết bị:</strong> Lưu trữ lịch trình nhịp điệu tâm trạng và góc riêng tư
                     an toàn trên hạ tầng bảo mật cao cấp.
                   </span>
                 </div>
@@ -359,7 +359,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
                 <div className="flex items-start gap-2.5">
                   <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Tọa đàm văn hóa định kỳ:</strong> Tham gia các buổi đàm thoại chuyên đề văn hóa
+                    <strong>Lộ trình · Tọa đàm văn hóa định kỳ:</strong> Tham gia các buổi đàm thoại chuyên đề văn hóa
                     cùng các học giả và nghệ nhân dân gian.
                   </span>
                 </div>

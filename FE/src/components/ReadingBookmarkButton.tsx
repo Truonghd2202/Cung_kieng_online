@@ -11,12 +11,14 @@ interface ReadingBookmarkButtonProps {
   kind: ReadingKind;
   id: string;
   email?: string;
+  title?: string;
 }
 
 export function ReadingBookmarkButton({
   kind,
   id,
   email,
+  title,
 }: ReadingBookmarkButtonProps) {
   const saved = useReadingBookmark(kind, id, email);
   const [error, setError] = useState("");
@@ -34,7 +36,8 @@ export function ReadingBookmarkButton({
             kind,
             id,
             !saved,
-            email
+            email,
+            title
           );
 
           if (!succeeded) {

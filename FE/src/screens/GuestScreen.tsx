@@ -27,7 +27,7 @@ interface MoodPreviewData {
   action: string;
 }
 
-// 5 trạng thái cảm xúc tiêu biểu kèm thông điệp ca dao vỗ về tức thì
+// 5 trạng thái cảm xúc tiêu biểu kèm lời gợi mở minh họa
 const MOOD_TEASER_CHIPS: MoodPreviewData[] = [
   {
     label: "Chênh vênh",
@@ -451,7 +451,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
               </h2>
 
               <p className="text-sm sm:text-base text-muted max-w-2xl leading-relaxed">
-                Rê chuột vào một cảm xúc để nhận lời ca dao vỗ về ngay tại chỗ,
+                Rê chuột vào một cảm xúc để xem lời gợi mở minh họa,
                 hoặc nhấn vào để bắt đầu buổi check-in an lòng.
               </p>
             </div>
@@ -492,7 +492,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
             })}
           </div>
 
-          {/* Hộp xem trước ca dao vỗ về tức thì (Micro-quote preview) */}
+          {/* Hộp xem trước lời gợi mở (Micro-quote preview) */}
           {activeMood && (
             <div className="guest-mood-preview-box mt-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -567,8 +567,8 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                 </h3>
 
                 <p className="text-sm sm:text-base text-muted leading-relaxed mb-4">
-                  Gửi gắm tâm sự khi áp lực, chênh vênh. Nhận lời khuyên từ ca
-                  dao, tục ngữ và thông điệp tích cực cá nhân hóa cho ngày hôm nay.
+                  Gửi gắm tâm sự khi áp lực, chênh vênh. Nhận lời gợi mở biên soạn
+                  và thông điệp tích cực cá nhân hóa cho ngày hôm nay.
                 </p>
 
                 <div className="flex flex-wrap gap-1.5 mb-4">
@@ -576,7 +576,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                     Check-in tâm trạng
                   </span>
                   <span className="text-[11px] font-medium text-subtle bg-surface-soft px-2 py-0.5 rounded-md">
-                    Ca dao tục ngữ
+                    Lời gợi mở minh họa
                   </span>
                   <span className="text-[11px] font-medium text-subtle bg-surface-soft px-2 py-0.5 rounded-md">
                     Hành động an yên

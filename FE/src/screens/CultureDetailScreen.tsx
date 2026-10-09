@@ -595,6 +595,7 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
             kind="culture"
             id={article.id}
             email={currentUserEmail}
+            title={article.title}
           />
 
           <Button

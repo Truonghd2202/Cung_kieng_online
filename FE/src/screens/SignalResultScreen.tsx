@@ -31,6 +31,7 @@ import "../styles/SignalResultScreen.css";
 
 interface SignalResultScreenProps {
   journalText?: string;
+  requestNotice?: string;
   mood?: MoodKey;
   signal: SignalData;
   isActionDone: boolean;
@@ -55,6 +56,7 @@ const CONTEXT_ICONS: Record<MoodContextKey, string> = {
 
 export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
   journalText = "",
+  requestNotice,
   signal,
   isActionDone,
   onToggleAction,
@@ -94,9 +96,7 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
 
   const quotationLabel = signal.metadata.quotationVerified
     ? "Câu trích đã đối chiếu nguồn"
-    : signal.metadata.contentKind === "demo"
-      ? "Lời biên soạn minh họa"
-      : "Câu trích đang chờ đối chiếu";
+    : "Chiêm nghiệm đương đại";
 
   const contextKey = signal.contextKey ?? "general";
 
@@ -190,6 +190,12 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
           </div>
         </header>
 
+        {requestNotice && (
+          <div role="status" aria-live="polite" className="mb-6 rounded-panel border border-line bg-canvas p-4 text-sm leading-relaxed text-muted">
+            {requestNotice}
+          </div>
+        )}
+
         {/* ========================================================= */}
         {/* 2. DẢI LỤA CHỌN HOÀN CẢNH (CONTEXT PILLS 10/10)           */}
         {/* ========================================================= */}
@@ -258,7 +264,7 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
         {/* 4. CỤM TRUNG TÂM: BỨC TRƯỚNG THƯ PHÁP & PHIẾN NGỌC HÀNH ĐỘNG */}
         {/* ========================================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
-          {/* CỘT TRÁI (7 cols): BỨC TRƯỚNG CA DAO & TRANH DI SẢN */}
+          {/* CỘT TRÁI (7 cols): LỜI GỢI MỞ & TRANH MINH HỌA */}
           <section
             aria-labelledby="reflection-scroll-title"
             className="lg:col-span-7 signal-scroll-card group"
@@ -280,16 +286,20 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
                 </span>
               </div>
 
-              {/* Hai câu ca dao thư pháp */}
+              {/* Hai câu biên soạn minh họa; không trình bày như trích dẫn dân gian */}
               <blockquote className="signal-poem-quote">
                 <p className="m-0">{signal.poem.line1}</p>
                 <p className="m-0 mt-1">{signal.poem.line2}</p>
               </blockquote>
 
-              {/* Giải nghĩa văn học dân gian */}
-              <p className="text-sm text-muted leading-relaxed mt-2 mb-5">
-                {signal.poem.subtext}
-              </p>
+              {/* Lời diễn giải chiêm nghiệm */}
+              {signal.poem.subtext && (
+                <p className="text-sm text-muted leading-relaxed mt-2 mb-5">
+                  {signal.poem.subtext.includes("thử nghiệm") || signal.poem.subtext.includes("không phải nguyên văn")
+                    ? "Lời gợi mở chiêm nghiệm đương đại · Đồng hành cùng tâm an."
+                    : signal.poem.subtext}
+                </p>
+              )}
 
               {/* Khung tranh di sản nghệ thuật (Artwork) - Chú thích tách biệt nằm dưới ảnh, KHÔNG ĐÈ LÊN ẢNH */}
               {signal.artwork?.image && (
@@ -308,7 +318,7 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
                       <Sparkle className="w-3 h-3 text-accent shrink-0" />
                       <span>{signal.artwork.caption}</span>
                     </span>
-                    {signal.research?.region && (
+                    {signal.research?.region && !signal.research.region.includes("Không gán") && (
                       <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-accent/10 border border-accent/20 text-accent shrink-0">
                         {signal.research.region}
                       </span>
@@ -327,6 +337,21 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
                   {signal.reflection.advice}
                 </p>
               </div>
+
+              {signal.aiExplanation && (
+                <div className="mt-4 rounded-control border border-accent/20 bg-accent/5 p-4">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent mb-2">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Gợi ý AI, tách riêng với nội dung gốc</span>
+                  </div>
+                  <p className="text-sm sm:text-base text-ink leading-relaxed m-0">
+                    {signal.aiExplanation.reflection}
+                  </p>
+                  <p className="mt-3 text-sm text-muted leading-relaxed">
+                    {signal.aiExplanation.action.title}: {signal.aiExplanation.action.description}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Các nút hành động bức trướng */}
@@ -441,21 +466,26 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
 
             {/* Khối lưu vào Góc của tôi */}
             <div className="mt-6 pt-5 border-t border-line/60">
-              <Button
+              <button
                 type="button"
-                variant="outline"
                 onClick={isSaved ? onGoToDiary : onSaveToAccount}
-                className="w-full h-11 text-sm font-semibold flex items-center justify-center gap-2"
+                className={`w-full h-11 text-sm font-semibold flex items-center justify-center gap-2 rounded-xl transition-all duration-300 cursor-pointer ${
+                  isSaved
+                    ? "bg-accent/15 border-1.5 border-accent text-accent hover:bg-accent/25 shadow-xs"
+                    : "bg-surface-soft hover:bg-surface border border-accent/40 hover:border-accent text-ink shadow-xs"
+                }`}
               >
                 <Bookmark
-                  className={`w-4 h-4 ${isSaved ? "fill-accent text-accent" : ""}`}
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    isSaved ? "fill-accent text-accent scale-110" : "text-accent"
+                  }`}
                 />
                 <span>
                   {isSaved
                     ? "Đã lưu — Xem trong Góc của tôi"
                     : "Lưu vào Góc của tôi"}
                 </span>
-              </Button>
+              </button>
 
               <p className="mt-2.5 text-xs text-center text-muted leading-relaxed">
                 Bạn có thể lưu giữ lời chiêm nghiệm này vào sổ tay bất cứ lúc nào.

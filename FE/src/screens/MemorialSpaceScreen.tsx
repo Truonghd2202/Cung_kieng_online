@@ -23,6 +23,7 @@ export interface MemorialRecord {
   relation: string;
   date: string;
   note?: string;
+  avatarUrl?: string;
 }
 
 interface MemorialSpaceScreenProps {
@@ -119,8 +120,13 @@ export const MemorialSpaceScreen: React.FC<MemorialSpaceScreenProps> = ({
             <Card className="p-6 sm:p-9 rounded-2xl border border-amber-400/35 bg-surface/95 mb-8 shadow-xs backdrop-blur-sm">
               <div className="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex min-w-0 flex-1 items-start gap-4">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-amber-400/40 bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-amber-600/15 text-amber-800 dark:text-amber-300 shadow-xs">
-                    <UserRound className="h-8 w-8" aria-hidden="true" />
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-amber-400/40 bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-amber-600/15 text-amber-800 dark:text-amber-300 shadow-xs">
+                    {memorial.avatarUrl ? (
+                      <>
+                        <img src={memorial.avatarUrl} alt={`Ảnh tưởng niệm ${memorial.name}`} className="h-full w-full object-cover" onError={(event) => { event.currentTarget.classList.add("hidden"); event.currentTarget.nextElementSibling?.classList.remove("hidden"); }} />
+                        <UserRound className="hidden h-8 w-8" aria-hidden="true" />
+                      </>
+                    ) : <UserRound className="h-8 w-8" aria-hidden="true" />}
                   </div>
 
                   <div className="min-w-0 flex-1">

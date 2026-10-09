@@ -2,12 +2,15 @@ import { apiRequest } from "../lib/api";
 import type { MemorialRecord } from "../screens/MemorialSpaceScreen";
 import type { CalendarEventItem } from "./calendarData";
 
-export function loadMemorial(): Promise<MemorialRecord | null> {
-  return apiRequest<MemorialRecord | null>("/memory/memorial");
-}
-
-export function saveMemorial(record: MemorialRecord): Promise<MemorialRecord> {
-  return apiRequest<MemorialRecord>("/memory/memorial", { method: "PUT", body: JSON.stringify(record) });
+export function memorialProfileToRecord(profile: MemorialProfile): MemorialRecord {
+  return {
+    id: profile.id,
+    name: profile.fullName,
+    relation: profile.relationship || "Người thân",
+    date: profile.deathDate || profile.birthDate || "",
+    note: profile.note || profile.biography || undefined,
+    avatarUrl: profile.avatarUrl || undefined,
+  };
 }
 
 export function recordIncense(memorialId: string, message?: string) {
@@ -43,6 +46,10 @@ export function updateMemorialProfile(id: string, input: Partial<Omit<MemorialPr
 
 export function deleteMemorialProfile(id: string) {
   return apiRequest(`/memorials/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+export function deleteMemorialAnniversary(memorialId: string, anniversaryId: string) {
+  return apiRequest(`/memorials/${encodeURIComponent(memorialId)}/anniversaries/${encodeURIComponent(anniversaryId)}`, { method: "DELETE" });
 }
 
 export function loadCalendarNotes(): Promise<CalendarEventItem[]> {

@@ -3,9 +3,10 @@ import { trackProductEvent } from "./productAnalytics";
 import type { MoodContextKey, MoodKey, SignalData } from "./demoSignals";
 import type { SavedSignalItem } from "../screens/AccountScreen";
 
-interface ServerSignal {
+interface ServerSignalSummary {
   id: string;
   mood: MoodKey;
+  contextKey?: MoodContextKey;
 }
 
 interface CheckInResult {
@@ -22,16 +23,21 @@ interface CheckInResult {
 export function analyzeMoodSignal(input: {
   mood: MoodKey;
   contextKey: MoodContextKey;
-}): Promise<{ signal: SignalData; aiUsed: boolean }> {
+  excludeSignalId?: string;
+}, options: { signal?: AbortSignal } = {}): Promise<{ signal: SignalData; aiUsed: boolean }> {
   return apiRequest("/mood/analyze-signal", {
     method: "POST",
     body: JSON.stringify(input),
+    signal: options.signal,
   });
 }
 
-export function loadSignals(mood?: MoodKey): Promise<{ items: ServerSignal[] }> {
-  const query = mood ? `?mood=${encodeURIComponent(mood)}` : "";
-  return apiRequest<{ items: ServerSignal[] }>(`/signals${query}`);
+export function loadSignals(mood?: MoodKey, contextKey: MoodContextKey = "general"): Promise<{ items: ServerSignalSummary[] }> {
+  const params = new URLSearchParams();
+  if (mood) params.set("mood", mood);
+  params.set("contextKey", contextKey);
+  const query = `?${params.toString()}`;
+  return apiRequest<{ items: ServerSignalSummary[] }>(`/signals${query}`);
 }
 
 export function createMoodCheckIn(input: {
@@ -39,11 +45,13 @@ export function createMoodCheckIn(input: {
   contextKey: MoodContextKey;
   note?: string;
   signalId?: string;
+  excludeSignalId?: string;
   actionDone?: boolean;
-}): Promise<CheckInResult> {
+}, options: { signal?: AbortSignal } = {}): Promise<CheckInResult> {
   return apiRequest<CheckInResult>("/mood/check-ins", {
     method: "POST",
     body: JSON.stringify(input),
+    signal: options.signal,
   }).then((result) => {
     trackProductEvent("mood_checkin_completed");
     return result;
@@ -59,7 +67,7 @@ export function updateMoodAction(checkInId: string, actionDone: boolean) {
 
 export function saveSignal(
   signalId: string,
-  input: { checkInId?: string; note?: string; actionDone?: boolean },
+  input: { checkInId?: string; note?: string; actionDone?: boolean; mood?: MoodKey; contextKey?: MoodContextKey; signalSnapshot?: SignalData },
 ): Promise<SavedSignalItem> {
   return apiRequest<SavedSignalItem>("/mood/save-signal", {
     method: "POST",

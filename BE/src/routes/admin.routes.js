@@ -14,6 +14,10 @@ router.get("/calendar", validate(listSchema, "query"), controller.calendar);
 router.patch("/calendar/:id/review", validate(idParamsSchema, "params"), validate(reviewSchema), controller.updateCalendar);
 router.get("/xam", validate(listSchema, "query"), controller.xam);
 router.patch("/xam/:id/review", validate(idParamsSchema, "params"), validate(reviewSchema), controller.updateXam);
+router.get("/rituals", validate(listSchema, "query"), controller.rituals);
+router.patch("/rituals/:id/review", validate(idParamsSchema, "params"), validate(reviewSchema), controller.updateRitual);
+router.get("/prayers", validate(listSchema, "query"), controller.prayers);
+router.patch("/prayers/:id/review", validate(idParamsSchema, "params"), validate(reviewSchema), controller.updatePrayer);
 router.get("/membership-interests", validate(listSchema, "query"), controller.interests);
 router.get("/audit-logs", validate(listSchema, "query"), controller.auditLogs);
 

@@ -141,9 +141,7 @@ export function ChauVanAudioLibrary({
           </h3>
 
           <p className="mt-2 text-sm leading-relaxed text-muted">
-            Dự án đang bổ sung tư liệu có nguồn và quyền sử
-            dụng rõ ràng. Hiện bạn có thể đọc phần giới thiệu
-            và ghi lại điều muốn tìm hiểu.
+            Hiện chưa có bản thu Chầu Văn được cấp quyền để phát trong ứng dụng. Phần nghe trong kịch bản demo chưa khả dụng; bạn có thể đọc phần giới thiệu và ghi lại điều muốn tìm hiểu.
           </p>
         </div>
       ) : (
