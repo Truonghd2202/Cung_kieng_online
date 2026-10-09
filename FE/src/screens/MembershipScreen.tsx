@@ -110,7 +110,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
     {
       name: "Check-in tâm trạng & Lắng nghe cảm xúc",
       desc: "Lắng nghe tâm tư, nhận thông điệp an yên và câu ca dao ngẫm",
-      currentDemo: "✓ Đầy đủ trải nghiệm trên trình duyệt",
+      currentDemo: "Đang hoạt động",
       futureVision: "Định hướng bổ sung thống kê nhịp điệu tâm hồn",
       status: "Đang mở miễn phí",
       statusColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30",
@@ -118,7 +118,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
     {
       name: "Chiêm nghiệm xin xăm & Gieo keo",
       desc: "Giải tỏa những đắn đo, tìm thấu hiểu tinh thần",
-      currentDemo: "Trải nghiệm bộ thẻ mẫu theo vùng miền",
+      currentDemo: "Rút thẻ qua thư viện BE; phần diễn giải tiếng Việt cần thẩm định",
       futureVision: "Đồng bộ lịch sử quẻ xăm đa thiết bị an toàn",
       status: "Đang mở miễn phí",
       statusColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30",
@@ -126,7 +126,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
     {
       name: "Cẩm nang nghi lễ & Lịch văn hóa nếp nhà",
       desc: "Thông tin ngày sóc vọng, phong tục dân gian và nghi thức tại gia",
-      currentDemo: "Nội dung tham khảo kiểm chứng & lưu việc muốn nhớ",
+      currentDemo: "Tra cứu tư liệu có nguồn; trạng thái biên tập được hiển thị",
       futureVision: "Mở rộng tập quán chi tiết các làng xã truyền thống",
       status: "Đang mở miễn phí",
       statusColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30",
@@ -134,7 +134,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
     {
       name: "Hồ sơ cá nhân 'Góc của tôi'",
       desc: "Không gian lưu lại các thẻ quẻ, lời ước và suy ngẫm riêng tư",
-      currentDemo: "✓ Lưu trữ độc lập trên Local Storage trình duyệt",
+      currentDemo: "Cache mã hóa trên thiết bị và dữ liệu đồng bộ theo tài khoản",
       futureVision: "Bảo mật mã hóa đầu cuối và đồng bộ đám mây",
       status: "Đang mở miễn phí",
       statusColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30",
@@ -142,7 +142,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
     {
       name: "Khảo cứu nguồn tư liệu chuyên đề",
       desc: "Bản dịch Hán Nôm, di sản đình làng và phong tục cổ truyền",
-      currentDemo: "✓ Bài viết đại cương & tư liệu văn hóa chọn lọc",
+      currentDemo: "Kho bài nghiên cứu chuyên sâu chưa hoàn tất",
       futureVision: "Số hóa tư liệu văn bia Hán Nôm cùng chuyên gia Viện nghiên cứu",
       status: "Kế hoạch nghiên cứu",
       statusColor: "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30",
@@ -242,12 +242,12 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
 
         {/* 2 Primary Plans Comparison: Free vs Tam An */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 items-stretch">
-          {/* Card 1: Current Demo Tier */}
+          {/* Card 1: Free features currently available */}
           <Card className="p-6 sm:p-8 rounded-3xl bg-surface border border-line shadow-sm flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
-                  BẢN TRẢI NGHIỆM CỘNG ĐỒNG
+                  TÍNH NĂNG MIỄN PHÍ
                 </span>
                 <Badge variant="outline" className="text-xs border-emerald-500/40 text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 font-semibold">
                   Mở hoàn toàn miễn phí
@@ -260,8 +260,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
               <p className="text-xs text-stone-500 mb-4">Dành cho mọi người dùng tìm kiếm sự an yên</p>
 
               <div className="p-3.5 rounded-2xl bg-surface-soft border border-line text-xs text-stone-700 dark:text-stone-300 leading-relaxed mb-5">
-                Toàn bộ các tính năng cốt lõi hiện có trong ứng dụng đều đang hoạt động miễn phí trên trình duyệt của bạn,
-                không yêu cầu thanh toán hay giới hạn lượt trải nghiệm.
+                Các tính năng cơ bản hiện có được dùng miễn phí. Diễn giải AI theo năm yêu cầu hội viên và chỉ mở khi dịch vụ được cấu hình.
               </div>
 
               <div className="space-y-3 text-xs text-stone-700 dark:text-stone-300 mb-6">
@@ -311,15 +310,15 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
             </Button>
           </Card>
 
-          {/* Card 2: Tam An Membership Vision */}
+          {/* Card 2: Current paid service */}
           <Card className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-surface via-surface to-amber-500/[0.06] border-2 border-amber-500/40 shadow-md flex flex-col justify-between relative overflow-hidden">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
-                  ĐỊNH HƯỚNG BẢO TRỢ DI SẢN
+                  HỘI VIÊN
                 </span>
                 <Badge variant="outline" className="text-xs border-amber-500/40 text-amber-800 dark:text-amber-300 bg-amber-500/10 font-semibold">
-                  Ý tưởng tương lai
+                  29.000đ/tháng · VNPay
                 </Badge>
               </div>
 
@@ -329,8 +328,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
               <p className="text-xs text-stone-500 mb-4">29.000đ/tháng · Thanh toán qua VNPay khi cổng đã sẵn sàng</p>
 
               <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-stone-700 dark:text-stone-300 leading-relaxed mb-5">
-                Chương trình đồng hành dành cho những ai tâm huyết muốn bảo tồn sâu hơn kho tàng di sản văn hóa,
-                hỗ trợ các nghệ nhân dân gian và lưu trữ tư liệu số hóa lâu dài.
+                Quyền lợi hiện có là diễn giải AI theo năm để tự suy ngẫm. Nội dung chưa phải lá số tử vi được tính toán; thư viện độc quyền và không gian 3D chưa khả dụng.
               </div>
 
               <div className="space-y-3 text-xs text-stone-700 dark:text-stone-300 mb-6">
@@ -507,8 +505,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
               <div className="font-bold text-amber-700 dark:text-amber-400 mb-1 flex items-center gap-1.5">
                 <span>📖 Tự nguyện & Minh bạch nguồn cội</span>
               </div>
-              Bản demo hiện tại miễn phí. Nguồn tham khảo và phạm vi áp dụng của từng phong tục luôn được công khai
-              rõ ràng để người dùng tự do tham chiếu.
+              Tính năng cơ bản miễn phí; gói Tâm An tính phí 29.000đ/tháng khi cổng thanh toán sẵn sàng. Nguồn tham khảo và phạm vi áp dụng được công khai để người dùng tự đối chiếu.
             </div>
 
             <div className="p-4 rounded-2xl bg-surface-soft border border-line">
@@ -521,7 +518,6 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
           </div>
         </section>
 
-        {/* Premium Demo Content Showcase */}
         <MembershipCheckout
           key={currentUserEmail || "guest"}
           email={currentUserEmail}
