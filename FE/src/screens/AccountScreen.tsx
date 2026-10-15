@@ -33,6 +33,9 @@ export interface SavedSignalItem {
   mood: MoodKey;
   contextKey?: MoodContextKey;
   signalSnapshot?: SignalData;
+  actionDone?: boolean;
+  idempotencyKey?: string;
+  contentStatus?: "available" | "withdrawn";
   date: string;
   createdAt?: number;
   journal?: string;
@@ -45,6 +48,7 @@ export interface SavedSignalItem {
 export interface SavedXinXamItem {
   id: string;
   drawId?: string;
+  resultToken?: string;
   stickNumber: string;
   fortuneType: string;
   category: string;
@@ -156,6 +160,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
     title?: string;
   } | null>(null);
   const [deleteError, setDeleteError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [openedWish, setOpenedWish] = useState<SavedWishItem | null>(null);
   const [openedXam, setOpenedXam] = useState<SavedXinXamItem | null>(null);
@@ -275,8 +280,9 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
   // Perform deletion
   const handleConfirmDelete = async () => {
-    if (!itemToDelete) return;
+    if (!itemToDelete || isDeleting) return;
 
+    setIsDeleting(true);
     setDeleteError("");
 
     let deleted = false;
@@ -295,8 +301,9 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
     if (!deleted) {
       setDeleteError(
-        "Chưa xóa được bản ghi trên trình duyệt này. Nội dung vẫn được giữ; bạn hãy thử lại."
+        "Chưa xác nhận được việc xóa. Bạn hãy tải lại danh sách để kiểm tra trước khi thử lại."
       );
+      setIsDeleting(false);
       return;
     }
 
@@ -310,6 +317,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
     }
 
     setItemToDelete(null);
+    setIsDeleting(false);
   };
 
   // Filtered Xam
@@ -428,7 +436,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
           <div className="flex items-center gap-1.5 uppercase font-semibold text-xs text-muted">
             <Lock className="w-3.5 h-3.5 text-accent" />
-            <span>NỘI DUNG BẢN DEMO ĐƯỢC LƯU TRÊN TRÌNH DUYỆT NÀY</span>
+            <span>NỘI DUNG RIÊNG TƯ CỦA TÀI KHOẢN</span>
           </div>
         </div>
 
@@ -449,7 +457,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
             <p className="text-sm text-ink leading-relaxed">
               Nơi xem lại lời chiêm nghiệm, thẻ xăm và lời gửi gắm
-              bạn đã chọn lưu trên trình duyệt này.
+              bạn đã chọn lưu vào tài khoản. Các mục này không được chia sẻ công khai.
             </p>
           </div>
 
@@ -465,7 +473,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="font-display font-bold text-base text-ink">
-                    {currentUser?.name || "An Nhiên"}
+                    {currentUser?.name || "Tài khoản"}
                   </span>
                   <span className="w-4 h-4 rounded-full bg-action text-white flex items-center justify-center text-xs">
                     ✓
@@ -473,7 +481,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                 </div>
                 <div className="text-xs text-muted mb-1.5 flex flex-col gap-0.5">
                   <span className="break-all text-xs text-muted">
-                    {currentUser?.email || "annhien@tinlamtamlinh.vn"}
+                    {currentUser?.email || "Chưa có thông tin"}
                   </span>
                   <span className="text-xs font-medium inline-flex items-center gap-1 text-accent">
                     <span className="w-1.5 h-1.5 rounded-full bg-accent-soft" />
@@ -1047,6 +1055,8 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
         <AppDialog
           labelledBy="delete-saved-item-title"
           onClose={() => {
+            if (isDeleting) return;
+
             setDeleteError("");
             setItemToDelete(null);
           }}
@@ -1084,6 +1094,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
               autoFocus
               variant="outline"
               size="lg"
+              disabled={isDeleting}
               onClick={() => {
                 setDeleteError("");
                 setItemToDelete(null);
@@ -1097,11 +1108,12 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
               type="button"
               variant="default"
               size="lg"
-              onClick={handleConfirmDelete}
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
               className="w-1/2 rounded-panel text-xs font-semibold bg-action hover:bg-action text-on-action"
             >
               <Trash2 className="w-3.5 h-3.5 mr-1" />
-              <span>Xóa vĩnh viễn</span>
+              <span>{isDeleting ? "Đang xóa…" : "Xóa vĩnh viễn"}</span>
             </Button>
           </div>
         </AppDialog>
@@ -1216,9 +1228,8 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
           </div>
 
           <p className="mb-6 text-sm leading-relaxed text-muted">
-            Đây là nội dung chiêm nghiệm trong bản thử nghiệm.
-            Bạn có thể tiếp nhận như một gợi ý suy ngẫm,
-            không phải dự đoán kết quả của sự việc.
+            Đây là nội dung để suy ngẫm, không phải dự đoán kết quả
+            hoặc lời khuyên quyết định thay bạn.
           </p>
 
           <div className="flex items-center gap-3">

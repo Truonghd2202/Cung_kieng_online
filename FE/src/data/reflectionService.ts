@@ -18,6 +18,7 @@ export function loadSavedXam(): Promise<SavedXinXamItem[]> {
 
 export function saveXam(result: {
   drawId?: string;
+  resultToken?: string;
   stickNumber: string;
   topic: string;
   region: string;
@@ -30,6 +31,7 @@ export function saveXam(result: {
     method: "POST",
     body: JSON.stringify({
       drawId: result.drawId?.startsWith("guest:") ? undefined : result.drawId,
+      resultToken: result.resultToken,
       stickNumber: result.stickNumber,
       xamType: result.topic,
       region: result.region,
@@ -68,10 +70,45 @@ export interface XinXamDrawResponse extends SavedXinXamItem {
   proverb: SourcedProverb | null;
 }
 
-export function drawXinXam(region: string, topic: string, question?: string): Promise<XinXamDrawResponse> {
+export interface XinXamAvailability {
+  region: string;
+  topic: string;
+  count: number;
+  available: boolean;
+}
+
+export function loadXinXamAvailability(
+  region: string,
+  topic: string,
+  options: { signal?: AbortSignal } = {},
+): Promise<XinXamAvailability> {
+  const params = new URLSearchParams({
+    region,
+    topic,
+  });
+
+  return apiRequest<XinXamAvailability>(
+    `/xam/availability?${params.toString()}`,
+    {
+      signal: options.signal,
+    },
+  );
+}
+
+export function drawXinXam(
+  region: string,
+  topic: string,
+  question?: string,
+  options: { signal?: AbortSignal } = {},
+): Promise<XinXamDrawResponse> {
   return apiRequest<XinXamDrawResponse>("/xam/draw", {
     method: "POST",
-    body: JSON.stringify({ region, topic, question }),
+    body: JSON.stringify({
+      region,
+      topic,
+      question,
+    }),
+    signal: options.signal,
   }).then((result) => {
     trackProductEvent("xam_draw_completed");
     return result;
@@ -93,10 +130,18 @@ export function loadSavedWishes(): Promise<SavedWishItem[]> {
   return apiRequest<{ items: SavedWishItem[] }>("/wishes").then((result) => result.items);
 }
 
-export function saveWish(content: string, category: string): Promise<SavedWishItem> {
+export function saveWish(
+  content: string,
+  category: string,
+  requestId: string = crypto.randomUUID()
+): Promise<SavedWishItem> {
   return apiRequest<SavedWishItem>("/wishes", {
     method: "POST",
-    body: JSON.stringify({ content, category }),
+    body: JSON.stringify({
+      content,
+      category,
+      requestId,
+    }),
   });
 }
 
@@ -112,10 +157,27 @@ export function deleteSavedWish(id: string) {
 }
 
 export interface XinKeoCast {
+  id: string;
+  throwNumber: number;
   type: "nhat-am-nhat-duong" | "nhi-duong" | "nhi-am";
   piece1: "am" | "duong";
   piece2: "am" | "duong";
   proverb: SourcedProverb | null;
+}
+
+export interface XinKeoSession {
+  id: string;
+  question: string;
+  drawId: string | null;
+  throws: XinKeoCast[];
+}
+
+export function loadXinKeoSession(
+  sessionId: string,
+): Promise<XinKeoSession> {
+  return apiRequest<XinKeoSession>(
+    `/reflections/xin-keo/sessions/${encodeURIComponent(sessionId)}`,
+  );
 }
 
 export function createXinKeoSession(question: string, drawId?: string): Promise<{ id: string }> {
@@ -125,11 +187,17 @@ export function createXinKeoSession(question: string, drawId?: string): Promise<
   });
 }
 
-export function castXinKeo(sessionId: string): Promise<XinKeoCast> {
-  return apiRequest<XinKeoCast>("/xam/toss-keo", {
-    method: "POST",
-    body: JSON.stringify({ sessionId }),
-  });
+export function castXinKeo(
+  sessionId: string,
+  requestId: string
+): Promise<XinKeoCast> {
+  return apiRequest<XinKeoCast>(
+    `/reflections/xin-keo/sessions/${encodeURIComponent(sessionId)}/throws`,
+    {
+      method: "POST",
+      body: JSON.stringify({ requestId }),
+    }
+  );
 }
 
 export function loadReflectionProverb(context: "XAM" | "KEO"): Promise<SourcedProverb> {

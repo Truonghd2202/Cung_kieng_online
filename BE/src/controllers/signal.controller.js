@@ -3,7 +3,7 @@ const signalService = require("../services/signal.service");
 const { sendSuccess } = require("../utils/response");
 
 async function list(req, res) {
-  const items = await signalService.listSignals(req.query);
+  const items = await signalService.listSignals(req.validated.query);
   return sendSuccess(res, { message: "Signals retrieved", data: { items } });
 }
 
@@ -15,6 +15,11 @@ async function get(req, res) {
 async function listSaved(req, res) {
   const items = await signalService.getSavedSignals(req.user.id);
   return sendSuccess(res, { message: "Saved signals retrieved", data: { items } });
+}
+
+async function getSaved(req, res) {
+  const item = await signalService.getSavedSignal(req.user.id, req.params.id);
+  return sendSuccess(res, { message: "Saved signal retrieved", data: item });
 }
 
 async function save(req, res) {
@@ -32,4 +37,4 @@ async function removeSaved(req, res) {
   return sendSuccess(res, { message: "Saved signal deleted" });
 }
 
-module.exports = { list, get, listSaved, save, updateSaved, removeSaved };
+module.exports = { list, get, listSaved, getSaved, save, updateSaved, removeSaved };

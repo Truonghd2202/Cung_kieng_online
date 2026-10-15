@@ -27,11 +27,6 @@ const CONTEXT_DATA = {
       image: "/images/relic_book.jpg",
       caption: "Sách cổ bút nghiên — Soi sáng từng bước đường học",
     },
-    region: "Truyền thống hiếu học Việt Nam",
-    sourceTitle: "Kho tàng ca dao người Việt (Tập 1 — Khuyến học & Tu thân)",
-    sourceAuthor: "PGS. Nguyễn Xuân Kính & GS. Phan Đăng Nhật (Chủ biên) — Viện Nghiên cứu Văn hóa",
-    sourcePublisher: "Nhà xuất bản Văn hóa Thông tin, Hà Nội (2001)",
-    sourceLocator: "Chương 'Đạo học & Sự kiên nhẫn trong đường đời', tr. 142-145",
   },
   work: {
     label: "Công việc",
@@ -46,11 +41,6 @@ const CONTEXT_DATA = {
       image: "/images/pottery_artisan.jpg",
       caption: "Đôi bàn tay tạo tác — Vững vàng kiên nhẫn từng chi tiết",
     },
-    region: "Làng nghề thủ công truyền thống",
-    sourceTitle: "Tổng tập Văn học dân gian người Việt (Tập 14 — Ca dao nghề nghiệp & Lao động)",
-    sourceAuthor: "Viện Văn hóa Dân gian Việt Nam (Biên soạn)",
-    sourcePublisher: "Nhà xuất bản Khoa học Xã hội, Hà Nội (2002)",
-    sourceLocator: "Chương 'Bàn tay nghệ nhân & Đạo đức nghề nghiệp', tr. 88-92",
   },
   family: {
     label: "Gia đình",
@@ -65,11 +55,6 @@ const CONTEXT_DATA = {
       image: "/images/hero_family.jpg",
       caption: "Mái ấm sum vầy — Nơi nương náu bình yên nhất",
     },
-    region: "Nếp sống gia đình Việt",
-    sourceTitle: "Kho tàng ca dao người Việt (Tập 2 — Đạo hiếu & Tình cảm gia đình)",
-    sourceAuthor: "PGS. Nguyễn Xuân Kính (Chủ biên) — Viện Nghiên cứu Văn hóa Dân gian",
-    sourcePublisher: "Nhà xuất bản Văn hóa Thông tin, Hà Nội (2001)",
-    sourceLocator: "Mục 'Nếp nhà & Sự gắn kết gia đình Việt', tr. 210-215",
   },
   relationship: {
     label: "Tình cảm",
@@ -84,11 +69,6 @@ const CONTEXT_DATA = {
       image: "/images/chu_dong_tu.jpg",
       caption: "Tiên Dung – Chử Đồng Tử: Duyên lành trân quý",
     },
-    region: "Truyền thuyết dân gian Việt Nam",
-    sourceTitle: "Tổng tập Văn học dân gian người Việt (Tập 16 — Ca dao tình yêu lứa đôi)",
-    sourceAuthor: "Nguyễn Xuân Kính (Chủ biên) — Viện Văn học",
-    sourcePublisher: "Nhà xuất bản Khoa học Xã hội, Hà Nội (2002)",
-    sourceLocator: "Mục 'Duyên lành & Lòng thủy chung trong tình cảm', tr. 305-310",
   },
 };
 
@@ -154,6 +134,13 @@ const MOOD_ARTWORK = {
     region: "Cố đô Huế",
   },
 };
+
+async function createSignalIfMissing(source, data, client = prisma) {
+  const existing = await client.signals.findFirst({ where: { source } });
+  if (existing) return { created: false, row: existing };
+  const row = await client.signals.create({ data: { source, ...data } });
+  return { created: true, row };
+}
 
 const MOOD_GUIDANCE = {
   "Chênh vênh": {
@@ -227,23 +214,9 @@ function signalContent(moodLabel, moodDescription, source, contextKey) {
     return {
       metadata: {
         contentKind: "editorial",
-        editorialStatus: "approved",
-        sources: [
-          {
-            id: `src-${contextKey}`,
-            title: contextData.sourceTitle,
-            authorOrOrganization: contextData.sourceAuthor,
-            bibliographicReference: contextData.sourcePublisher,
-            locator: contextData.sourceLocator,
-            accessedOn: "2026-10-09",
-          },
-        ],
-        originCommunity: contextData.region,
-        rightsStatus: "cleared",
-        quotationVerified: true,
-        reviewedBy: "Hội đồng Cố vấn Văn hóa & Triết lý Dân gian — Tin Lắm Tâm Linh",
-        reviewedOn: "2026-10-09",
-        editorialNote: "Thông điệp chiêm nghiệm đã được đối chiếu thư mục học thuật, bản địa hóa và biên soạn nhằm nâng đỡ sức khỏe tinh thần học đường.",
+        sources: [],
+        quotationVerified: false,
+        editorialNote: "Lời gợi mở nguyên bản do ứng dụng biên soạn; không phải ca dao hoặc trích dẫn dân gian. Đang chờ rà soát biên tập.",
       },
       moodDesc: `${moodDescription}. Lời gợi mở hướng về ${contextData.label.toLowerCase()}.`,
       badge: `Lời gợi mở · ${contextData.label}`,
@@ -253,10 +226,10 @@ function signalContent(moodLabel, moodDescription, source, contextKey) {
         subtext: "Lời gợi mở chiêm nghiệm đương đại · Đồng hành cùng tâm an.",
       },
       research: {
-        title: "VÙNG 2 • TƯ LIỆU THAM KHẢO",
-        source: contextData.sourceTitle,
-        region: contextData.region,
-        note: "Nội dung gợi ý chiêm nghiệm, không thay thế tư vấn chuyên môn.",
+        title: "LỜI GỢI MỞ BIÊN SOẠN",
+        source: "Nội dung nguyên bản của ứng dụng",
+        region: "",
+        note: "Nội dung phản tư, không phải trích dẫn dân gian hoặc tư vấn chuyên môn.",
       },
       reflection: {
         title: `VÙNG 3 • Một góc nhìn về ${contextData.label.toLowerCase()}`,
@@ -295,23 +268,9 @@ function signalContent(moodLabel, moodDescription, source, contextKey) {
   return {
     metadata: {
       contentKind: "editorial",
-      editorialStatus: "approved",
-      sources: [
-        {
-          id: `src-${moodLabel}`,
-          title: "Kho tàng ca dao người Việt (Tập 4 — Triết lý nhân sinh & Ứng xử thế thái)",
-          authorOrOrganization: "PGS. Nguyễn Xuân Kính & GS. Phan Đăng Nhật — Viện Nghiên cứu Văn hóa",
-          bibliographicReference: "Nhà xuất bản Văn hóa Thông tin, Hà Nội (2001)",
-          locator: "Mục 'Tâm an & Bình thản trước thăng trầm cuộc sống', tr. 450-455",
-          accessedOn: "2026-10-09",
-        },
-      ],
-      originCommunity: moodArt.region,
-      rightsStatus: "cleared",
-      quotationVerified: true,
-      reviewedBy: "Hội đồng Cố vấn Văn hóa & Triết lý Dân gian — Tin Lắm Tâm Linh",
-      reviewedOn: "2026-10-09",
-      editorialNote: "Thông điệp chiêm nghiệm đã được đối chiếu thư mục học thuật, bản địa hóa và biên soạn nhằm nâng đỡ sức khỏe tinh thần học đường.",
+      sources: [],
+      quotationVerified: false,
+      editorialNote: "Lời gợi mở nguyên bản do ứng dụng biên soạn; không phải ca dao hoặc trích dẫn dân gian. Đang chờ rà soát biên tập.",
     },
     moodDesc: moodDescription,
     badge: "BƯỚC 4 / 4 • CHIÊM NGHIỆM TRỌN VẸN",
@@ -321,10 +280,10 @@ function signalContent(moodLabel, moodDescription, source, contextKey) {
       subtext: "Lời gợi mở chiêm nghiệm đương đại · Đồng hành cùng tâm an.",
     },
     research: {
-      title: "VÙNG 2 • TƯ LIỆU THAM KHẢO",
-      source: "Kho tàng ca dao người Việt (Viện Nghiên cứu Văn hóa)",
-      region: moodArt.region,
-      note: "Nội dung gợi ý chiêm nghiệm, không thay thế tư vấn chuyên môn.",
+      title: "LỜI GỢI MỞ BIÊN SOẠN",
+      source: "Nội dung nguyên bản của ứng dụng",
+      region: "",
+      note: "Nội dung phản tư, không phải trích dẫn dân gian hoặc tư vấn chuyên môn.",
     },
     reflection: {
       title: "VÙNG 3 • Góc Nhìn Soi Tỏ Tâm Thức",
@@ -365,42 +324,23 @@ async function seedSignals() {
     const variants = prefix.startsWith("mood-") ? [1] : [1, 2];
     for (const variant of variants) {
       const source = prefix.startsWith("mood-") ? prefix : `${prefix}-${variant}`;
-      const content = signalContent(moodLabel, moodDescription, source, null);
-      const existing = await prisma.signals.findFirst({ where: { source } });
-
-      if (existing) {
-        await prisma.signals.update({
-          where: { id: existing.id },
-          data: {
-            content: JSON.stringify(content),
-            mood,
-            title: `${moodLabel} · ${variant}`,
-            advice: content.reflection.advice,
-            context_key: null,
-            active: true,
-          },
-        });
-      } else {
-        await prisma.signals.create({
-          data: {
-            source,
-            mood,
-            title: `${moodLabel} · ${variant}`,
-            content: JSON.stringify(content),
-            advice: content.reflection.advice,
-            category: "daily",
-            context_key: null,
-            active: true,
-          },
-        });
-      }
+      const content = signalContent(moodLabel, moodDescription, source, "general");
+      await createSignalIfMissing(source, {
+        mood,
+        title: `${moodLabel} · ${variant}`,
+        content: JSON.stringify(content),
+        advice: content.reflection.advice,
+        category: "daily",
+        context_key: "general",
+        editorial_status: "DRAFT",
+        active: false,
+      });
     }
 
     for (const [contextKey, contextInfo] of Object.entries(CONTEXT_DATA)) {
       const baseSource = prefix.startsWith("mood-") ? prefix : `${prefix}-1`;
       const source = `${baseSource}-context-${contextKey}`;
       const content = signalContent(moodLabel, moodDescription, source, contextKey);
-      const existing = await prisma.signals.findFirst({ where: { source } });
       const data = {
         mood,
         title: `${moodLabel} · ${contextInfo.label}`,
@@ -408,20 +348,12 @@ async function seedSignals() {
         advice: content.reflection.advice,
         category: "mood-context",
         context_key: contextKey,
-        active: true,
+        editorial_status: "DRAFT",
+        active: false,
       };
-      if (existing) {
-        await prisma.signals.update({ where: { id: existing.id }, data });
-      } else {
-        await prisma.signals.create({
-          data: {
-            source,
-            ...data,
-          },
-        });
-      }
+      await createSignalIfMissing(source, data);
     }
   }
 }
 
-module.exports = { seedSignals };
+module.exports = { createSignalIfMissing, seedSignals };

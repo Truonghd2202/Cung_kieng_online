@@ -1,33 +1,18 @@
 import {
   createDemoMetadata,
-  createScholarlyMetadata,
   type ContentMetadata,
 } from "./contentMetadata";
+import checkInCatalog from "../../../shared/checkin-catalog.json";
 
-export type MoodKey =
-  | "An yên"
-  | "Chênh vênh"
-  | "Băn khoăn"
-  | "Nôn nóng"
-  | "Biết ơn"
-  | "Cần điểm tựa"
-  | "Áp lực"
-  | "Cô đơn"
-  | "Vui vẻ"
-  | "Mông lung";
+export type MoodKey = (typeof checkInCatalog.moods)[number]["label"];
 
-export const MOOD_CONTEXTS = [
-  { key: "general", label: "Chưa muốn chọn" },
-  { key: "study", label: "Học tập" },
-  { key: "work", label: "Công việc" },
-  { key: "family", label: "Gia đình" },
-  { key: "relationship", label: "Tình cảm" },
-] as const;
+export const MOOD_CONTEXTS = checkInCatalog.contexts;
 
 export type MoodContextKey =
   (typeof MOOD_CONTEXTS)[number]["key"];
 
 export interface SignalData {
+  resultToken?: string;
   id: string;
   contextKey?: MoodContextKey;
   metadata: ContentMetadata;
@@ -83,73 +68,29 @@ export interface SignalData {
   };
 }
 
+const MOOD_PRESENTATION: Record<MoodKey, { desc: string; iconType: string }> = {
+  "An yên": { desc: "Trái tim bình lặng, sẵn sàng đón nhận điều lành", iconType: "lotus" },
+  "Chênh vênh": { desc: "Cảm giác mất thăng bằng, cần một neo đậu an lành", iconType: "waves" },
+  "Băn khoăn": { desc: "Đứng trước ngã rẽ, cần góc nhìn sáng suốt và thấu đạt", iconType: "question" },
+  "Nôn nóng": { desc: "Tâm trí hối hả, cần hạ nhịp thở và chậm lại từng giây", iconType: "wind" },
+  "Biết ơn": { desc: "Tràn đầy cảm kích với những duyên lành nhỏ bé quanh mình", iconType: "heart" },
+  "Cần điểm tựa": { desc: "Cần một lời động viên và một khoảng được lắng nghe", iconType: "moon" },
+  "Áp lực": { desc: "Nhiều việc dồn lại, muốn nhẹ gánh hơn một chút", iconType: "wind" },
+  "Cô đơn": { desc: "Muốn có một người lắng nghe và kết nối", iconType: "moon" },
+  "Vui vẻ": { desc: "Có một niềm vui muốn tận hưởng hoặc chia sẻ", iconType: "lotus" },
+  "Mông lung": { desc: "Chưa rõ hướng đi, muốn tìm một bước nhỏ tiếp theo", iconType: "question" },
+};
+
 export const MOODS_LIST: {
   key: MoodKey;
   name: string;
   desc: string;
   iconType: string;
-}[] = [
-  {
-    key: "An yên",
-    name: "An yên",
-    desc: "Trái tim bình lặng, sẵn sàng đón nhận điều lành",
-    iconType: "lotus",
-  },
-  {
-    key: "Chênh vênh",
-    name: "Chênh vênh",
-    desc: "Cảm giác mất thăng bằng, cần một neo đậu an lành",
-    iconType: "waves",
-  },
-  {
-    key: "Băn khoăn",
-    name: "Băn khoăn",
-    desc: "Đứng trước ngã rẽ, cần góc nhìn sáng suốt và thấu đạt",
-    iconType: "question",
-  },
-  {
-    key: "Nôn nóng",
-    name: "Nôn nóng",
-    desc: "Tâm trí hối hả, cần hạ nhịp thở và chậm lại từng giây",
-    iconType: "wind",
-  },
-  {
-    key: "Biết ơn",
-    name: "Biết ơn",
-    desc: "Tràn đầy cảm kích với những duyên lành nhỏ bé quanh mình",
-    iconType: "heart",
-  },
-  {
-    key: "Cần điểm tựa",
-    name: "Cần điểm tựa",
-    desc: "Cần một lời động viên và một khoảng được lắng nghe",
-    iconType: "moon",
-  },
-  {
-    key: "Áp lực",
-    name: "Áp lực",
-    desc: "Nhiều việc dồn lại, muốn nhẹ gánh hơn một chút",
-    iconType: "wind",
-  },
-  {
-    key: "Cô đơn",
-    name: "Cô đơn",
-    desc: "Muốn có một người lắng nghe và kết nối",
-    iconType: "moon",
-  },
-  {
-    key: "Vui vẻ",
-    name: "Vui vẻ",
-    desc: "Có một niềm vui muốn tận hưởng hoặc chia sẻ",
-    iconType: "lotus",
-  },
-  {
-    key: "Mông lung",
-    name: "Mông lung",
-    desc: "Chưa rõ hướng đi, muốn tìm một bước nhỏ tiếp theo",
-    iconType: "question",
-  },
-];
+}[] = checkInCatalog.moods.map(({ label }) => ({
+  key: label,
+  name: label,
+  ...MOOD_PRESENTATION[label],
+}));
 
 export const ALL_SIGNALS: SignalData[] = [
   // 1. CHÊNH VÊNH - Signal 1
@@ -289,7 +230,7 @@ export const ALL_SIGNALS: SignalData[] = [
       title: "Gieo nụ cười vào không gian",
       duration: "2 PHÚT",
       description:
-        "Khép nhẹ mi mắt, hít sâu ba hơi thở dịu nhẹ và thầm gửi lời chúc lành đến người thân yêu hoặc vạn vật xung quanh bạn.",
+        "Nếu muốn, hít thở chậm vài nhịp hoặc nghĩ về điều bạn trân trọng lúc này.",
       buttonLabel: "Đánh dấu đã thực hiện hành động này ✓",
       tag: "VÙNG 4 • HÀNH ĐỘNG NUÔI TÂM",
     },
@@ -638,7 +579,7 @@ export const ALL_SIGNALS: SignalData[] = [
       caption: "Họa phẩm cảm hứng: Cội nguồn thiêng liêng hoa trái ngọt ngào",
     },
     loadingFacts: {
-      breathingText: "Cảm tạ đất trời, cha mẹ và vạn duyên...",
+      breathingText: "Dành một nhịp để nhận biết điều đang có mặt...",
       thoughtTitle: "TÂM NIỆM",
       thoughtContent: "Tâm biết ơn sinh hoa thơm cỏ lạ, lòng hoan hỷ đón nhận muôn phúc.",
       originTitle: "GỢI NHẮC CỘI NGUỒN",
@@ -780,7 +721,7 @@ export const ALL_SIGNALS: SignalData[] = [
       title: "VÙNG 3 • Góc Nhìn Soi Tỏ Tâm Thức",
       highlightWord: "cần điểm tựa",
       content:
-        "Con thuyền nào rồi cũng phải neo vào bến cảng, cánh chim nào bay mỏi cũng phải tìm về tàng cây. Sự mỏi mệt hôm nay là lời nhắc cơ thể bạn cần được bảo bọc. Đừng ngại tìm về một người thân yêu hoặc đơn giản là cho phép mình nằm nghỉ một giấc thật sâu.",
+        "Khi thấy mệt, bạn có thể nghỉ ngơi hoặc tìm đến một người bạn tin cậy nếu điều đó phù hợp với mình.",
       advice: "Gợi ý tiếp nhận: Đắp một tấm chăn mỏng hoặc mặc thêm áo ấm",
       signalNumber: "Chiêm nghiệm số #5921",
     },
@@ -1138,7 +1079,7 @@ for (const base of CONTEXT_BASE_SIGNALS) {
 
       id: `${base.id}-context-${contextKey}`,
       contextKey,
-      metadata: createScholarlyMetadata(contextKey),
+      metadata: createDemoMetadata(),
       badge: `Lời gợi mở · ${content.label}`,
 
       poem: {
@@ -1164,7 +1105,7 @@ for (const base of CONTEXT_BASE_SIGNALS) {
               ? {
                   tag: "Bếp Lửa Sum Vầy",
                   image: "/images/hero_family.jpg",
-                  caption: "Mái ấm sum vầy — Nơi nương náu bình yên nhất",
+                  caption: "Minh họa chủ đề sum họp; không đại diện cho một hoàn cảnh cụ thể.",
                 }
               : {
                   tag: "Duyên Lành Tao Ngộ",

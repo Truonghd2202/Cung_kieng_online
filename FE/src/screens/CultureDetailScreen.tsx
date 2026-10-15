@@ -25,8 +25,6 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import {
-  getCultureArticleById,
-  getRelatedArticles,
   CultureArticle,
 } from "../data/cultureData";
 import { DetailNotFound } from "../components/DetailNotFound";
@@ -36,9 +34,10 @@ import { ContentProvenance } from "../components/ContentProvenance";
 import { getCultureMetadata } from "../data/readingMetadata";
 import { ChauVanAudioLibrary } from "../components/ChauVanAudioLibrary";
 import { ScrollReveal } from "../components/ScrollReveal";
-import { apiRequest, ApiError } from "../lib/api";
-import type { RemoteContentItem } from "../data/contentService";
-import { toCultureArticle } from "../data/cultureAdapter";
+import { ApiError, apiRequest } from "../lib/api";
+import { loadCultureArticles, type RemoteContentItem } from "../data/contentService";
+import { canShowArticleImage, toCultureArticle } from "../data/cultureAdapter";
+import { UnverifiedImage } from "../components/UnverifiedImage";
 
 interface CultureDetailScreenProps {
   articleId?: string;
@@ -67,8 +66,8 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
   onGoToRituals,
   onGoToMood,
 }) => {
-  const article: CultureArticle = resolvedArticle ?? getCultureArticleById(articleId)!;
-  const relatedArticles = getRelatedArticles(article.id, 3);
+  const article: CultureArticle = resolvedArticle!;
+  const [relatedArticles, setRelatedArticles] = useState<CultureArticle[]>([]);
 
   const [readingProgress, setReadingProgress] = useState(0);
   const [textSize, setTextSize] = useState<TextSize>("normal");
@@ -81,6 +80,22 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
       behavior: "auto",
     });
   }, [articleId]);
+
+  useEffect(() => {
+    let active = true;
+    void loadCultureArticles().then((items) => {
+      if (!active) return;
+      setRelatedArticles(
+        items
+          .filter((item) => item.verified === true && item.id !== article.id)
+          .slice(0, 3)
+          .map(toCultureArticle),
+      );
+    }).catch(() => {
+      if (active) setRelatedArticles([]);
+    });
+    return () => { active = false; };
+  }, [article.id]);
 
   // Track Reading Scroll Progress
   useEffect(() => {
@@ -571,7 +586,7 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
 
           <div className="ml-auto hidden sm:flex items-center gap-1.5 text-xs text-muted/80">
             <Flower2 className="w-3.5 h-3.5 text-amber-500" />
-            <span>Thư tịch khảo cứu chính thống</span>
+            <span>Nguồn tham khảo</span>
           </div>
         </div>
 
@@ -609,22 +624,18 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
           </Button>
         </div>
 
-        {/* Hero Artwork Image with Heritage Museum Frame */}
-        <ScrollReveal variant="scale" className="mb-12">
+        {canShowArticleImage(article) && <ScrollReveal variant="scale" className="mb-12">
           <div className="rounded-3xl overflow-hidden bg-surface border-2 border-line/60 shadow-md relative group">
             <div className="relative h-60 sm:h-96 md:h-[440px] overflow-hidden bg-surface-soft">
-              <img
+              <UnverifiedImage
                 src={article.image}
-                alt={article.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                alt={article.caption || article.title}
+                title={article.title}
+                description={article.caption}
+                allowExpand={true}
+                className="w-full h-full object-cover object-[center_30%]"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-              
-              {/* Corner Decorative Heritage Emblem */}
-              <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-semibold flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
-                <span>Di sản văn hóa dân tộc</span>
-              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
             </div>
 
             <div className="p-4 sm:p-5 bg-surface/95 backdrop-blur-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-muted border-t border-line">
@@ -632,14 +643,11 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
                 <MapPin className="w-4 h-4 text-accent shrink-0" />
                 <span className="italic text-ink font-medium">{article.caption}</span>
               </div>
-              <div className="flex items-center gap-3 text-xs font-semibold text-accent/90 shrink-0">
-                <span className="px-2 py-0.5 rounded bg-accent/10 border border-accent/20">
-                  Tư liệu điền dã
-                </span>
-              </div>
+              {article.metadata?.imageSource && <span className="text-xs text-muted">Nguồn ảnh: {article.metadata.imageSource}</span>}
+              {article.metadata?.imageRightsBasis && <span className="text-xs text-muted">Quyền sử dụng: {article.metadata.imageRightsBasis}</span>}
             </div>
           </div>
-        </ScrollReveal>
+        </ScrollReveal>}
 
         {/* Mobile Quick Table of Contents Drawer */}
         <details
@@ -969,6 +977,7 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
         </div>
 
         {/* Bottom Related Articles Section */}
+        {relatedArticles.length > 0 && (
         <ScrollReveal variant="up" className="pt-12 border-t-2 border-line/60">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-8">
             <div>
@@ -1000,14 +1009,17 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
               >
                 <div>
                   <div className="relative h-48 overflow-hidden bg-surface-soft">
-                    <img
-                      src={rel.image}
-                      alt={rel.title}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    {canShowArticleImage(rel) ? (
+                      <img
+                        src={rel.image}
+                        alt={rel.caption || rel.title}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="grid h-full place-items-center bg-surface-soft text-sm text-muted">Ảnh chưa có hồ sơ sử dụng.</div>
+                    )}
                     <div className="absolute top-3 left-3 flex items-center gap-1.5">
                       <span className="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-xs font-semibold text-white">
                         {rel.region}
@@ -1039,6 +1051,7 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
             ))}
           </div>
         </ScrollReveal>
+        )}
 
         {/* User's Saved Reading List */}
         <ScrollReveal variant="up" className="mt-12">
@@ -1052,29 +1065,121 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
   );
 };
 
-export const CultureDetailScreen: React.FC<CultureDetailScreenProps> = (props) => {
+export const CultureDetailScreen: React.FC<
+  CultureDetailScreenProps
+> = (props) => {
   const articleId = props.articleId ?? "dinh-lang-bac-bo";
-  const [article, setArticle] = useState<CultureArticle | undefined>();
+
+  const [article, setArticle] = useState<
+    CultureArticle | undefined
+  >();
+
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [notFound, setNotFound] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+
   useEffect(() => {
     let active = true;
+
     setLoading(true);
-    apiRequest<RemoteContentItem>(`/content/culture/${encodeURIComponent(articleId)}`)
-      .then((item) => { if (active) setArticle(toCultureArticle(item)); })
-      .catch((error) => { if (active) setArticle(error instanceof ApiError && error.status === 404 ? undefined : getCultureArticleById(articleId)); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [articleId]);
+    setLoadError("");
+    setNotFound(false);
+    setArticle(undefined);
 
-  if (loading) return <p role="status" className="p-8 text-center">Đang tải tư liệu…</p>;
+    void apiRequest<RemoteContentItem>(
+      `/content/culture/${encodeURIComponent(articleId)}`,
+    )
+      .then((item) => {
+        if (!active) return;
 
-  if (!article) {
+        setArticle(toCultureArticle(item));
+      })
+      .catch((cause: unknown) => {
+        if (!active) return;
+
+        const unavailable =
+          cause instanceof ApiError &&
+          cause.status === 404;
+
+        setNotFound(unavailable);
+
+        setLoadError(
+          unavailable
+            ? "Bài viết này không còn được phát hành hoặc đường dẫn không tồn tại."
+            : "Chưa tải được bài viết. Bạn hãy kiểm tra kết nối rồi thử lại.",
+        );
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [articleId, loadAttempt]);
+
+  if (loading) {
+    return (
+      <div className="screen-shell">
+        <main className="page-container">
+          <p role="status" className="p-8 text-center">
+            Đang tải bài viết…
+          </p>
+        </main>
+      </div>
+    );
+  }
+
+  if (!article && notFound) {
     return (
       <DetailNotFound
-        title="Không tìm thấy bài viết"
+        title={loadError}
         backLabel="Về Khám phá văn hóa"
         onBack={props.onBackToCulture}
       />
+    );
+  }
+
+  if (!article) {
+    return (
+      <div className="screen-shell">
+        <main className="page-container max-w-3xl">
+          <section className="rounded-2xl border border-line bg-surface p-6 sm:p-8">
+            <h1 className="page-title mb-3">
+              Chưa tải được bài viết
+            </h1>
+
+            <p
+              role="alert"
+              className="text-sm leading-relaxed text-muted"
+            >
+              {loadError || "Đã xảy ra lỗi khi tải bài viết."}
+            </p>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button
+                type="button"
+                onClick={() => {
+                  setLoadAttempt((value) => value + 1);
+                }}
+              >
+                Tải lại
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={props.onBackToCulture}
+              >
+                Về danh sách bài viết
+              </Button>
+            </div>
+          </section>
+        </main>
+      </div>
     );
   }
 

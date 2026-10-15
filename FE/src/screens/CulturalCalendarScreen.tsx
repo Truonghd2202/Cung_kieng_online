@@ -26,6 +26,9 @@ import {
   CalendarEventItem,
   getReliableLunarDate,
   getCanChiYear,
+  getCanChiDay,
+  getCanChiMonth,
+  getAuspiciousHoursForDay,
   loadCalendarPersonalNotes,
   saveCalendarPersonalNotes,
 } from "../data/calendarData";
@@ -61,9 +64,6 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   const [selectedMonth, setSelectedMonth] = useState<number>(todayRealMonth);
   const [selectedDay, setSelectedDay] = useState<number>(todayRealDay);
 
-  const isSampleMonth =
-    selectedYear === 2024 && selectedMonth === 10;
-
   const [activeFilter, setActiveFilter] = useState<"all" | "custom" | "festival" | "personal">("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState("");
@@ -91,6 +91,7 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
   const allEvents = useMemo(() => {
     const remotePublicEvents: CalendarEventItem[] = [];
     for (const item of remoteEvents) {
+      if (item.verified !== true) continue;
       const eventDay = Number(item.day);
       const eventMonth = Number(item.month);
       if (!Number.isInteger(eventDay) || !Number.isInteger(eventMonth)) continue;
@@ -181,13 +182,6 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
     setSelectedYear(now.getFullYear());
     setSelectedMonth(now.getMonth() + 1);
     setSelectedDay(now.getDate());
-  };
-
-  // Chuyển nhanh đến tháng 10/2024 có bộ tư liệu mẫu đã kiểm chứng
-  const handleViewVerifiedOct2024 = () => {
-    setSelectedYear(2024);
-    setSelectedMonth(10);
-    setSelectedDay(17);
   };
 
   const handleAddPersonalNote = (
@@ -399,6 +393,16 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
     return getReliableLunarDate(selectedDay, selectedMonth, selectedYear);
   }, [selectedDay, selectedMonth, selectedYear]);
 
+  const currentCalendarFacts = useMemo(() => {
+    const date = new Date(selectedYear, selectedMonth - 1, selectedDay);
+    const canChiDay = getCanChiDay(date);
+    return {
+      canChiDay: canChiDay.name,
+      canChiMonth: getCanChiMonth(currentSelectedLunar.lunarMonth, currentSelectedLunar.lunarYear),
+      auspiciousHours: getAuspiciousHoursForDay(canChiDay.chi),
+    };
+  }, [selectedDay, selectedMonth, selectedYear, currentSelectedLunar]);
+
   // Âm lịch tiêu đề tháng
   const monthHeaderLunar = useMemo(() => {
     return getReliableLunarDate(15, selectedMonth, selectedYear);
@@ -449,37 +453,12 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
             </h1>
 
             <div className="flex items-center gap-2 flex-wrap">
-              {onGoToGoodDays && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onGoToGoodDays}
-                  className="border-line text-accent hover:bg-surface text-xs font-semibold gap-1.5 self-start sm:self-auto cursor-pointer"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-accent" />
-                  <span>Ngày lành — bản thử nghiệm</span>
-                </Button>
-              )}
-
-              {/* Nút xem nhanh bộ dữ liệu mẫu đã kiểm chứng tháng 10/2024 */}
-              {!isSampleMonth && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleViewVerifiedOct2024}
-                  className="border-line bg-surface text-accent hover:bg-surface text-xs font-medium gap-1.5 cursor-pointer"
-                  title="Mở bộ sự kiện mẫu tháng 10/2024"
-                >
-                  <Bookmark className="w-3.5 h-3.5 text-accent" />
-                  <span>Xem sự kiện mẫu 10/2024</span>
-                </Button>
-              )}
             </div>
           </div>
 
           <p className="text-sm sm:text-base text-ink max-w-3xl leading-relaxed">
-            Xem ngày âm/dương, khám phá sự kiện văn hóa mẫu
-            và ghi lại những ngày bạn muốn nhớ.
+            Tra cứu ngày âm/dương, xem sự kiện văn hóa đã được biên tập
+            và lưu những ngày bạn muốn nhớ.
           </p>
 
           <div className="flex items-center justify-center my-6">
@@ -489,13 +468,11 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
           </div>
         </div>
 
-        <div className="mb-6 rounded-xl border border-line bg-surface p-4">
-          <p className="text-sm text-muted leading-relaxed">
-            {isSampleMonth
-              ? "Bạn đang xem bộ sự kiện mẫu tháng 10/2024. Các ngày này không phải lịch sự kiện của năm hiện tại."
-              : "Lịch hiển thị ngày âm/dương và ghi chú cá nhân. Kho sự kiện văn hóa hiện mới có dữ liệu mẫu tháng 10/2024."}
-          </p>
-        </div>
+        {calendarError && (
+          <div role="status" className="mb-6 rounded-xl border border-line bg-surface p-4">
+            <p className="text-sm text-muted leading-relaxed">{calendarError} Sự kiện văn hóa sẽ xuất hiện khi kết nối máy chủ được khôi phục.</p>
+          </div>
+        )}
 
         {/* Main 2-Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -731,11 +708,19 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                       ? `Các ngày tôi đã lưu (${personalCount})`
                       : `Ngày ${selectedDay} tháng ${selectedMonth}, ${selectedYear}`}
                   </h3>
-                  {activeFilter !== "personal" && currentSelectedLunar && (
-                    <p className="text-sm text-muted font-medium mt-0.5">
-                      Âm lịch: Ngày {currentSelectedLunar.lunarDay} tháng {currentSelectedLunar.lunarMonth} ({currentSelectedLunar.canChiYear})
-                      {currentSelectedLunar.solarTerm && ` • Tiết ${currentSelectedLunar.solarTerm}`}
-                    </p>
+                                    {activeFilter !== "personal" && currentSelectedLunar && (
+                    <div className="mt-1 space-y-2 text-sm text-muted">
+                      <p className="font-medium">
+                        Âm lịch: ngày {currentSelectedLunar.lunarDay} tháng {currentSelectedLunar.lunarMonth} ({currentSelectedLunar.canChiYear})
+                        {currentSelectedLunar.solarTerm && ` · Tiết ${currentSelectedLunar.solarTerm}`}
+                      </p>
+                      <p>Can Chi ngày: <strong className="text-ink">{currentCalendarFacts.canChiDay}</strong> · Can Chi tháng: <strong className="text-ink">{currentCalendarFacts.canChiMonth}</strong></p>
+                      <p>Giờ hoàng đạo theo lịch dân gian: {currentCalendarFacts.auspiciousHours.join(", ")}</p>
+                      <p className="text-xs leading-relaxed">Thông tin giờ là tham khảo phong tục, không dự báo hay bảo đảm kết quả công việc.</p>
+                      <a className="inline-flex min-h-11 items-center gap-1 text-xs font-semibold text-accent underline underline-offset-4" href="https://xemamlich.uhm.vn/vncal.html" target="_blank" rel="noreferrer">
+                        Cách tính và nguồn tham khảo <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                      </a>
+                    </div>
                   )}
                 </div>
 
@@ -837,8 +822,8 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                           Chưa có dữ liệu sự kiện cho ngày này
                         </p>
                         <p className="text-sm text-muted mb-4 leading-relaxed">
-                          Kho dữ liệu hiện chưa bao phủ ngày đang chọn.
-                          Bạn có thể thêm ghi chú cá nhân hoặc xem bộ sự kiện mẫu.
+                          Chưa có sự kiện văn hóa được công bố cho ngày này.
+                          Bạn vẫn có thể lưu ghi chú cá nhân cho ngày đã chọn.
                         </p>
                         <div className="flex flex-wrap items-center justify-center gap-2">
                           <Button
@@ -848,16 +833,6 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                           >
                             + Thêm ghi chú ngày này
                           </Button>
-                          {!isSampleMonth && (
-                            <Button
-                              onClick={handleViewVerifiedOct2024}
-                              size="sm"
-                              variant="outline"
-                              className="rounded-xl text-xs border-line text-accent"
-                            >
-                              Xem sự kiện mẫu 10/2024
-                            </Button>
-                          )}
                         </div>
                       </>
                     )}
@@ -887,8 +862,7 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                 <Info className="w-4 h-4 text-accent shrink-0 mt-0.5" />
                 <div>
                   <strong className="font-semibold text-ink">Minh bạch tư liệu:</strong>{" "}
-                  Mọi dữ liệu lịch âm dương đều tính theo thuật toán thiên văn học Việt Nam (Hồ Ngọc Đức)
-                  và các nguồn khảo cứu văn hóa dân gian chính thống.
+                  Ngày âm lịch dùng dữ liệu tính lịch của Hồ Ngọc Đức. Thông tin sự kiện có thể khác theo địa phương; xem nguồn cụ thể nếu được đính kèm.
                 </div>
               </div>
             </Card>

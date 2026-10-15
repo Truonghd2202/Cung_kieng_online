@@ -9,6 +9,7 @@ const router = express.Router();
 
 router.get("/", validate(signalQuerySchema, "query"), controller.list);
 router.get("/saved", authenticate, controller.listSaved);
+router.get("/saved/:id", authenticate, controller.getSaved);
 router.get("/:id", controller.get);
 router.post("/:id/save", authenticate, validate(savedSignalSchema), controller.save);
 router.patch("/saved/:id", authenticate, validate(savedSignalUpdateSchema), controller.updateSaved);

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { LogOut, Menu, Moon, Sun, X } from "lucide-react";
+import { LogOut, Menu, Moon, ShieldCheck, Sun, X } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { ProfileAvatar } from "./ProfileAvatar";
 
@@ -50,7 +50,7 @@ interface AppHeaderProps {
   dark?: boolean;
   onToggleDark?: () => void;
   onLoginClick?: () => void;
-  user?: { name: string; email: string } | null;
+  user?: { name: string; email: string; role?: string } | null;
   onLogout?: () => void;
 }
 
@@ -133,6 +133,16 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           Đăng nhập / Đăng ký
         </Button>
       )}
+      {mobile && user?.role?.toUpperCase() === "ADMIN" && (
+        <a
+          href="/admin"
+          className="mt-2 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-serif text-xs font-semibold text-amber-900 dark:text-amber-200 bg-amber-400/20 border border-amber-500/50 shadow-sm"
+          onClick={closeMenu}
+        >
+          <ShieldCheck className="h-4 w-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+          <span>Vào Cổng Quản Trị (ADMIN)</span>
+        </a>
+      )}
       {mobile && user && onLogout && (
         <Button variant="ghost" className="mt-2 w-full justify-start" onClick={() => { onLogout(); closeMenu(); }}>
           <LogOut className="h-4 w-4" aria-hidden="true" />
@@ -177,6 +187,17 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           >
             {dark ? <Moon className="h-4 w-4" aria-hidden="true" /> : <Sun className="h-4 w-4" aria-hidden="true" />}
           </button>
+
+          {user?.role?.toUpperCase() === "ADMIN" && (
+            <a
+              href="/admin"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-serif text-xs font-semibold text-amber-950 dark:text-amber-200 bg-amber-400/20 hover:bg-amber-400/35 border border-amber-500/50 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+              title="Truy cập Cổng Quản Trị Viên"
+            >
+              <ShieldCheck className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+              <span>Cổng Quản Trị</span>
+            </a>
+          )}
 
           {user ? (
             <>

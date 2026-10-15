@@ -35,10 +35,6 @@ export function RitualPrayerSection({ prayers = [] }: Props) {
 
   const selected =
     available.find((prayer) => prayer.id === selectedId) ?? available[0];
-  const demoPreviews = import.meta.env.DEV
-    ? prayers.filter((prayer) => prayer.preview && prayer.paragraphs.some((paragraph) => paragraph.trim()))
-    : [];
-
   const copyPrayer = async () => {
     if (!selected || copying) return;
 
@@ -150,23 +146,6 @@ export function RitualPrayerSection({ prayers = [] }: Props) {
           </div>
         )}
       </div>
-
-      {demoPreviews.length > 0 && (
-        <aside role="note" className="mt-5 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-950 dark:text-amber-100">
-          <strong className="block uppercase tracking-wide">Bản văn mẫu để demo · chưa thẩm định</strong>
-          <p className="mt-1 leading-relaxed">Đây là nội dung biên tập minh họa, chưa xác minh nguồn hoặc quyền sử dụng; không phải văn khấn cổ truyền đã được thẩm định và không nên xem là bản hướng dẫn chính thức.</p>
-          <div className="mt-4 space-y-4">
-            {demoPreviews.map((prayer) => (
-              <article key={prayer.id} className="rounded-xl border border-amber-500/30 bg-surface/70 p-3">
-                <h3 className="font-semibold">{prayer.title}</h3>
-                <div className="mt-2 space-y-2 font-serif leading-relaxed">
-                  {prayer.paragraphs.map((paragraph, index) => <p key={`${prayer.id}:${index}`} className="whitespace-pre-wrap">{paragraph}</p>)}
-                </div>
-              </article>
-            ))}
-          </div>
-        </aside>
-      )}
 
       {!selected ? (
         <div className="py-8 text-center">

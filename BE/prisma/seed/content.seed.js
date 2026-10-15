@@ -66,7 +66,7 @@ async function seedContent() {
     }
     for (const offering of offerings) {
       let catalogOffering = await prisma.offerings.findFirst({ where: { name: offering.name } });
-      if (!catalogOffering) catalogOffering = await prisma.offerings.create({ data: { ...offering, category: "Nghi lễ gia đình" } });
+      if (!catalogOffering) catalogOffering = await prisma.offerings.create({ data: { name: offering.name, description: offering.description, category: "Nghi lễ gia đình" } });
       await prisma.ritual_offerings.upsert({
         where: { ritual_id_offering_id: { ritual_id: ritual.id, offering_id: catalogOffering.id } },
         create: { ritual_id: ritual.id, offering_id: catalogOffering.id, quantity: offering.quantity, required: false, note: "Tùy điều kiện gia đình." },
@@ -180,6 +180,16 @@ async function seedContent() {
     where: { xam_type: { in: legacyXamTypes }, verified: false },
     data: { active: false },
   });
+
+  const unnamedLots = await prisma.xin_xam.findMany({ where: { name: null } });
+  for (const lot of unnamedLots) {
+    await prisma.xin_xam.update({
+      where: { id: lot.id },
+      data: {
+        name: `Quẻ số ${lot.stick_number}: ${lot.category || "Chiêm nghiệm"}${lot.fortune_level ? ` (${lot.fortune_level})` : ""}`,
+      },
+    });
+  }
 }
 
 module.exports = { seedContent };

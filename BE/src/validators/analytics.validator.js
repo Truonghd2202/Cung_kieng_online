@@ -5,6 +5,8 @@ const eventNames = [
   "signup_completed",
   "mood_checkin_completed",
   "xam_draw_completed",
+  "culture_article_saved",
+  "ritual_checklist_completed",
   "share_link_copied",
   "membership_interest_registered",
 ];

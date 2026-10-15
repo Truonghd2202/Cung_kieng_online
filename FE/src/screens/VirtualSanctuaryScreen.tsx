@@ -1,4 +1,5 @@
 import React, { lazy, Suspense, useState } from "react";
+import { UnverifiedImage } from "../components/UnverifiedImage";
 import {
   ArrowLeft,
   ArrowRight,
@@ -15,10 +16,6 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { SceneErrorBoundary } from "../components/SceneErrorBoundary";
-import {
-  DigitalItemsPanel,
-  type DigitalItemId,
-} from "../components/DigitalItemsPanel";
 
 import type { MemorialRecord } from "./MemorialSpaceScreen";
 
@@ -52,8 +49,6 @@ export const VirtualSanctuaryScreen: React.FC<
   onRecordIncense,
 }) => {
   const [show3D, setShow3D] = useState(false);
-  const [decoration, setDecoration] =
-    useState<DigitalItemId | null>(null);
 
   return (
     <div className="screen-shell">
@@ -121,7 +116,7 @@ export const VirtualSanctuaryScreen: React.FC<
           </div>
 
           <div className="relative min-h-64 overflow-hidden rounded-2xl border border-line bg-surface shadow-card">
-            <img
+            <UnverifiedImage
               src="/images/temple_bac_bo.jpg"
               alt="Mái đình trong một khoảng chiều yên"
               className="absolute inset-0 h-full w-full object-cover opacity-85"
@@ -135,13 +130,12 @@ export const VirtualSanctuaryScreen: React.FC<
           </div>
         </section>
 
-        {/* Digital Items Panel (Collection & Offering Demo) */}
-        <DigitalItemsPanel
-          key={currentUserEmail?.trim().toLowerCase() || "guest"}
-          currentUserEmail={currentUserEmail}
-          onGoToLogin={onGoToLogin}
-          onDecorationChange={setDecoration}
-        />
+        <Card className="mb-10 border-line bg-surface p-5">
+          <h2 className="font-display text-lg font-bold text-ink mb-2">Bộ sưu tập vật phẩm số</h2>
+          <p className="text-sm leading-relaxed text-muted">
+            Tính năng nhận, mua và đồng bộ vật phẩm số chưa được phát hành. Hiện chưa có giao dịch nào được thực hiện trong ứng dụng.
+          </p>
+        </Card>
 
         {/* 3D Sanctuary Interactive Scene Section */}
         <section aria-labelledby="sanctuary-3d-title" className="mb-14">
@@ -211,12 +205,7 @@ export const VirtualSanctuaryScreen: React.FC<
                     memorial={memorial}
                     onOpenMemorial={onGoToMemorial}
                     onRecordIncense={onRecordIncense}
-                    decoration={
-                      decoration === "lotus-vase" ||
-                      decoration === "river-lantern"
-                        ? decoration
-                        : null
-                    }
+                    decoration={null}
                   />
                 </Suspense>
               </SceneErrorBoundary>

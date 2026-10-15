@@ -1,4 +1,5 @@
 import { toast } from "./ui/Toast";
+import { UnverifiedImage } from "./UnverifiedImage";
 import { useState, useRef, useEffect } from "react";
 import {
   Sparkles,
@@ -242,7 +243,7 @@ export function PhysiognomyDemoPanel() {
         {/* Left Column (5 cols): Face Scanner Visualization */}
         <div className="lg:col-span-5 rounded-3xl border border-amber-500/30 bg-surface-soft p-4 sm:p-5 relative overflow-hidden shadow-xs">
           <div className="relative aspect-3/4 rounded-2xl overflow-hidden bg-stone-900 border border-line">
-            <img
+            <UnverifiedImage
               src={previewImage}
               alt="Khuôn mặt khảo cứu nhân tướng"
               className="w-full h-full object-cover opacity-90"

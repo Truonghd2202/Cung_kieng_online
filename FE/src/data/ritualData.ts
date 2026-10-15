@@ -137,7 +137,7 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
       heroArtCredit: "Ảnh minh họa trong bản thử nghiệm",
       meaningTitle: "Ý nghĩa của việc dành thời gian tưởng nhớ và giữ nếp nhà",
       meaningParagraphs: [
-        "Trong nếp sinh hoạt truyền thống của người Việt, ngày sóc vọng (mùng một và ngày rằm) định kỳ mỗi tháng là khoảng lặng quý giá để người trong gia đình cùng nhìn lại mình, lắng đọng sau những bộn bề công việc và thể hiện lòng tri ân sâu xa tới cội nguồn, tổ tiên.",
+        "Với một số người, ngày mùng một và ngày rằm là dịp tưởng nhớ tổ tiên hoặc thực hành tín ngưỡng. Bạn có thể tìm hiểu tập tục tại nơi mình sống và chọn cách phù hợp với hoàn cảnh.",
         "Đối với người trẻ, sinh sống nơi đô thị hoặc trong các căn hộ chung cư hiện đại, nghi thức không đòi hỏi mâm cao cỗ đầy hay những thủ tục rườm rà cầu kỳ. Điều cốt tủy nằm ở sự thanh tịnh, sạch sẽ và cái tâm tĩnh lặng. Đó là dịp để làm mới không gian sống, mở toang khung cửa đón gió lành và dành vài phút đứng trước hương án chiêm nghiệm lại chính mình.",
       ],
       meaningQuote:
@@ -176,7 +176,7 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
           id: "o4",
           name: "Nén hương thơm tự nhiên",
           subname: "(Hương trầm sạch / Hương tăm mộc)",
-          desc: "Khuyên dùng hương thảo mộc tự nhiên không tẩm hóa chất tạo cuốn tàn; chỉ thắp 1 nén để thanh tịnh và bảo vệ hệ hô hấp cho cả nhà.",
+          desc: "Nếu nơi ở cho phép dùng hương, làm theo hướng dẫn an toàn và giữ phòng thông thoáng. Bạn có thể không dùng hương.",
         },
         {
           id: "o5",
@@ -204,7 +204,7 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         {
           stepNumber: "04",
           title: "Thu dọn an toàn & Thưởng thức lộc lành",
-          desc: "Kiểm tra kỹ nén hương đã tàn hoàn toàn hay đặt nắp đĩa sứ an toàn trước khi rời khỏi khu vực thờ. Nước sạch và hoa quả sau đó có thể chia sẻ cùng người thân trong gia đình như một thức lộc lành khởi sắc cho một ngày an vui, trọn vẹn lòng biết ơn và sự kết nối.",
+          desc: "Nếu có đốt hương, kiểm tra lửa đã tắt hẳn trước khi rời đi. Việc sử dụng đồ lễ sau đó tùy theo tập tục và nhu cầu của bạn.",
         },
       ],
       regionalDetails: [
@@ -526,7 +526,7 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
             "Cầu xin tổ tiên phù hộ độ trì cho đại gia đình chúng con trên thuận dưới hòa, trong ấm ngoài êm, con cháu chăm ngoan học giỏi, biết yêu thương đùm bọc lẫn nhau, kế thừa xứng đáng nếp gia phong hiền đức của dòng họ.",
             "Dãi tấm lòng thành, cúi xin chứng giám. Cẩn cáo!"
           ],
-          usageNote: "Bài khấn thích hợp đọc khi cả nhà cùng đứng trước bàn thờ trước khi bắt đầu bữa cơm sum vầy.",
+          usageNote: "Chỉ đọc nếu phù hợp với tập tục và hoàn cảnh của bạn.",
           metadata: createPrayerMeta(
             "Nếp Cũ: Gia Tộc và Phong Tục Dân Gian",
             "Toan Ánh",
@@ -722,7 +722,7 @@ export const RITUAL_GUIDES: RitualGuideItem[] = [
         {
           stepNumber: "01",
           title: "Sửa soạn nguyên liệu thảo thơm",
-          desc: "Chợ sớm lựa chọn thịt tươi, rau củ và trái ngọt; cả nhà cùng quây quần sơ chế, nấu nướng.",
+          desc: "Có thể chọn thực phẩm phù hợp với thời gian, điều kiện và tập tục tại nơi bạn sống.",
         },
         {
           stepNumber: "02",
@@ -1136,40 +1136,43 @@ const slugify = (value: string) => value.normalize("NFD")
 
 export function adaptRemoteRitual(item: RemoteContentItem): RitualGuideItem {
   const id = asText(item.slug, item.id);
-  const local = getRitualById(id);
   const details = asRecord(item.detail);
   const rawOfferings = asArray(item.offerings);
   const rawSteps = asArray(item.steps);
   const rawPrayers = asArray(item.prayers);
-  const offerings: RitualOfferingItem[] = rawOfferings.map((value, index) => {
+  const remoteOfferings: RitualOfferingItem[] = rawOfferings.map((value) => {
     const offering = asRecord(value);
-    const name = asText(offering.name, `Lễ vật ${index + 1}`);
+    const name = asText(offering.name);
     return {
-      id: asText(offering.id, `${id}-offering-${slugify(name) || index + 1}`),
+      id: asText(offering.id),
       name,
       subname: asText(offering.quantity),
-      desc: asText(offering.desc, "Chuẩn bị tùy điều kiện gia đình."),
+      desc: asText(offering.desc),
     };
-  });
-  const checklists: RitualChecklistItem[] = offerings.map((offering) => ({
-    id: `${id}-check-${slugify(offering.id)}`,
-    label: [offering.name, offering.subname].filter(Boolean).join(" · "),
-  }));
-  const steps: RitualStep[] = rawSteps.map((value, index) => {
+  }).filter((offering) => Boolean(offering.name));
+  const offerings = remoteOfferings;
+  const checklists: RitualChecklistItem[] = asArray(item.checklists)
+    .map((value) => {
+      const checklistItem = asRecord(value);
+      return { id: asText(checklistItem.id), label: asText(checklistItem.label) };
+    })
+    .filter((checklistItem) => Boolean(checklistItem.id && checklistItem.label));
+  const remoteSteps: RitualStep[] = rawSteps.map((value, index) => {
     const step = asRecord(value);
     return {
       stepNumber: asText(step.stepNumber, String(index + 1)),
-      title: asText(step.title, `Bước ${index + 1}`),
-      desc: asText(step.desc, "Thực hiện nhẹ nhàng theo điều kiện thực tế."),
+      title: asText(step.title),
+      desc: asText(step.desc),
     };
-  });
-  const prayers: RitualPrayer[] = rawPrayers.map((value, index) => {
+  }).filter((step) => Boolean(step.title && step.desc));
+  const steps = remoteSteps;
+  const remotePrayers: RitualPrayer[] = rawPrayers.map((value, index): RitualPrayer => {
     const prayer = asRecord(value);
     const review = asRecord(prayer.reviewMetadata);
-    const title = asText(prayer.title, "Văn khấn tham khảo");
+    const title = asText(prayer.title);
     const content = asText(prayer.content);
     const sourceUrl = asText(prayer.source);
-    const hasReview = prayer.verified === true && Boolean(review.sourceLocator);
+    const hasReview = prayer.verified === true && Boolean(review.rightsConfirmed === true && review.sourceLocator && review.reviewedBy && review.reviewedOn);
     const rightsStatus = asText(review.usageRights, "unknown") as NonNullable<ContentMetadata["usageRights"]>["status"];
     return {
       id: `${id}-prayer-${slugify(title) || index + 1}`,
@@ -1181,58 +1184,73 @@ export function adaptRemoteRitual(item: RemoteContentItem): RitualGuideItem {
       usageNote: asText(prayer.usageNote),
       metadata: {
         contentKind: "editorial",
-        editorialStatus: hasReview ? "approved" : "in-review",
-        quotationVerified: hasReview,
+        editorialStatus: hasReview ? "published" : "in-review",
+        quotationVerified: false,
         reviewedBy: asText(review.reviewedBy) || undefined,
         reviewedOn: asText(review.reviewedOn) || undefined,
-        usageRights: { status: rightsStatus, note: asText(review.reviewNote, "Chưa có hồ sơ xác nhận quyền sử dụng.") },
-        sources: [{
+        usageRights: hasReview ? { status: rightsStatus, note: asText(review.reviewNote) } : undefined,
+        sources: sourceUrl ? [{
           id: `${id}-prayer-source-${index + 1}`,
-          title: sourceUrl || "Tư liệu do BE cung cấp",
-          authorOrOrganization: "Nguồn cẩm nang nghi lễ",
-          ...(sourceUrl ? { url: sourceUrl } : {}),
+          title: sourceUrl,
+          url: sourceUrl,
           ...(asText(review.sourceLocator) ? { locator: asText(review.sourceLocator) } : {}),
-        }],
+        }] : [],
         editorialNote: hasReview ? asText(review.reviewNote, "Nguồn và quyền sử dụng đã được duyệt.") : "Nội dung do BE cung cấp; đang chờ biên tập và thẩm định.",
       },
     };
-  });
+  }).filter((prayer) => Boolean(prayer.title && prayer.paragraphs.length));
+  const prayers = remotePrayers;
   const regionName = asText(item.region);
   const region: RitualRegionKey = regionName === "Toàn quốc" || regionName === "NATIONWIDE"
     ? "Thích ứng đa vùng"
-    : (["Bắc Bộ", "Trung Bộ", "Nam Bộ"].includes(regionName) ? regionName as RitualRegionKey : "Thích ứng đa vùng");
+    : (["Bắc Bộ", "Trung Bộ", "Nam Bộ"].includes(regionName) ? regionName as RitualRegionKey : "all");
   const occasionName = asText(item.occasion);
   const occasion: RitualOccasionKey = (["Rằm", "Mùng một", "Tết Nguyên Đán", "Dịp gia đình", "Động thổ"].includes(occasionName)
     ? occasionName
-    : "Dịp gia đình") as RitualOccasionKey;
-  const image = asText(item.image, local?.image || "/images/ritual_ram.jpg");
-  const title = asText(item.title, local?.title || "Hướng dẫn nghi lễ");
-  const desc = asText(item.desc, local?.desc || title);
+    : "all") as RitualOccasionKey;
+  const local = getRitualById(id);
+  const usesRemembranceIllustration =
+    id === "tuong-nho-nguoi-than-tai-nha";
+
+  const image = usesRemembranceIllustration
+    ? "/images/goc-tuong-nho-minh-hoa.png"
+    : asText(item.image) || local?.image || "";
+  const title = asText(item.title) || local?.title || "Hướng dẫn nghi lễ";
+  const desc = asText(item.desc) || local?.desc || title;
   const verified = item.verified === true;
   const ritualReview = asRecord(item.reviewMetadata);
-  const hasRitualReview = verified && Boolean(ritualReview.sourceLocator);
+  const provenance = asRecord(item.contentProvenance);
+  const ritualContentType = asText(provenance.contentType) as ContentMetadata["contentType"];
+  const groupAuthored = ritualContentType === "GROUP_AUTHORED";
+  const hasRitualReview = verified
+    && ritualReview.rightsConfirmed === true
+    && Boolean(ritualReview.reviewedBy)
+    && Boolean(ritualReview.reviewedOn)
+    && (groupAuthored || Boolean(ritualReview.sourceLocator));
   const ritualRights = asText(ritualReview.usageRights, "unknown") as NonNullable<ContentMetadata["usageRights"]>["status"];
   const metadata: ContentMetadata = {
     contentKind: "editorial",
-    editorialStatus: hasRitualReview ? "approved" : "in-review",
+    editorialStatus: hasRitualReview ? "published" : "in-review",
     quotationVerified: false,
+    contentType: ritualContentType,
+    contentAuthor: asText(provenance.authorOrOrganization) || undefined,
+    contentRightsBasis: asText(provenance.contentRightsBasis) || undefined,
+    scope: asText(provenance.scope) || undefined,
     reviewedBy: asText(ritualReview.reviewedBy) || undefined,
     reviewedOn: asText(ritualReview.reviewedOn) || undefined,
-    usageRights: { status: ritualRights, note: asText(ritualReview.reviewNote, "Chưa có hồ sơ xác nhận quyền sử dụng.") },
-    sources: [{ id: `${id}-source`, title: asText(item.source, "Tư liệu biên tập"), authorOrOrganization: "Nguồn cẩm nang nghi lễ", ...(asText(item.source).startsWith("https://") ? { url: asText(item.source) } : {}), ...(asText(ritualReview.sourceLocator) ? { locator: asText(ritualReview.sourceLocator) } : {}) }],
-    editorialNote: hasRitualReview ? asText(ritualReview.reviewNote, "Nguồn và quyền sử dụng đã được duyệt.") : "Nội dung chưa có hồ sơ thẩm định và quyền sử dụng đầy đủ.",
+    usageRights: hasRitualReview && !groupAuthored ? { status: ritualRights, note: asText(ritualReview.reviewNote) } : undefined,
+    sources: !groupAuthored && asText(item.source) ? [{ id: `${id}-source`, title: asText(item.source), ...(asText(item.source).startsWith("https://") ? { url: asText(item.source) } : {}), ...(asText(ritualReview.sourceLocator) ? { locator: asText(ritualReview.sourceLocator) } : {}) }] : [],
+    editorialNote: hasRitualReview ? asText(ritualReview.reviewNote) : "",
   };
   const stepCount = steps.length;
   return {
     id,
     title,
     preview: item.preview === true,
-    badge: local?.badge,
-    badgeType: local?.badgeType,
-    subBadgeOccasion: local?.subBadgeOccasion || occasion,
-    tagOnImage: region === "Thích ứng đa vùng" ? "Đa vùng thích ứng" : region,
-    stepsCount: `${stepCount} bước`,
-    timeEstimate: local?.timeEstimate || "Tùy thời gian chuẩn bị",
+    subBadgeOccasion: local?.subBadgeOccasion || (occasion === "all" ? "" : occasion),
+    tagOnImage: local?.tagOnImage || (region === "all" ? "" : region === "Thích ứng đa vùng" ? "Đa vùng thích ứng" : region),
+    stepsCount: stepCount ? `${stepCount} bước` : (local?.stepsCount || "4 bước chuẩn bị"),
+    timeEstimate: local?.timeEstimate || "15 - 20 phút",
     desc,
     image,
     tagPill: local?.tagPill || "THAM KHẢO VĂN HÓA",
@@ -1244,21 +1262,30 @@ export function adaptRemoteRitual(item: RemoteContentItem): RitualGuideItem {
       fullTitle: title,
       subtitle: desc,
       heroImage: image,
-      heroCaption: asText(details.heroCaption, "Hình ảnh minh họa cho nội dung nghi lễ."),
-      heroArtCredit: asText(details.heroArtCredit, "Ảnh minh họa"),
-      meaningTitle: asText(details.meaningTitle, "Ý nghĩa và lưu ý thực hành"),
+      heroCaption: usesRemembranceIllustration
+        ? "Ảnh minh họa tạo bằng AI. Hoa và nước là lựa chọn trang trí, không phải yêu cầu của hướng dẫn."
+        : asText(details.heroCaption) ||
+          local?.detail?.heroCaption ||
+          "Hình minh họa cho hướng dẫn.",
+
+      heroArtCredit: usesRemembranceIllustration
+        ? "Minh họa tạo bằng AI cho dự án Tin Lắm Tâm Linh."
+        : asText(details.heroArtCredit) ||
+          local?.detail?.heroArtCredit ||
+          "Chưa cung cấp thông tin nguồn ảnh.",
+      meaningTitle: asText(details.meaningTitle),
       meaningParagraphs: asArray(details.meaningParagraphs).map((value) => asText(value)).filter(Boolean),
       meaningQuote: asText(details.meaningQuote),
       checklists,
-      safetyTip: asText(details.safetyTip, "Thực hành an toàn, tuân thủ quy định nơi ở; không sử dụng lửa nếu điều kiện không phù hợp."),
-      offeringsTitle: "Lễ vật tham khảo",
-      offeringAdvice: asText(details.offeringAdvice, "Lễ vật có thể điều chỉnh theo nếp nhà và điều kiện thực tế."),
+      safetyTip: asText(details.safetyTip),
+      offeringsTitle: offerings.length ? "Lễ vật tham khảo" : undefined,
+      offeringAdvice: asText(details.offeringAdvice),
       offerings,
       steps,
       regionalDetails: asArray(details.regionalDetails).map((value) => {
         const detail = asRecord(value);
-        return { region: asText(detail.region, region), desc: asText(detail.desc) };
-      }),
+        return { region: asText(detail.region), desc: asText(detail.desc) };
+      }).filter((detail) => Boolean(detail.region && detail.desc)),
       fireSafetyRules: asArray(details.fireSafetyRules).map((value) => asText(value)).filter(Boolean),
       closingQuote: asText(details.closingQuote),
       prayers,

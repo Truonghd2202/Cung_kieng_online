@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { UnverifiedImage } from "../components/UnverifiedImage";
 import {
   ArrowRight,
   Bookmark,
@@ -23,7 +24,9 @@ import {
   type SignalData,
 } from "../data/demoSignals";
 
-import { getCultureArticleById } from "../data/cultureData";
+import type { CultureArticle } from "../data/cultureData";
+import { loadCultureArticles } from "../data/contentService";
+import { toCultureArticle } from "../data/cultureAdapter";
 import { Button } from "@/src/components/ui/button";
 import { ContentProvenance } from "../components/ContentProvenance";
 import { trackProductEvent } from "../data/productAnalytics";
@@ -32,6 +35,7 @@ import "../styles/SignalResultScreen.css";
 interface SignalResultScreenProps {
   journalText?: string;
   requestNotice?: string;
+  isLoggedIn?: boolean;
   mood?: MoodKey;
   signal: SignalData;
   isActionDone: boolean;
@@ -57,6 +61,7 @@ const CONTEXT_ICONS: Record<MoodContextKey, string> = {
 export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
   journalText = "",
   requestNotice,
+  isLoggedIn = false,
   signal,
   isActionDone,
   onToggleAction,
@@ -137,12 +142,23 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
     relationship: {
       articleId: "tien-dung-chu-dong-tu",
       reason:
-        "Đọc cách bản thử nghiệm giới thiệu truyện Tiên Dung – Chử Đồng Tử, rồi tự suy ngẫm về sự kết nối.",
+        "Tìm hiểu một câu chuyện văn hóa có liên hệ với chủ đề bạn đang suy ngẫm.",
     },
   };
 
   const readingSuggestion = suggestedReading[contextKey];
-  const suggestedArticle = getCultureArticleById(readingSuggestion.articleId);
+  const [suggestedArticle, setSuggestedArticle] = useState<CultureArticle>();
+
+  useEffect(() => {
+    let active = true;
+    void loadCultureArticles().then((items) => {
+      const approved = items.find((item) => item.id === readingSuggestion.articleId && item.verified === true);
+      if (active) setSuggestedArticle(approved ? toCultureArticle(approved) : undefined);
+    }).catch(() => {
+      if (active) setSuggestedArticle(undefined);
+    });
+    return () => { active = false; };
+  }, [readingSuggestion.articleId]);
 
   return (
     <div className="screen-shell relative overflow-hidden">
@@ -254,7 +270,9 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
               </p>
               <p className="mt-3 text-xs text-muted leading-relaxed">
                 Lời chiêm nghiệm được chọn theo tâm trạng để bạn tự soi chiếu.
-                Ghi chép này hoàn toàn riêng tư và không đưa vào liên kết chia sẻ.
+                {isLoggedIn
+                  ? "Đoạn này đã được gửi cùng check-in tới máy chủ và không nằm trong liên kết chia sẻ."
+                  : "Đoạn này không nằm trong liên kết chia sẻ. Nếu lưu kết quả sau khi đăng nhập, nội dung sẽ được gửi cùng bản lưu."}
               </p>
             </div>
           </details>
@@ -305,7 +323,7 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
               {signal.artwork?.image && (
                 <figure className="signal-artwork-frame my-5">
                   <div className="signal-artwork-img-box">
-                    <img
+                    <UnverifiedImage
                       src={signal.artwork.image}
                       alt={signal.artwork.caption || "Minh họa di sản văn hóa"}
                       loading="lazy"
@@ -592,7 +610,7 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
 
             {suggestedArticle.image && (
               <figure className="m-0">
-                <img
+                  <UnverifiedImage
                   src={suggestedArticle.image}
                   alt={suggestedArticle.title}
                   loading="lazy"

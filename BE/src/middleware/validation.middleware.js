@@ -11,7 +11,10 @@ function validate(schema, source = "body") {
         })),
       });
     }
-    req[source] = result.data;
+    req.validated = { ...req.validated, [source]: result.data };
+    // Express 5 exposes req.query through a getter, so assigning to req.query
+    // does not replace the parsed values. Keep the validated query separately.
+    if (source !== "query") req[source] = result.data;
     return next();
   };
 }

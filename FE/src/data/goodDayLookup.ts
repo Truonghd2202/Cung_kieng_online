@@ -1,4 +1,4 @@
-import { getReliableLunarDate } from "./calendarData";
+import { getReliableLunarDate, getCanChiDay as getCalendarCanChiDay, getCanChiMonth as getCalendarCanChiMonth } from "./calendarData";
 
 export const GOOD_DAY_PURPOSES = [
   { id: "family", label: "Gặp mặt gia đình & Sum họp", icon: "🏡" },
@@ -90,38 +90,24 @@ export function validateGoodDayQuery(query: GoodDayQuery): string | null {
 }
 
 // Danh sách các Can Chi ngày và giờ hoàng đạo truyền thống
-const CAN_DAYS = ["Giáp", "Ất", "Bính", "Đinh", "Mậu", "Kỷ", "Canh", "Tân", "Nhâm", "Quý"];
 const CHI_DAYS = ["Tý", "Sửu", "Dần", "Mão", "Thìn", "Tỵ", "Ngọ", "Mùi", "Thân", "Dậu", "Tuất", "Hợi"];
 const TRUC_NAMES = ["Kiến", "Trừ", "Mãn", "Bình", "Định", "Chấp", "Phá", "Nguy", "Thành", "Thu", "Khai", "Bế"];
 
 // Hàm tính Can Chi ngày theo số ngày Julius
 export function getCanChiDay(date: Date): { name: string; can: string; chi: string } {
-  const localDateOrdinal = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000;
-  const diffDays = localDateOrdinal + 25569 + 1;
-  const can = CAN_DAYS[(diffDays + 9) % 10];
-  const chi = CHI_DAYS[(diffDays + 1) % 12];
-  return { name: `${can} ${chi}`, can, chi };
+  return getCalendarCanChiDay(date);
 }
 
 // Hàm tính Can Chi tháng theo quy luật ngũ hổ độn (Can năm -> Can tháng 1 Dần)
 export function getCanChiMonth(lunarMonth: number, lunarYear: number): string {
-  // Can năm: 0: Giáp, 1: Ất, 2: Bính, 3: Đinh, 4: Mậu, 5: Kỷ, 6: Canh, 7: Tân, 8: Nhâm, 9: Quý
-  const canYearIndex = (lunarYear - 4) % 10;
-  // Tháng 1 luôn là tháng Dần. Can của tháng Dần = (canYearIndex % 5) * 2 + 2
-  const startCanIndex = ((canYearIndex % 5) * 2 + 2) % 10;
-  const canMonthIndex = (startCanIndex + (lunarMonth - 1)) % 10;
-  // Chi của tháng: 1: Dần, 2: Mão, 3: Thìn, 4: Tỵ, 5: Ngọ, 6: Mùi, 7: Thân, 8: Dậu, 9: Tuất, 10: Hợi, 11: Tý, 12: Sửu
-  const chiMonthIndex = (lunarMonth + 1) % 12;
-  return `${CAN_DAYS[canMonthIndex]} ${CHI_DAYS[chiMonthIndex]}`;
+  return getCalendarCanChiMonth(lunarMonth, lunarYear);
 }
 
-// Lấy tên Trực của ngày theo chu kỳ 12 trực
 export function getTrucForDay(date: Date): string {
-  const d = date.getDate();
-  const m = date.getMonth() + 1;
-  const y = date.getFullYear();
-  const daySeed = (d * 7 + m * 13 + y) % 12;
-  return TRUC_NAMES[daySeed];
+  const lunar = getReliableLunarDate(date.getDate(), date.getMonth() + 1, date.getFullYear());
+  const dayBranch = CHI_DAYS.indexOf(getCalendarCanChiDay(date).chi);
+  const lunarMonthBranch = (lunar.lunarMonth + 1) % 12;
+  return TRUC_NAMES[(dayBranch - lunarMonthBranch + 12) % 12];
 }
 
 // Lấy danh sách giờ hoàng đạo theo Địa Chi của ngày
@@ -187,9 +173,7 @@ export function lookupGoodDays(query: GoodDayQuery): GoodDayResult[] {
 
     // Trực Kiến khởi khi chi ngày trùng chi tháng âm; các trực tiếp theo thứ tự 12 Trực.
     const lunar = getReliableLunarDate(d, m, y);
-    const lunarMonthBranch = (lunar.lunarMonth + 1) % 12;
-    const dayBranch = CHI_DAYS.indexOf(canChi.chi);
-    const truc = TRUC_NAMES[(dayBranch - lunarMonthBranch + 12) % 12];
+    const truc = getTrucForDay(curr);
 
     const isAuspicious =
       ["Mãn", "Khai", "Thành", "Định", "Bình"].includes(truc) ||

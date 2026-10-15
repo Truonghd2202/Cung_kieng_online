@@ -3,31 +3,34 @@ const env = require("../config/env");
 const { durationToMilliseconds } = require("../utils/token");
 const { sendSuccess } = require("../utils/response");
 
-function refreshCookieOptions() {
-  return {
+function refreshCookieOptions(rememberMe = true) {
+  const options = {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/api/v1/auth",
-    maxAge: durationToMilliseconds(env.JWT_REFRESH_EXPIRES_IN),
   };
+  if (rememberMe) {
+    options.maxAge = durationToMilliseconds(env.JWT_REFRESH_EXPIRES_IN);
+  }
+  return options;
 }
 
-function setRefreshCookie(res, token) {
-  res.cookie("refreshToken", token, refreshCookieOptions());
+function setRefreshCookie(res, token, rememberMe = true) {
+  res.cookie("refreshToken", token, refreshCookieOptions(rememberMe));
   // Remove the old cookie scope during migration to the canonical API prefix.
-  res.clearCookie("refreshToken", { ...refreshCookieOptions(), path: "/api/auth" });
+  res.clearCookie("refreshToken", { ...refreshCookieOptions(rememberMe), path: "/api/auth" });
 }
 
 function clearRefreshCookie(res) {
-  const { maxAge, ...options } = refreshCookieOptions();
+  const options = refreshCookieOptions(false);
   res.clearCookie("refreshToken", options);
   res.clearCookie("refreshToken", { ...options, path: "/api/auth" });
 }
 
 async function register(req, res) {
   const result = await authService.register(req.body);
-  setRefreshCookie(res, result.refreshToken);
+  setRefreshCookie(res, result.refreshToken, true);
   return sendSuccess(res, {
     statusCode: 201,
     message: "Registered successfully",
@@ -36,8 +39,9 @@ async function register(req, res) {
 }
 
 async function login(req, res) {
+  const rememberMe = req.body?.rememberMe === true;
   const result = await authService.login(req.body);
-  setRefreshCookie(res, result.refreshToken);
+  setRefreshCookie(res, result.refreshToken, rememberMe);
   return sendSuccess(res, {
     message: "Logged in successfully",
     data: { user: result.user, accessToken: result.accessToken },
@@ -45,8 +49,9 @@ async function login(req, res) {
 }
 
 async function googleLogin(req, res) {
+  const rememberMe = req.body?.rememberMe === true;
   const result = await authService.loginWithGoogle(req.body.credential);
-  setRefreshCookie(res, result.refreshToken);
+  setRefreshCookie(res, result.refreshToken, rememberMe);
   return sendSuccess(res, {
     message: "Logged in with Google successfully",
     data: { user: result.user, accessToken: result.accessToken },
@@ -54,8 +59,9 @@ async function googleLogin(req, res) {
 }
 
 async function refresh(req, res) {
+  const rememberMe = req.headers["x-remember-me"] === "1" || req.body?.rememberMe === true;
   const result = await authService.refresh(req.cookies?.refreshToken);
-  setRefreshCookie(res, result.refreshToken);
+  setRefreshCookie(res, result.refreshToken, rememberMe);
   return sendSuccess(res, {
     message: "Access token refreshed",
     data: { accessToken: result.accessToken },

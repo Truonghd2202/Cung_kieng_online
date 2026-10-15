@@ -113,7 +113,7 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
       if (!saved) throw new Error("Chưa lưu được hồ sơ tưởng niệm.");
     } catch {
       setError(
-        "Chưa lưu được hồ sơ trên máy chủ. Kiểm tra kết nối rồi thử lại."
+        "Chưa lưu được hồ sơ. Nếu đang dùng tài khoản, hãy kiểm tra kết nối; nếu dùng với tư cách khách, hãy kiểm tra quyền lưu dữ liệu của trình duyệt. Nội dung form vẫn được giữ."
       );
     } finally {
       setSaving(false);
@@ -127,6 +127,7 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
         <div className="flex items-center justify-between gap-3 mb-6 text-xs text-stone-600 dark:text-stone-400">
           <button
             onClick={onBack}
+            disabled={saving}
             className="inline-flex items-center gap-1.5 hover:text-accent transition-colors font-medium cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -152,7 +153,9 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
             {initialValue ? "Chỉnh sửa góc tưởng niệm" : "Tạo góc tưởng niệm"}
           </h1>
           <p className="text-sm sm:text-base text-stone-700 dark:text-stone-300 leading-relaxed">
-            Thông tin được lưu an toàn theo tài khoản của bạn; khi dùng thử với tư cách khách, thông tin chỉ lưu trên thiết bị này.
+            Khi đăng nhập, thông tin được gửi lên máy chủ để lưu theo tài khoản.
+            Khi dùng với tư cách khách, hồ sơ được lưu trong trình duyệt trên thiết bị này;
+            người dùng chung trình duyệt có thể xem được.
           </p>
         </header>
 
@@ -170,6 +173,7 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
                 </span>
                 <input
                   value={name}
+                  disabled={saving}
                   maxLength={MAX_MEMORIAL_NAME_LENGTH}
                   onChange={(event) => {
                     setName(event.target.value);
@@ -186,6 +190,7 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
                 </span>
                 <input
                   value={relation}
+                  disabled={saving}
                   maxLength={MAX_MEMORIAL_RELATION_LENGTH}
                   onChange={(event) => {
                     setRelation(event.target.value);
@@ -204,6 +209,7 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
                   <CalendarDays className="absolute left-3.5 top-3.5 w-5 h-5 text-stone-500 pointer-events-none" />
                   <input
                     type="date"
+                    disabled={saving}
                     min="0001-01-01"
                     max="9999-12-31"
                     value={date}
@@ -225,6 +231,7 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
                 </span>
                 <Textarea
                   value={note}
+                  disabled={saving}
                   maxLength={MAX_MEMORIAL_NOTE_LENGTH}
                   onChange={(event) => {
                     setNote(event.target.value);
@@ -253,6 +260,7 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
               <Button
                 type="button"
                 variant="outline"
+                disabled={saving}
                 onClick={onBack}
                 className="min-h-11 px-5 rounded-xl border-line text-ink hover:text-accent cursor-pointer"
               >

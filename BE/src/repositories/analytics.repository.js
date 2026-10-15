@@ -7,7 +7,7 @@ async function recordEvents(events) {
 }
 
 async function getSummary() {
-  const [activity, signupSources, activation, retention, subscribers] = await Promise.all([
+  const [activity, signupSources, activation, retention, subscribers, dailyTrends] = await Promise.all([
     prisma.$queryRaw`
       SELECT
         COUNT(DISTINCT anonymous_id) FILTER (WHERE created_at >= date_trunc('day', CURRENT_TIMESTAMP))::int AS dau,
@@ -26,7 +26,7 @@ async function getSummary() {
         COUNT(*) FILTER (WHERE EXISTS (
           SELECT 1 FROM analytics_events e
           WHERE e.user_id = u.id
-            AND e.event_name IN ('mood_checkin_completed', 'xam_draw_completed')
+            AND e.event_name IN ('mood_checkin_completed', 'culture_article_saved', 'ritual_checklist_completed')
             AND e.created_at >= u.created_at
             AND e.created_at < u.created_at + INTERVAL '24 hours'
         ))::int AS activated
@@ -64,12 +64,39 @@ async function getSummary() {
       ) cohorts
     `,
     prisma.subscriptions.count({ where: { status: "ACTIVE", expires_at: { gt: new Date() } } }),
+    prisma.$queryRaw`
+      SELECT
+        d.day::date::text AS date,
+        COUNT(DISTINCT e.anonymous_id)::int AS visits,
+        COUNT(e.id)::int AS engagements
+      FROM generate_series(CURRENT_DATE - INTERVAL '6 days', CURRENT_DATE, '1 day') AS d(day)
+      LEFT JOIN analytics_events e ON e.created_at >= d.day AND e.created_at < d.day + INTERVAL '1 day'
+      GROUP BY d.day
+      ORDER BY d.day ASC
+    `,
   ]);
+
+  const DAY_NAMES = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+  const trends = (dailyTrends || []).map((row) => {
+    const d = new Date(row.date);
+    const dayLabel = !isNaN(d.getTime()) ? DAY_NAMES[d.getDay()] : row.date;
+    return {
+      date: row.date,
+      label: dayLabel,
+      value: Number(row.visits) || 0,
+      secondary: Number(row.engagements) || 0,
+    };
+  });
 
   const funnel = activation[0];
   return {
     dau: activity[0].dau,
     mau: activity[0].mau,
+    trends,
+    sparklines: {
+      dau: trends.map((t) => t.value),
+      engagements: trends.map((t) => t.secondary),
+    },
     acquisition: signupSources.map(({ campaign_source, _count }) => ({ source: campaign_source || "unknown", signups: _count._all })),
     activationRate30d: funnel.signups === 0 ? null : Number((funnel.activated * 100 / funnel.signups).toFixed(2)),
     retention: retention.map(({ metric, cohort_size, retained, rate_percent }) => ({ day: metric, cohortSize: cohort_size, retained, ratePercent: rate_percent === null ? null : Number(rate_percent) })),

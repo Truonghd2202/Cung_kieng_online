@@ -29,7 +29,8 @@ export interface CultureSource {
     | "Tác phẩm kinh điển"
     | "Di sản Quốc gia / UNESCO"
     | "Khảo cứu học thuật"
-    | "Thông tin cơ quan / đơn vị";
+    | "Thông tin cơ quan / đơn vị"
+    | "Tư liệu tham khảo";
   annotation: string;
 }
 

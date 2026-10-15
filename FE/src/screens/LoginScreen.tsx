@@ -12,7 +12,7 @@ import {
   ArrowLeft,
   ArrowRight,
 } from "lucide-react";
-import { loginAccount, loginWithGoogle, UserProfile, DEMO_USER } from "../data/authService";
+import { loginAccount, loginWithGoogle, UserProfile } from "../data/authService";
 import "../styles/LoginScreen.css";
 import { toast } from "../components/ui/Toast";
 
@@ -77,7 +77,7 @@ let activeGoogleCredentialHandler: ((credential: string) => void) | null = null;
 
 export interface LoginScreenProps {
   onBack?: () => void;
-  onSuccess: (name?: string, email?: string) => void | Promise<void>;
+  onSuccess: (name?: string, email?: string, role?: string) => void | Promise<void>;
   onGoToRegister: () => void;
   onGoToForgotPassword?: () => void;
   onImmersiveChange?: (immersive: boolean) => void;
@@ -168,7 +168,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     setAuthState("submitting");
     onImmersiveChange?.(false);
 
-    const result = await loginWithGoogle(credential);
+    const result = await loginWithGoogle(credential, rememberEmail);
     if (!result.success) {
       setAuthState("error");
       const gFailMsg = result.error || "Chưa đăng nhập được bằng Google. Vui lòng thử lại.";
@@ -176,7 +176,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       return;
     }
 
-    await onSuccess(result.user.name, result.user.email);
+    await onSuccess(result.user.name, result.user.email, result.user.role);
     setAuthState("idle");
   }, [isSubmitting, isSuccess, onImmersiveChange, onSuccess]);
 
@@ -184,19 +184,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     void handleGoogleCredential(credential);
   };
 
-  const handleFallbackGoogleAuth = useCallback(async () => {
+  const handleFallbackGoogleAuth = useCallback(() => {
     setErrorMessage("");
-    setAuthState("submitting");
+    setAuthState("error");
     onImmersiveChange?.(false);
-
-    try {
-      await onSuccess(DEMO_USER.name || "Khách Hàng Google", DEMO_USER.email || "khach.google@gmail.com");
-      setAuthState("idle");
-    } catch {
-      setAuthState("error");
-      setErrorMessage("Không thể kết nối đăng nhập Google lúc này.");
-    }
-  }, [onImmersiveChange, onSuccess]);
+    setErrorMessage("Đăng nhập Google chưa hoàn tất xác thực. Hãy thử lại hoặc đăng nhập bằng email và mật khẩu.");
+  }, [onImmersiveChange]);
 
   const handleGoogleClick = useCallback(() => {
     if (isSubmitting || isSuccess) return;
@@ -298,7 +291,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   // Refs
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const leftSectionRef = useRef<HTMLElement | null>(null);
-  const altarImageRef = useRef<HTMLImageElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
 
@@ -492,6 +484,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   // Hoàn tất và chuyển vào trang trong
   const handleCompleteLogin = useCallback(() => {
     if (hasCompletedRef.current) return;
+    const user = authenticatedUser;
+    if (!user) {
+      setAuthState("error");
+      setErrorMessage("Phiên đăng nhập chưa được máy chủ xác thực. Vui lòng đăng nhập lại.");
+      return;
+    }
     hasCompletedRef.current = true;
 
     if (audioElementRef.current) {
@@ -501,7 +499,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       audioCtxRef.current.close().catch(() => {});
     }
 
-    const user = authenticatedUser || DEMO_USER;
     onSuccess(user.name, user.email);
   }, [authenticatedUser, onSuccess]);
 
@@ -1069,7 +1066,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     setAuthState("submitting");
 
     const timer = setTimeout(async () => {
-      const result = await loginAccount(identifier, password);
+      const result = await loginAccount(identifier, password, rememberEmail);
       if (!result.success) {
         setAuthState("error");
         const failMsg = result.error || "Tài khoản hoặc mật khẩu không chính xác.";
@@ -1088,7 +1085,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         } catch {}
       }
 
-      await onSuccess(result.user.name, result.user.email);
+      await onSuccess(result.user.name, result.user.email, result.user.role);
       setAuthState("idle");
     }, 280);
 
@@ -1187,7 +1184,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
         {/* Ảnh nền bàn thờ gia tiên với hiệu ứng Parallax 2.5D */}
         <img
-          ref={altarImageRef}
           src="/images/login-celestial-left.jpg"
           alt="Tin vào những điều tốt lành - không gian mây ngàn tiên cảnh thanh tịnh"
           style={{
@@ -1379,22 +1375,29 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               </div>
             </div>
 
-            {/* Checkbox nhớ tài khoản */}
-            <div className="flex items-center gap-2 pt-0.5 pb-0.5">
-              <input
-                type="checkbox"
-                id="remember-email"
-                checked={rememberEmail}
-                disabled={isSubmitting}
-                onChange={(e) => setRememberEmail(e.target.checked)}
-                className="w-4 h-4 rounded border-stone-300 text-accent accent-[#8f202b] focus:ring-amber-500/30 cursor-pointer"
-              />
-              <label
-                htmlFor="remember-email"
-                className="text-xs text-muted cursor-pointer select-none font-medium"
-              >
-                Nhớ tài khoản trên thiết bị này
-              </label>
+            {/* Checkbox nhớ tài khoản / ghi nhớ đăng nhập */}
+            <div className="flex flex-col gap-1 pt-0.5 pb-0.5">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="remember-email"
+                  checked={rememberEmail}
+                  disabled={isSubmitting}
+                  onChange={(e) => setRememberEmail(e.target.checked)}
+                  className="w-4 h-4 rounded border-stone-300 text-accent accent-[#8f202b] focus:ring-amber-500/30 cursor-pointer"
+                />
+                <label
+                  htmlFor="remember-email"
+                  className="text-xs text-muted cursor-pointer select-none font-medium"
+                >
+                  Ghi nhớ đăng nhập trên thiết bị này
+                </label>
+              </div>
+              <p className="text-[11px] text-stone-500 dark:text-stone-400 pl-6 leading-relaxed">
+                {rememberEmail
+                  ? "Duy trì phiên đăng nhập ngay cả khi tắt máy."
+                  : "Mặc định: Tự động đăng xuất khi tắt máy hoặc đóng trình duyệt để bảo mật."}
+              </p>
             </div>
 
             {/* Nút bấm Đăng nhập chính sơn mài ánh kim cao cấp */}

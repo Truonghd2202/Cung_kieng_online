@@ -49,6 +49,11 @@ export const SavedSignalDialog: React.FC<
             {" · "}
             {entry.mood}
           </p>
+          {entry.contentStatus === "withdrawn" && (
+            <p role="status" className="mt-2 text-sm font-medium text-danger">
+              Nội dung gốc đã bị thu hồi. Đây là snapshot đã lưu của tài khoản, không phải nội dung đang phát hành.
+            </p>
+          )}
         </div>
 
         <Button
@@ -76,6 +81,27 @@ export const SavedSignalDialog: React.FC<
 
           <p className="text-base text-muted leading-relaxed [overflow-wrap:anywhere]">
             {entry.actionTitle}
+          </p>
+        </section>
+      )}
+
+      {entry.signalSnapshot?.aiExplanation && (
+        <section className="mt-6 border-t border-line pt-5">
+          <h3 className="mb-2 text-sm font-semibold text-ink">Gợi ý AI trong bản đã lưu</h3>
+          <p className="whitespace-pre-wrap text-base text-muted leading-relaxed [overflow-wrap:anywhere]">
+            {entry.signalSnapshot.aiExplanation.reflection}
+          </p>
+          <p className="mt-2 text-sm text-muted">
+            {entry.signalSnapshot.aiExplanation.action.title}: {entry.signalSnapshot.aiExplanation.action.description}
+          </p>
+        </section>
+      )}
+
+      {entry.signalSnapshot?.reflection?.content && (
+        <section className="mt-6 border-t border-line pt-5">
+          <h3 className="mb-2 text-sm font-semibold text-ink">Diễn giải đã lưu</h3>
+          <p className="whitespace-pre-wrap text-base text-muted leading-relaxed [overflow-wrap:anywhere]">
+            {entry.signalSnapshot.reflection.content}
           </p>
         </section>
       )}

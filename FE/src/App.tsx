@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { readPrivateJson, writePrivateJson } from "./lib/privateStorage";
 import { apiRequest, ApiError } from "./lib/api";
 import { clearPersonalStorage } from "./lib/clearPersonalStorage";
+import { getMoodContentUnavailableMessage } from "./data/moodAvailability";
 import { AppHeader, NavScreen } from "./components/AppHeader";
 import { AppFooter } from "./components/AppFooter";
 import { ScreenFocus } from "./components/ScreenFocus";
@@ -20,17 +21,17 @@ import {
   MoodKey,
   getSignalById,
   getDefaultSignalForMood,
-  getSignalForMoodContext,
   type MoodContextKey,
   type SignalData,
 } from "./data/demoSignals";
+import { applyMoodTurnOutcome, isConfirmedActionUpdate, isSupportedMood, supportedMoodLabels } from "./data/moodCheckInState";
 
 import { Trash2, Calendar, BookOpen, ArrowRight, Flower2, Sparkles } from "lucide-react";
 import {
-  loadCurrentDemoUser,
+  loadStoredUser,
   logoutAccount,
   restoreSession,
-  saveLocalDemoAccount,
+  saveStoredProfile,
 } from "./data/authService";
 import {
   CALENDAR_NOTES_CHANGED_EVENT,
@@ -51,6 +52,8 @@ import {
 import {
   createMoodCheckIn,
   analyzeMoodSignal,
+  loadSignalById,
+  loadSavedSignalById,
   deleteSavedSignal,
   loadSavedSignals,
   saveSignal,
@@ -119,77 +122,24 @@ export type SavedEntry = SavedSignalItem;
 export interface UserProfile {
   name: string;
   email: string;
+  role?: string;
 }
 
 interface MoodSubmissionOutcome {
-  signal: SignalData;
+  signal: SignalData | null;
   checkInId: string | null;
   notice: string | null;
+  mood: MoodKey;
+  contextKey: MoodContextKey;
 }
 
-const MOOD_REQUEST_DEADLINE_MS = 1700;
+const MOOD_REQUEST_DEADLINE_MS = 12_000;
 
 export interface UserCornerData {
   signals: SavedSignalItem[];
   xam: SavedXinXamItem[];
   wishes: SavedWishItem[];
 }
-
-const getAnNhienDefaultData = (): UserCornerData => ({
-  signals: [
-    {
-      id: "annhien-sig-1",
-      signalId: "1",
-      mood: "An yên",
-      date: "28/09/2026",
-      poemLine1: "Gió đưa cành trúc la đà",
-      poemLine2: "Tiếng chuông Trấn Vũ canh gà Thọ Xương",
-      actionTitle: "Uống một ngụm trà ấm trong chánh niệm",
-      journal: "Sáng sớm thanh bình, tâm an vạn sự an.",
-      starred: true,
-    },
-  ],
-  xam: [
-    {
-      id: "annhien-xam-1",
-      stickNumber: "07",
-      fortuneType: "Thượng Cát",
-      category: "Bình an & Tâm an",
-      region: "Bắc Bộ",
-      quote: "Nước chảy đá mòn, thuận theo tự nhiên mọi việc ắt hanh thông.",
-      date: "26/09/2026",
-      starred: true,
-    },
-    {
-      id: "annhien-xam-2",
-      stickNumber: "12",
-      fortuneType: "Trung Cát",
-      category: "Công việc & Học tập",
-      region: "Nam Bộ",
-      quote: "Buồm thuận gió xuôi, kiên tâm ắt gặt trái ngọt nơi bến đỗ.",
-      date: "22/09/2026",
-      starred: false,
-    },
-  ],
-  wishes: [
-    {
-      id: "annhien-wish-1",
-      category: "Gia đạo",
-      content: "Cầu mong cha mẹ sức khỏe dồi dào, gia đạo thuận hòa, mỗi bữa cơm đều rộn rã tiếng cười ấm áp.",
-      date: "24/09/2026",
-      sealed: true,
-      starred: true,
-    },
-    {
-      id: "annhien-wish-2",
-      category: "Bản thân",
-      content: "Nguyện giữ cho lòng luôn sáng trong, bớt âu lo chuyện được mất, bao dung với chính mình hơn.",
-      date: "18/09/2026",
-      sealed: true,
-      starred: false,
-    },
-  ],
-});
 
 export const getUserCornerStorageKey = (email: string) => {
   return `tltl-user-corner-${email.trim().toLowerCase()}`;
@@ -214,14 +164,7 @@ const hasStringFields = (
   );
 };
 
-const validSavedMoods: MoodKey[] = [
-  "An yên",
-  "Chênh vênh",
-  "Băn khoăn",
-  "Nôn nóng",
-  "Biết ơn",
-  "Cần điểm tựa",
-];
+const validSavedMoods = supportedMoodLabels;
 
 const hasValidOptionalFields = (
   record: Record<string, unknown>
@@ -369,46 +312,8 @@ export const loadUserCornerData = async (
     wishes: [],
   };
 
-  if (!user?.email) return empty;
-
-  const key = getUserCornerStorageKey(user.email);
-  let stored: string | null;
-
-  try {
-    stored = localStorage.getItem(key);
-  } catch {
-    return empty;
-  }
-
-  // Khóa đã tồn tại: đọc dữ liệu, không tự tạo lại mẫu.
-  if (stored !== null) {
-    try {
-      const parsed: unknown = await readPrivateJson(key);
-      return parseUserCornerData(parsed);
-    } catch {
-      // Giữ nguyên dữ liệu gốc trong bộ nhớ trình duyệt.
-      return empty;
-    }
-  }
-
-  // Chỉ tạo dữ liệu mẫu nếu chưa từng có khóa.
-  const email = user.email.trim().toLowerCase();
-
-  const isDemoAccount =
-    email === "annhien@tinlamtamlinh.vn" ||
-    email === "annhien@tinlam.vn";
-
-  if (!isDemoAccount) return empty;
-
-  const demoData = getAnNhienDefaultData();
-
-  try {
-    await writePrivateJson(key, demoData);
-  } catch {
-    // Vẫn cho xem dữ liệu mẫu trong phiên hiện tại.
-  }
-
-  return demoData;
+  void user;
+  return empty;
 };
 
 export const saveUserCornerData = async (
@@ -458,7 +363,7 @@ export const getAccountScopedKey = (base: string, email?: string | null) => {
 };
 
 const readActionDone = (
-  signalId: string,
+  recordId: string,
   date: string,
   email?: string | null
 ): boolean => {
@@ -484,11 +389,12 @@ const readActionDone = (
     const record = value as {
       date?: unknown;
       signalId?: unknown;
+      checkInId?: unknown;
     };
 
     return (
       record.date === date &&
-      record.signalId === signalId
+      (record.checkInId || record.signalId) === recordId
     );
   } catch {
     return false;
@@ -501,6 +407,7 @@ export const loadUserSessionState = (user: UserProfile | null, todayStr: string)
   const moodKey = getAccountScopedKey("tltl-today-mood", email);
   const topicsKey = getAccountScopedKey("tltl-selected-topics", email);
   const signalKey = getAccountScopedKey("tltl-current-signal-id", email);
+  const currentResultKey = getAccountScopedKey("tltl-current-checkin-id", email);
 
   let checkedIn = false;
   try {
@@ -512,7 +419,7 @@ export const loadUserSessionState = (user: UserProfile | null, todayStr: string)
     const savedMood = localStorage.getItem(moodKey);
     if (
       savedMood &&
-      ["An yên", "Chênh vênh", "Băn khoăn", "Nôn nóng", "Biết ơn", "Cần điểm tựa"].includes(savedMood)
+      isSupportedMood(savedMood)
     ) {
       mood = savedMood as MoodKey;
     }
@@ -537,22 +444,26 @@ export const loadUserSessionState = (user: UserProfile | null, todayStr: string)
   let signalId = getDefaultSignalForMood(mood).id;
   try {
     const storedSigId = localStorage.getItem(signalKey);
-    if (storedSigId && getSignalById(storedSigId)) {
-      signalId = storedSigId;
-    }
+    if (storedSigId) signalId = storedSigId;
+  } catch {}
+
+  let checkInId = signalId;
+  try {
+    const storedCheckInId = localStorage.getItem(currentResultKey);
+    if (storedCheckInId) checkInId = storedCheckInId;
   } catch {}
 
   const actionDone = readActionDone(
-    signalId,
+    checkInId,
     todayStr,
     email
   );
 
-  return { checkedIn, mood, topics, actionDone, signalId };
+  return { checkedIn, mood, topics, actionDone, signalId, checkInId };
 };
 
 export type PendingSave =
-  | { type: "signal"; item: SavedSignalItem }
+  | { type: "signal"; item: SavedSignalItem & { idempotencyKey: string } }
   | { type: "xam"; item: SavedXinXamItem }
   | { type: "wish"; item: SavedWishItem };
 
@@ -696,11 +607,15 @@ const loadMemorialRecord = (
 export default function App() {
   const todayDateString = new Date().toDateString();
 
-  const initialUser = loadCurrentDemoUser();
+  const initialUser = loadStoredUser();
   const initialSession = loadUserSessionState(initialUser, todayDateString);
 
   // Helper to resolve initial screen from URL safely with prerequisite checks
   const getInitialScreen = (): NavScreen => {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get("login") === "true" || searchParams.get("screen") === "login") {
+      return "login";
+    }
     const path = window.location.pathname.replace(/^\//, "");
     if (
       ["account", "settings"].includes(path) &&
@@ -747,6 +662,7 @@ export default function App() {
         "login",
         "register",
         "forgot",
+        "reset-password",
         "xinkeo",
         "good-days",
         "horoscope",
@@ -762,6 +678,7 @@ export default function App() {
 
   // Check URL signalId first
   const initialUrlSignalId = new URLSearchParams(window.location.search).get("signalId");
+  const initialUrlSavedId = new URLSearchParams(window.location.search).get("savedId");
   const initialUrlSignal = initialUrlSignalId ? getSignalById(initialUrlSignalId) : null;
 
   // Check URL articleId for CultureDetail
@@ -781,7 +698,16 @@ export default function App() {
       getCultureRegionFromLocation
     );
   const [selectedRitualId, setSelectedRitualId] = useState<string>(initialUrlRitualId);
-  const [xinKeoDrawId, setXinKeoDrawId] = useState<string | null>(null);
+  const [xinKeoDrawId, setXinKeoDrawId] =
+    useState<string | null>(() => {
+      if (window.location.pathname !== "/xinkeo") {
+        return null;
+      }
+
+      return new URLSearchParams(
+        window.location.search,
+      ).get("drawId");
+    });
   const [selectedCalendarEventId, setSelectedCalendarEventId] = useState<string>(initialUrlCalendarEventId);
   const [journalText, setJournalText] = useState("");
   const {
@@ -790,28 +716,51 @@ export default function App() {
     setThemePreference,
   } = useTheme();
 
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(initialUser);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+
+  const cornerAccountScopeRef = useRef({
+    email: currentUser?.email ?? null,
+    version: 0,
+  });
+
+  const currentCornerEmail = currentUser?.email ?? null;
+
+  if (cornerAccountScopeRef.current.email !== currentCornerEmail) {
+    cornerAccountScopeRef.current = {
+      email: currentCornerEmail,
+      version: cornerAccountScopeRef.current.version + 1,
+    };
+  }
+
+  const cornerDeleteLocksRef = useRef(new Set<string>());
+  const [sessionResolved, setSessionResolved] = useState(false);
   const [userSettings, setUserSettings] = useState<UserSettings>(DEFAULT_USER_SETTINGS);
   const [pendingSave, setPendingSave] = useState<PendingSave | null>(null);
   const [isLoginImmersive, setIsLoginImmersive] = useState(false);
 
   useEffect(() => {
     let active = true;
+    if (new URLSearchParams(window.location.search).get("logout") === "unconfirmed") {
+      toast.warning("Đã xóa phiên trên thiết bị, nhưng máy chủ chưa xác nhận thu hồi phiên do kết nối gián đoạn.", "Đăng xuất chưa đồng bộ");
+    }
 
     void restoreSession().then(async (user) => {
       if (!active) return;
 
-      setCurrentUser(user);
-      setUserCornerData(await loadUserCornerData(user));
+      setCurrentUser(user.user);
+      setUserCornerData(await loadUserCornerData(user.user));
+      if (user.status === "unavailable") toast.warning("Chưa xác minh được phiên đăng nhập do mất kết nối. Vui lòng thử lại.");
+      setSessionResolved(true);
 
-      const session = loadUserSessionState(user, todayDateString);
+      const session = loadUserSessionState(user.user, todayDateString);
       setSelectedTopics(session.topics);
       setIsCheckedIn(session.checkedIn);
       setSelectedMood(session.mood);
       setIsActionDone(session.actionDone);
-      setCurrentSignalId(session.signalId);
+      setCurrentSignalId(initialUrlSignalId || session.signalId);
+      setPendingMoodCheckInId(session.checkInId || null);
 
-      if (user) {
+      if (user.user) {
         try {
           const preferences = await loadUserPreferences();
           if (!active) return;
@@ -822,33 +771,6 @@ export default function App() {
           // Giữ cache cục bộ nếu máy chủ tạm thời không phản hồi.
         }
 
-        try {
-          const remoteSignals = await loadSavedSignals();
-          if (active) {
-            setUserCornerData((previous) => ({
-              ...previous,
-              signals: remoteSignals,
-            }));
-          }
-        } catch {
-          // Giữ cache cục bộ khi danh sách tín hiệu chưa sẵn sàng.
-        }
-
-        try {
-          const [remoteXam, remoteWishes] = await Promise.all([
-            loadSavedXam(),
-            loadSavedWishes(),
-          ]);
-          if (active) {
-            setUserCornerData((previous) => ({
-              ...previous,
-              xam: remoteXam,
-              wishes: remoteWishes,
-            }));
-          }
-        } catch {
-          // Giữ cache cục bộ nếu API reflection chưa sẵn sàng.
-        }
 
         try {
           const [remoteMemorials, remoteNotes] = await Promise.all([
@@ -857,7 +779,7 @@ export default function App() {
           ]);
           if (active) {
             if (remoteMemorials.length) {
-              const preferredId = localStorage.getItem(`tltl-selected-memorial-${user.email.trim().toLowerCase()}`);
+              const preferredId = localStorage.getItem(`tltl-selected-memorial-${user.user.email.trim().toLowerCase()}`);
               const selected = remoteMemorials.find((profile) => profile.id === preferredId) || remoteMemorials[0];
               setMemorial(memorialProfileToRecord(selected));
             } else {
@@ -866,8 +788,8 @@ export default function App() {
             if (remoteNotes.length > 0) {
               for (const note of remoteNotes) {
                 try {
-                  const key = getCalendarNotesStorageKey(user.email);
-                  const current = loadCalendarPersonalNotes(user.email);
+                  const key = getCalendarNotesStorageKey(user.user.email);
+                  const current = loadCalendarPersonalNotes(user.user.email);
                   if (!current.some((item) => item.id === note.id)) {
                     localStorage.setItem(key, JSON.stringify([note, ...current]));
                   }
@@ -923,12 +845,18 @@ export default function App() {
     if (initialUrlSignal) {
       return initialUrlSignal.id;
     }
-    return initialSession.signalId;
+    return initialUrlSignalId || initialSession.signalId;
   });
-  const [pendingMoodCheckInId, setPendingMoodCheckInId] = useState<string | null>(null);
+  const [pendingMoodCheckInId, setPendingMoodCheckInId] = useState<string | null>(initialSession.checkInId);
   const moodResolutionRef = useRef<Promise<MoodSubmissionOutcome> | null>(null);
   const moodRequestControllerRef = useRef<AbortController | null>(null);
   const moodRequestVersionRef = useRef(0);
+  const moodSubmittingRef = useRef(false);
+  const [isMoodSubmitting, setIsMoodSubmitting] = useState(false);
+  const moodSubmissionKeyRef = useRef<{ fingerprint: string; key: string } | null>(null);
+  const activeResultIdempotencyKeyRef = useRef<string | null>(null);
+  const resultSaveKeyRef = useRef<{ fingerprint: string; key: string } | null>(null);
+  const resultSaveLockRef = useRef(false);
 
   // Trạng thái hành động hoàn thành theo từng tài khoản
   const [isActionDone, setIsActionDone] =
@@ -943,13 +871,14 @@ export default function App() {
   useEffect(() => {
     setIsActionDone(
       readActionDone(
-        currentSignalId,
+        pendingMoodCheckInId || activeResultIdempotencyKeyRef.current || currentSignalId,
         todayDateString,
         currentUser?.email
       )
     );
   }, [
     currentSignalId,
+    pendingMoodCheckInId,
     currentUser?.email,
     todayDateString,
   ]);
@@ -964,8 +893,93 @@ export default function App() {
     userCornerDataRef.current = userCornerData;
   }, [userCornerData]);
 
+  const [cornerReload, setCornerReload] = useState(0);
+
+  const [cornerLoadState, setCornerLoadState] = useState<{
+    email: string | null;
+    status: "idle" | "loading" | "ready" | "error";
+  }>({
+    email: null,
+    status: "idle",
+  });
+
+  useEffect(() => {
+    if (!sessionResolved) return;
+
+    const scope = cornerAccountScopeRef.current;
+    const email = currentUser?.email ?? null;
+
+    if (!email) {
+      const empty: UserCornerData = {
+        signals: [],
+        xam: [],
+        wishes: [],
+      };
+
+      userCornerDataRef.current = empty;
+      setUserCornerData(empty);
+      setCornerLoadState({
+        email: null,
+        status: "idle",
+      });
+
+      return;
+    }
+
+    let active = true;
+
+    const isCurrentRequest = () =>
+      active && cornerAccountScopeRef.current === scope;
+
+    setCornerLoadState({
+      email,
+      status: "loading",
+    });
+
+    void Promise.all([
+      loadSavedSignals(),
+      loadSavedXam(),
+      loadSavedWishes(),
+    ])
+      .then(([signals, xam, wishes]) => {
+        if (!isCurrentRequest()) return;
+
+        const loaded: UserCornerData = {
+          signals,
+          xam,
+          wishes,
+        };
+
+        userCornerDataRef.current = loaded;
+        setUserCornerData(loaded);
+
+        setCornerLoadState({
+          email,
+          status: "ready",
+        });
+      })
+      .catch(() => {
+        if (!isCurrentRequest()) return;
+
+        setCornerLoadState({
+          email,
+          status: "error",
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [
+    sessionResolved,
+    currentUser?.email,
+    cornerReload,
+  ]);
+
   const [openedSavedSignal, setOpenedSavedSignal] =
     useState<SavedSignalItem | null>(null);
+  const [savedRecordId, setSavedRecordId] = useState<string | null>(initialUrlSavedId);
+  const [savedRecordNotice, setSavedRecordNotice] = useState<string | null>(null);
 
   const handleOpenSavedSignal = (entryId: string) => {
     const entry = userCornerData.signals.find(
@@ -977,17 +991,60 @@ export default function App() {
       return;
     }
 
+    if (!currentUser) {
+      returnScreenRef.current = "account";
+      navigateTo("login");
+      return;
+    }
     setOpenedSavedSignal(entry);
+    setSavedRecordId(entryId);
+    setSavedRecordNotice(null);
+    window.history.pushState({ screen: "result", savedId: entryId }, "", `/result?savedId=${encodeURIComponent(entryId)}`);
+    setScreen("result");
   };
 
   useEffect(() => {
     setOpenedSavedSignal(null);
+    setSavedRecordId(initialUrlSavedId);
   }, [currentUser?.email]);
+
+  useEffect(() => {
+    if (!sessionResolved || !currentUser || !savedRecordId || openedSavedSignal?.contentStatus) return;
+    let active = true;
+    setSavedRecordNotice("Đang tải bản ghi đã lưu từ máy chủ…");
+    void loadSavedSignalById(savedRecordId)
+      .then(({ item, signal, contentStatus }) => {
+        if (!active) return;
+        setOpenedSavedSignal({ ...item, signalSnapshot: signal, contentStatus });
+        setSavedRecordNotice(null);
+        if (contentStatus === "withdrawn") toast.warning("Nội dung của bản ghi này đã bị thu hồi; đang hiển thị trạng thái lưu trữ, không thay bằng nội dung khác.");
+      })
+      .catch((error) => {
+        if (!active) return;
+        setOpenedSavedSignal(null);
+        const message = error instanceof ApiError && error.status === 404
+          ? "Bản ghi không tồn tại hoặc không thuộc tài khoản này."
+          : "Chưa tải được kết quả đã lưu. Vui lòng thử lại.";
+        setSavedRecordNotice(message);
+        toast.error(message);
+      });
+    return () => { active = false; };
+  }, [sessionResolved, currentUser?.email, savedRecordId, openedSavedSignal?.contentStatus]);
+
+  const handleCloseSavedSignal = () => {
+    setOpenedSavedSignal(null);
+    setSavedRecordId(null);
+    setSavedRecordNotice(null);
+    if ((window.history.state as { savedId?: string } | null)?.savedId) window.history.back();
+    else navigateTo("account");
+  };
 
   const [memorial, setMemorial] =
     useState<MemorialRecord | null>(() =>
       loadMemorialRecord(initialUser?.email)
     );
+  const [memorialFormMode, setMemorialFormMode] =
+    useState<"create" | "edit">("create");
   const handleSelectMemorial = (record: MemorialRecord | null) => {
     setMemorial(record);
     if (!currentUser) return;
@@ -1004,6 +1061,37 @@ export default function App() {
   const activeSignal = analyzedSignal?.id === currentSignalId
     ? analyzedSignal
     : getSignalById(currentSignalId) || getDefaultSignalForMood(selectedMood);
+  const publishedSignal = analyzedSignal?.id === currentSignalId ? analyzedSignal : activeSignal;
+
+  useEffect(() => {
+    if (screen !== "result" || savedRecordId) return;
+    if (!currentSignalId.trim()) return;
+    if (analyzedSignal?.id === currentSignalId) return;
+
+    let active = true;
+
+    void loadSignalById(currentSignalId)
+      .then((signal) => {
+        if (!active || signal.id !== currentSignalId) return;
+
+        setAnalyzedSignal(signal);
+        setSelectedMood(signal.mood);
+        setSelectedContextKey(signal.contextKey || "general");
+        setMoodRequestNotice(null);
+      })
+      .catch(() => {
+        if (!active) return;
+
+        setAnalyzedSignal(null);
+        setMoodRequestNotice(
+          "Chưa tải được kết quả. Nội dung có thể không còn khả dụng hoặc kết nối đang gặp vấn đề."
+        );
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [screen, currentSignalId, analyzedSignal?.id]);
 
   useEffect(() => {
     setMemorial(loadMemorialRecord(currentUser?.email));
@@ -1011,6 +1099,7 @@ export default function App() {
 
   // Account và Settings yêu cầu hồ sơ đăng nhập.
   useEffect(() => {
+    if (!sessionResolved) return;
     if (currentUser) return;
 
     const path = window.location.pathname.replace(
@@ -1021,6 +1110,7 @@ export default function App() {
     const protectedScreens = [
       "account",
       "settings",
+      ...(savedRecordId ? ["result"] : []),
     ];
 
     const needsLogin =
@@ -1028,6 +1118,8 @@ export default function App() {
       protectedScreens.includes(path);
 
     if (!needsLogin) return;
+
+    returnScreenRef.current = savedRecordId ? "result" : "account";
 
     setScreen("login");
 
@@ -1043,7 +1135,7 @@ export default function App() {
       top: 0,
       behavior: "auto",
     });
-  }, [screen, currentUser]);
+  }, [screen, currentUser, sessionResolved, savedRecordId]);
 
   useEffect(() => {
     try {
@@ -1057,17 +1149,23 @@ export default function App() {
   // Handle URL history sync & direct link / popstate reload with full context restoration
   useEffect(() => {
     // If opened directly on /result without ?signalId=..., ensure URL query param is normalized
-    if (screen === "result" && !initialUrlSignalId) {
+    if (screen === "result" && !initialUrlSignalId && publishedSignal) {
       window.history.replaceState(
-        { screen: "result", signalId: activeSignal.id, mood: selectedMood },
+        { screen: "result", signalId: publishedSignal.id, mood: selectedMood },
         "",
-        `/result?signalId=${activeSignal.id}`
+        `/result?signalId=${publishedSignal.id}`
       );
     }
 
     const handlePopState = (event: PopStateEvent) => {
       const path = window.location.pathname.replace(/^\//, "");
       const params = new URLSearchParams(window.location.search);
+
+      setXinKeoDrawId(
+        path === "xinkeo"
+          ? params.get("drawId")
+          : null,
+      );
 
       if (
         path === "region-culture" ||
@@ -1083,6 +1181,7 @@ export default function App() {
       const state = event.state as {
         screen?: NavScreen;
         signalId?: string;
+        savedId?: string;
         articleId?: string;
         ritualId?: string;
         mood?: MoodKey;
@@ -1090,21 +1189,16 @@ export default function App() {
 
       // Restore signal context
       const urlSignalId = params.get("signalId") || state?.signalId;
+      const urlSavedId = params.get("savedId") || state?.savedId || null;
+      setSavedRecordId(urlSavedId);
+      if (urlSavedId) setOpenedSavedSignal(null);
+      else setOpenedSavedSignal(null);
       if (urlSignalId) {
         const sig = getSignalById(urlSignalId);
+        setCurrentSignalId(urlSignalId);
         if (sig) {
-          setCurrentSignalId(sig.id);
           setSelectedMood(sig.mood);
         }
-      } else if (path === "result") {
-        const fallbackSig = getSignalById(currentSignalId) || getDefaultSignalForMood(selectedMood);
-        setCurrentSignalId(fallbackSig.id);
-        setSelectedMood(fallbackSig.mood);
-        window.history.replaceState(
-          { screen: "result", signalId: fallbackSig.id, mood: fallbackSig.mood },
-          "",
-          `/result?signalId=${fallbackSig.id}`
-        );
       }
 
       // Restore article context
@@ -1204,7 +1298,7 @@ export default function App() {
     const effectiveUser =
       authenticatedUser !== undefined
         ? authenticatedUser
-        : currentUser ?? loadCurrentDemoUser();
+        : currentUser ?? loadStoredUser();
 
     if (
       ["account", "settings"].includes(targetScreen) &&
@@ -1216,7 +1310,6 @@ export default function App() {
     if (["login", "register"].includes(targetScreen) && !["login", "register", "forgot"].includes(screen)) {
       returnScreenRef.current = screen;
     }
-    setScreen(targetScreen);
     let url = targetScreen === "guest" ? "/" : `/${targetScreen}`;
     let resolvedSignalId = undefined;
     let resolvedArticleId = undefined;
@@ -1224,14 +1317,36 @@ export default function App() {
     let resolvedEventId = undefined;
 
     if (targetScreen === "result") {
-      resolvedSignalId = signalIdParam || currentSignalId || activeSignal.id;
-      url = `/result?signalId=${resolvedSignalId}`;
+      if (!(savedRecordId && !signalIdParam)) {
+        const resultId = signalIdParam?.trim() || publishedSignal?.id;
+        if (!resultId) {
+          targetScreen = "mood";
+        } else {
+          resolvedSignalId = resultId;
+          setCurrentSignalId(resultId);
+        }
+      }
+    }
+    setScreen(targetScreen);
+    url = targetScreen === "guest" ? "/" : `/${targetScreen}`;
+    if (targetScreen === "result") {
+      url = savedRecordId && !resolvedSignalId
+        ? `/result?savedId=${encodeURIComponent(savedRecordId)}`
+        : `/result?signalId=${encodeURIComponent(resolvedSignalId!)}`;
     } else if (targetScreen === "culture-detail") {
       resolvedArticleId = signalIdParam || selectedArticleId || "dinh-lang-bac-bo";
       url = `/culture-detail?articleId=${resolvedArticleId}`;
     } else if (targetScreen === "ritual-detail") {
       resolvedRitualId = signalIdParam || selectedRitualId || "chuan-bi-ngay-ram";
       url = `/ritual-detail?ritualId=${resolvedRitualId}`;
+    } else if (targetScreen === "xinkeo") {
+      const linkedDrawId = signalIdParam?.trim() || null;
+
+      setXinKeoDrawId(linkedDrawId);
+
+      url = linkedDrawId
+        ? `/xinkeo?drawId=${encodeURIComponent(linkedDrawId)}`
+        : "/xinkeo";
     } else if (targetScreen === "calendar-detail") {
       resolvedEventId = signalIdParam || selectedCalendarEventId || "le-soc-vong-ngay-ram";
       url = `/calendar-detail?eventId=${resolvedEventId}`;
@@ -1264,6 +1379,7 @@ export default function App() {
     const historyPayload = {
       screen: targetScreen,
       signalId: resolvedSignalId,
+      savedId: targetScreen === "result" ? savedRecordId || undefined : undefined,
       articleId: resolvedArticleId,
       ritualId: resolvedRitualId,
       eventId: resolvedEventId,
@@ -1274,56 +1390,82 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleToggleAction = (
+  const handleToggleAction = async (
     completed: boolean
-  ): boolean => {
+  ): Promise<boolean> => {
+    if (completed && !publishedSignal) return false;
+    const checkInId = pendingMoodCheckInId || activeResultIdempotencyKeyRef.current || activeSignal.id;
+    if (currentUser) {
+      if (!pendingMoodCheckInId) {
+        toast.error("Chưa xác định được mã check-in để đồng bộ hành động. Trạng thái hiện tại được giữ.");
+        return false;
+      }
+      try {
+        const updated = await updateMoodAction(pendingMoodCheckInId, completed);
+        if (!isConfirmedActionUpdate(pendingMoodCheckInId, completed, updated)) {
+          toast.error("Máy chủ chưa xác nhận đúng trạng thái hành động. Trạng thái hiện tại được giữ.");
+          return false;
+        }
+      } catch {
+        toast.error("Chưa đồng bộ được trạng thái hành động. Trạng thái hiện tại được giữ.");
+        return false;
+      }
+    }
     const key = getAccountScopedKey(
       "tltl-action-done-date",
       currentUser?.email
     );
 
+    let localSaved = true;
     try {
       if (completed) {
         localStorage.setItem(
           key,
           JSON.stringify({
             date: todayDateString,
-            signalId: activeSignal.id,
+            checkInId,
           })
         );
       } else {
         localStorage.removeItem(key);
       }
     } catch {
-      toast.error("Chưa lưu được trạng thái hành động. Bạn hãy thử lại.");
-
-      return false;
+      localSaved = false;
     }
 
+    if (!localSaved && !currentUser) {
+      toast.error("Chưa lưu được trạng thái hành động. Trạng thái hiện tại được giữ.");
+      return false;
+    }
     setIsActionDone(completed);
-
-    if (currentUser && pendingMoodCheckInId) {
-      void updateMoodAction(pendingMoodCheckInId, completed).catch(() => {
-        toast.error("Chưa đồng bộ được trạng thái hành động. Bạn hãy thử lại.");
-      });
+    if (!localSaved) {
+      toast.warning(currentUser
+        ? "Máy chủ đã xác nhận hành động, nhưng chưa lưu được bản sao trên thiết bị này."
+        : "Chưa lưu được trạng thái hành động trên thiết bị này. Hãy thử lại.");
+      return Boolean(currentUser);
     }
 
     return true;
   };
 
   const handleSubmitMood = async (contextKey: MoodContextKey) => {
+    if (moodSubmittingRef.current) return;
     // Mỗi lần gửi cảm xúc là một lượt mới,
     // kể cả khi chọn lại cùng cảm xúc.
-    const resetSucceeded = handleToggleAction(false);
-
-    if (!resetSucceeded) return;
-
-    const nextSignal = getSignalForMoodContext(selectedMood, contextKey);
-    setSelectedContextKey(contextKey);
-    setAnalyzedSignal(nextSignal);
-    setCurrentSignalId(nextSignal.id);
-    setPendingMoodCheckInId(null);
     setMoodRequestNotice(null);
+
+    const fingerprint = JSON.stringify([
+      currentUser?.email?.trim().toLowerCase() || "guest",
+      selectedMood,
+      contextKey,
+      journalText.trim(),
+    ]);
+    if (moodSubmissionKeyRef.current?.fingerprint !== fingerprint) {
+      moodSubmissionKeyRef.current = { fingerprint, key: crypto.randomUUID() };
+    }
+    const idempotencyKey = moodSubmissionKeyRef.current.key;
+    moodSubmittingRef.current = true;
+    setIsMoodSubmitting(true);
 
     const requestVersion = ++moodRequestVersionRef.current;
     const controller = new AbortController();
@@ -1335,15 +1477,20 @@ export default function App() {
         mood: selectedMood,
         contextKey,
         note: journalText.trim() || undefined,
+        idempotencyKey,
       }, { signal: controller.signal }).then((result): MoodSubmissionOutcome => ({
         signal: result.signal,
         checkInId: result.checkIn.id,
         notice: null,
+        mood: selectedMood,
+        contextKey,
       }))
       : analyzeMoodSignal({ mood: selectedMood, contextKey }, { signal: controller.signal }).then((result): MoodSubmissionOutcome => ({
         signal: result.signal,
         checkInId: null,
         notice: null,
+        mood: selectedMood,
+        contextKey,
       }));
 
     let deadlineTimer = 0;
@@ -1351,31 +1498,34 @@ export default function App() {
       deadlineTimer = window.setTimeout(() => {
         controller.abort();
         resolve({
-          signal: nextSignal,
+          signal: null,
           checkInId: null,
           notice: currentUser
-            ? "Máy chủ chưa xác nhận check-in kịp thời. Đang hiển thị nội dung mẫu; trạng thái lưu tâm sự chưa được xác nhận."
-            : "Máy chủ phản hồi chậm. Đang hiển thị nội dung mẫu đã được ghi nhãn; bạn có thể thử lại sau.",
+            ? "Máy chủ chưa xác nhận check-in kịp thời. Chưa lưu tâm sự và chưa có gợi mở để hiển thị."
+            : "Máy chủ phản hồi chậm. Chưa có gợi mở để hiển thị; hãy thử lại khi kết nối ổn định.",
+          mood: selectedMood,
+          contextKey,
         });
       }, MOOD_REQUEST_DEADLINE_MS);
     });
 
     moodResolutionRef.current = Promise.race([
-      request.catch((): MoodSubmissionOutcome => ({
-        signal: nextSignal,
+      request.catch((error: unknown): MoodSubmissionOutcome => ({
+        signal: null,
         checkInId: null,
         notice: currentUser
-          ? "Chưa kết nối được máy chủ. Đang hiển thị nội dung mẫu; check-in chưa được xác nhận lưu."
-          : "Chưa kết nối được máy chủ. Đang hiển thị nội dung mẫu đã được ghi nhãn.",
+          ? getMoodContentUnavailableMessage(error) || "Chưa kết nối được máy chủ. Check-in chưa được xác nhận lưu và chưa có gợi mở để hiển thị."
+          : getMoodContentUnavailableMessage(error) || "Chưa kết nối được máy chủ. Chưa có gợi mở để hiển thị; hãy thử lại sau.",
+        mood: selectedMood,
+        contextKey,
       })),
       deadline,
     ]).then((outcome) => {
       window.clearTimeout(deadlineTimer);
       if (requestVersion === moodRequestVersionRef.current) {
-        setAnalyzedSignal(outcome.signal);
-        setCurrentSignalId(outcome.signal.id);
-        setPendingMoodCheckInId(outcome.checkInId);
         setMoodRequestNotice(outcome.notice);
+        moodSubmittingRef.current = false;
+        setIsMoodSubmitting(false);
       }
       return outcome;
     });
@@ -1384,34 +1534,40 @@ export default function App() {
   };
 
   const handleChangeSignalContext = async (contextKey: MoodContextKey) => {
-    const nextSignal = getSignalForMoodContext(selectedMood, contextKey);
-    setMoodRequestNotice(null);
-    setSelectedContextKey(contextKey);
-    setAnalyzedSignal(nextSignal);
-    setCurrentSignalId(nextSignal.id);
-    setIsActionDone(false);
-
-    if (currentUser) {
-      try {
+    const requestVersion = ++moodRequestVersionRef.current;
+    const controller = new AbortController();
+    moodRequestControllerRef.current?.abort();
+    moodRequestControllerRef.current = controller;
+    const idempotencyKey = crypto.randomUUID();
+    try {
+      if (currentUser) {
         const result = await createMoodCheckIn({
           mood: selectedMood,
           contextKey,
           note: journalText.trim() || undefined,
-        });
+          idempotencyKey,
+        }, { signal: controller.signal });
+        if (requestVersion !== moodRequestVersionRef.current) return;
         setPendingMoodCheckInId(result.checkIn.id);
+        try { localStorage.setItem(getAccountScopedKey("tltl-current-checkin-id", currentUser.email), result.checkIn.id); } catch {}
         setAnalyzedSignal(result.signal);
         setCurrentSignalId(result.signal.id);
-      } catch {
-        toast.info("Chưa đồng bộ được ngữ cảnh. Kết quả hiện tại vẫn được giữ trên màn hình.");
-      }
-    } else {
-      try {
-        const result = await analyzeMoodSignal({ mood: selectedMood, contextKey });
+      } else {
+        const result = await analyzeMoodSignal({ mood: selectedMood, contextKey }, { signal: controller.signal });
+        if (requestVersion !== moodRequestVersionRef.current) return;
+        setPendingMoodCheckInId(null);
+        activeResultIdempotencyKeyRef.current = idempotencyKey;
+        try { localStorage.setItem(getAccountScopedKey("tltl-current-checkin-id", undefined), idempotencyKey); } catch {}
         setAnalyzedSignal(result.signal);
         setCurrentSignalId(result.signal.id);
-      } catch {
-        // Giữ nội dung biên tập cục bộ làm phương án dự phòng.
       }
+      setMoodRequestNotice(null);
+      setSelectedContextKey(contextKey);
+      setIsActionDone(false);
+    } catch (error) {
+      if (requestVersion === moodRequestVersionRef.current) toast.error(
+        getMoodContentUnavailableMessage(error) || "Chưa tải được gợi mở cho bối cảnh này. Nội dung hiện tại vẫn được giữ."
+      );
     }
   };
 
@@ -1420,14 +1576,37 @@ export default function App() {
     return (async () => {
       const outcome = await moodResolutionRef.current;
       if (requestVersion !== moodRequestVersionRef.current) return false;
+      if (!outcome?.signal) {
+        setMoodRequestNotice(outcome?.notice || "Chưa nhận được kết quả từ máy chủ. Hãy thử lại.");
+        return false;
+      }
 
-      const resultSignal = outcome?.signal || activeSignal;
+      const resultSignal = outcome.signal;
+      const nextTurn = applyMoodTurnOutcome({
+        checkedIn: isCheckedIn,
+        signalId: currentSignalId,
+        checkInId: pendingMoodCheckInId,
+        actionDone: isActionDone,
+        mood: selectedMood,
+        contextKey: selectedContextKey,
+      }, outcome, Boolean(currentUser));
+      activeResultIdempotencyKeyRef.current = moodSubmissionKeyRef.current?.key || null;
+      moodSubmissionKeyRef.current = null;
       const checkInId = outcome?.checkInId || null;
       setAnalyzedSignal(resultSignal);
-      setCurrentSignalId(resultSignal.id);
-      setPendingMoodCheckInId(checkInId);
+      setCurrentSignalId(nextTurn.signalId);
+      setPendingMoodCheckInId(nextTurn.checkInId);
+      setSelectedContextKey(nextTurn.contextKey);
+      setSelectedMood(nextTurn.mood);
+      setIsActionDone(nextTurn.actionDone);
+      if (checkInId || !currentUser) {
+        try {
+          localStorage.removeItem(getAccountScopedKey("tltl-action-done-date", currentUser?.email));
+          localStorage.setItem(getAccountScopedKey("tltl-current-checkin-id", currentUser?.email), checkInId || activeResultIdempotencyKeyRef.current || resultSignal.id);
+        } catch {}
+      }
       setMoodRequestNotice(outcome?.notice || null);
-      setIsCheckedIn(!currentUser || Boolean(checkInId));
+      setIsCheckedIn(nextTurn.checkedIn);
       try {
         const email = currentUser?.email;
         if (!currentUser || checkInId) {
@@ -1443,6 +1622,8 @@ export default function App() {
 
   const handleCancelMoodLoading = () => {
     moodRequestVersionRef.current += 1;
+    moodSubmittingRef.current = false;
+    setIsMoodSubmitting(false);
     moodRequestControllerRef.current?.abort();
     moodRequestControllerRef.current = null;
     moodResolutionRef.current = null;
@@ -1450,6 +1631,13 @@ export default function App() {
   };
 
   const handleRefreshSignal = async () => {
+    if (moodSubmittingRef.current) return;
+    moodSubmittingRef.current = true;
+    const requestVersion = ++moodRequestVersionRef.current;
+    const controller = new AbortController();
+    moodRequestControllerRef.current?.abort();
+    moodRequestControllerRef.current = controller;
+    const idempotencyKey = crypto.randomUUID();
     if (currentUser) {
       try {
         const contextKey = activeSignal.contextKey || selectedContextKey;
@@ -1458,8 +1646,11 @@ export default function App() {
           contextKey,
           note: journalText.trim() || undefined,
           excludeSignalId: activeSignal.id,
-        });
+          idempotencyKey,
+        }, { signal: controller.signal });
+        if (requestVersion !== moodRequestVersionRef.current) return;
         setPendingMoodCheckInId(checkIn.checkIn.id);
+        try { localStorage.setItem(getAccountScopedKey("tltl-current-checkin-id", currentUser.email), checkIn.checkIn.id); } catch {}
         setIsActionDone(false);
         setSelectedMood(activeSignal.mood);
         setAnalyzedSignal(checkIn.signal);
@@ -1470,14 +1661,19 @@ export default function App() {
           `/result?signalId=${encodeURIComponent(checkIn.signal.id)}`
         );
       } catch {
-        toast.error("Chưa đổi được lời chiêm nghiệm. Bạn hãy thử lại.");
+        if (requestVersion === moodRequestVersionRef.current) toast.error("Chưa đổi được lời chiêm nghiệm. Bạn hãy thử lại.");
+      } finally {
+        if (requestVersion === moodRequestVersionRef.current) moodSubmittingRef.current = false;
       }
       return;
     }
 
     try {
       const contextKey = activeSignal.contextKey || selectedContextKey;
-      const analyzed = await analyzeMoodSignal({ mood: activeSignal.mood, contextKey, excludeSignalId: activeSignal.id });
+      const analyzed = await analyzeMoodSignal({ mood: activeSignal.mood, contextKey, excludeSignalId: activeSignal.id }, { signal: controller.signal });
+      if (requestVersion !== moodRequestVersionRef.current) return;
+      activeResultIdempotencyKeyRef.current = idempotencyKey;
+      try { localStorage.setItem(getAccountScopedKey("tltl-current-checkin-id", undefined), idempotencyKey); } catch {}
       setAnalyzedSignal(analyzed.signal);
       setSelectedContextKey(contextKey);
       setIsActionDone(false);
@@ -1494,47 +1690,66 @@ export default function App() {
         `/result?signalId=${encodeURIComponent(analyzed.signal.id)}`
       );
     } catch {
-      toast.error("Chưa đổi được lời chiêm nghiệm từ máy chủ. Bạn hãy thử lại.");
+      if (requestVersion === moodRequestVersionRef.current) toast.error("Chưa đổi được lời chiêm nghiệm từ máy chủ. Bạn hãy thử lại.");
+    } finally {
+      if (requestVersion === moodRequestVersionRef.current) moodSubmittingRef.current = false;
     }
   };
 
   const handleSaveResult = async () => {
-    setIsCheckedIn(true);
-    try {
-      const email = currentUser?.email;
-      localStorage.setItem(getAccountScopedKey("tltl-last-checkin-date", email), todayDateString);
-      localStorage.setItem(getAccountScopedKey("tltl-today-mood", email), selectedMood);
-      localStorage.setItem(getAccountScopedKey("tltl-current-signal-id", email), activeSignal.id);
-    } catch {}
-
+    if (resultSaveLockRef.current) return;
+    if (!publishedSignal) {
+      toast.error("Chưa có lời chiêm nghiệm được xuất bản để lưu.");
+      return;
+    }
+    resultSaveLockRef.current = true;
+    const fingerprint = JSON.stringify([
+      currentUser?.email?.trim().toLowerCase() || "guest",
+      activeSignal.id,
+      journalText.trim(),
+    ]);
+    const pendingKey = pendingSave?.type === "signal" ? pendingSave.item.idempotencyKey : null;
+    if (pendingKey) resultSaveKeyRef.current = { fingerprint, key: pendingKey };
+    if (resultSaveKeyRef.current?.fingerprint !== fingerprint) {
+      resultSaveKeyRef.current = {
+        fingerprint,
+        key: activeResultIdempotencyKeyRef.current || crypto.randomUUID(),
+      };
+    }
+    const idempotencyKey = resultSaveKeyRef.current.key;
     const createdAt = Date.now();
-
-    const newEntry: SavedSignalItem = {
+    const newEntry: SavedSignalItem & { idempotencyKey: string } = {
       id: crypto.randomUUID(),
       signalId: activeSignal.id,
       mood: activeSignal.mood,
       contextKey: activeSignal.contextKey || selectedContextKey,
       signalSnapshot: activeSignal,
+      actionDone: isActionDone,
       createdAt,
       date: new Date(createdAt).toLocaleDateString("vi-VN"),
       journal: journalText.trim() || undefined,
       poemLine1: activeSignal.poem.line1,
       poemLine2: activeSignal.poem.line2,
       actionTitle: activeSignal.action.title,
+      idempotencyKey,
       starred: false,
     };
 
-    if (!currentUser) {
-      setPendingSave({
-        type: "signal",
-        item: newEntry,
-      });
-
-      navigateTo("login");
-      return;
-    }
+    try {
+      setIsCheckedIn(true);
+      const email = currentUser?.email;
+      localStorage.setItem(getAccountScopedKey("tltl-last-checkin-date", email), todayDateString);
+      localStorage.setItem(getAccountScopedKey("tltl-today-mood", email), selectedMood);
+      localStorage.setItem(getAccountScopedKey("tltl-current-signal-id", email), activeSignal.id);
+    } catch {}
 
     try {
+      if (!currentUser) {
+        setPendingSave({ type: "signal", item: newEntry });
+        navigateTo("login");
+        return;
+      }
+
       const remoteEntry = await saveSignal(activeSignal.id, {
         checkInId: pendingMoodCheckInId || undefined,
         note: journalText.trim() || undefined,
@@ -1542,34 +1757,59 @@ export default function App() {
         mood: activeSignal.mood,
         contextKey: activeSignal.contextKey || selectedContextKey,
         signalSnapshot: activeSignal,
+        idempotencyKey,
       });
-      setUserCornerData((previous) => ({ ...previous, signals: [remoteEntry, ...previous.signals.filter((entry) => entry.id !== remoteEntry.id)] })); toast.success("Đã lưu lời chiêm nghiệm vào hồ sơ của bạn.", "Lưu thành công");
-      return;
-    } catch {
-      toast.error("Chưa lưu được lời chiêm nghiệm. Bạn hãy thử lại.");
-      return;
+      setUserCornerData((previous) => ({ ...previous, signals: [remoteEntry, ...previous.signals.filter((entry) => entry.id !== remoteEntry.id)] }));
+      setPendingMoodCheckInId(remoteEntry.id);
+      try { localStorage.setItem(getAccountScopedKey("tltl-current-checkin-id", currentUser.email), remoteEntry.id); } catch {}
+      setPendingSave(null);
+      resultSaveKeyRef.current = null;
+      activeResultIdempotencyKeyRef.current = null;
+      toast.success("Đã lưu lời chiêm nghiệm vào hồ sơ của bạn.", "Lưu thành công");
+    } catch (error) {
+      setPendingSave({ type: "signal", item: newEntry });
+      if (error instanceof ApiError && error.status === 404) {
+        toast.error("Nội dung này đã bị thu hồi hoặc không còn được phát hành. Kết quả đang mở vẫn được giữ.");
+      } else {
+        toast.error("Chưa lưu được lời chiêm nghiệm. Kết quả và ghi chú vẫn được giữ để thử lại.");
+      }
+    } finally {
+      resultSaveLockRef.current = false;
     }
-
-    return;
-
-    /* if (!saved) {
-      toast.error("Chưa lưu được lời chiêm nghiệm. Bạn hãy thử lại.");
-
-      return;
-    }
-
-    setUserCornerData(updated); */
   };
 
   const handleAuthenticated = async (
     name?: string,
-    email?: string
+    email?: string,
+    role?: string
   ) => {
+    const authenticatedEmail = email?.trim().toLowerCase();
+    if (!authenticatedEmail) {
+      toast.error("Không nhận được tài khoản đã xác thực từ máy chủ. Vui lòng đăng nhập lại.");
+      return;
+    }
+    const userRole = role || loadStoredUser()?.role;
     const user: UserProfile = {
-      name: name?.trim() || "An Nhiên",
-      email: email?.trim().toLowerCase() ||
-        "annhien@tinlamtamlinh.vn",
+      name: name?.trim() || authenticatedEmail.split("@")[0],
+      email: authenticatedEmail,
+      role: userRole,
     };
+
+    saveStoredProfile(user);
+
+    if (userRole?.toUpperCase() === "ADMIN") {
+      try {
+        sessionStorage.setItem("tltl_admin_just_logged_in", user.name || "Quản trị viên");
+      } catch {}
+      toast.success(
+        `Chào mừng Quản trị viên ${user.name}! Đang chuyển hướng vào Cổng Quản Trị...`,
+        "Đăng nhập thành công"
+      );
+      setTimeout(() => {
+        window.location.href = "/admin";
+      }, 750);
+      return;
+    }
 
     // Giữ nội dung đang chờ trước khi cập nhật state.
     const pending = pendingSave;
@@ -1581,31 +1821,63 @@ export default function App() {
       xam: [...existingData.xam],
       wishes: [...existingData.wishes],
     };
+    let savedGuestCheckInId: string | null = null;
 
     // Save on the server before hydration so cached items use canonical IDs.
     try {
       if (pending?.type === "signal") {
-        const item = await saveSignal(pending.item.signalId, { note: pending.item.journal, actionDone: isActionDone, mood: pending.item.mood, contextKey: pending.item.contextKey || "general", signalSnapshot: pending.item.signalSnapshot });
+        const item = await saveSignal(pending.item.signalId, { note: pending.item.journal, actionDone: pending.item.actionDone, mood: pending.item.mood, contextKey: pending.item.contextKey || "general", signalSnapshot: pending.item.signalSnapshot, idempotencyKey: pending.item.idempotencyKey });
         nextData.signals = [item, ...nextData.signals.filter((entry) => entry.id !== item.id)];
+        savedGuestCheckInId = item.id;
       } else if (pending?.type === "xam") {
         const item = await saveXam({
-          drawId: pending.item.drawId, stickNumber: pending.item.stickNumber,
-          topic: pending.item.category, region: pending.item.region,
-          category: pending.item.category, fortuneType: pending.item.fortuneType, quote: pending.item.quote,
+          drawId: pending.item.drawId,
+          resultToken: pending.item.resultToken,
+          stickNumber: pending.item.stickNumber,
+          topic: pending.item.category,
+          region: pending.item.region,
+          category: pending.item.category,
+          fortuneType: pending.item.fortuneType,
+          quote: pending.item.quote,
         });
-        nextData.xam = [item, ...nextData.xam.filter((entry) => entry.id !== item.id)];
+
+        nextData.xam = [
+          item,
+          ...nextData.xam.filter(
+            (entry) => entry.id !== item.id,
+          ),
+        ];
       } else if (pending?.type === "wish") {
-        const item = await saveWish(pending.item.content, pending.item.category);
+        const item = await saveWish(
+          pending.item.content,
+          pending.item.category,
+          pending.item.id,
+        );
         nextData.wishes = [item, ...nextData.wishes.filter((entry) => entry.id !== item.id)];
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Chưa lưu được nội dung đang chờ. Vui lòng thử lại.");
+      if (pending?.type === "signal") {
+        setCurrentUser(user);
+        setUserCornerData(existingData);
+        setAnalyzedSignal(pending.item.signalSnapshot || null);
+        setCurrentSignalId(pending.item.signalId);
+        setSelectedMood(pending.item.mood);
+        setSelectedContextKey(pending.item.contextKey || "general");
+        setJournalText(pending.item.journal || "");
+        setIsActionDone(Boolean(pending.item.actionDone));
+        navigateTo("result", pending.item.signalId, user);
+      } else if (pending?.type === "wish") {
+        setCurrentUser(user);
+        setUserCornerData(existingData);
+        setPendingSave(pending);
+
+        navigateTo("wish", undefined, user);
+      }
       return;
     }
     await saveUserCornerData(user.email, nextData);
-    try { localStorage.setItem("tltl-current-user", JSON.stringify(user)); } catch {
-      // Server session remains valid when browser storage is unavailable.
-    }
+    saveStoredProfile(user);
 
     const userSession = loadUserSessionState(
       user,
@@ -1626,30 +1898,7 @@ export default function App() {
         // Phiên đăng nhập vẫn hợp lệ; giữ tùy chọn cache để người dùng tiếp tục.
       });
 
-    void loadSavedSignals()
-      .then((remoteSignals) => {
-        {
-          setUserCornerData((previous) => ({
-            ...previous,
-            signals: remoteSignals,
-          }));
-        }
-      })
-      .catch(() => {
-        // Giữ dữ liệu local nếu API tín hiệu chưa sẵn sàng.
-      });
 
-    void Promise.all([loadSavedXam(), loadSavedWishes()])
-      .then(([remoteXam, remoteWishes]) => {
-        setUserCornerData((previous) => ({
-          ...previous,
-          xam: remoteXam,
-          wishes: remoteWishes,
-        }));
-      })
-      .catch(() => {
-        // Giữ cache local nếu API reflection chưa sẵn sàng.
-      });
 
     void Promise.all([loadMemorialProfiles(), loadCalendarNotes()])
       .then(([remoteMemorials, remoteNotes]) => {
@@ -1671,11 +1920,13 @@ export default function App() {
       .catch(() => {});
 
     if (pending?.type === "signal") {
-      const savedSignal =
-        getSignalById(pending.item.signalId) ||
-        getDefaultSignalForMood(
-          pending.item.mood as MoodKey
-        );
+      const savedSignal = pending.item.signalSnapshot;
+      if (!savedSignal) {
+        setCurrentUser(user);
+        setUserCornerData(nextData);
+        toast.error("Không thể khôi phục chính xác kết quả đang chờ lưu. Không tạo kết quả thay thế.");
+        return;
+      }
 
       // Giữ đúng lượt chiêm nghiệm trước khi đăng nhập.
       setIsCheckedIn(true);
@@ -1718,7 +1969,7 @@ export default function App() {
             actionKey,
             JSON.stringify({
               date: todayDateString,
-              signalId: savedSignal.id,
+              checkInId: savedGuestCheckInId,
             })
           );
         } else {
@@ -1730,8 +1981,15 @@ export default function App() {
       }
 
       setPendingSave(null);
+      setPendingMoodCheckInId(savedGuestCheckInId);
+      if (savedGuestCheckInId) {
+        try { localStorage.setItem(getAccountScopedKey("tltl-current-checkin-id", user.email), savedGuestCheckInId); } catch {}
+      }
 
-
+      toast.success(
+        "Chào mừng " + user.name + " trở lại! Lời chiêm nghiệm đã được lưu vào Góc của tôi.",
+        "Đăng nhập thành công"
+      );
       navigateTo("result", savedSignal.id, user);
       return;
     }
@@ -1745,6 +2003,18 @@ export default function App() {
     setCurrentSignalId(userSession.signalId);
     setJournalText("");
     setPendingSave(null);
+
+    if (pending?.type === "wish") {
+      returnScreenRef.current = null;
+
+      toast.success(
+        "Lời gửi gắm đã được lưu vào Góc của tôi.",
+        "Đăng nhập và lưu thành công",
+      );
+
+      navigateTo("account", undefined, user);
+      return;
+    }
 
     toast.success("Chào mừng " + user.name + " trở lại góc an yên!", "Đăng nhập thành công");
     const targetScreen = returnScreenRef.current && !["login", "register", "forgot", "guest"].includes(returnScreenRef.current)
@@ -1770,7 +2040,7 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    await logoutAccount();
+    const logoutResult = await logoutAccount();
 
     const guestSession = loadUserSessionState(
       null,
@@ -1787,18 +2057,34 @@ export default function App() {
     });
 
     setOpenedSavedSignal(null);
+    setSavedRecordId(null);
+    setAnalyzedSignal(null);
+    setPendingMoodCheckInId(null);
+    moodRequestVersionRef.current += 1;
+    moodRequestControllerRef.current?.abort();
+    moodSubmittingRef.current = false;
+    setIsMoodSubmitting(false);
+    favoriteLocksRef.current.clear();
 
     setIsCheckedIn(guestSession.checkedIn);
     setSelectedMood(guestSession.mood);
     setSelectedTopics(guestSession.topics);
     setIsActionDone(guestSession.actionDone);
     setCurrentSignalId(guestSession.signalId);
+    setPendingMoodCheckInId(guestSession.checkInId || null);
+    activeResultIdempotencyKeyRef.current = null;
+    moodSubmissionKeyRef.current = null;
+    resultSaveKeyRef.current = null;
+    moodResolutionRef.current = null;
+    setSavedRecordNotice(null);
 
     setJournalText("");
     setPendingSave(null);
 
     // Truyền null rõ ràng để không dùng hồ sơ của lần render cũ.
-    toast.info("Đã đăng xuất tài khoản an toàn. Hẹn gặp lại bạn!", "Đăng xuất"); navigateTo("guest", undefined, null);
+    if (logoutResult.serverRevoked) toast.info("Phiên trên máy chủ đã được thu hồi và dữ liệu nhạy cảm trên thiết bị đã được xóa.", "Đã đăng xuất");
+    else toast.warning("Đã xóa phiên và dữ liệu nhạy cảm khỏi giao diện thiết bị này. Máy chủ chưa xác nhận thu hồi phiên vì kết nối bị gián đoạn.", "Đăng xuất chưa đồng bộ");
+    navigateTo("guest", undefined, null);
   };
 
   const handleUpdateProfile = async (
@@ -1814,7 +2100,7 @@ export default function App() {
 
     try {
       const updatedUser = await updateProfile(cleanName);
-      saveLocalDemoAccount(updatedUser);
+      saveStoredProfile(updatedUser);
       setCurrentUser(updatedUser);
       return true;
     } catch {
@@ -1905,20 +2191,134 @@ export default function App() {
   };
 
   const deleteCornerItem = async (
-    kind: "signals" | "xam" | "wishes", id: string, remove: (id: string) => Promise<unknown>,
+    kind: "signals" | "xam" | "wishes",
+    id: string,
+    remove: (id: string) => Promise<unknown>
   ): Promise<boolean> => {
-    if (!currentUser) return false;
-    try { await remove(id); } catch (error) {
-      if (!(error instanceof ApiError && error.status === 404)) {
-        toast.error(error instanceof Error ? error.message : "Máy chủ chưa xóa được dữ liệu. Vui lòng thử lại.");
-        return false;
-      }
+    const scope = cornerAccountScopeRef.current;
+    const email = scope.email;
+
+    if (!email) return false;
+
+    const lockId = `${scope.version}:${kind}:${id}`;
+
+    if (cornerDeleteLocksRef.current.has(lockId)) {
+      return false;
     }
-    const updated = { ...userCornerData, [kind]: userCornerData[kind].filter((item) => item.id !== id) };
-    setUserCornerData(updated);
-    await saveUserCornerData(currentUser.email, updated);
-    if (kind === "signals" && openedSavedSignal?.id === id) setOpenedSavedSignal(null);
-    return true;
+
+    if (favoriteLocksRef.current.has(lockId)) {
+      toast.info(
+        "Mục này đang cập nhật yêu thích. Bạn hãy chờ hoàn tất rồi xóa."
+      );
+      return false;
+    }
+
+    cornerDeleteLocksRef.current.add(lockId);
+
+    const isCurrentAccount = () =>
+      cornerAccountScopeRef.current === scope;
+
+    try {
+      try {
+        await remove(id);
+      } catch (error) {
+        // Mục đã được xóa trước đó cũng được coi là hoàn tất.
+        if (!(error instanceof ApiError && error.status === 404)) {
+          throw error;
+        }
+      }
+
+      if (!isCurrentAccount()) return false;
+
+      // Dùng cùng hàng đợi với cập nhật yêu thích để tránh
+      // hai thao tác ghi đè bộ nhớ đệm của nhau.
+      const cacheWrite = favoriteCacheQueueRef.current.then(
+        async () => {
+          if (!isCurrentAccount()) return;
+
+          const current = userCornerDataRef.current;
+
+          const updated: UserCornerData = {
+            ...current,
+            [kind]: current[kind].filter(
+              (item) => item.id !== id
+            ),
+          };
+
+          userCornerDataRef.current = updated;
+          setUserCornerData(updated);
+
+          let cached = false;
+
+          try {
+            cached = await saveUserCornerData(email, updated);
+          } catch {
+            cached = false;
+          }
+
+          if (!cached) {
+            try {
+              localStorage.removeItem(
+                getUserCornerStorageKey(email)
+              );
+            } catch {
+              if (isCurrentAccount()) {
+                toast.warning(
+                  "Đã xóa trên máy chủ, nhưng chưa dọn được bộ nhớ đệm trên thiết bị."
+                );
+              }
+            }
+          }
+        }
+      );
+
+      favoriteCacheQueueRef.current = cacheWrite.then(
+        () => undefined,
+        () => undefined
+      );
+
+      await cacheWrite;
+
+      if (!isCurrentAccount()) return false;
+
+      if (kind === "signals") {
+        if (openedSavedSignal?.id === id) {
+          setOpenedSavedSignal(null);
+        }
+
+        if (pendingMoodCheckInId === id) {
+          setPendingMoodCheckInId(null);
+
+          activeResultIdempotencyKeyRef.current =
+            crypto.randomUUID();
+
+          try {
+            localStorage.removeItem(
+              getAccountScopedKey(
+                "tltl-current-checkin-id",
+                email
+              )
+            );
+          } catch {
+            // Bản ghi trên máy chủ đã được xóa.
+          }
+        }
+      }
+
+      return true;
+    } catch (error) {
+      if (isCurrentAccount()) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Chưa xác nhận được việc xóa. Bạn hãy tải lại danh sách để kiểm tra."
+        );
+      }
+
+      return false;
+    } finally {
+      cornerDeleteLocksRef.current.delete(lockId);
+    }
   };
   const handleDeleteSignal = (id: string) => deleteCornerItem("signals", id, deleteSavedSignal);
   const handleDeleteXam = (id: string) => deleteCornerItem("xam", id, deleteSavedXam);
@@ -1926,70 +2326,147 @@ export default function App() {
 
   const handleToggleFavorite = async (
     kind: "signals" | "xam" | "wishes",
-    id: string,
+    id: string
   ) => {
-    const lockId = `${kind}:${id}`;
+    const scope = cornerAccountScopeRef.current;
+    const email = scope.email;
+
+    if (!email) return;
+
+    const lockId = `${scope.version}:${kind}:${id}`;
+
     if (favoriteLocksRef.current.has(lockId)) return;
+
+    // Không cập nhật yêu thích khi chính mục này đang bị xóa.
+    if (cornerDeleteLocksRef.current.has(lockId)) return;
+
+    const entry = userCornerDataRef.current[kind].find(
+      (item) => item.id === id
+    );
+
+    if (!entry) return;
+
     favoriteLocksRef.current.add(lockId);
-    const entry = userCornerDataRef.current[kind].find((item) => item.id === id);
-    if (!entry) {
-      favoriteLocksRef.current.delete(lockId);
-      return;
-    }
-    const nextStarred = !entry.starred;
+
+    const isCurrentAccount = () =>
+      cornerAccountScopeRef.current === scope;
 
     try {
-      let remoteStarred = nextStarred;
-      if (currentUser) {
-        const updated = kind === "signals"
+      const nextStarred = !entry.starred;
+
+      const remoteItem =
+        kind === "signals"
           ? await updateSavedSignal(id, nextStarred)
           : kind === "xam"
             ? await updateSavedXam(id, nextStarred)
             : await updateSavedWish(id, nextStarred);
-        remoteStarred = updated.starred ?? nextStarred;
+
+      if (!isCurrentAccount()) return;
+
+      const remoteStarred = remoteItem.starred;
+
+      if (typeof remoteStarred !== "boolean") {
+        throw new Error(
+          "Máy chủ chưa trả về trạng thái yêu thích hợp lệ. Bạn hãy tải lại danh sách để kiểm tra."
+        );
       }
 
-      const cacheWrite = favoriteCacheQueueRef.current.then(async () => {
-        const current = userCornerDataRef.current;
-        const updated: UserCornerData = {
-          ...current,
-          [kind]: current[kind].map((item) =>
-            item.id === id ? { ...item, starred: remoteStarred } : item
-          ),
-        };
-        const cached = currentUser
-          ? await saveUserCornerData(currentUser.email, updated)
-          : true;
-        userCornerDataRef.current = updated;
-        setUserCornerData(updated);
-        if (!cached) {
-          toast.info("Yêu thích đã cập nhật trên máy chủ, nhưng chưa lưu được bản cache trên thiết bị.");
+      const cacheWrite = favoriteCacheQueueRef.current.then(
+        async () => {
+          if (!isCurrentAccount()) return;
+
+          const current = userCornerDataRef.current;
+
+          // Mục có thể đã bị xóa trong lúc chờ phản hồi.
+          if (!current[kind].some((item) => item.id === id)) {
+            return;
+          }
+
+          const updated: UserCornerData = {
+            ...current,
+            [kind]: current[kind].map((item) =>
+              item.id === id
+                ? { ...item, starred: remoteStarred }
+                : item
+            ),
+          };
+
+          userCornerDataRef.current = updated;
+          setUserCornerData(updated);
+
+          let cached = false;
+
+          try {
+            cached = await saveUserCornerData(email, updated);
+          } catch {
+            cached = false;
+          }
+
+          if (!cached) {
+            // Tránh giữ cache cũ trái với trạng thái máy chủ.
+            try {
+              localStorage.removeItem(
+                getUserCornerStorageKey(email)
+              );
+            } catch {
+              // Không đổi kết quả đã được máy chủ xác nhận.
+            }
+
+            if (isCurrentAccount()) {
+              toast.info(
+                "Đã cập nhật yêu thích trên máy chủ, nhưng chưa lưu được bộ nhớ đệm trên thiết bị."
+              );
+            }
+          }
         }
-      });
-      favoriteCacheQueueRef.current = cacheWrite.then(() => undefined, () => undefined);
+      );
+
+      favoriteCacheQueueRef.current = cacheWrite.then(
+        () => undefined,
+        () => undefined
+      );
+
       await cacheWrite;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Chưa cập nhật được yêu thích. Trạng thái cũ vẫn được giữ.");
+      if (isCurrentAccount()) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Chưa xác nhận được thay đổi yêu thích. Bạn hãy tải lại danh sách để kiểm tra."
+        );
+      }
     } finally {
       favoriteLocksRef.current.delete(lockId);
     }
   };
 
-  const handleToggleStarSignal = (id: string) => { void handleToggleFavorite("signals", id); };
-  const handleToggleStarXam = (id: string) => { void handleToggleFavorite("xam", id); };
-  const handleToggleStarWish = (id: string) => { void handleToggleFavorite("wishes", id); };
+  const handleToggleStarSignal = (id: string) => {
+    void handleToggleFavorite("signals", id);
+  };
+
+  const handleToggleStarXam = (id: string) => {
+    void handleToggleFavorite("xam", id);
+  };
+
+  const handleToggleStarWish = (id: string) => {
+    void handleToggleFavorite("wishes", id);
+  };
 
   const handleSavePrivateWish = async (
     content: string,
-    category: string
+    category: string,
+    requestId: string = crypto.randomUUID()
   ): Promise<boolean> => {
     const cleanContent = content.trim();
-    if (!cleanContent) return false;
+
+    if (!cleanContent || cleanContent.length > 1000) {
+      return false;
+    }
 
     const createdAt = Date.now();
 
     const newWish: SavedWishItem = {
-      id: crypto.randomUUID(),
+      id: requestId,
       category,
       content: cleanContent,
       createdAt,
@@ -2009,20 +2486,59 @@ export default function App() {
     }
 
     let remoteWish: SavedWishItem;
-    try { remoteWish = await saveWish(cleanContent, category); }
-    catch { return false; }
 
-    const nextData: UserCornerData = {
-      ...userCornerData,
-      wishes: [remoteWish, ...userCornerData.wishes.filter((item) => item.id !== remoteWish.id)],
-    };
+    try {
+      remoteWish = await saveWish(
+        cleanContent,
+        category,
+        requestId
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Chưa lưu được lời gửi gắm.",
+      );
 
-    const saved = await saveUserCornerData(
-      currentUser.email,
-      nextData
-    );
+      return false;
+    }
 
-    setUserCornerData(nextData);
+    setUserCornerData((previous) => ({
+      ...previous,
+      wishes: [
+        remoteWish,
+        ...previous.wishes.filter(
+          (item) => item.id !== remoteWish.id,
+        ),
+      ],
+    }));
+
+    // Server đã xác nhận: lỗi cache không biến thành lỗi lưu.
+    try {
+      const cached = await saveUserCornerData(
+        currentUser.email,
+        {
+          ...userCornerData,
+          wishes: [
+            remoteWish,
+            ...userCornerData.wishes.filter(
+              (item) => item.id !== remoteWish.id,
+            ),
+          ],
+        },
+      );
+
+      if (!cached) {
+        toast.warning(
+          "Đã lưu trên máy chủ nhưng chưa lưu được bản sao trên thiết bị.",
+        );
+      }
+    } catch {
+      toast.warning(
+        "Đã lưu trên máy chủ nhưng chưa lưu được bản sao trên thiết bị.",
+      );
+    }
+
     return true;
   };
 
@@ -2082,15 +2598,28 @@ export default function App() {
   const currentDateLabel = new Date().toLocaleDateString("vi-VN");
 
   const isCurrentSignalSaved = Boolean(
-    currentUser &&
+    publishedSignal && currentUser &&
       userCornerData.signals.some((entry) =>
         isSameSavedReflection(entry, {
-          signalId: activeSignal.id,
+          signalId: publishedSignal.id,
           date: currentDateLabel,
           journal: journalText,
         })
       )
   );
+
+  const cornerHasCurrentResult =
+    cornerLoadState.email === (currentUser?.email ?? null);
+
+  const cornerReady =
+    sessionResolved &&
+    cornerHasCurrentResult &&
+    cornerLoadState.status === "ready";
+
+  const cornerFailed =
+    sessionResolved &&
+    cornerHasCurrentResult &&
+    cornerLoadState.status === "error";
 
   return (
     <div className={`app-shell ${dark ? "dark" : ""} ${["login", "register", "forgot", "reset-password"].includes(screen) ? "lg:h-screen lg:max-h-screen lg:overflow-hidden" : ""}`}>
@@ -2124,20 +2653,20 @@ export default function App() {
           <GuestScreen
             onSelectMood={() => navigateTo("mood")}
             onGoToCulture={() => navigateTo("culture")}
-            onGoToExperience={() => navigateTo("experience")}
+            onGoToRituals={() => navigateTo("rituals")}
           />
         )}
 
         {screen === "today" && (
           <TodayScreen
-            signal={activeSignal}
+            signal={publishedSignal}
             isCheckedIn={isCheckedIn}
             mood={selectedMood}
             isActionDone={isActionDone}
             onSelectMoodClick={() => navigateTo("mood")}
-            onViewSignalDetails={() =>
-              navigateTo("result", activeSignal.id)
-            }
+            onViewSignalDetails={() => publishedSignal
+              ? navigateTo("result", publishedSignal.id)
+              : navigateTo("mood")}
             selectedTopics={selectedTopics}
             onGoToCulture={() => navigateTo("culture")}
             onGoToExperience={() => navigateTo("experience")}
@@ -2156,11 +2685,10 @@ export default function App() {
             onSelectMood={setSelectedMood}
             journalText={journalText}
             onChangeJournal={setJournalText}
-            onBackToToday={() => {
-              setSelectedMood(activeSignal.mood);
-              navigateTo("today");
-            }}
+            onBackToToday={() => navigateTo("today")}
             onSubmit={handleSubmitMood}
+            isSubmitting={isMoodSubmitting}
+            isLoggedIn={Boolean(currentUser)}
             contextKey={selectedContextKey}
             onChangeContext={setSelectedContextKey}
           />
@@ -2168,18 +2696,19 @@ export default function App() {
 
         {screen === "loading" && (
           <SignalLoadingScreen
-            signal={activeSignal}
+            requestNotice={moodRequestNotice}
             onFinishLoading={handleFinishLoading}
             onCancel={handleCancelMoodLoading}
           />
         )}
 
-        {screen === "result" && (
+        {screen === "result" && !savedRecordId && publishedSignal && (
           <SignalResultScreen
             journalText={journalText}
             requestNotice={moodRequestNotice || undefined}
+            isLoggedIn={Boolean(currentUser)}
             mood={selectedMood}
-            signal={activeSignal}
+            signal={publishedSignal}
             isActionDone={isActionDone}
             onToggleAction={handleToggleAction}
             onGoToCompletion={() => navigateTo("saved")}
@@ -2190,6 +2719,30 @@ export default function App() {
             onChangeContext={(contextKey) => void handleChangeSignalContext(contextKey)}
             onOpenCultureArticle={(articleId) => navigateTo("culture-detail", articleId)}
           />
+        )}
+
+        {screen === "result" && !savedRecordId && !publishedSignal && (
+          <div className="page-container max-w-3xl py-12 text-center" role="status">
+            <h1 className="font-display text-2xl font-bold text-ink">Chưa có gợi mở đã xuất bản</h1>
+            <p className="mt-3 text-sm leading-relaxed text-muted">
+              Nội dung này không còn trong thư viện hiện hành hoặc chưa tải được từ máy chủ.
+            </p>
+            <button type="button" className="mt-5 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-white" onClick={() => navigateTo("mood")}>
+              Gửi check-in mới
+            </button>
+          </div>
+        )}
+
+        {screen === "result" && savedRecordId && savedRecordNotice && (
+          <div className="page-container max-w-3xl py-12 text-center" role="status">
+            <h1 className="font-display text-2xl font-bold text-ink">Bản kết quả đã lưu</h1>
+            <p className="mt-3 text-sm leading-relaxed text-muted">{savedRecordNotice}</p>
+            {savedRecordNotice !== "Đang tải bản ghi đã lưu từ máy chủ…" && (
+              <button type="button" className="mt-5 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-white" onClick={handleCloseSavedSignal}>
+                Quay lại
+              </button>
+            )}
+          </div>
         )}
 
         {screen === "experience" && (
@@ -2248,8 +2801,16 @@ export default function App() {
             onSelect={handleSelectMemorial}
             memorial={memorial}
             onBack={() => navigateTo("sanctuary")}
-            onCreate={() => navigateTo("memorial-form")}
-            onEdit={() => navigateTo("memorial-form")}
+            onCreate={() => {
+              setMemorialFormMode("create");
+              navigateTo("memorial-form");
+            }}
+            onEdit={() => {
+              if (!memorial) return;
+
+              setMemorialFormMode("edit");
+              navigateTo("memorial-form");
+            }}
             onGoToAltar={() => navigateTo("ancestor-altar")}
             onGoToReminders={() => navigateTo("account")}
           />
@@ -2257,19 +2818,27 @@ export default function App() {
 
         {screen === "memorial-form" && (
           <MemorialFormScreen
-            initialValue={memorial}
+            key={`${currentUser?.email ?? "guest"}:${memorialFormMode}:${
+              memorialFormMode === "edit"
+                ? memorial?.id ?? "local"
+                : "new"
+            }`}
+            initialValue={
+              memorialFormMode === "edit" ? memorial : null
+            }
             onBack={() => navigateTo("memorial")}
             onSave={async (nextMemorial) => {
+              const scope = cornerAccountScopeRef.current;
               const accountId =
                 currentUser?.email?.trim().toLowerCase() || "guest";
               let savedMemorial = nextMemorial;
               if (currentUser) {
                 const input = {
-                  fullName: nextMemorial.name,
-                  relationship: nextMemorial.relation,
+                  fullName: nextMemorial.name.trim(),
+                  relationship: nextMemorial.relation.trim(),
                   deathDate: nextMemorial.date,
                   avatarUrl: nextMemorial.avatarUrl || null,
-                  note: nextMemorial.note || null,
+                  note: nextMemorial.note?.trim() ?? "",
                 };
                 let profile;
                 if (nextMemorial.id) {
@@ -2288,6 +2857,9 @@ export default function App() {
                   });
                 }
                 savedMemorial = memorialProfileToRecord(profile);
+                if (cornerAccountScopeRef.current !== scope) {
+                  return null;
+                }
                 window.dispatchEvent(new Event("tltl-memorial-profiles-change"));
               }
               try {
@@ -2296,7 +2868,16 @@ export default function App() {
                   JSON.stringify(savedMemorial)
                 );
               } catch {
-                // API result remains authoritative if the local cache cannot be written.
+                if (!currentUser) {
+                  throw new Error(
+                    "Trình duyệt chưa lưu được hồ sơ trên thiết bị."
+                  );
+                }
+
+                // Tài khoản đã nhận xác nhận lưu từ BE.
+                toast.info(
+                  "Đã lưu hồ sơ trên máy chủ, nhưng chưa lưu được bộ nhớ đệm trên thiết bị."
+                );
               }
               setMemorial(savedMemorial);
               if (currentUser && savedMemorial.id) {
@@ -2395,8 +2976,7 @@ export default function App() {
         {screen === "xinxam" && (
           <XinXamScreen
             onGoToXinKeo={(drawId) => {
-              setXinKeoDrawId(drawId);
-              navigateTo("xinkeo");
+              navigateTo("xinkeo", drawId);
             }}
             onBackToExperienceHome={() => navigateTo("experience")}
             onGoToArticle={(articleId) => {
@@ -2409,6 +2989,7 @@ export default function App() {
               const newXam: SavedXinXamItem = {
                 id: crypto.randomUUID(),
                 drawId: result.drawId,
+                resultToken: result.resultToken,
                 stickNumber: result.stickNumber,
                 fortuneType:
                   result.fortuneType ||
@@ -2474,8 +3055,18 @@ export default function App() {
             onGoToDiary={() => navigateTo("account")}
             onGoToHome={() => navigateTo("today")}
             onGoToExplore={() => navigateTo("culture")}
-            onSaveJournal={(text, topic) =>
-              handleSavePrivateWish(text, topic)
+            initialContent={
+              pendingSave?.type === "wish"
+                ? pendingSave.item.content
+                : ""
+            }
+            initialCategory={
+              pendingSave?.type === "wish"
+                ? pendingSave.item.category
+                : "Bình an"
+            }
+            onSaveJournal={(text, topic, requestId) =>
+              handleSavePrivateWish(text, topic, requestId)
             }
             isLoggedIn={!!currentUser}
           />
@@ -2614,23 +3205,70 @@ export default function App() {
           />
         )}
 
-        {screen === "saved" && (
+        {screen === "saved" && publishedSignal && (
           <CompletionScreen
-            signal={activeSignal}
+            signal={publishedSignal}
             isActionDone={isActionDone}
             isLoggedIn={Boolean(currentUser)}
             isSaved={isCurrentSignalSaved}
             onGoToHome={() => navigateTo("today")}
             onGoToAccount={() => navigateTo("account")}
             onViewSignal={() =>
-              navigateTo("result", activeSignal.id)
+              navigateTo("result", publishedSignal.id)
             }
             onSaveToAccount={handleSaveResult}
           />
         )}
 
-        {screen === "account" && (
-          <AccountScreen
+        {screen === "saved" && !publishedSignal && (
+          <div className="page-container max-w-3xl py-12 text-center" role="status">
+            <h1 className="font-display text-2xl font-bold text-ink">Chưa có kết quả để lưu</h1>
+            <p className="mt-3 text-sm leading-relaxed text-muted">Hãy gửi check-in và nhận lời gợi mở đã xuất bản trước.</p>
+            <button type="button" className="mt-5 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-white" onClick={() => navigateTo("mood")}>Gửi check-in</button>
+          </div>
+        )}
+
+        {screen === "account" &&
+          (!sessionResolved || (currentUser && !cornerReady)) && (
+            <div className="page-container max-w-2xl py-12 text-center">
+              {cornerFailed ? (
+                <div role="alert">
+                  <h1 className="text-xl font-semibold text-ink">
+                    Chưa tải được Góc của tôi
+                  </h1>
+
+                  <p className="mt-3 text-sm leading-relaxed text-muted">
+                    Chưa lấy được đầy đủ dữ liệu từ máy chủ.
+                    Đây không phải xác nhận rằng danh sách của bạn trống.
+                  </p>
+
+                  <button
+                    type="button"
+                    className="mt-5 min-h-11 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-white"
+                    onClick={() => {
+                      setCornerLoadState({
+                        email: currentUser?.email ?? null,
+                        status: "loading",
+                      });
+                      setCornerReload((value) => value + 1);
+                    }}
+                  >
+                    Thử tải lại
+                  </button>
+                </div>
+              ) : (
+                <p role="status" className="text-sm text-muted">
+                  Đang tải Góc của tôi…
+                </p>
+              )}
+            </div>
+          )}
+
+        {screen === "account" &&
+          sessionResolved &&
+          (!currentUser || cornerReady) && (
+            <AccountScreen
+            key={currentUser?.email ?? "guest"}
             currentUser={currentUser}
             savedSignals={userCornerData.signals}
             savedXamList={userCornerData.xam}
@@ -2671,6 +3309,7 @@ export default function App() {
 
         {screen === "xinkeo" && (
           <XinKeoScreen
+            key={`${currentUser?.email || "guest"}:${xinKeoDrawId || "standalone"}`}
             drawId={xinKeoDrawId}
             isLoggedIn={Boolean(currentUser)}
             onBackToExperience={() => navigateTo("experience")}
@@ -2751,7 +3390,7 @@ export default function App() {
 
       <SavedSignalDialog
         entry={openedSavedSignal}
-        onClose={() => setOpenedSavedSignal(null)}
+        onClose={handleCloseSavedSignal}
       />
       <LogoutConfirmDialog
         open={showLogoutConfirm}

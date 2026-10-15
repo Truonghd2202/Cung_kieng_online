@@ -13,10 +13,10 @@ import {
   Compass,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
+import { UnverifiedImage } from "../components/UnverifiedImage";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import {
-  RITUAL_GUIDES,
   adaptRemoteRitual,
   RitualOccasionKey,
   RitualRegionKey,
@@ -24,7 +24,6 @@ import {
 } from "../data/ritualData";
 import { DiscoveryNav } from "../components/DiscoveryNav";
 import { loadRituals } from "../data/contentService";
-import { ApiError } from "../lib/api";
 
 const normalizeRitualSearch = (value: string) =>
   value
@@ -57,29 +56,40 @@ export const RitualGuideScreen: React.FC<
   const [selectedRegion, setSelectedRegion] = useState<RitualRegionKey>("all");
   const [visibleCount, setVisibleCount] = useState(4);
   const [rituals, setRituals] = useState<RitualGuideItem[]>([]);
-  const [usingFallback, setUsingFallback] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
-    void loadRituals().then((remote) => {
-      if (!active) return;
-      setRituals(remote.map(adaptRemoteRitual));
-      setUsingFallback(false);
-    }).catch((cause: unknown) => {
-      if (!active) return;
-      if (cause instanceof ApiError && cause.status === 0) {
-        setRituals(RITUAL_GUIDES);
-        setUsingFallback(true);
-      } else {
-        setLoadError(cause instanceof Error ? cause.message : "Chưa tải được danh sách nghi lễ.");
-      }
-    }).finally(() => {
-      if (active) setLoading(false);
-    });
-    return () => { active = false; };
-  }, []);
+
+    setLoading(true);
+    setLoadError("");
+    setRituals([]);
+
+    void loadRituals()
+      .then((remote) => {
+        if (!active) return;
+
+        setRituals(remote.map(adaptRemoteRitual));
+      })
+      .catch(() => {
+        if (!active) return;
+
+        setLoadError(
+          "Không thể tải hướng dẫn nghi lễ. Bạn hãy kiểm tra kết nối rồi thử lại.",
+        );
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [loadAttempt]);
 
   const OCCASIONS: { key: RitualOccasionKey; label: string }[] = [
     { key: "all", label: "Tất cả" },
@@ -144,13 +154,6 @@ export const RitualGuideScreen: React.FC<
   return (
     <div className="screen-shell">
       <main className="page-container max-w-6xl">
-        {loading && <p role="status" className="mb-5 text-sm text-muted">Đang tải danh sách nghi lễ từ thư viện…</p>}
-        {loadError && <p role="alert" className="mb-5 rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted">{loadError}</p>}
-        {usingFallback && (
-          <p role="status" className="mb-5 rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted">
-            Không kết nối được thư viện. Đang hiển thị cẩm nang dự phòng có sẵn trong ứng dụng.
-          </p>
-        )}
         {/* Top Breadcrumb & Tag */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-xs text-muted">
           <div className="flex items-center gap-2">
@@ -203,11 +206,6 @@ export const RitualGuideScreen: React.FC<
           onGoToMap={onGoToMap}
         />
 
-        {import.meta.env.DEV && rituals.some((item) => item.preview) && (
-          <aside role="note" className="mb-5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
-            Đang xem dữ liệu seed để demo. Các nghi lễ này chưa được thẩm định để phát hành chính thức.
-          </aside>
-        )}
 
         {/* Search & Filter Toolbar */}
         <div className="py-6 border-y border-line mb-10 space-y-5">
@@ -339,12 +337,12 @@ export const RitualGuideScreen: React.FC<
                   >
                     <div className="flex items-start gap-4 p-4 md:block md:p-0">
                       <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-surface-soft md:h-44 md:w-full md:rounded-none">
-                        <img
+                        <UnverifiedImage
                           src={item.image}
                           alt={item.title}
                           loading="lazy"
                           decoding="async"
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-cover object-[center_30%]"
                         />
                       </div>
 
@@ -354,7 +352,6 @@ export const RitualGuideScreen: React.FC<
                           <span aria-hidden="true"> · </span>
                           {item.region}
                         </p>
-                        {item.preview && <span className="mb-2 inline-flex rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold text-amber-900 dark:text-amber-200">Bản demo · chưa duyệt</span>}
 
                         <h2 className="mb-2 font-display text-base font-bold leading-snug text-ink md:text-xl">
                           <a
@@ -375,8 +372,7 @@ export const RitualGuideScreen: React.FC<
                     <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-2 md:px-5">
                       <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
                         <span>{item.stepsCount}</span>
-                        <span aria-hidden="true">·</span>
-                        <span>{item.timeEstimate}</span>
+                        {item.timeEstimate && <><span aria-hidden="true">·</span><span>{item.timeEstimate}</span></>}
                       </p>
 
                       <a
@@ -431,19 +427,50 @@ export const RitualGuideScreen: React.FC<
             </div>
           </>
         ) : (
-          <div className="p-12 text-center rounded-card bg-surface border border-line mb-16">
-            <p className="text-base text-muted mb-4">
-              {rituals.length === 0
-                ? "Chưa có hướng dẫn nghi lễ được duyệt để phát hành."
-                : "Không tìm thấy nghi thức phù hợp với bộ lọc đã chọn."}
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetFilters}
+          <div className="p-8 sm:p-12 text-center rounded-card bg-surface border border-line mb-16">
+            <h2 className="font-display text-xl font-semibold text-ink mb-3">
+              {loading
+                ? "Đang tải hướng dẫn"
+                : loadError
+                  ? "Chưa tải được hướng dẫn"
+                  : rituals.length === 0
+                    ? "Cẩm nang đang được cập nhật"
+                    : "Không tìm thấy hướng dẫn phù hợp"}
+            </h2>
+
+            <p
+              role={loadError ? "alert" : "status"}
+              className="text-sm leading-relaxed text-muted mb-5"
             >
-              Đặt lại bộ lọc
-            </Button>
+              {loading
+                ? "Đang tải các hướng dẫn đã được duyệt…"
+                : loadError
+                  ? loadError
+                  : rituals.length === 0
+                    ? "Chưa có hướng dẫn được phát hành. Bạn có thể quay lại sau."
+                    : "Hãy thử từ khóa khác hoặc đặt lại bộ lọc."}
+            </p>
+
+            {!loading && loadError && (
+              <Button
+                type="button"
+                onClick={() => {
+                  setLoadAttempt((value) => value + 1);
+                }}
+              >
+                Tải lại hướng dẫn
+              </Button>
+            )}
+
+            {!loading && !loadError && rituals.length > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleResetFilters}
+              >
+                Đặt lại bộ lọc
+              </Button>
+            )}
           </div>
         )}
 

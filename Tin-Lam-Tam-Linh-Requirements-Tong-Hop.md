@@ -4,13 +4,13 @@
 ### HỆ SINH THÁI SỐ BẢO TỒN VĂN HÓA TÍN NGƯỠNG & ĐỒNG HÀNH TINH THẦN CHO THẾ HỆ TRẺ VIỆT NAM
 
 
-## PHẠM VI MVP VÀ TRẠNG THÁI TRIỂN KHAI (CẬP NHẬT 09/10/2026)
+## PHẠM VI MVP VÀ TRẠNG THÁI TRIỂN KHAI (CẬP NHẬT 13/10/2026)
 
-Tài liệu này giữ cả tầm nhìn sản phẩm và yêu cầu tương lai. MVP hiện có một số cảnh 3D/WebGL ở bàn thờ và trải nghiệm vùng miền; điều đó không đồng nghĩa mọi luồng 3D đã hoàn thiện. Xin xăm 3D, tích hợp hoa đăng từ `WishScreen`, gói năm 199.000đ, thư viện hội viên độc quyền và các quyền lợi Premium ngoài diễn giải AI là **lộ trình**, chưa phải chức năng đã bàn giao. Gói hội viên chưa thể mua/kích hoạt; các khoản giá và vật phẩm trong phần mô hình kinh doanh là giả định đề xuất.
+Tài liệu này giữ cả tầm nhìn sản phẩm và yêu cầu tương lai. Mã nguồn có một số cảnh 3D/WebGL ở bàn thờ và trải nghiệm vùng miền, nhưng các cảnh đó nằm ngoài ba luồng MVP đã chốt và không đồng nghĩa các luồng 3D đã hoàn thiện. Xin xăm 3D, tích hợp hoa đăng từ `WishScreen`, gói năm 199.000đ, thư viện hội viên độc quyền và các quyền lợi Premium ngoài diễn giải AI là **lộ trình**, chưa phải chức năng đã bàn giao. Gói hội viên chưa thể mua/kích hoạt; các khoản giá và vật phẩm trong phần mô hình kinh doanh là giả định đề xuất.
 
-Kho hiện có 14 mục bài văn hóa phía FE; chưa có bộ hơn 200 bài được bàn giao và thẩm định. Kiểm tra hiện tại có 0 nhóm thẻ xin xăm đủ điều kiện xuất bản. Các con số 200+ trong đặc tả là mục tiêu roadmap, không phải nội dung đã có. Mọi bài và quẻ phải có nguồn, quyền sử dụng và thẩm định trước khi gắn trạng thái đã xác minh; dữ liệu thiếu không được tự viết thêm để đủ số lượng. Tử vi AI hiện chỉ tạo diễn giải để suy ngẫm, không tính lá số. SMTP, Gemini và VAPID đã có giá trị cấu hình trong BE/.env nhưng chưa được xác thực hoặc kiểm thử hoạt động thực tế. Thông tin merchant VNPay và hotline chính thức của trường chưa được cấu hình nên chưa thể kiểm thử các tích hợp này.
+**Ba luồng MVP được chốt trong tài liệu này:** (1) khám phá văn hóa → đọc/lưu/xem lại bài; (2) hướng dẫn nghi lễ → checklist/lưu tiến độ; (3) check-in → nhận/lưu/xem lại lời chiêm nghiệm. Kho FE hiện có 14 mục nội dung văn hóa; chưa có bộ hơn 200 bài được bàn giao và thẩm định. Các con số 200+ là mục tiêu roadmap, không phải nội dung đã có. Mỗi nội dung phải có nguồn hoặc ghi rõ do nhóm biên soạn; trích dẫn văn hóa cần được đối chiếu và tài sản phải có căn cứ quyền phù hợp trước khi phát hành. Nội dung chưa đạt điều kiện không được giới thiệu là đã xác minh. Các luồng xin xăm, xin keo, điều ước/hoa đăng, không gian thờ 3D, lịch/nhắc giỗ, hội viên và các phân hệ khác chưa thuộc ba luồng MVP đã chốt; xem roadmap. Chức năng hỗ trợ MVP gồm đăng ký, đăng nhập, khôi phục phiên, quản lý nội dung đã lưu, xóa nội dung cá nhân và quản trị/duyệt nội dung. Tử vi AI hiện chỉ tạo diễn giải để suy ngẫm, không tính lá số. SMTP, Gemini và VAPID đã có giá trị cấu hình trong BE/.env nhưng chưa được xác thực hoặc kiểm thử hoạt động thực tế. Thông tin merchant VNPay và hotline chính thức của trường chưa được cấu hình nên chưa thể kiểm thử các tích hợp này.
 
-Các yêu cầu 3D/WebGL, mở rộng nội dung, quyền lợi hội viên theo năm và vật phẩm số trong các phần sau được hiểu là **roadmap** trừ khi mục đó ghi rõ đã có trong MVP. Gói tháng chỉ khả dụng khi cổng thanh toán được cấu hình.
+Các yêu cầu ngoài ba luồng MVP được chốt ở trên là **roadmap**; việc một màn hình hoặc thành phần đã tồn tại trong mã nguồn không tự động đưa nó vào phạm vi MVP. Gói hội viên chỉ có thể triển khai sau khi cấu hình và kiểm thử thanh toán.
 
 ---
 
@@ -49,15 +49,15 @@ Các yêu cầu 3D/WebGL, mở rộng nội dung, quyền lợi hội viên theo
    - Module 4: Zen Space – Không Gian Tĩnh Lặng & Chánh Niệm
    - Module 5: Virtual Sanctuary – Điện Thờ 3D & Nén Nhang Lòng Tri Ân Gia Tiên
    - Module 6: Bản Đồ Di Sản Ba Miền & Kho Tri Thức Văn Hóa Dân Gian
-   - Module 7: Lịch Văn Hóa, Tra Cứu Ngày Lành & Cẩm Nang Nghi Lễ Chuẩn Mực
+   - Module 7: Hướng Dẫn Nghi Lễ & Checklist
    - Module 8: Chiêm Tinh, Tử Vi AI, Gói Hội Viên "Tâm An" & Quản Lý Hồ Sơ
 5. [V. SƠ ĐỒ LUỒNG TRẢI NGHIỆM CHI TIẾT (END-TO-END MERMAID FLOWS)](#v-sơ-đồ-luồng-trải-nghiệm-chi-tiết-end-to-end-mermaid-flows)
-   - Flow 1: Luồng Đồng Hành Tinh Thần & Chữa Lành Nhanh
-   - Flow 2: Luồng Xin Xăm & Xin Keo Âm Dương Hoàn Chỉnh
-   - Flow 3: Luồng Khám Phá Di Sản Ba Miền & Tương Tác Văn Hóa
-   - Flow 4: Luồng Bàn Thờ Gia Tiên, Thắp Nhang Ảo & Nhắc Giỗ Chạp
-   - Flow 5: Luồng Tra Cứu Nghi Lễ, Mâm Cúng & Văn Khấn Chuẩn
-   - Flow 6: Luồng Đăng Ký Hội Viên & Quản Lý Góc Tâm An
+   - Flow 1 (MVP 3): Check-in & Lưu/Xem Lại Lời Chiêm Nghiệm
+   - Flow 2 (Roadmap): Luồng Xin Xăm & Xin Keo Âm Dương
+   - Flow 3 (MVP 1): Khám Phá Văn Hóa → Đọc/Lưu Bài
+   - Flow 4 (Roadmap): Bàn Thờ Gia Tiên, Thắp Nhang Ảo & Nhắc Giỗ Chạp
+   - Flow 5 (MVP 2): Hướng Dẫn Nghi Lễ → Checklist
+   - Flow 6 (Roadmap): Luồng dự kiến cho Hội viên & Quản Lý Góc Tâm An
 6. [VI. KỊCH BẢN DEMO THỰC CHIẾN PITCHING ĐẠT ĐIỂM TỐI ĐA (7-MINUTE SCRIPT)](#vi-kịch-bản-demo-thực-chiến-pitching-đạt-điểm-tối-đa-7-minute-script)
    - Phân vai, Thiết lập sân khấu & Danh mục thiết bị chuẩn bị
    - Chi tiết từng phút kịch bản (0:00 - 7:00) kèm thao tác và lời thoại "chạm cảm xúc"
@@ -103,13 +103,7 @@ Các yêu cầu 3D/WebGL, mở rộng nội dung, quyền lợi hội viên theo
 
 ### 2. Bằng chứng thị trường & Dữ liệu khảo sát thực tế (Customer Discovery Survey)
 
-Để chứng minh **Problem-Solution Fit** trước Hội đồng Thẩm định EXE101, nhóm đã thực hiện khảo sát định lượng và phỏng vấn sâu trên tệp **382 sinh viên và người trẻ đi làm (18 – 26 tuổi)** tại Đại học FPT (Hà Nội, TP.HCM, Cần Thơ) cùng các trường đại học lân cận (RMIT, Kinh tế TP.HCM, KHXH&NV):
-
-* **81.4% (311/382)** người được hỏi thừa nhận thường xuyên gặp cảm giác cô đơn, áp lực học tập/thi cử, mất phương hướng sự nghiệp và cần một điểm tựa tinh thần để an tâm.
-* **76.2% (291/382)** đã từng xem Tarot, tử vi, bói bài hoặc tìm kiếm "tín hiệu vũ trụ" online ít nhất 1 lần/tháng để xoa dịu cảm xúc.
-* **89.5% (342/382)** muốn tìm hiểu phong tục cúng kiếng, mâm lễ, văn khấn chuẩn mực nhưng không biết hỏi ai vì cha mẹ ở xa, tài liệu trên mạng thì rời rạc, tam sao thất bản.
-* **92.1% (352/382)** cảm thấy bức xúc, lo ngại trước các hiện tượng mê tín dị đoan, hù dọa vận hạn, bùa ngải lừa đảo kiếm tiền ngoài xã hội.
-* **68.8% (263/382)** sẵn sàng trả mức phí nhỏ (tương đương 20.000 – 35.000 VNĐ/tháng) cho một nền tảng văn hóa chuẩn xác, giao diện đẹp mắt, giúp thắp nhang tri ân gia tiên và nhận thông điệp tích cực mỗi ngày.
+Theo kết quả kiểm đếm hiện có, khảo sát ghi nhận **148 lượt phản hồi và 144 email duy nhất**. Nhóm đang rà soát các phản hồi trùng; trong thời gian này có thể trình bày thống kê mô tả trên 148 lượt, ghi rõ dữ liệu chưa khử trùng và mẫu số của từng tỷ lệ. Sau khi thống nhất quy tắc làm sạch, nhóm sẽ công bố thêm kết quả đã làm sạch. Con số email duy nhất là kết quả khử trùng theo email, không mặc định đồng nghĩa với số người trả lời hợp lệ; không suy rộng mẫu khảo sát thành đại diện cho toàn bộ người trẻ Việt Nam.
 
 ---
 
@@ -146,11 +140,11 @@ Các yêu cầu 3D/WebGL, mở rộng nội dung, quyền lợi hội viên theo
 | **1. Vấn đề (Problem)** | - Gen Z căng thẳng, cô đơn, chông chênh trước các bước ngoặt cuộc sống.<br>- Thiếu kiến thức phong tục truyền thống; sinh viên sống trọ không có không gian cúng kiếng.<br>- Mê tín dị đoan ngoài xã hội thao túng tâm lý, trục lợi tài chính. |
 | **2. Phân khúc khách hàng (Customer Segments)** | - *Chính yếu:* Sinh viên đại học (18–22 tuổi) tại FPTU, RMIT, HUB, UEH, VNU...<br>- *Thứ cấp:* Người trẻ mới đi làm (23–28 tuổi) chịu áp lực công việc đô thị.<br>- *Mở rộng:* Du học sinh, kiều bào xa quê muốn hướng về cội nguồn gia tiên. |
 | **3. Tuyên ngôn giá trị độc nhất (UVP, mục tiêu)** | *"Hệ sinh thái tâm linh số bản sắc Việt – Điểm tựa tinh thần an yên, kết nối cội nguồn bằng trải nghiệm số và AI có trách nhiệm."* Đây là định vị đề xuất, không phải cam kết mọi công nghệ đã hoàn tất. |
-| **4. Giải pháp (Solution, gồm MVP và hướng phát triển)** | - MVP: Mood Check-in với lời gợi mở; nội dung dân gian cần kiểm chứng nguồn trước khi gọi là trích dẫn.<br>- MVP: xin xăm dạng tương tác hiện có và gieo keo; nội dung quẻ chưa đủ điều kiện xuất bản đầy đủ.<br>- Một số cảnh bàn thờ/vùng miền 3D đang có; các nghi thức và tương tác mở rộng còn theo lộ trình.<br>- Cẩm nang, lịch văn hóa và quản lý hồ sơ được mở rộng sau khi hoàn tất biên tập/kiểm chứng. |
+| **4. Giải pháp (Solution, gồm MVP và hướng phát triển)** | - MVP gồm đúng ba luồng: khám phá văn hóa → đọc/lưu/xem lại bài; hướng dẫn nghi lễ → checklist/lưu tiến độ; check-in → nhận/lưu/xem lại lời chiêm nghiệm.<br>- Nội dung văn hóa và lời chiêm nghiệm cần nêu nguồn/trạng thái kiểm chứng phù hợp; chưa đạt điều kiện phát hành thì không giới thiệu là đã xác minh.<br>- Các phân hệ và mở rộng ngoài ba luồng này được ghi trong roadmap. |
 | **5. Kênh tiếp cận (Channels)** | - Trực tiếp tại Campus: QR code chiến dịch mùa thi, CLB Văn hóa, sự kiện Vu Lan/Tết.<br>- Trực tuyến: Kênh TikTok/Threads viral "Tín hiệu vũ trụ dân gian", Instagram Aesthetic.<br>- Hợp tác: Hội sinh viên, các bảo tàng, làng nghề thủ công truyền thống. |
 | **6. Dòng doanh thu (giả định mô hình, chưa phát sinh trong MVP)** | - Đề xuất gói hội viên "Tâm An" (29k/tháng hoặc 199k/năm); chưa mở thanh toán/kích hoạt.<br>- Vật phẩm số trang trí (9k–49k) là ý tưởng; chưa bán trong MVP.<br>- Hợp tác B2B/quà tặng văn hóa là hướng khảo sát, chưa phải doanh thu hiện có. |
 | **7. Cơ cấu chi phí (Cost Structure)** | - Hạ tầng máy chủ Cloud, Database, CDN tài nguyên 3D/Audio: ~25%.<br>- Chi phí Marketing, Campus Tour & Vận hành cộng đồng: ~40%.<br>- Chi phí Nghiên cứu, Cố vấn văn hóa & Bản quyền tư liệu: ~20%.<br>- Quản lý vận hành & Chi phí dự phòng: ~15%. |
-| **8. Chỉ số then chốt (Key Metrics)** | - DAU / MAU (Daily/Monthly Active Users).<br>- Retention Rate (D1 > 45%, D7 > 35%, D30 > 22%).<br>- Tỷ lệ chuyển đổi Freemium -> Premium (> 4.8%).<br>- LTV / CAC Ratio (> 10x). |
+| **8. Chỉ số then chốt (Key Metrics)** | - DAU / MAU (Daily/Monthly Active Users).<br>- Retention Rate mục tiêu (D1 > 45%, D7 > 35%, D30 > 22%), cần kiểm chứng.<br>- Tỷ lệ chuyển đổi Freemium -> Premium mục tiêu (> 4.8%), cần kiểm chứng.<br>- LTV / CAC chưa chốt; cần mô hình và dữ liệu phù hợp. |
 | **9. Lợi thế cần xây dựng (chưa phải lợi thế đã được chứng minh)** | - Xây dựng kho ngữ liệu văn hóa dân gian có nguồn và được chuyên gia thẩm định; hiện nội dung còn cần rà soát.<br>- Mở rộng, đo hiệu năng các cảnh WebGL trên thiết bị thực; hiện chỉ một số cảnh 3D đã có, chưa có số đo chứng minh chạy mượt trên mọi thiết bị. |
 
 ---
@@ -208,7 +202,7 @@ Các yêu cầu 3D/WebGL, mở rộng nội dung, quyền lợi hội viên theo
 | :--- | :---: | :---: | :---: | :---: |
 | **Bản sắc văn hóa Việt Nam** | ⭐⭐⭐⭐⭐ (100% Thuần Việt) | ⭐ (Hoàn toàn Tây phương) | ⭐⭐⭐⭐ (Văn hóa truyền thống) | ⭐ (Trung lập quốc tế) |
 | **Tính năng Thấu cảm / Chữa lành** | ⭐⭐⭐⭐⭐ (Ca dao, lời khuyên tích cực) | ⭐⭐⭐ (Chiêm tinh phức tạp, dễ gây hoang mang) | ❌ (Không có) | ⭐⭐⭐⭐⭐ (Chuyên sâu thiền định) |
-| **Tương tác 3D WebGL (so sánh theo tầm nhìn)** | Mục tiêu: ⭐⭐⭐⭐⭐; MVP chỉ có một số cảnh bàn thờ/vùng miền, chưa có xin xăm 3D | ⭐ (Chỉ có hình 2D tĩnh) | ❌ (Chỉ có văn bản thô) | ⭐⭐ (Đồ họa 2D tối giản) |
+| **Tương tác 3D WebGL (so sánh theo tầm nhìn)** | Mục tiêu: ⭐⭐⭐⭐⭐; mã nguồn có một số cảnh bàn thờ/vùng miền ngoài phạm vi MVP; chưa có xin xăm 3D | ⭐ (Chỉ có hình 2D tĩnh) | ❌ (Chỉ có văn bản thô) | ⭐⭐ (Đồ họa 2D tối giản) |
 | **Bàn thờ gia tiên số & Nhắc giỗ** | ⭐⭐⭐⭐⭐ (Có sổ giỗ, thắp nhang lòng) | ❌ (Không có) | ❌ (Không có) | ❌ (Không có) |
 | **Mức độ minh bạch, không mê tín** | ⭐⭐⭐⭐⭐ (Cam kết không hù dọa) | ⭐⭐⭐ (Phụ thuộc diễn giải) | ⭐⭐ (Nhiều quảng cáo mê tín) | ⭐⭐⭐⭐⭐ (Khoa học tâm lý) |
 | **Chi phí phù hợp sinh viên** | ⭐⭐⭐⭐⭐ (Freemium + 29k/tháng) | ⭐⭐ (Đắt: 150k - 250k/tháng) | ⭐⭐⭐⭐⭐ (Miễn phí nhưng nhiều rác) | ⭐ (Rất đắt: 300k+/tháng) |
@@ -227,33 +221,31 @@ Các yêu cầu 3D/WebGL, mở rộng nội dung, quyền lợi hội viên theo
 
 ### 1. Kiến trúc phân tầng (Multi-tier Architecture)
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                             PRESENTATION LAYER                              │
-│  • React 18 SPA (TypeScript) • Vite Build Tool • Service Worker cache vỏ ứng dụng       │
-│  • TailwindCSS Custom Token System • Lucide Icons • Web Audio Synthesizer   │
-│  • Trải nghiệm 2D và Web Audio; đồ họa 3D/WebGL là roadmap│
-└──────────────────────────────────────┬──────────────────────────────────────┘
-                                       │ HTTPS / JSON REST API
-┌──────────────────────────────────────▼──────────────────────────────────────┐
-│                              API GATEWAY & BE                               │
-│  • Node.js (Express Framework) • Routing Controllers                        │
-│  • JWT Auth Middleware • Express Validator • Helmet Security • Rate Limiter │
-└──────────────────────┬───────────────────────────────┬──────────────────────┘
-                       │                               │
-┌──────────────────────▼───────┐       ┌───────────────▼──────────────────────┐
-│       DATABASE LAYER         │       │          INTEGRATION LAYER           │
-│  • PostgreSQL / SQLite Local │       │  • Gemini AI Sentiment NLP Engine    │
-│  • Prisma ORM Data Models    │       │  • Lịch Vạn Niên & Tiết Khí Engine   │
-│  • Client LocalStorage Cache │       │  • MoMo / VNPay Payment Gateway SDK  │
-└──────────────────────────────┘       └──────────────────────────────────────┘
-```
+Frontend: React 19, TypeScript, Vite, Tailwind CSS.
+
+Backend: Node.js, Express, Zod validation, JWT authentication và các middleware bảo mật/rate limit hiện có.
+
+Database: PostgreSQL, Prisma ORM.
+
+Tích hợp: Google login, SMTP, Gemini, VNPay và Web Push.
+
+Trạng thái cấu hình và kiểm thử được ghi riêng cho từng dịch vụ:
+
+| Dịch vụ | Cấu hình | Kiểm thử thực tế |
+| :--- | :--- | :--- |
+| Google login | Chưa xác minh cấu hình | Chưa xác minh hoạt động thực tế. |
+| SMTP | Có giá trị cấu hình trong `BE/.env` | Chưa xác thực/kiểm thử hoạt động thực tế. |
+| Gemini | Có giá trị cấu hình trong `BE/.env` | Chưa xác thực/kiểm thử hoạt động thực tế. |
+| VNPay | Thông tin merchant chưa được cấu hình | Chưa thể kiểm thử checkout. |
+| Web Push | Có giá trị VAPID trong `BE/.env` | Chưa xác thực/kiểm thử hoạt động thực tế. |
 
 ---
 
 ### 2. Mô hình thực thể dữ liệu Prisma ORM (ERD Data Dictionary)
 
 Hệ thống được thiết kế theo cấu trúc cơ sở dữ liệu quan hệ chặt chẽ trong `BE/prisma/schema.prisma`:
+
+Đoạn dưới là mô hình khái niệm minh họa. Schema triển khai chính thức nằm trong `BE/prisma/schema.prisma`; không sử dụng đoạn minh họa này làm migration. Hội viên được quản lý bằng subscription, không phải role PREMIUM.
 
 ```prisma
 // 1. Thực thể Người dùng
@@ -262,7 +254,7 @@ model User {
   email           String           @unique
   passwordHash    String
   fullName        String
-  role            Role             @default(USER) // USER, PREMIUM, ADMIN
+  role            Role             @default(USER) // USER, ADMIN
   membershipPlan  MembershipPlan?  @relation(fields: [membershipId], references: [id])
   membershipId    String?
   savedSignals    SavedSignal[]
@@ -341,13 +333,13 @@ model MemorialRecord {
 | `POST` | `/api/v1/auth/login` | Đăng nhập nhận JWT Token | Public |
 | `POST` | `/api/v1/mood/analyze-signal` | Gửi tâm trạng + ngữ cảnh -> Nhận tín hiệu ca dao | Public / User |
 | `POST` | `/api/v1/mood/save-signal` | Lưu tín hiệu vào Góc Tâm An | Authenticated |
-| `GET` | `/api/v1/xam/draw` | Rút ngẫu nhiên thẻ xăm theo vùng miền | Public / User |
-| `POST` | `/api/v1/xam/toss-keo` | Gieo 2 đồng xu âm dương chứng quẻ | Public / User |
+| `POST` | `/api/v1/xam/draw` | Rút xăm — ngoài MVP | Public / User |
+| `POST` | `/api/v1/xam/toss-keo` | Gieo keo — cần đăng nhập, ngoài MVP | Authenticated |
 | `POST` | `/api/v1/wishes` | Tạo điều ước / Thả đèn hoa đăng số | Authenticated |
 | `GET` | `/api/v1/memorials` | Lấy danh sách hồ sơ bàn thờ gia tiên & ngày giỗ | Authenticated |
 | `POST` | `/api/v1/memorials/:id/incense` | Thao tác thắp nén nhang lòng tri ân | Authenticated |
-| `GET` | `/api/v1/rituals/:slug` | Tra cứu chi tiết mâm cúng & văn khấn nôm | Public |
-| `POST` | `/api/v1/membership/upgrade` | Nâng cấp gói hội viên "Tâm An" | Authenticated |
+| `GET` | `/api/v1/content/rituals/:slug` | Chi tiết nghi lễ | Public |
+| `POST` | `/api/v1/membership/checkout` | Checkout hội viên — ngoài MVP | Authenticated |
 
 ---
 
@@ -355,28 +347,39 @@ model MemorialRecord {
 
 ### Ma trận phân loại ưu tiên tính năng MoSCoW
 
-* **Must Have (ưu tiên theo tầm nhìn; không khẳng định đã bàn giao):** Mood Check-in, tín hiệu có nguồn, xin xăm, xin keo, bàn thờ gia tiên, cẩm nang và lịch âm dương. Tình trạng thực tế được nêu trong phần đầu; dữ liệu chưa thẩm định không được tính là hoàn tất.
-* **Should Have (lộ trình):** Tích hợp hoa đăng trong Wish, sổ nhắc ngày giỗ có đồng bộ/push, âm thanh chuông đúng đặc tả 432Hz, mở rộng bản đồ văn hóa và gói hội viên có thanh toán.
-* **Could Have (Mở rộng giai đoạn 2):** Luận giải tử vi chuyên sâu bằng AI, Âm nhạc Chầu Văn tương tác 360 độ, Đố vui văn hóa nhận quà.
+* **MVP:** Ba luồng: khám phá văn hóa → đọc/lưu/xem lại bài; hướng dẫn nghi lễ → checklist/lưu tiến độ; check-in → nhận/lưu/xem lại lời chiêm nghiệm.
+* **Điều kiện phát hành MVP:** Nội dung dùng trong ba luồng phải có nguồn hoặc ghi rõ do nhóm biên soạn; trích dẫn văn hóa phải được đối chiếu; tài sản được sử dụng phải có căn cứ quyền phù hợp. Nội dung chưa đạt điều kiện không được giới thiệu là đã xác minh.
+* **Chức năng hỗ trợ MVP:** Đăng ký, đăng nhập, khôi phục phiên, quản lý nội dung đã lưu, xóa nội dung cá nhân và quản trị/duyệt nội dung.
+* **Roadmap:** Mở rộng kho nội dung; bản đồ và trải nghiệm vùng miền nâng cao; xin xăm/xin keo; hoa đăng; không gian thờ; lịch/nhắc giỗ; Zen; hội viên, thanh toán và các tính năng AI mở rộng.
+* Các thành phần roadmap có thể đã tồn tại trong mã nguồn. Trạng thái triển khai được ghi riêng, không đồng nghĩa chúng đã được nghiệm thu hoặc phát hành.
+* **Could Have (mở rộng sau roadmap nền tảng):** Luận giải tử vi chuyên sâu bằng AI, âm nhạc Chầu Văn tương tác 360 độ, đố vui văn hóa nhận quà.
 * **Won't Have (Tuyệt đối không làm):** Bói toán hù dọa tang tóc, Dịch vụ cúng sao giải hạn thu tiền triệu, Mua bán bùa ngải.
 
 ---
 
 ### Module 1: Mood Check-in & Tín Hiệu Vũ Trụ Bản Sắc Việt
+* **Phạm vi:** Một phần của luồng MVP 3: check-in → nhận/lưu/xem lại lời chiêm nghiệm.
 * **Màn hình:** `MoodCheckInScreen`, `SignalLoadingScreen`, `SignalResultScreen`, `MoodJourneyScreen`.
 * **User Story:**
   > *Là một sinh viên đang gặp áp lực thi cử,*
   > *Tôi muốn check-in tâm trạng và nhận một thông điệp dân gian ý nghĩa,*
   > *Để tôi được an ủi tinh thần và có thêm động lực vượt qua khó khăn.*
-* **Acceptance Criteria (Gherkin):**
-  - **Given:** Người dùng mở `MoodCheckInScreen`.
-  - **When:** Người dùng chọn 1 trạng thái cảm xúc (ví dụ: *Chông chênh*), 1 chủ đề (ví dụ: *Thi cử*), và nhấn *"Nhận tín hiệu"*.
-  - **Then:** Hệ thống hiển thị hiệu ứng chuyển cảnh tải năng lượng trong tối đa 2.5 giây; trả về bài thơ ca dao 2 câu tương ứng ngữ cảnh, kèm lời bình tâm lý tích cực và 1 hành động chánh niệm cụ thể.
-  - **And:** Người dùng có thể nhấn nút "Lưu tín hiệu" để lưu vào LocalStorage/Database.
+* **Acceptance Criteria:**
+  - Người dùng chọn một cảm xúc và một chủ đề; ghi chú cá nhân là tùy chọn.
+  - Khi gửi, giao diện hiển thị trạng thái đang xử lý và ngăn gửi trùng.
+  - Khi thành công, hiển thị lời chiêm nghiệm và một hành động thực tế phù hợp. Nội dung biên soạn, trích dẫn dân gian và phần AI phải được phân biệt rõ.
+  - Trích dẫn dân gian chỉ được hiển thị khi đã có nguồn và được đối chiếu; không bắt buộc mọi kết quả phải là bài ca dao hai câu.
+  - Người chưa đăng nhập có thể nhận kết quả; khi muốn lưu thì đăng nhập và tiếp tục thao tác lưu.
+  - Chỉ thông báo lưu thành công sau khi máy chủ xác nhận.
+  - Người dùng có thể mở lại và xóa bản ghi đã lưu; không truy cập được dữ liệu của tài khoản khác.
+  - F5 hoặc mở đường dẫn kết quả phải tải lại nội dung tương ứng nếu nội dung còn khả dụng. Nếu nội dung đã bị thu hồi, hiển thị thông báo phù hợp.
+  - Khi API lỗi hoặc timeout, hiển thị lỗi và cho phép thử lại; không dùng dữ liệu mẫu để báo thành công.
+  - Thời gian phản hồi được đo trong kiểm thử; chưa cam kết tối đa 2,5 giây khi chưa xác định điều kiện thiết bị, mạng và dịch vụ AI.
 
 ---
 
 ### Module 2: Chiêm Nghiệm, Xin Xăm & Xin Keo Tương Tác 2D/3D
+* **Trạng thái phạm vi:** Roadmap; không thuộc ba luồng MVP đã chốt.
 * **Màn hình:** `XinXamScreen`, `XinKeoScreen`.
 * **User Story:**
   > *Là một người trẻ đang đứng trước quyết định quan trọng,*
@@ -392,6 +395,7 @@ model MemorialRecord {
 ---
 
 ### Module 3: Hòm Thư Điều Ước & Thả Hoa Đăng Số
+* **Trạng thái phạm vi:** Roadmap; không thuộc ba luồng MVP đã chốt.
 * **Màn hình:** `WishScreen`.
 * **Trạng thái:** lưu lời nguyện có BE mã hóa; hiệu ứng buông bỏ trong Wish chưa nối với cảnh hoa đăng WebGL. Các yêu cầu sau đây mô tả đích sản phẩm, trừ các gạch đầu dòng ghi rõ hiện trạng.
 * **User Story:**
@@ -407,6 +411,7 @@ model MemorialRecord {
 ---
 
 ### Module 4: Zen Space – Không Gian Tĩnh Lặng & Chánh Niệm
+* **Trạng thái phạm vi:** Roadmap; không thuộc ba luồng MVP đã chốt.
 * **Màn hình:** `ZenScreen`.
 * **User Story:**
   > *Là một người đang bị quá tải thông tin và căng thẳng tột độ,*
@@ -419,6 +424,7 @@ model MemorialRecord {
 ---
 
 ### Module 5: Virtual Sanctuary – Điện Thờ 3D & Nén Nhang Lòng Tri Ân Gia Tiên
+* **Trạng thái phạm vi:** Roadmap; không thuộc ba luồng MVP đã chốt.
 * **Màn hình:** `VirtualSanctuaryScreen`, `AncestorAltarScreen`, `MemorialSpaceScreen`, `MemorialFormScreen`, `GratitudeScreen`.
 * **User Story:**
   > *Là một người con sống xa quê hương trong phòng trọ chật hẹp,*
@@ -432,34 +438,41 @@ model MemorialRecord {
 ---
 
 ### Module 6: Bản Đồ Di Sản Ba Miền & Kho Tri Thức Văn Hóa Dân Gian
+* **Phạm vi:** Luồng MVP 1 là khám phá văn hóa → đọc/lưu bài. Bản đồ/hiệu ứng mở rộng và thư viện lớn thuộc roadmap.
 * **Màn hình:** `CulturalMapScreen`, `RegionCultureScreen`, `RegionalExperienceScreen`, `CultureScreen`, `CultureDetailScreen`.
 * **User Story:**
-  > *Là một người trẻ tò mò về tín ngưỡng dân tộc,*
-  > *Tôi muốn khám phá bản đồ 3 miền với hình ảnh và âm thanh đặc trưng,*
-  > *Để hiểu đúng về Đạo Mẫu, tín ngưỡng thờ Cá Ông và lễ hội Vía Bà.*
+  > *Là người trẻ quan tâm văn hóa tín ngưỡng Việt Nam, tôi muốn tìm và đọc bài viết ngắn có nguồn rõ ràng, để hiểu nội dung và lưu lại khi cần.*
 * **Acceptance Criteria:**
-  - Bản đồ Việt Nam chia làm 3 vùng tương tác:
-    + *Bắc Bộ:* Đạo Mẫu Tứ Phủ, âm nhạc Chầu Văn, Đền Trần, Phủ Tây Hồ.
-    + *Trung Bộ:* Di sản Cố đô Huế, Tín ngưỡng thờ Cá Ông (Nam Hải đại tướng quân).
-    + *Nam Bộ:* Đại lễ Vía Bà Chúa Xứ Núi Sam, Núi Bà Đen Tây Ninh, thờ Ông Tà.
+  - Duyệt và tìm kiếm bài theo chủ đề/vùng miền.
+  - Mở bài để đọc nội dung, nguồn, phạm vi áp dụng và trạng thái biên tập.
+  - Nội dung chưa đủ điều kiện phát hành không xuất hiện như bài đã xác minh.
+  - Lưu, mở lại và bỏ lưu bài.
+  - MVP lưu bookmark trên trình duyệt theo phạm vi người dùng; chưa cam kết đồng bộ bookmark giữa các thiết bị.
+  - Bài bị thu hồi hoặc đường dẫn không tồn tại phải có thông báo phù hợp.
+  - Bản đồ, âm thanh và trải nghiệm vùng miền nâng cao thuộc roadmap.
   - **Roadmap, chưa bàn giao:** xây dựng thư viện hơn 200 bài viết nghiên cứu có nguồn, quyền sử dụng và thẩm định; MVP hiện có 14 mục bài phía FE, chưa có mục được ghi nhận đã duyệt.
 
 ---
 
-### Module 7: Lịch Văn Hóa, Tra Cứu Ngày Lành & Cẩm Nang Nghi Lễ Chuẩn Mực
+### Module 7: Hướng Dẫn Nghi Lễ & Checklist
+* **Phạm vi:** Luồng MVP 2 là hướng dẫn nghi lễ → checklist. Lịch, tra cứu ngày và các phần mở rộng khác thuộc roadmap.
 * **Màn hình:** `CulturalCalendarScreen`, `GoodDayScreen`, `EventDetailScreen`, `RitualGuideScreen`, `RitualDetailScreen`.
 * **User Story:**
-  > *Là một bạn trẻ lần đầu tự tay chuẩn bị mâm cúng Rằm tại nhà trọ,*
-  > *Tôi muốn xem danh sách đồ lễ cần mua và bài văn khấn nôm chuẩn,*
-  > *Để thực hiện nghi lễ trang nghiêm, đúng phong tục mà không bị lúng túng.*
+  > *Là người lần đầu chuẩn bị một dịp lễ trong gia đình, tôi muốn đọc hướng dẫn và đánh dấu checklist, để chuẩn bị phù hợp với nếp nhà và điều kiện của mình.*
 * **Acceptance Criteria:**
-  - Tra cứu lịch Âm - Dương, Can Chi, Tiết khí, Giờ hoàng đạo theo ngày thực tế.
-  - Cung cấp checklist sắm lễ trực quan (có ô đánh dấu đã mua).
-  - Cung cấp toàn văn bài văn khấn nôm chuẩn, hỗ trợ "Chế độ đọc trang nghiêm" (chữ to, nền tối trang nhã, không tắt màn hình khi đang khấn).
+  - Chọn và mở một hướng dẫn được phép phát hành.
+  - Hiển thị nguồn, phạm vi địa phương/gia đình và các phần tùy chọn; không giới thiệu một cách thực hành là chuẩn chung toàn quốc.
+  - Đánh dấu hoặc bỏ đánh dấu từng mục checklist.
+  - Lưu tiến độ trên trình duyệt theo người dùng và từng hướng dẫn; mở lại vẫn giữ tiến độ khi dữ liệu trình duyệt còn tồn tại.
+  - Cho phép đặt lại checklist.
+  - Không cam kết đồng bộ checklist giữa các thiết bị trong MVP.
+  - Văn khấn chỉ xuất hiện khi đủ căn cứ nội dung và quyền sử dụng phù hợp.
+  - Lịch âm dương, tra cứu ngày và chế độ đọc nâng cao thuộc roadmap.
 
 ---
 
 ### Module 8: Chiêm Tinh, Tử Vi AI, Gói Hội Viên "Tâm An" & Quản Lý Hồ Sơ
+* **Trạng thái phạm vi:** Roadmap, ngoại trừ chức năng xem lại lời chiêm nghiệm đã lưu thuộc luồng MVP 3.
 * **Màn hình:** `AstrologyHubScreen`, `HoroscopeScreen`, `MembershipScreen`, `AccountScreen`, `SettingsScreen`, `NotificationScreen`.
 * **Trạng thái:** checkout VNPay và kích hoạt hội viên chưa khả dụng; `MembershipScreen` hiện nhận email quan tâm. User story/quyền lợi trả phí bên dưới là mục tiêu roadmap, không phải dịch vụ có thể mua ở MVP.
 * **User Story:**
@@ -474,7 +487,7 @@ model MemorialRecord {
 
 ## V. SƠ ĐỒ LUỒNG TRẢI NGHIỆM CHI TIẾT (END-TO-END MERMAID FLOWS)
 
-### Flow 1: Luồng Đồng Hành Tinh Thần & Chữa Lành Nhanh
+### Flow 1 (MVP 3): Check-in & Lưu/Xem Lại Lời Chiêm Nghiệm
 
 ```mermaid
 flowchart TD
@@ -488,21 +501,24 @@ flowchart TD
     ClickMood --> MoodScreen[Màn hình MoodCheckInScreen]
     MoodScreen --> SelectMood[Chọn cảm xúc: Áp lực / Chông chênh / An yên...]
     SelectMood --> SelectContext[Chọn bối cảnh: Thi cử / Công việc / Tình cảm]
-    SelectContext --> InputNote[Nhập đôi dòng nhật ký tâm sự]
-    
-    InputNote --> ClickSend[Nhấn 'Nhận tín hiệu vũ trụ']
-    ClickSend --> Loading[SignalLoadingScreen: AI phân tích & Lọc kho dân gian]
-    
-    Loading --> Result[SignalResultScreen: Hiển thị 2 câu ca dao + Lời khuyên + Hành động]
-    Result --> ActionChoice{Hành động tiếp theo}
-    ActionChoice -- Lưu lại --> Save[Bấm nút 'Lưu tín hiệu' -> Lưu vào Góc Tâm An]
-    ActionChoice -- Muốn bình an hơn --> ZenFlow[Chuyển sang Thả Hoa Đăng hoặc Zen Screen]
-    ActionChoice -- Hoàn tất --> Today
+    SelectContext --> InputNote{Có muốn thêm ghi chú cá nhân?}
+    InputNote -- Có --> AddNote[Nhập ghi chú tùy chọn]
+    InputNote -- Không --> ClickSend[Nhấn 'Nhận tín hiệu']
+    AddNote --> ClickSend
+    ClickSend --> Loading[Hiển thị trạng thái xử lý, ngăn gửi trùng]
+    Loading --> Result[Hiển thị lời chiêm nghiệm đã phân loại và hành động thực tế]
+    Result --> SaveChoice{Muốn lưu kết quả?}
+    SaveChoice -- Chưa đăng nhập --> Login[Đăng nhập rồi tiếp tục lưu]
+    SaveChoice -- Đã đăng nhập --> Save[Gửi yêu cầu lưu]
+    Login --> Save
+    Save --> Confirm[Chỉ báo lưu thành công sau xác nhận từ máy chủ]
+    Confirm --> Saved[Mở lại hoặc xóa bản ghi đã lưu]
+    SaveChoice -- Không --> Today([Kết thúc])
 ```
 
 ---
 
-### Flow 2: Luồng Xin Xăm & Xin Keo Âm Dương Hoàn Chỉnh
+### Flow 2 (Roadmap): Luồng Xin Xăm & Xin Keo Âm Dương
 
 ```mermaid
 flowchart TD
@@ -517,7 +533,7 @@ flowchart TD
     G -- Có --> H[Chuyển sang XinKeoScreen]
     H --> I[Chạm nút gieo 2 đồng xu cổ]
     I --> J{Kết quả gieo keo}
-    J -- Nhất âm nhất dương --> K[Được quẻ: Thần linh chứng giám, quẻ linh ứng!]
+    J -- Nhất âm nhất dương --> K[Kết quả mô phỏng một âm, một dương; không xác nhận quyết định hay dự báo tương lai]
     J -- Nhị dương / Nhị âm --> L[Chưa được: Khuyên người dùng tịnh tâm gieo lại]
     
     K --> M[Đọc bài thơ chữ Hán - Việt & Điển tích lịch sử]
@@ -530,30 +546,22 @@ flowchart TD
 
 ---
 
-### Flow 3: Luồng Khám Phá Di Sản Ba Miền & Tương Tác Văn Hóa
+### Flow 3 (MVP 1): Khám Phá Văn Hóa → Đọc/Lưu Bài
 
 ```mermaid
 flowchart TD
-    A([Người dùng chọn 'Khám Phá Di Sản']) --> B[CulturalMapScreen: Bản đồ 3 miền tương tác]
-    B --> C{Chọn vùng miền}
-    
-    C -- Miền Bắc --> D[Bắc Bộ: Đạo Mẫu, Tam phủ Tứ phủ & Chầu Văn]
-    C -- Miền Trung --> E[Trung Bộ: Di sản Cố Đô & Tín ngưỡng Cá Ông biển]
-    C -- Miền Nam --> F[Nam Bộ: Lễ hội Vía Bà Chúa Xứ & Miệt vườn sông nước]
-    
-    D --> G[Trải nghiệm âm nhạc Chầu Văn & Tham quan Phủ 3D]
-    E --> H[Tìm hiểu tích Cá Ông & Không gian Trầm mặc cố đô]
-    F --> I[Tham gia thả đèn hoa đăng số trên sông nước miền Tây]
-    
-    G --> J[Đọc các bài nghiên cứu bách khoa di sản]
-    H --> J
-    I --> J
-    J --> K([Gia tăng tình yêu và niềm tự hào bản sắc dân tộc])
+    A([Người dùng mở Khám phá văn hóa]) --> B[CultureScreen: Duyệt chủ đề/bài hiện có]
+    B --> C[Chọn một bài văn hóa]
+    C --> D[CultureDetailScreen: Đọc nội dung và thông tin nguồn/trạng thái]
+    D --> E{Muốn lưu bài?}
+    E -- Có --> F[Lưu bài vào danh sách đã lưu]
+    E -- Chưa --> G([Kết thúc đọc])
+    F --> H[Xem lại bài trong danh sách đã lưu]
 ```
 
 ---
 
-### Flow 4: Luồng Bàn Thờ Gia Tiên, Thắp Nhang Ảo & Nhắc Giỗ Chạp
+### Flow 4 (Roadmap): Bàn Thờ Gia Tiên, Thắp Nhang Ảo & Nhắc Giỗ Chạp
 
 ```mermaid
 flowchart TD
@@ -581,27 +589,20 @@ flowchart TD
 
 ---
 
-### Flow 5: Luồng Tra Cứu Nghi Lễ, Mâm Cúng & Văn Khấn Chuẩn
+### Flow 5 (MVP 2): Hướng Dẫn Nghi Lễ → Checklist
 
 ```mermaid
 flowchart TD
-    A([Chuẩn bị cúng kiếng tại nhà]) --> B[Truy cập RitualGuideScreen]
-    B --> C[Tìm kiếm dịp lễ: Tết, Rằm, Giỗ, Khai trương...]
-    C --> D[Chọn bài nghi lễ: 'Cúng Rằm Tháng Giêng']
-    
-    D --> E[Mở RitualDetailScreen]
-    E --> F[Xem Tab 1: Checklist chuẩn bị mâm lễ trực quan]
-    E --> G[Xem Tab 2: Trình tự các bước thực hiện trang nghiêm]
-    E --> H[Xem Tab 3: Bài văn khấn nôm chuẩn mực]
-    
-    F --> I[Đánh dấu các món lễ vật đã sắm đủ]
-    H --> J[Bật 'Chế độ đọc trang nghiêm' để cầm điện thoại đọc khấn]
-    J --> K([Nghi lễ hoàn tất trọn vẹn, đúng phong tục cha ông])
+    A([Người dùng mở Hướng dẫn nghi lễ]) --> B[RitualGuideScreen: Chọn hướng dẫn hiện có]
+    B --> C[RitualDetailScreen: Đọc hướng dẫn và xem trạng thái nội dung]
+    C --> D[Mở checklist chuẩn bị]
+    D --> E[Đánh dấu từng mục đã chuẩn bị]
+    E --> F([Lưu tiến độ checklist và kết thúc])
 ```
 
 ---
 
-### Flow 6: Luồng dự kiến cho Hội viên & Quản Lý Góc Tâm An
+### Flow 6 (Roadmap): Luồng dự kiến cho Hội viên & Quản Lý Góc Tâm An
 
 > **Trạng thái MVP:** chưa có checkout VNPay khả dụng, chưa ghi nhận thanh toán và chưa kích hoạt quyền lợi hội viên. `MembershipScreen` hiện nhận email quan tâm; sơ đồ dưới đây là luồng mục tiêu sau khi tích hợp thanh toán và kiểm thử quyền lợi.
 
@@ -635,73 +636,46 @@ flowchart TD
 #### ⏱️ Phút 0:00 – 0:45: Hook mở đầu – Chạm đúng nỗi đau thực tế
 * **Màn hình:** `GuestScreen` (Giao diện chào mừng, đồ họa hoài cổ tinh tế).
 * **Lời thoại Founder:**
-  > *"Kính thưa Hội đồng Thẩm định! Khi một bạn sinh viên Gen Z đứng trước kỳ thi tốt nghiệp, áp lực tìm việc hay cảm thấy chênh vênh giữa căn phòng trọ xa nhà, bạn ấy sẽ tìm đến ai? Khảo sát trên 380 sinh viên của chúng em cho thấy: Hơn 76% bạn trẻ tìm đến Tarot hoặc bói toán mạng để tìm kiếm một 'tín hiệu vũ trụ' an ủi. Nhưng nghịch lý là: Dân tộc ta sở hữu một kho tàng văn hóa tín ngưỡng dân gian vô cùng nhân văn, người trẻ lại thấy quá xa cách, phức tạp hoặc e sợ trước những biến tướng mê tín dị đoan bên ngoài.*
+  > *"Kính thưa Hội đồng Thẩm định! Khi một bạn sinh viên Gen Z đứng trước kỳ thi tốt nghiệp, áp lực tìm việc hay cảm thấy chênh vênh giữa căn phòng trọ xa nhà, bạn ấy cần một nơi có thể khám phá văn hóa, tìm hướng dẫn nghi lễ dễ theo dõi và nhận lời chiêm nghiệm tích cực. Khảo sát hiện ghi nhận 148 lượt phản hồi và 144 email duy nhất. Trong khi rà soát phản hồi trùng, nhóm trình bày thống kê mô tả trên 148 lượt, ghi rõ dữ liệu chưa khử trùng và mẫu số từng tỷ lệ; kết quả đã làm sạch sẽ được cập nhật sau khi thống nhất quy tắc xử lý.*
   >
   > *Đó là lý do chúng em mang đến **'Tin Lắm Tâm Linh'** – Hệ sinh thái số tiên phong kết hợp giữa Chữa lành tinh thần và Bảo tồn di sản văn hóa tín ngưỡng dân gian. Xin mời thầy cô cùng bước vào trải nghiệm trực tiếp sản phẩm của chúng em!"*
 
 ---
 
-#### ⏱️ Phút 0:45 – 2:00: Demo Luồng 1 – Check-in Cảm Xúc & Tín Hiệu Vũ Trụ Bản Sắc Việt
+#### ⏱️ Phút 0:45 – 2:00: Demo Luồng 1 – Khám Phá Văn Hóa & Lưu Bài
 * **Thao tác Demo Lead:**
-  1. Bấm *"Khám phá ngay"* hoặc đăng nhập vào `TodayScreen`.
-  2. Bấm nút *"Lắng nghe tâm trạng"* mở `MoodCheckInScreen`.
-  3. Chọn cảm xúc: **"Chông chênh"**. Chọn ngữ cảnh: **"Thi cử & Đồ án tốt nghiệp"**. Nhập nhanh: *"Em chuẩn bị bảo vệ đề án EXE101 và đang rất hồi hộp."*
-  4. Bấm *"Nhận tín hiệu vũ trụ"*.
-  5. Màn hình `SignalLoadingScreen` hội tụ năng lượng trong 2 giây rồi hiển thị `SignalResultScreen`.
+  1. Mở `CultureScreen` và chọn một chủ đề văn hóa.
+  2. Mở một bài trong `CultureDetailScreen`, chỉ rõ nguồn/trạng thái nội dung đang hiển thị.
+  3. Lưu bài và mở lại từ danh sách đã lưu.
 * **Lời thoại Founder:**
-  > *"Mỗi sáng thức dậy, thay vì bói toán nặng nề, người dùng được check-in cảm xúc. Thuật toán AI thấu cảm của chúng em đối chiếu tâm trạng bạn với kho tàng văn học dân gian. Như thầy cô đang thấy trên màn hình: Với tâm trạng chông chênh trước kỳ thi, ứng dụng gửi đến bạn câu ca dao:*
-  >
-  > **'Nước chảy đá mòn, có công mài sắt có ngày nên kim'**
-  >
-  > *Kèm lời nhắn nhủ tâm lý: 'Những nỗ lực âm thầm của bạn suốt cả kỳ học chắc chắn sẽ đơm hoa kết trái. Hôm nay hãy hít một hơi thật sâu và tự thưởng cho mình một tách trà ấm.' Một lời an ủi mang đậm hồn Việt, chữa lành mà không hề giáo điều!"*
+  > *"Luồng đầu tiên đưa người dùng đến nội dung văn hóa, cho phép đọc bài, xem thông tin nguồn/trạng thái và lưu lại để xem sau. Kho nội dung sẽ được mở rộng khi từng bài hoàn tất kiểm chứng và quyền sử dụng."*
 
 ---
 
-#### ⏱️ Phút 2:00 – 3:15: Demo Luồng 2 – Trải nghiệm xin xăm hiện có & xin keo âm dương
+#### ⏱️ Phút 2:00 – 3:15: Demo Luồng 2 – Hướng Dẫn Nghi Lễ & Checklist
 * **Thao tác Demo Lead:**
-  1. Mở `XinXamScreen` và thao tác theo hướng dẫn/nhãn đang hiển thị trên bản chạy.
-  2. Nêu rõ nội dung quẻ hiện là dữ liệu mẫu/xem trước, chưa đủ điều kiện xuất bản như nội dung đã thẩm định.
-  3. Nếu bản đang chạy cung cấp điều hướng, mở `XinKeoScreen` và trình bày kết quả mô phỏng đúng như UI; không khẳng định đây là nghi thức thật hay xăm 3D vật lý.
+  1. Mở `RitualGuideScreen` và chọn một hướng dẫn có sẵn.
+  2. Xem các bước hướng dẫn và trạng thái nội dung.
+  3. Mở checklist, đánh dấu một mục đã chuẩn bị.
 * **Lời thoại Founder:**
-  > *"MVP hiện cho người dùng thử luồng xin xăm và gieo keo trên giao diện số. Đây là trải nghiệm chiêm nghiệm minh họa; bộ quẻ đang cần rà soát nguồn và thẩm định nên chúng em chưa giới thiệu như lời giải đã được xác minh.*
-  >
-  > *Các cảnh 3D ở một số khu vực khác là phần riêng của MVP; hiệu ứng xin xăm 3D vẫn nằm trong lộ trình."*
+  > *"Luồng thứ hai giúp người dùng xem hướng dẫn nghi lễ và theo dõi các bước chuẩn bị bằng checklist. Nội dung được giới thiệu theo đúng trạng thái biên tập và thẩm định hiện có."*
 
 ---
 
-#### ⏱️ Phút 3:15 – 4:30: Demo Luồng 3 – Bàn Thờ Gia Tiên Số & Nén Nhang Lòng Cho Người Xa Quê
+#### ⏱️ Phút 3:15 – 4:30: Demo Luồng 3 – Check-in & Lưu Lời Chiêm Nghiệm
 * **Thao tác Demo Lead:**
-  1. Chuyển sang mục **"Bàn Thờ Gia Tiên"** (`AncestorAltarScreen` / `MemorialSpaceScreen`).
-  2. Hiển thị không gian bàn thờ trang nghiêm, ấm cúng.
-  3. Bấm vào nén nhang: Đầu hương đỏ rực, khói trầm lan tỏa kèm tiếng chuông ngân thanh tịnh vang lên.
-  4. Mở tính năng *"Sổ nhắc ngày Giỗ"* và *"Gửi lời tri ân"*.
+  1. Mở `MoodCheckInScreen`, chọn cảm xúc và chủ đề rồi nhận lời chiêm nghiệm.
+  2. Lưu kết quả.
+  3. Mở danh sách đã lưu để xem lại kết quả vừa nhận.
 * **Lời thoại Founder:**
-  > *"Đây chính là tính năng chạm đến trái tim của hàng triệu sinh viên và kiều bào xa quê: **Bàn Thờ Gia Tiên Số & Nén Nhang Lòng**. Ở phòng trọ chật hẹp hay ký túc xá nước ngoài, các bạn không thể lập bàn thờ thật. Nhưng với Tin Lắm Tâm Linh, mỗi dịp Rằm, Mùng Một hay ngày giỗ ông bà, bạn có thể mở điện thoại, thắp nén nhang lòng tri ân, dâng đóa sen thơm và gửi gắm đôi dòng tưởng nhớ cội nguồn.*
-  >
-  > *Chúng em dùng công nghệ hiện đại làm nhịp cầu gìn giữ đạo lý 'Uống nước nhớ nguồn' của dân tộc."*
+  > *"Luồng thứ ba cho người dùng check-in, nhận một lời chiêm nghiệm, lưu lại và xem lại sau. Đây là nội dung gợi mở để suy ngẫm, không dự đoán tương lai hay thay thế hỗ trợ chuyên môn."*
 
 ---
 
-#### ⏱️ Phút 4:30 – 5:30: Demo Luồng 4 – Cẩm Nang Mâm Cúng Chuẩn Mực & Bản Đồ Di Sản Ba Miền
-* **Thao tác Demo Lead:**
-  1. Mở `RitualGuideScreen` -> Chọn bài *"Mâm cúng Rằm Tháng Giêng"*.
-  2. Cuộn cho Hội đồng xem checklist lễ vật trực quan và bài văn khấn nôm chuẩn mực.
-   3. Chuyển sang `CulturalMapScreen` -> Chọn vùng **Miền Bắc** (Đạo Mẫu & Chầu Văn). Nếu thư viện có bản thu đã được cấp quyền thì mở một đoạn; nếu chưa có, giới thiệu phần nội dung đọc và nói rõ bản thu chưa khả dụng.
+#### ⏱️ Phút 4:30 – 6:30: Tóm Tắt Phạm Vi MVP & Roadmap
+* **Thao tác Demo Lead:** Tóm tắt ba luồng vừa trình diễn; nêu các phần đang nằm trong roadmap theo mục VIII.2.
 * **Lời thoại Founder:**
-  > *"Ứng dụng giải quyết triệt để sự lúng túng của người trẻ mỗi khi chuẩn bị cúng kiếng bằng Cẩm nang nghi thức chuẩn mực: từ mâm ngũ quả, cúng chay mặn đến bài văn khấn nôm chính thống.*
-  >
-  > *Cùng với đó là Bản đồ di sản ba miền: đưa người trẻ khám phá Đạo Mẫu Bắc Bộ, văn hóa biển miền Trung hay lễ hội Vía Bà phương Nam ngay trong tầm tay."*
-
----
-
-#### ⏱️ Phút 5:30 – 6:30: Demo Luồng 5 – Mô Hình Kinh Doanh, Gói Hội Viên & Quản Lý Hồ Sơ
-* **Thao tác Demo Lead:**
-  1. Mở `MembershipScreen`: Giới thiệu định hướng gói **"Tâm An"** (giá đề xuất 29.000 VNĐ/tháng; checkout chưa khả dụng).
-  2. Mở `AccountScreen`: Hiển thị kho tín hiệu đã lưu, lịch sử xăm và sổ giỗ.
-* **Lời thoại Founder:**
-  > *"MVP hiện mở các tính năng cơ bản để dùng thử. Gói Tâm An và mức giá 29.000 đồng/tháng là giả thuyết kinh doanh đang đề xuất; thanh toán VNPay, kích hoạt hội viên, thư viện độc quyền và không gian 3D đặc quyền chưa khả dụng. Diễn giải AI theo năm cũng chỉ thử được khi Gemini được cấu hình và không thay thế lá số tử vi.*
-  >
-  > *Doanh thu từ vật phẩm số và hợp tác B2B cũng là phương án nghiên cứu, chưa phải dịch vụ đang bán."*
+  > *"MVP tập trung vào ba việc: khám phá và lưu bài văn hóa, làm theo checklist hướng dẫn nghi lễ, và check-in để nhận rồi xem lại lời chiêm nghiệm. Các phân hệ mở rộng như xin xăm, không gian thờ 3D, hội viên và thanh toán sẽ được xem xét trong roadmap sau khi hoàn thiện nội dung, kiểm thử tích hợp và xác nhận điều kiện phát hành."*
 
 ---
 
@@ -728,11 +702,10 @@ flowchart TD
 
 * **CAC (Customer Acquisition Cost):** **11.200 VNĐ / người dùng mới**.
   - Tận dụng mạng lưới sinh viên Campus FPT và video ngắn viral tự nhiên trên TikTok/Threads nên chi phí kéo người dùng cực kỳ thấp.
-* **ARPU (Average Revenue Per User hàng tháng):** **14.200 VNĐ / người dùng hoạt động**.
+* **ARPU:** Chưa chốt. Nếu ARPPU là **35.000đ/tháng** và tỷ lệ người trả phí là **5%**, doanh thu từ nhóm trả phí tương ứng **1.750đ/người hoạt động/tháng**. Các nguồn doanh thu khác phải được tính và giải thích riêng.
 * **ARPPU (Average Revenue Per Paying User):** **35.000 VNĐ / người dùng trả phí** (kết hợp Subscription + mua vật phẩm số).
 * **LTV (Customer Lifetime Value - Vòng đời 12 tháng):** **172.000 VNĐ / Paying User**.
-* **Tỷ lệ LTV / CAC:** **~15.3x** (Vượt xa ngưỡng an toàn 3x của các quỹ đầu tư mạo hiểm).
-* **Payback Period (Thời gian thu hồi chi phí CAC):** **~1.8 tháng**.
+* **LTV/CAC và thời gian hoàn vốn:** Chưa chốt, cần mô hình sử dụng cùng nhóm khách hàng, có chi phí phục vụ, tỷ lệ gia hạn và churn.
 
 ---
 
@@ -775,7 +748,7 @@ flowchart TD
 | **TỔNG CHI PHÍ (B)** | **70.000.000** | **131.000.000** | **220.000.000** | **345.000.000** | **766.000.000** |
 | **LỢI NHUẬN RÒNG (A - B)** | **-28.400.000** | **+31.650.000** | **+150.400.000** | **+360.000.000** | **+513.650.000** |
 
-* **Điểm hòa vốn (Break-even):** Đạt được vào **tháng thứ 5** hoạt động.
+* **Điểm hòa vốn (Break-even):** Thời điểm hòa vốn sẽ được tính lại từ bảng dòng tiền theo tháng; bảng quý hiện tại chưa đủ cơ sở xác nhận tháng hòa vốn.
 * **Tỷ suất lợi nhuận ròng (Net Profit Margin):** Đạt **40.1%** vào cuối năm thứ 1.
 
 ---
@@ -809,10 +782,22 @@ flowchart TD
 
 ---
 
-### 2. Bộ chỉ số đo lường sản phẩm (AARRR Framework)
+### 2. Lộ trình phát triển 3 giai đoạn (Roadmap)
+
+| Giai đoạn | Phạm vi dự kiến | Điều kiện hoàn thành |
+| :--- | :--- | :--- |
+| **1. Chốt MVP** | Ba luồng: khám phá văn hóa → đọc/lưu bài; hướng dẫn nghi lễ → checklist; check-in → nhận/lưu/xem lại lời chiêm nghiệm. | Rà trùng khảo sát; xác nhận trạng thái và nguồn nội dung; hoàn thiện, rà soát ba luồng trước khi công bố bản MVP. |
+| **2. Hoàn thiện nội dung và trải nghiệm** | Mở rộng kho bài có nguồn/quyền sử dụng/thẩm định; bổ sung lịch văn hóa, tra cứu ngày, nội dung nghi lễ; hoàn thiện trải nghiệm chánh niệm, xin xăm/xin keo, hồ sơ tưởng niệm và nhắc giỗ. | Nội dung có hồ sơ nguồn và phê duyệt phù hợp; từng tính năng được kiểm thử và mô tả đúng khả năng thực tế. |
+| **3. Mở rộng tích hợp và mô hình kinh doanh** | Hoa đăng kết nối trải nghiệm 3D, các cảnh WebGL/âm thanh nâng cao, AI mở rộng, hội viên, thanh toán, vật phẩm số và hợp tác B2B. | Tích hợp được cấu hình/kiểm thử; quyền lợi, quyền riêng tư, bản quyền và giả định kinh doanh được xác minh trước khi phát hành. |
+
+Các mốc trên là thứ tự dự kiến, chưa phải cam kết thời hạn. Trong khi rà trùng, có thể trình bày thống kê mô tả trên 148 lượt phản hồi nếu ghi rõ dữ liệu chưa khử trùng và mẫu số từng tỷ lệ; kết quả làm sạch sẽ được công bố sau khi thống nhất quy tắc xử lý.
+
+---
+
+### 3. Bộ chỉ số đo lường sản phẩm (AARRR Framework)
 
 * **Acquisition (Thu hút):** Đạt 150.000 người dùng đăng ký sau 12 tháng.
-* **Activation (Kích hoạt):** > 70% người dùng thực hiện ít nhất 1 lượt Mood Check-in hoặc Rút xăm trong 24 giờ đầu.
+* **Activation (mục tiêu cần kiểm chứng):** Tỷ lệ người dùng hoàn thành ít nhất một trong ba luồng MVP trong 24 giờ đầu.
 * **Retention (Giữ chân):** Day-1 Retention đạt 45%, Day-7 đạt 35%, Day-30 đạt 22%.
 * **Revenue (Doanh thu):** Tỷ lệ chuyển đổi người dùng trả phí đạt 5.0%.
 * **Referral (Lan tỏa):** Hệ số lan tỏa K-factor đạt > 1.2 (Mỗi người dùng mời thêm trung bình 1.2 bạn bè).
@@ -834,21 +819,21 @@ flowchart TD
 
 ### 3. Bảo vệ dữ liệu cá nhân & An toàn tâm lý học đường
 
-* Nhật ký cảm xúc và điều ước được mã hóa cục bộ; người dùng có quyền xóa toàn bộ dữ liệu chỉ bằng 1 nút bấm.
-* Khi hệ thống phát hiện các từ khóa thể hiện dấu hiệu trầm cảm nặng hoặc suy nghĩ tiêu cực cực đoan, ứng dụng sẽ tự động hiển thị số điện thoại hotline hỗ trợ tâm lý học đường miễn phí của trường đại học.
+* Người dùng có thể xóa nội dung cá nhân trong phạm vi tính năng công bố; tài khoản và chứng từ thanh toán được xử lý riêng.
+* Chỉ hiển thị liên hệ hỗ trợ của trường khi đã xác minh và cấu hình; nhận diện từ khóa không phải chẩn đoán tâm lý.
 
 ---
 
 ## X. BỘ 10 CÂU HỎI & ĐÁP ÁN PHẢN BIỆN "SÁT HẠCH" CỦA HỘI ĐỒNG EXE101
 
 ### ❓ Câu 1: Dự án này có cổ súy mê tín dị đoan trong môi trường đại học không?
-> **Đáp án:** Dạ thưa Hội đồng, hoàn toàn không ạ! Điểm phân định rạch ròi giữa "Tin Lắm Tâm Linh" và bói toán mê tín bên ngoài chính là triết lý: **"Tín ngưỡng vị nhân sinh"**. Chúng em không xem bói để phán đoán tương lai hay hù dọa vận hạn, mà chúng em sử dụng ca dao, tục ngữ và triết lý dân gian như một liệu pháp tâm lý để an ủi tinh thần sinh viên khi gặp áp lực. Toàn bộ nội dung đều định hướng người dùng quay về nỗ lực tự thân và lối sống hướng thiện.
+> **Đáp án:** Dạ thưa Hội đồng, ứng dụng không xem bói để phán đoán tương lai hay hù dọa vận hạn. Nội dung hướng tới lời gợi mở hỗ trợ tự suy ngẫm; không thay thế dịch vụ chăm sóc sức khỏe tinh thần. Trích dẫn văn hóa chỉ được dùng khi có nguồn và đã được đối chiếu.
 
 ### ❓ Câu 2: Đối thủ cạnh tranh là ai? Người dùng có thể tra văn khấn miễn phí trên Google, tại sao phải dùng app của các bạn?
-> **Đáp án:** MVP kết hợp một số luồng check-in, tra cứu và trải nghiệm văn hóa trong cùng ứng dụng. Một số cảnh 3D bàn thờ/vùng miền đã có; luồng hoa đăng trong Wish chưa tích hợp với cảnh WebGL, còn xin xăm 3D và nội dung đã thẩm định vẫn là phần cần hoàn thiện. Chúng em không khẳng định nội dung luôn chuẩn mực hoặc tiện lợi hơn mọi nguồn tra cứu; giá trị hướng tới là trải nghiệm có ngữ cảnh và minh bạch trạng thái kiểm chứng.
+> **Đáp án:** MVP tập trung vào ba luồng: khám phá văn hóa để đọc/lưu bài, xem hướng dẫn nghi lễ và checklist, check-in để nhận/lưu/xem lại lời chiêm nghiệm. Nội dung cần hiển thị đúng trạng thái nguồn và thẩm định; các phân hệ mở rộng nằm trong roadmap. Chúng em không khẳng định nội dung luôn chuẩn mực hoặc tiện lợi hơn mọi nguồn tra cứu; giá trị hướng tới là trải nghiệm có ngữ cảnh và minh bạch trạng thái kiểm chứng.
 
 ### ❓ Câu 3: Mức giá 29.000 VNĐ/tháng có khả thi với sinh viên không?
-> **Đáp án:** 29.000 VNĐ/tháng là mức giá giả định cần kiểm chứng bằng khảo sát và thử nghiệm thực tế. Gói chưa mở thanh toán; diễn giải AI theo năm, không gian 3D riêng và thư viện độc quyền chưa phải quyền lợi có thể mua ở MVP. Chỉ công bố số liệu khảo sát khi có bảng hỏi, cỡ mẫu và kết quả đối chiếu để dẫn chứng.
+> **Đáp án:** 29.000 VNĐ/tháng là mức giá giả định cần kiểm chứng bằng khảo sát và thử nghiệm thực tế. Gói chưa mở thanh toán; diễn giải AI theo năm, không gian 3D riêng và thư viện độc quyền chưa phải quyền lợi có thể mua ở MVP. Trong thời gian rà trùng, thống kê mô tả cần ghi rõ mẫu số và trạng thái dữ liệu chưa khử trùng; không suy rộng cho toàn bộ người trẻ Việt Nam.
 
 ### ❓ Câu 4: Các bạn làm thế nào để đạt 15.000 người dùng đầu tiên mà không tốn nhiều tiền Marketing?
 > **Đáp án:** Dạ, chúng em tận dụng 2 kênh tiếp cận chi phí 0 đồng:
@@ -856,22 +841,19 @@ flowchart TD
 > 2. **Organic Viral Content:** Format *"Tín hiệu vũ trụ từ ca dao tục ngữ"* hiện là xu hướng cực kỳ viral trên TikTok và Threads, giúp chúng em kéo lưu lượng người dùng tự nhiên khổng lồ về ứng dụng mà không cần chạy quảng cáo đắt đỏ.
 
 ### ❓ Câu 5: Bàn thờ gia tiên số có làm mất đi tính trang nghiêm truyền thống của phong tục cúng bái không?
-> **Đáp án:** Dạ thưa thầy cô, chúng em không hề có ý định thay thế bàn thờ truyền thống ngoài đời thực. Tính năng này được tạo ra để giải quyết nỗi đau của những bạn sinh viên ở trọ chật hẹp, những du học sinh xa xứ cách quê nhà hàng ngàn cây số không có điều kiện lập bàn thờ. Nén nhang lòng số là phương tiện để người trẻ kết nối tâm tưởng và tưởng nhớ ông bà cha mẹ mỗi dịp Giỗ, Rằm. Công nghệ ở đây phục vụ cho đạo hiếu và sự biết ơn cội nguồn.
+> **Đáp án:** Đây là một ý tưởng trong roadmap, không thuộc ba luồng MVP hiện tại và không nhằm thay thế bàn thờ truyền thống. Nếu triển khai, trải nghiệm số sẽ mang tính tưởng niệm tự nguyện; nhóm cần rà soát với người dùng và cố vấn văn hóa để bảo đảm cách thể hiện phù hợp.
 
 ### ❓ Câu 6: Dữ liệu tâm sự riêng tư của người dùng được bảo mật như thế nào?
-> **Đáp án:** Dạ, an toàn tâm lý của người dùng là ưu tiên sống còn. Ghi chú lưu trên máy chủ được mã hóa AES-256-GCM bằng khóa cấu hình ở backend; các thao tác backend được phân quyền có thể giải mã, nên đây chưa phải mã hóa đầu cuối. Cache riêng tư trên trình duyệt cũng được mã hóa AES-GCM bằng khóa không xuất được lưu trong IndexedDB trên thiết bị; điều này bảo vệ dữ liệu lưu thô nhưng không bảo vệ khỏi mã độc chạy trong phiên trình duyệt. Khi đăng nhập, nhật ký cảm xúc được gửi lên máy chủ để lưu theo tài khoản; dịch vụ AI chỉ nhận tâm trạng và chủ đề, không nhận nội dung tâm sự. Cache trình duyệt được phân vùng theo tài khoản và có thể xóa qua mục quyền riêng tư.
+> **Đáp án:** Dạ, an toàn dữ liệu là ưu tiên. Ghi chú lưu trên máy chủ được mã hóa AES-256-GCM bằng khóa cấu hình ở backend; các thao tác backend được phân quyền có thể giải mã, nên đây chưa phải mã hóa đầu cuối. Cache riêng tư trên trình duyệt được mã hóa AES-GCM và phân vùng theo tài khoản. Người dùng có thể xóa nội dung cá nhân trong phạm vi tính năng công bố; tài khoản và chứng từ thanh toán được xử lý riêng. Dịch vụ AI chỉ nhận tâm trạng và chủ đề, không nhận nội dung tâm sự.
 
 ### ❓ Câu 7: Đội ngũ đã thực sự xây dựng được sản phẩm chưa hay đây chỉ là ý tưởng trên giấy?
-> **Đáp án:** Dạ kính thưa Hội đồng, nhóm đã xây dựng một MVP có thể chạy thử, nhưng chưa hoàn thiện toàn bộ tầm nhìn trong tài liệu. MVP gồm ứng dụng React/TypeScript, API Node.js/Express, dữ liệu Prisma, trải nghiệm xin xăm và gieo keo, bản đồ văn hóa, cẩm nang nghi lễ và các luồng tài khoản. Một số cảnh 3D/WebGL bàn thờ/vùng miền đã có; xin xăm 3D, tích hợp hoa đăng từ Wish, gói hội viên, thư viện độc quyền và vật phẩm số có thanh toán vẫn là roadmap. Dữ liệu xin xăm còn cần thẩm định nguồn trước khi công bố đầy đủ.
+> **Đáp án:** Dạ kính thưa Hội đồng, nhóm đã xây dựng sản phẩm có thể chạy thử nhưng chưa hoàn thiện toàn bộ tầm nhìn. Phạm vi MVP được chốt gồm ba luồng: khám phá văn hóa → đọc/lưu bài; hướng dẫn nghi lễ → checklist; check-in → nhận/lưu/xem lại lời chiêm nghiệm. Các phân hệ xin xăm/xin keo, không gian thờ, hoa đăng, lịch/nhắc giỗ, hội viên và mở rộng 3D/AI nằm trong roadmap; nội dung chỉ được giới thiệu theo đúng trạng thái nguồn và thẩm định.
 
 ### ❓ Câu 8: Rủi ro lớn nhất về mặt pháp lý và tôn giáo của dự án là gì và cách phòng tránh?
 > **Đáp án:** Dạ, rủi ro lớn nhất là bị hiểu lầm là tổ chức tôn giáo hoặc cổ súy mê tín. Để kiểm soát rủi ro này, chúng em định vị rõ ràng: Đây là **Nền tảng chuyển đổi số văn hóa dân gian và hỗ trợ sức khỏe tinh thần**, không đại diện cho bất kỳ tổ chức tôn giáo cụ thể nào. Đồng thời, nhóm đặt quy trình thẩm định chuyên môn và rà soát ngôn từ làm điều kiện phát hành; chưa tuyên bố toàn bộ tư liệu đã được hội đồng chuyên gia duyệt khi chưa có hồ sơ xác nhận.
 
 ### ❓ Câu 9: Tại sao người dùng không xóa app sau khi xin xăm xong (Vấn đề Churn Rate)?
-> **Đáp án:** Dạ, chúng em giữ chân người dùng bằng 3 cơ chế vòng lặp hàng ngày (Daily Loops):
-> 1. *Mood Check-in hằng ngày:* Mỗi ngày một câu ca dao và một hành động chánh niệm mới.
-> 2. *Sổ nhắc ngày Giỗ chạp, ngày Rằm, Mùng Một:* Tự động gửi thông báo giúp người dùng không quên cúng kiếng.
-> 3. *Theo dõi hành trình tâm trạng (Mood Journey):* Biểu đồ cảm xúc theo tuần/tháng giúp người dùng thấu hiểu chính mình.
+> **Đáp án:** Luồng check-in, lưu và xem lại lời chiêm nghiệm thuộc phạm vi MVP. Nhắc ngày lễ/giỗ và hành trình tâm trạng mở rộng là ý tưởng roadmap cần được kiểm chứng bằng hành vi sử dụng thực tế trước khi đặt mục tiêu giữ chân.
 
 ### ❓ Câu 10: Kế hoạch mở rộng (Scalability) của dự án sau môn học EXE101 là gì?
 > **Đáp án:** Dạ, sau khi hoàn thành xuất sắc môn EXE101 tại trường, nhóm sẽ:

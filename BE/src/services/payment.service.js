@@ -6,15 +6,33 @@ const { encodedParams, signature, verifyCallback, vietnamTimestamp, addMembershi
 const PRICE = 29000;
 
 function isConfigured() { return Boolean(env.VNPAY_TMN_CODE && env.VNPAY_HASH_SECRET && env.VNPAY_RETURN_URL); }
+function canStartCheckout() {
+  return (
+    env.MEMBERSHIP_SALES_ENABLED === true &&
+    isConfigured() &&
+    Boolean(env.GEMINI_API_KEY)
+  );
+}
 async function getMembership(userId) {
   const subscription = userId ? await prisma.subscriptions.findFirst({
     where: { user_id: userId, status: "ACTIVE", expires_at: { gt: new Date() }, membership_plans: { code: "TAM_AN_MONTHLY" } },
     orderBy: { expires_at: "desc" }, select: { id: true, started_at: true, expires_at: true },
   }) : null;
-  return { subscription, price: PRICE, currency: "VND", checkoutAvailable: isConfigured() && Boolean(env.GEMINI_API_KEY) };
+  return {
+    subscription,
+    price: PRICE,
+    currency: "VND",
+    salesEnabled: env.MEMBERSHIP_SALES_ENABLED === true,
+    checkoutAvailable: canStartCheckout(),
+  };
 }
 async function checkout(userId, ip) {
-  if (!isConfigured() || !env.GEMINI_API_KEY) throw new ApiError(503, "Thanh toán hoặc dịch vụ hội viên chưa được cấu hình. Vui lòng quay lại sau.");
+  if (!canStartCheckout()) {
+    throw new ApiError(
+      503,
+      "Gói hội viên hiện chưa nhận đăng ký hoặc gia hạn. Vui lòng quay lại sau.",
+    );
+  }
   const id = randomBytes(16).toString("hex");
   const now = new Date();
   const expires = new Date(now.getTime() + 15 * 60000);

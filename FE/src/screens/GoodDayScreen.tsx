@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -10,11 +10,17 @@ import {
   Flower2,
   ShieldCheck,
   BookOpen,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
-import { GoodDayLookupPanel } from "../components/GoodDayLookupPanel";
+import {
+  getAuspiciousHoursForDay,
+  getCanChiDay,
+  getCanChiMonth,
+  getReliableLunarDate,
+} from "@/src/data/calendarData";
 
 interface DayPlan {
   title: string;
@@ -42,6 +48,30 @@ export const GoodDayScreen: React.FC<GoodDayScreenProps> = ({
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const calendarFacts = useMemo(() => {
+    const match = dateValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return null;
+
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const date = new Date(year, month - 1, day);
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== month - 1 ||
+      date.getDate() !== day
+    ) return null;
+
+    const lunar = getReliableLunarDate(day, month, year);
+    const canChiDay = getCanChiDay(date);
+    return {
+      lunar,
+      canChiDay,
+      canChiMonth: getCanChiMonth(lunar.lunarMonth, lunar.lunarYear),
+      hours: getAuspiciousHoursForDay(canChiDay.chi),
+    };
+  }, [dateValue]);
 
   const resetStatus = () => {
     setSaveStatus("idle");
@@ -113,7 +143,7 @@ export const GoodDayScreen: React.FC<GoodDayScreenProps> = ({
             variant="outline"
             className="text-xs px-3 py-0.5 border-amber-400/40 text-amber-800 dark:text-amber-300 bg-amber-500/10 font-medium self-start sm:self-auto"
           >
-            ✦ THIÊN THỜI · ĐỊA LỢI · NHÂN HÒA
+              ✦ LỊCH ÂM DƯƠNG · KẾ HOẠCH CÁ NHÂN
           </Badge>
         </div>
 
@@ -124,39 +154,96 @@ export const GoodDayScreen: React.FC<GoodDayScreenProps> = ({
           <div className="relative z-10 space-y-4 max-w-3xl">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-widest text-amber-800 dark:text-amber-300">
-                THỜI ĐIỂM CÁT LÀNH & NẾP SỐNG DÂN GIAN
+                LỊCH CÁ NHÂN
               </span>
               <span className="text-xs text-stone-400">·</span>
               <span className="text-xs text-stone-500">Chủ động an tâm</span>
             </div>
 
             <h1 className="page-title font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-ink leading-tight">
-              Ngày lành khởi tâm · Việc lành hanh thông
+              Ghi lại ngày bạn muốn chuẩn bị
             </h1>
 
             <p className="font-display text-base sm:text-lg text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
-              Hiểu cách người xưa nhìn nhận thời điểm để an tâm khởi sự, gìn giữ nếp nhà bình an
+              Lập kế hoạch theo ngày dương lịch và lưu vào lịch cá nhân của bạn.
             </p>
 
             <div className="p-4 rounded-2xl border-l-3 border-amber-600 bg-amber-500/[0.07] border border-amber-500/20">
               <p className="font-display italic text-xs sm:text-sm text-stone-800 dark:text-stone-200 leading-relaxed">
-                “Tâm an vạn sự an — Ngày lành tháng tốt cốt ở sự hòa thuận của lòng người, sự chu toàn trong chuẩn bị và cái tâm hướng thiện.”
+                “Một kế hoạch rõ ràng giúp mình chủ động chuẩn bị và dành thời gian cho điều quan trọng.”
               </p>
             </div>
 
             <p className="text-xs sm:text-sm text-stone-700 dark:text-stone-300 leading-relaxed">
-              Trong quan niệm cổ truyền, chọn ngày hoàng đạo không phải là bói toán may rủi mà là sự giao hòa
-              giữa quy luật tự nhiên và ý thức con người. Biết trước thời điểm giúp gia đình tề tựu đông đủ,
-              chuẩn bị chu tất và bắt đầu công việc với năng lượng tươi mới, tự tin nhất.
+              Trang này lưu dự định cá nhân; ứng dụng hiện không xếp ngày hoặc giờ thành tốt, xấu hay dự báo kết quả.
             </p>
           </div>
         </section>
 
-        {/* Smart Good Day Lookup Tool */}
-        <GoodDayLookupPanel
-          onSaveDayToCalendar={onSaveDayToCalendar}
-          onGoToCalendar={onGoToCalendar}
-        />
+        <section role="status" className="mb-8 rounded-2xl border border-line bg-surface p-5 sm:p-6">
+          <h2 className="font-display text-lg font-bold text-ink mb-2">Tra cứu ngày cát lành đang được hoàn thiện</h2>
+          <p className="text-sm leading-relaxed text-muted">
+            Ứng dụng chưa có bộ dữ liệu phong tục đủ nguồn và được thẩm định để gợi ý ngày tốt, giờ tốt theo từng việc. Vì vậy, trang này không xếp ngày thành tốt hoặc xấu. Bạn có thể xem lịch âm/dương và tự lưu ngày dự định vào lịch cá nhân.
+          </p>
+          <Button type="button" variant="outline" className="mt-4" onClick={onGoToCalendar}>
+            Mở lịch âm dương
+          </Button>
+        </section>
+
+        {calendarFacts && (
+          <section
+            aria-labelledby="selected-date-calendar-facts"
+            className="mb-8 rounded-2xl border border-amber-500/30 bg-amber-500/[0.04] p-5 sm:p-6"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 id="selected-date-calendar-facts" className="font-display text-lg font-bold text-ink">
+                  Thông tin lịch truyền thống cho ngày đã chọn
+                </h2>
+                <p className="mt-1 text-sm text-muted">
+                  Dữ liệu tra theo ngày dương lịch; không phải đánh giá ngày tốt/xấu cho việc cụ thể.
+                </p>
+              </div>
+              <a
+                href="https://xemamlich.uhm.vn/vncal.html"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-800 underline underline-offset-4 dark:text-amber-300"
+              >
+                Tham khảo phương pháp lịch Việt
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              </a>
+            </div>
+            <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-xl border border-line bg-surface p-3">
+                <dt className="text-xs text-muted">Ngày âm lịch</dt>
+                <dd className="mt-1 font-semibold text-ink">
+                  {calendarFacts.lunar.lunarDay}/{calendarFacts.lunar.lunarMonth}/{calendarFacts.lunar.lunarYear}
+                  {calendarFacts.lunar.isLeapMonth ? " (tháng nhuận)" : ""}
+                </dd>
+              </div>
+              <div className="rounded-xl border border-line bg-surface p-3">
+                <dt className="text-xs text-muted">Can Chi ngày</dt>
+                <dd className="mt-1 font-semibold text-ink">{calendarFacts.canChiDay.name}</dd>
+              </div>
+              <div className="rounded-xl border border-line bg-surface p-3">
+                <dt className="text-xs text-muted">Can Chi tháng âm</dt>
+                <dd className="mt-1 font-semibold text-ink">{calendarFacts.canChiMonth}</dd>
+              </div>
+              <div className="rounded-xl border border-line bg-surface p-3">
+                <dt className="text-xs text-muted">Tiết khí</dt>
+                <dd className="mt-1 font-semibold text-ink">{calendarFacts.lunar.solarTerm || "Không có dữ liệu"}</dd>
+              </div>
+            </dl>
+            <div className="mt-3 rounded-xl border border-line bg-surface p-4">
+              <h3 className="text-sm font-semibold text-ink">Giờ hoàng đạo theo quy ước lịch truyền thống</h3>
+              <p className="mt-1 text-sm text-muted">{calendarFacts.hours.join(" · ") || "Không có dữ liệu"}</p>
+              <p className="mt-2 text-xs leading-relaxed text-muted">
+                Đây là thông tin quy ước văn hóa để tham khảo, không bảo đảm kết quả và không thay thế tư vấn theo phong tục địa phương.
+              </p>
+            </div>
+          </section>
+        )}
 
         {/* Manual Plan Entry Form */}
         <form

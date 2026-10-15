@@ -1,7 +1,15 @@
+const { randomUUID, randomInt } = require("node:crypto");
 const xinXamRepository = require("../repositories/xin-xam.repository");
 const wishRepository = require("../repositories/wish.repository");
+const proverbRepository = require("../repositories/proverb.repository");
 const ApiError = require("../utils/api-error");
 const { pickVerifiedProverb, toProverbDto } = require("./proverb.service");
+
+const {
+  contentFingerprint,
+  issueXamResult,
+  readXamResult,
+} = require("../utils/xam-result-token");
 
 const REGION_TO_DB = {
   "Bắc Bộ": "NORTH",
@@ -122,42 +130,182 @@ function toWishItem(wish) {
   };
 }
 
-async function saveXamDraw(userId, input) {
-  if (input.drawId) {
-    const existing = await xinXamRepository.findDraw(input.drawId, userId);
-    if (!existing) throw new ApiError(404, "Xin xam draw not found");
-    const saved = await xinXamRepository.markDrawSaved(input.drawId, userId);
-    if (saved.count !== 1) throw new ApiError(404, "Xin xam draw not found");
-    return toXamItem(existing);
+async function drawXam(userId, input) {
+  const region = REGION_TO_DB[input.region];
+
+  const cards = await xinXamRepository.listCatalog(
+    `${region}:${input.topic}`,
+    region,
+  );
+
+  if (cards.length === 0) {
+    throw new ApiError(
+      404,
+      "Chưa có thẻ được phát hành cho lựa chọn này.",
+    );
   }
-  const region = REGION_TO_DB[input.region] || "NATIONWIDE";
-  const cards = await xinXamRepository.listCatalog(`${region}:${input.xamType}`, region);
-  const catalog = cards.find((card) => card.stick_number === Number(input.stickNumber));
-  if (!catalog) throw new ApiError(404, "Xin xam card not found");
-  const proverb = await pickVerifiedProverb({ categories: proverbCategoriesForFortune(catalog.fortune_level) });
+
+  const card = cards[randomInt(cards.length)];
+
+  const proverb = await pickVerifiedProverb({
+    categories: proverbCategoriesForFortune(
+      card.fortune_level,
+    ),
+  });
+
+  if (!userId) {
+    const drawId = randomUUID();
+    const createdAt = new Date();
+
+    const resultToken = issueXamResult({
+      drawId,
+      cardId: card.id,
+      xamType: card.xam_type,
+      stickNumber: card.stick_number,
+      proverbId: proverb?.id || null,
+      fingerprint: contentFingerprint(card, proverb),
+      createdAt: createdAt.getTime(),
+    });
+
+    return {
+      ...toXamItem({
+        id: `guest:${drawId}`,
+        xin_xam: card,
+        proverbs: proverb,
+        created_at: createdAt,
+        starred: false,
+      }),
+      resultToken,
+    };
+  }
+
   const draw = await xinXamRepository.createDraw({
     user_id: userId,
-    xin_xam_id: catalog.id,
+    xin_xam_id: card.id,
     proverb_id: proverb?.id || null,
     question: input.question || null,
-    saved_at: new Date(),
   });
+
   return toXamItem(draw);
 }
 
-async function drawXam(userId, input) {
-  const region = REGION_TO_DB[input.region];
-  const cards = await xinXamRepository.listCatalog(`${region}:${input.topic}`, region);
-  if (cards.length === 0) throw new ApiError(404, "No xin xam card is available for this selection");
-  const card = cards[Math.floor(Math.random() * cards.length)];
-  const proverb = await pickVerifiedProverb({ categories: proverbCategoriesForFortune(card.fortune_level) });
-  if (!userId) {
-    return toXamItem({ id: `guest:${require("node:crypto").randomUUID()}`, xin_xam: card, proverbs: proverb, created_at: new Date(), starred: false });
+async function saveXamDraw(userId, input) {
+  // Lượt đã được tạo khi người dùng đăng nhập.
+  if (input.drawId) {
+    const existing = await xinXamRepository.findDraw(
+      input.drawId,
+      userId,
+    );
+
+    if (!existing) {
+      throw new ApiError(
+        404,
+        "Không tìm thấy lượt rút của tài khoản này.",
+      );
+    }
+
+    const saved = await xinXamRepository.markDrawSaved(
+      input.drawId,
+      userId,
+    );
+
+    if (saved.count !== 1) {
+      throw new ApiError(404, "Không tìm thấy lượt rút.");
+    }
+
+    return toXamItem(existing);
   }
-    const draw = await xinXamRepository.createDraw({ user_id: userId, xin_xam_id: card.id, proverb_id: proverb?.id || null, question: input.question || null });
-  return {
-    ...toXamItem(draw),
-  };
+
+  // Khách rút trước rồi mới đăng nhập.
+  const receipt = readXamResult(input.resultToken);
+
+  // Retry cùng lượt: trả lại bản đã tạo cho tài khoản này.
+  const existing = await xinXamRepository.findDraw(
+    receipt.drawId,
+    userId,
+  );
+
+  if (existing) {
+    await xinXamRepository.markDrawSaved(
+      receipt.drawId,
+      userId,
+    );
+
+    return toXamItem(existing);
+  }
+
+  const card = await xinXamRepository.findCatalog(
+    receipt.xamType,
+    receipt.stickNumber,
+  );
+
+  if (!card || card.id !== receipt.cardId) {
+    throw new ApiError(
+      404,
+      "Thẻ này không còn được phát hành.",
+    );
+  }
+
+  let proverb = null;
+
+  if (receipt.proverbId) {
+    const availableProverbs =
+      await proverbRepository.listVerified();
+
+    proverb = availableProverbs.find(
+      (item) => item.id === receipt.proverbId,
+    );
+
+    if (!proverb) {
+      throw new ApiError(
+        409,
+        "Nội dung đi cùng thẻ đã thay đổi. Hãy nhận kết quả mới trước khi lưu.",
+      );
+    }
+  }
+
+  if (
+    contentFingerprint(card, proverb) !==
+    receipt.fingerprint
+  ) {
+    throw new ApiError(
+      409,
+      "Nội dung thẻ đã được chỉnh sửa. Hãy nhận kết quả mới trước khi lưu.",
+    );
+  }
+
+  try {
+    const draw = await xinXamRepository.createDraw({
+      // ID do server ký: cùng lượt chỉ có một bản ghi.
+      id: receipt.drawId,
+      user_id: userId,
+      xin_xam_id: card.id,
+      proverb_id: proverb?.id || null,
+      question: input.question || null,
+      created_at: new Date(receipt.createdAt),
+      saved_at: new Date(),
+    });
+
+    return toXamItem(draw);
+  } catch (error) {
+    if (error.code === "P2002") {
+      const repeated = await xinXamRepository.findDraw(
+        receipt.drawId,
+        userId,
+      );
+
+      if (repeated) {
+        return toXamItem(repeated);
+      }
+
+      throw new ApiError(
+        409,
+        "Lượt rút này không thể lưu vào tài khoản hiện tại. Hãy nhận kết quả mới.",
+      );
+    }
+
+    throw error;
+  }
 }
 
 async function listSavedXam(userId) {
@@ -182,7 +330,66 @@ async function listWishes(userId) {
 }
 
 async function createWish(userId, input) {
-  return toWishItem(await wishRepository.create({ user_id: userId, content: input.content, category: input.category || null }));
+  const content = input.content.trim();
+  const category = input.category?.trim() || null;
+  const requestId = input.requestId;
+
+  const resolveExisting = (wish) => {
+    if (
+      wish.content !== content ||
+      (wish.category || null) !== category
+    ) {
+      throw new ApiError(
+        409,
+        "Mã lưu đã được dùng cho nội dung khác. Vui lòng bắt đầu lượt lưu mới."
+      );
+    }
+
+    return toWishItem(wish);
+  };
+
+  if (requestId) {
+    const existing = await wishRepository.findForUser(
+      requestId,
+      userId
+    );
+
+    if (existing) {
+      return resolveExisting(existing);
+    }
+  }
+
+  try {
+    const wish = await wishRepository.create({
+      ...(requestId ? { id: requestId } : {}),
+      user_id: userId,
+      content,
+      category,
+    });
+
+    return toWishItem(wish);
+  } catch (error) {
+    if (!requestId || error.code !== "P2002") {
+      throw error;
+    }
+
+    // Hai request có thể cùng vượt qua bước kiểm tra phía trên.
+    // Khóa chính trong DB bảo đảm chỉ một bản ghi được tạo.
+    const existing = await wishRepository.findForUser(
+      requestId,
+      userId
+    );
+
+    if (existing) {
+      return resolveExisting(existing);
+    }
+
+    // Không trả dữ liệu thuộc tài khoản khác.
+    throw new ApiError(
+      409,
+      "Không thể dùng mã lưu này. Vui lòng bắt đầu lượt lưu mới."
+    );
+  }
 }
 
 async function updateWishStar(userId, id, starred) {
@@ -196,4 +403,31 @@ async function deleteWish(userId, id) {
   if (deleted.count !== 1) throw new ApiError(404, "Saved wish not found");
 }
 
-module.exports = { drawXam, saveXamDraw, listSavedXam, updateXamStar, deleteXam, listWishes, createWish, updateWishStar, deleteWish };
+async function getXamAvailability(input) {
+  const region = REGION_TO_DB[input.region];
+
+  const cards = await xinXamRepository.listCatalog(
+    `${region}:${input.topic}`,
+    region,
+  );
+
+  return {
+    region: input.region,
+    topic: input.topic,
+    count: cards.length,
+    available: cards.length > 0,
+  };
+}
+
+module.exports = {
+  getXamAvailability,
+  drawXam,
+  saveXamDraw,
+  listSavedXam,
+  updateXamStar,
+  deleteXam,
+  listWishes,
+  createWish,
+  updateWishStar,
+  deleteWish,
+};

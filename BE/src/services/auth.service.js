@@ -240,10 +240,10 @@ async function changePassword(userId, { currentPassword, newPassword }) {
 
 async function requestPasswordReset(email) {
   const deliveryConfigured = emailService.isConfigured();
-  if (!deliveryConfigured) return { deliveryConfigured: false };
+  if (!deliveryConfigured) return { deliveryConfigured: false, deliveryStatus: "request_received" };
 
   const user = await userRepository.findByEmail(email);
-  if (!user) return { deliveryConfigured: true };
+  if (!user) return { deliveryConfigured: true, deliveryStatus: "request_received" };
 
   const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
   const now = new Date();
@@ -271,7 +271,7 @@ async function requestPasswordReset(email) {
       data: { used_at: new Date() },
     }).catch(() => {});
   }
-  return { deliveryConfigured: true };
+  return { deliveryConfigured: true, deliveryStatus: "request_received" };
 }
 
 async function verifyResetCode(email, code) {

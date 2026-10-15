@@ -40,6 +40,22 @@ export function loadSignals(mood?: MoodKey, contextKey: MoodContextKey = "genera
   return apiRequest<{ items: ServerSignalSummary[] }>(`/signals${query}`);
 }
 
+export function loadSignalById(signalId: string): Promise<SignalData> {
+  return apiRequest<SignalData>(`/signals/${encodeURIComponent(signalId)}`);
+}
+
+export function loadSavedSignalById(checkInId: string): Promise<{
+  item: SavedSignalItem;
+  signal: SignalData;
+  contentStatus: "available" | "withdrawn";
+}> {
+  return apiRequest<{
+    item: SavedSignalItem;
+    signal: SignalData;
+    contentStatus: "available" | "withdrawn";
+  }>(`/signals/saved/${encodeURIComponent(checkInId)}`);
+}
+
 export function createMoodCheckIn(input: {
   mood: MoodKey;
   contextKey: MoodContextKey;
@@ -47,6 +63,7 @@ export function createMoodCheckIn(input: {
   signalId?: string;
   excludeSignalId?: string;
   actionDone?: boolean;
+  idempotencyKey?: string;
 }, options: { signal?: AbortSignal } = {}): Promise<CheckInResult> {
   return apiRequest<CheckInResult>("/mood/check-ins", {
     method: "POST",
@@ -59,7 +76,7 @@ export function createMoodCheckIn(input: {
 }
 
 export function updateMoodAction(checkInId: string, actionDone: boolean) {
-  return apiRequest(`/mood/check-ins/${encodeURIComponent(checkInId)}/action`, {
+  return apiRequest<{ id: string; actionDone: boolean }>(`/mood/check-ins/${encodeURIComponent(checkInId)}/action`, {
     method: "PATCH",
     body: JSON.stringify({ actionDone }),
   });
@@ -67,12 +84,34 @@ export function updateMoodAction(checkInId: string, actionDone: boolean) {
 
 export function saveSignal(
   signalId: string,
-  input: { checkInId?: string; note?: string; actionDone?: boolean; mood?: MoodKey; contextKey?: MoodContextKey; signalSnapshot?: SignalData },
+  input: {
+    checkInId?: string;
+    note?: string;
+    actionDone?: boolean;
+    mood?: MoodKey;
+    contextKey?: MoodContextKey;
+    signalSnapshot?: SignalData;
+    idempotencyKey?: string;
+  },
 ): Promise<SavedSignalItem> {
-  return apiRequest<SavedSignalItem>("/mood/save-signal", {
-    method: "POST",
-    body: JSON.stringify({ ...input, signalId }),
-  });
+  const { signalSnapshot, ...fields } = input;
+
+  return apiRequest<SavedSignalItem>(
+    "/mood/save-signal",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        ...fields,
+        signalId,
+
+        ...(!fields.checkInId
+          ? {
+              resultToken: signalSnapshot?.resultToken,
+            }
+          : {}),
+      }),
+    },
+  );
 }
 
 export async function loadSavedSignals(): Promise<SavedSignalItem[]> {

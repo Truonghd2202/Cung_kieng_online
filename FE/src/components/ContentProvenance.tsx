@@ -24,6 +24,12 @@ function getEditorialLabel(metadata: ContentMetadata): string {
   }
 
   switch (metadata.editorialStatus) {
+    case "published":
+      return "Đang phát hành";
+    case "hidden":
+      return "Đang ẩn";
+    case "revoked":
+      return "Đã thu hồi duyệt";
     case "approved":
       return "Đã duyệt biên tập";
     case "in-review":
@@ -44,7 +50,7 @@ export function ContentProvenance({
           {getEditorialLabel(metadata)}
         </span>
 
-        <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold tracking-wide shadow-2xs ${
+        {metadata.contentType === "QUOTATION" && <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold tracking-wide shadow-2xs ${
           metadata.quotationVerified
             ? "border-success/40 bg-success/10 text-success"
             : "border-line bg-canvas text-muted"
@@ -53,13 +59,33 @@ export function ContentProvenance({
           {metadata.quotationVerified
             ? "Câu trích đã đối chiếu nguồn"
             : "Câu trích đang chờ đối chiếu"}
-        </span>
+        </span>}
       </div>
 
-      <p className="text-xs text-muted">
-        Trạng thái đối chiếu áp dụng cho câu trích.
-        Trạng thái biên tập áp dụng cho toàn bộ nội dung.
-      </p>
+      {metadata.contentType === "QUOTATION" && <p className="text-xs text-muted">
+        Trạng thái đối chiếu áp dụng cho câu trích. Trạng thái biên tập áp dụng cho toàn bộ nội dung.
+      </p>}
+
+      {metadata.contentType && <p className="text-xs text-muted">
+        <strong className="text-ink font-medium">Loại nội dung:</strong>{" "}
+        {metadata.contentType === "GROUP_AUTHORED" ? "Nguyên bản do nhóm biên soạn" : metadata.contentType === "QUOTATION" ? "Trích dẫn dân gian" : metadata.contentType}
+      </p>}
+      {metadata.contentAuthor && <p className="text-xs text-muted">
+        <strong className="text-ink font-medium">Người biên soạn / cộng đồng:</strong> {metadata.contentAuthor}
+      </p>}
+      {metadata.originCommunity && !metadata.contentAuthor && <p className="text-xs text-muted">
+        <strong className="text-ink font-medium">Cộng đồng lưu truyền:</strong> {metadata.originCommunity}
+      </p>}
+      {metadata.scope && <p className="text-xs text-muted">
+        <strong className="text-ink font-medium">Phạm vi áp dụng:</strong> {metadata.scope}
+      </p>}
+      {metadata.contentRightsBasis && <p className="text-xs text-muted">
+        <strong className="text-ink font-medium">Căn cứ quyền nội dung:</strong> {metadata.contentRightsBasis}
+      </p>}
+
+      {metadata.usageRights && <p className="text-xs text-muted">
+        <strong className="text-ink font-medium">Quyền sử dụng:</strong> {metadata.usageRights.status}{metadata.usageRights.note ? ` • ${metadata.usageRights.note}` : ""}
+      </p>}
 
       {metadata.sources.length > 0 ? (
         <ul className="space-y-3">
@@ -125,14 +151,21 @@ export function ContentProvenance({
         </ul>
       ) : (
         <p className="text-muted">
-          Chưa bổ sung tài liệu nguồn cho nội dung này.
+          {metadata.contentType === "GROUP_AUTHORED" ? "Nội dung do nhóm biên soạn." : "Chưa có tài liệu nguồn được cung cấp."}
         </p>
       )}
 
-      {metadata.editorialStatus === "approved" &&
+      {(metadata.imageSource || metadata.imageRightsBasis) && (
+        <div className="border-t border-line/60 pt-3 text-xs text-muted space-y-1">
+          {metadata.imageSource && <p><strong className="text-ink font-medium">Nguồn ảnh:</strong> {metadata.imageSource}</p>}
+          {metadata.imageRightsBasis && <p><strong className="text-ink font-medium">Căn cứ quyền ảnh:</strong> {metadata.imageRightsBasis}</p>}
+        </div>
+      )}
+
+      {["approved", "published"].includes(metadata.editorialStatus) &&
         metadata.reviewedBy && (
           <p className="text-xs text-muted border-t border-line/60 pt-3">
-            <strong className="text-ink font-medium">Hội đồng thẩm định:</strong> {metadata.reviewedBy}
+            <strong className="text-ink font-medium">Người phụ trách duyệt nội dung:</strong> {metadata.reviewedBy}
             {metadata.reviewedOn
               ? ` • Ngày phê duyệt: ${metadata.reviewedOn}`
               : ""}

@@ -52,6 +52,7 @@ const metadata = (): ContentMetadata => ({
       id: "test-source",
       title: "Nguồn giả chỉ dùng kiểm thử",
       bibliographicReference: "TEST FIXTURE",
+        url: "https://example.test/test-source",
       locator: "Bản ghi kiểm thử số 1",
     },
   ],
@@ -115,6 +116,14 @@ try {
     getPublishableTraditionalSticks("quan-am", "Gia đình").length,
     0,
   );
+
+  const validSource = TRADITIONAL_XAM_STICKS[0].metadata.sources[0].url;
+  TRADITIONAL_XAM_STICKS[0].metadata.sources[0].url = "not-a-valid-source";
+  assert.equal(
+    getPublishableTraditionalSticks("quan-am", "Bình an").length,
+    0,
+  );
+  TRADITIONAL_XAM_STICKS[0].metadata.sources[0].url = validSource;
 
   // 3. Khách chưa có tài khoản không lưu được.
   assert.equal(

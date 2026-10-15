@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
+import { UnverifiedImage } from "../components/UnverifiedImage";
 import {
   ArrowLeft,
   Sparkles,
@@ -21,10 +22,8 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { MembershipCheckout } from "../components/MembershipCheckout";
-import { BrandPartnershipForm } from "../components/BrandPartnershipForm";
 import type { MembershipTerm } from "../data/membershipIntent";
-import { registerMembershipInterest, removeMembershipInterest } from "../data/membershipService";
-import { trackProductEvent } from "../data/productAnalytics";
+import { MembershipInterest } from "../components/MembershipInterest";
 
 interface MembershipScreenProps {
   onBackToHome: () => void;
@@ -39,78 +38,11 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
   currentUserEmail,
   onGoToLogin,
 }) => {
-  const [registeredEmail, setRegisteredEmail] = useState("");
-  const [interestError, setInterestError] = useState("");
-  const [isSubmittingInterest, setIsSubmittingInterest] = useState(false);
-  const [savedEmail, setSavedEmail] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem("tltl-membership-interest-email");
-    } catch {
-      return null;
-    }
-  });
-
-  const handleRegisterNewsletter = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setInterestError("");
-
-    const cleanEmail = registeredEmail.trim().toLowerCase();
-
-    if (
-      cleanEmail.length > 254 ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)
-    ) {
-      setInterestError("Vui lòng nhập địa chỉ email hợp lệ.");
-      return;
-    }
-
-    setIsSubmittingInterest(true);
-    try {
-      await registerMembershipInterest(cleanEmail);
-      trackProductEvent("membership_interest_registered");
-    } catch {
-      setInterestError("Chưa đăng ký được. Bạn hãy kiểm tra kết nối và thử lại.");
-      setIsSubmittingInterest(false);
-      return;
-    }
-
-    try { localStorage.setItem("tltl-membership-interest-email", cleanEmail); } catch { /* The server record is authoritative. */ }
-
-    setSavedEmail(cleanEmail);
-    setRegisteredEmail("");
-    setIsSubmittingInterest(false);
-  };
-
-  const handleClearInterest = async () => {
-    setInterestError("");
-
-    if (savedEmail) {
-      setIsSubmittingInterest(true);
-      try {
-        await removeMembershipInterest(savedEmail);
-      } catch {
-        setInterestError("Chưa xóa được đăng ký trên máy chủ. Bạn hãy thử lại.");
-        setIsSubmittingInterest(false);
-        return;
-      }
-    }
-
-    try {
-      localStorage.removeItem("tltl-membership-interest-email");
-    } catch {
-      // The server record has already been removed.
-    }
-
-    setSavedEmail(null);
-    setRegisteredEmail("");
-    setIsSubmittingInterest(false);
-  };
-
   const featureMatrix = [
     {
       name: "Check-in tâm trạng & Lắng nghe cảm xúc",
       desc: "Lắng nghe tâm tư và nhận lời gợi mở an yên để chiêm nghiệm",
-      currentDemo: "Đang hoạt động",
+      currentStatus: "Đang hoạt động",
       futureVision: "Định hướng bổ sung thống kê nhịp điệu tâm hồn",
       status: "Đang mở miễn phí",
       statusColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30",
@@ -118,7 +50,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
     {
       name: "Chiêm nghiệm xin xăm & Gieo keo",
       desc: "Giải tỏa những đắn đo, tìm thấu hiểu tinh thần",
-      currentDemo: "Rút thẻ qua thư viện BE; phần diễn giải tiếng Việt cần thẩm định",
+      currentStatus: "Gieo keo đang hoạt động; thư viện xin xăm chờ thẩm định nội dung và quyền sử dụng",
       futureVision: "Đồng bộ lịch sử quẻ xăm đa thiết bị an toàn",
       status: "Đang mở miễn phí",
       statusColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30",
@@ -126,7 +58,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
     {
       name: "Cẩm nang nghi lễ & Lịch văn hóa nếp nhà",
       desc: "Thông tin ngày sóc vọng, phong tục dân gian và nghi thức tại gia",
-      currentDemo: "Tra cứu tư liệu có nguồn; trạng thái biên tập được hiển thị",
+      currentStatus: "Lịch âm/dương và ghi chú cá nhân đang hoạt động; cẩm nang chờ duyệt",
       futureVision: "Mở rộng tập quán chi tiết các làng xã truyền thống",
       status: "Đang mở miễn phí",
       statusColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30",
@@ -134,7 +66,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
     {
       name: "Hồ sơ cá nhân 'Góc của tôi'",
       desc: "Không gian lưu lại các thẻ quẻ, lời ước và suy ngẫm riêng tư",
-      currentDemo: "Cache mã hóa trên thiết bị và dữ liệu đồng bộ theo tài khoản",
+      currentStatus: "Bộ nhớ mã hóa trên thiết bị và dữ liệu đồng bộ theo tài khoản",
       futureVision: "Bảo mật mã hóa đầu cuối và đồng bộ đám mây",
       status: "Đang mở miễn phí",
       statusColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30",
@@ -142,7 +74,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
     {
       name: "Khảo cứu nguồn tư liệu chuyên đề",
       desc: "Bản dịch Hán Nôm, di sản đình làng và phong tục cổ truyền",
-      currentDemo: "Kho bài nghiên cứu chuyên sâu chưa hoàn tất",
+      currentStatus: "Kho bài nghiên cứu chuyên sâu chưa hoàn tất",
       futureVision: "Số hóa tư liệu văn bia Hán Nôm cùng chuyên gia Viện nghiên cứu",
       status: "Kế hoạch nghiên cứu",
       statusColor: "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30",
@@ -150,7 +82,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
     {
       name: "Quảng cáo thương mại / Pop-up gây phiền",
       desc: "Cam kết không quấy rầy thương mại, không tạo áp lực tài chính",
-      currentDemo: "Hoàn toàn KHÔNG có quảng cáo",
+      currentStatus: "Hiện không hiển thị quảng cáo",
       futureVision: "Cam kết duy trì không gian thanh tịnh vĩnh viễn",
       status: "Nguyên tắc cốt lõi",
       statusColor: "bg-red-500/15 text-red-800 dark:text-red-300 border-red-500/30",
@@ -201,31 +133,28 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
               </h1>
 
               <p className="text-xs sm:text-sm text-stone-700 dark:text-stone-300 leading-relaxed max-w-2xl">
-                Tin Lắm Tâm Linh hướng tới việc tạo dựng một không gian an trú tâm hồn, nơi bạn có thể
-                chạm vào kho tàng tri thức dân gian một cách chuẩn mực, thấu đáo và tinh tế nhất. Chúng tôi
-                không bao giờ dùng nỗi sợ vận hạn, điềm gở hay sự hoang mang để thúc đẩy hội viên. Mọi giá
-                trị phát triển đều đặt trên sự tôn trọng tự do tinh thần và sự tự soi tỏ của mỗi cá nhân.
+                Các trải nghiệm hiện có để tham khảo. Bạn không cần tin theo hay làm theo; nội dung không dùng nỗi sợ vận hạn hoặc điềm gở để thuyết phục.
               </p>
 
               <div className="flex items-center gap-4 text-xs font-semibold text-stone-600 dark:text-stone-400 flex-wrap pt-2">
                 <span className="flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  100% Không quảng cáo trục lợi
+                  Gói hội viên chưa mở bán
                 </span>
                 <span className="flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
                   <Sparkles className="w-4 h-4 text-amber-600" />
-                  Bảo tồn tri thức độc lập
+                  AI không tính lá số cá nhân
                 </span>
                 <span className="flex items-center gap-1.5 text-stone-700 dark:text-stone-300">
                   <Lock className="w-4 h-4 text-stone-500" />
-                  Bảo mật riêng tư trên máy
+                  Checklist lưu tiến độ trên thiết bị
                 </span>
               </div>
             </div>
 
             <div className="lg:col-span-5">
               <div className="rounded-2xl overflow-hidden border border-line shadow-xs relative aspect-16/10 bg-surface-soft">
-                <img
+                <UnverifiedImage
                   src="/images/tea_bowl.jpg"
                   alt="Nhâm nhi tách trà thơm và tìm hiểu nếp xưa dân tộc"
                   className="w-full h-full object-cover"
@@ -274,7 +203,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Rút thẻ xăm & Gieo keo:</strong> Khám phá bộ thẻ mẫu cổ truyền theo ba miền Bắc - Trung - Nam.
+                    <strong>Gieo keo:</strong> Trải nghiệm gieo ngẫu nhiên để chiêm nghiệm; thư viện xin xăm chưa phát hành vì chưa có bộ thẻ đủ nguồn và quyền sử dụng.
                   </span>
                 </div>
 
@@ -288,14 +217,14 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Cẩm nang nghi lễ & Lịch nếp nhà:</strong> Xem ngày âm lịch thuần Việt, tra cứu ngày lành đại sự.
+                    <strong>Lịch nếp nhà:</strong> Tra cứu ngày âm/dương và ghi chú cá nhân. Cẩm nang nghi lễ và tra cứu ngày lành chỉ mở sau khi tư liệu được thẩm định.
                   </span>
                 </div>
 
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Chuông thiền & Biểu tượng ngày sinh:</strong> Khám phá tứ trụ can chi và bài học ngũ hành.
+                    <strong>Khoảng nghỉ tĩnh tâm:</strong> Dùng phiên thở ngắn và âm thanh tổng hợp. Luận giải ngày sinh chưa được phát hành.
                   </span>
                 </div>
               </div>
@@ -323,7 +252,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
               </div>
 
               <h2 className="font-display font-bold text-2xl text-ink mb-1">
-                Gói Hội Viên Tâm An · Chưa mở đăng ký
+                Gói Hội Viên Tâm An · Chưa mở bán
               </h2>
               <p className="text-xs text-stone-500 mb-4">Mức giá đề xuất; thanh toán và kích hoạt quyền lợi chưa khả dụng.</p>
 
@@ -367,79 +296,11 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
             </div>
 
             {/* Email interest registration */}
-            <div className="pt-4 border-t border-line">
-              {interestError && (
-                <p
-                  id="membership-interest-error"
-                  role="alert"
-                  className="mb-3 text-xs text-red-700 bg-red-500/10 p-2.5 rounded-xl border border-red-500/30"
-                >
-                  {interestError}
-                </p>
-              )}
-
-              {savedEmail ? (
-                <div
-                  role="status"
-                  className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 space-y-2 text-xs"
-                >
-                  <div className="flex items-start gap-2 text-emerald-800 dark:text-emerald-300">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
-                    <div className="min-w-0">
-                      <p className="font-semibold">Đã ghi nhận email quan tâm:</p>
-                      <p className="font-mono text-[11px] mt-0.5">{savedEmail}</p>
-                    </div>
-                  </div>
-                  <p className="text-stone-600 dark:text-stone-400 text-[11px]">
-                    Cảm ơn tấm lòng của bạn với văn hóa truyền thống!
-                  </p>
-                  <button
-                    type="button"
-                    disabled={isSubmittingInterest}
-                    onClick={() => void handleClearInterest()}
-                    className="inline-flex items-center gap-1.5 text-xs text-emerald-800 dark:text-emerald-300 underline cursor-pointer pt-1"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Xóa email này</span>
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={(event) => void handleRegisterNewsletter(event)} className="space-y-2.5">
-                  <label
-                    htmlFor="membership-interest-email"
-                    className="block text-xs font-semibold text-ink"
-                  >
-                    Để lại email nếu bạn muốn bày tỏ quan tâm tới gói hội viên:
-                  </label>
-
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      id="membership-interest-email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      maxLength={254}
-                      required
-                      value={registeredEmail}
-                      onChange={(e) => {
-                        setRegisteredEmail(e.target.value);
-                        setInterestError("");
-                      }}
-                      placeholder="email-cua-ban@domain.com"
-                      className="min-w-0 flex-1 px-3.5 py-2.5 rounded-xl border border-line text-xs text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-amber-500/30 min-h-11"
-                    />
-
-                    <Button
-                      type="submit"
-                      disabled={isSubmittingInterest}
-                      className="rounded-xl bg-gradient-to-r from-red-800 to-amber-700 hover:from-red-700 hover:to-amber-800 text-white font-semibold text-xs px-4 min-h-11 cursor-pointer shadow-xs shrink-0"
-                    >
-                      Gửi đăng ký
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </div>
+            <MembershipInterest
+              key={currentUserEmail || "guest"}
+              email={currentUserEmail}
+              onLogin={() => onGoToLogin("monthly")}
+            />
           </Card>
         </div>
 
@@ -450,7 +311,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
               So Sánh Tính Năng Trực Quan
             </h3>
             <p className="text-xs text-stone-500">
-              Đối chiếu trung thực giữa tính năng đang hoạt động trong bản thử nghiệm và các định hướng nội dung tương lai.
+              Trạng thái hiện tại và các quyền lợi dự kiến được tách riêng để tránh hiểu nhầm về tính năng hoặc khoản phí.
             </p>
           </div>
 
@@ -459,7 +320,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
               <thead>
                 <tr className="border-b border-line text-stone-500 uppercase text-[10px] tracking-wider font-bold">
                   <th className="py-3 px-3">Tính năng / Giá trị trải nghiệm</th>
-                  <th className="py-3 px-3">Bản Tự Do Hiện Tại</th>
+                  <th className="py-3 px-3">Tình trạng hiện tại</th>
                   <th className="py-3 px-3">Định Hướng Tâm An</th>
                   <th className="py-3 px-3">Trạng thái</th>
                 </tr>
@@ -471,7 +332,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
                       <div className="font-semibold text-ink">{row.name}</div>
                       <div className="text-[11px] text-stone-500 mt-0.5">{row.desc}</div>
                     </td>
-                    <td className="py-3.5 px-3 text-ink font-medium">{row.currentDemo}</td>
+                    <td className="py-3.5 px-3 text-ink font-medium">{row.currentStatus}</td>
                     <td className="py-3.5 px-3 text-amber-800 dark:text-amber-300 font-medium">{row.futureVision}</td>
                     <td className="py-3.5 px-3">
                       <span className={`inline-flex rounded-lg border px-2.5 py-1 text-[11px] font-semibold ${row.statusColor}`}>
@@ -524,8 +385,12 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
           onLogin={() => onGoToLogin("monthly")}
         />
 
-        {/* B2B Cultural Brand Partnership Section */}
-        <BrandPartnershipForm />
+        <Card className="mt-8 border-line bg-surface p-5">
+          <h3 className="font-display text-lg font-bold text-ink mb-2">Hợp tác nội dung</h3>
+          <p className="text-sm leading-relaxed text-muted">
+            Tiếp nhận đề xuất hợp tác qua ứng dụng chưa được phát hành. Biểu mẫu chỉ xuất hiện khi có kênh gửi và lưu yêu cầu hoạt động thật.
+          </p>
+        </Card>
       </main>
     </div>
   );

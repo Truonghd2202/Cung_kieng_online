@@ -1,4 +1,5 @@
 const express = require("express");
+const { z } = require("zod");
 const authenticate = require("../middleware/auth.middleware");
 const validate = require("../middleware/validation.middleware");
 const controller = require("../controllers/reflection.controller");
@@ -16,6 +17,16 @@ router.post("/wishes", validate(wishSchema), controller.createWish);
 router.patch("/wishes/:id", validate(savedItemUpdateSchema), controller.updateWish);
 router.delete("/wishes/:id", controller.deleteWish);
 router.get("/xin-keo/sessions", controller.listKeoSessions);
+router.get(
+  "/xin-keo/sessions/:id",
+  validate(
+    z.object({
+      id: z.string().uuid(),
+    }),
+    "params",
+  ),
+  controller.getKeoSession,
+);
 router.post("/xin-keo/sessions", validate(xinKeoSessionSchema), controller.createKeoSession);
 router.post("/xin-keo/sessions/:id/throws", validate(xinKeoThrowSchema), controller.throwKeo);
 module.exports = router;

@@ -9,6 +9,7 @@ export interface Anniversary {
   name: string;
   month: number;
   day: number;
+  year?: number;
 
   // Không có calendar ở dữ liệu cũ nghĩa là dương lịch.
   calendar?: AnniversaryCalendar;
@@ -142,6 +143,9 @@ export function loadSettings(email?: string): ReminderSettings {
           name: item.name.trim(),
           month: item.month,
           day: item.day,
+          ...(typeof item.year === "number" && Number.isInteger(item.year) && item.year >= 1 && item.year <= 9999
+            ? { year: item.year }
+            : {}),
           calendar,
           leapPolicy:
             item.leapPolicy === "both" ? "both" : "regular",

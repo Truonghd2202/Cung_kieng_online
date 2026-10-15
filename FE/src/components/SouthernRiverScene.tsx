@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Water } from "three/examples/jsm/objects/Water.js";
+import { AppDialog } from "./AppDialog";
 import { Button } from "./ui/button";
 import {
   Sparkles,
@@ -14,11 +15,6 @@ import {
   Moon,
 } from "lucide-react";
 
-interface SouthernRiverSceneProps {
-  wishText?: string;
-  onWishReleased?: (wish: string) => void;
-}
-
 interface FloatingLantern {
   group: THREE.Group;
   light: THREE.PointLight;
@@ -26,6 +22,10 @@ interface FloatingLantern {
   speed: number;
   bobPhase: number;
   message: string;
+}
+
+interface SouthernRiverSceneProps {
+  initialWish?: string;
 }
 
 // Tạo Procedural Normal Map cho dòng sông trôi êm ả
@@ -76,29 +76,18 @@ function createRiverNormalTexture(): THREE.CanvasTexture {
   return texture;
 }
 
-export function SouthernRiverScene({
-  wishText = "",
-  onWishReleased,
-}: SouthernRiverSceneProps) {
+export function SouthernRiverScene({ initialWish }: SouthernRiverSceneProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
-  const [lanternCount, setLanternCount] = useState(6);
+  const [lanternCount, setLanternCount] = useState(0);
+  const [sessionWishes, setSessionWishes] = useState<string[]>([]);
   const [customWish, setCustomWish] = useState("");
   const [showInputModal, setShowInputModal] = useState(false);
   const [selectedLanternWish, setSelectedLanternWish] = useState<string | null>(null);
 
   const releaseLanternRef = useRef<((msg: string) => void) | null>(null);
   const resetSceneRef = useRef<(() => void) | null>(null);
-
-  const initialWishes = [
-    "Cầu cho cha mẹ dồi dào sức khỏe, gia đạo an khang.",
-    "Nguyện cho tâm luôn bình an giữa sóng gió cuộc đời.",
-    "Cầu mùa màng tươi tốt, bà con xóm giềng thuận hòa ấm êm.",
-    "Cầu chuyến đi xa vạn dặm bình an, thuận buồm xuôi gió.",
-    "Gửi chút ân tình tri ân tổ tiên khai khẩn đất phương Nam.",
-    "Cầu con cháu học hành tiến tới, hiếu nghĩa vẹn tròn.",
-  ];
 
   useEffect(() => {
     const host = hostRef.current;
@@ -116,7 +105,6 @@ export function SouthernRiverScene({
       return;
     }
 
-    setReady(true);
     setError("");
 
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -504,27 +492,16 @@ export function SouthernRiverScene({
       };
     };
 
-    const seedPositions = [
-      { x: -1.6, z: 2.5, msg: initialWishes[0] },
-      { x: 0.6, z: 1.0, msg: initialWishes[1] },
-      { x: -0.8, z: -1.5, msg: initialWishes[2] },
-      { x: 1.8, z: -3.8, msg: initialWishes[3] },
-      { x: -2.2, z: -6.2, msg: initialWishes[4] },
-      { x: 0.8, z: -9.0, msg: initialWishes[5] },
-    ];
-
-    seedPositions.forEach((pos) => {
-      lanterns.push(createLotusLantern(pos.msg, pos.x, pos.z));
-    });
-
     releaseLanternRef.current = (message: string) => {
       const spawnX = (Math.random() - 0.5) * 4.2;
       const spawnZ = 4.2;
       const newLantern = createLotusLantern(message, spawnX, spawnZ);
       lanterns.unshift(newLantern);
       setLanternCount(lanterns.length);
+      setSessionWishes((wishes) => [...wishes, message]);
       controls.target.set(spawnX * 0.3, 0.4, spawnZ - 2);
     };
+    setReady(true);
 
     // ==========================================
     // 7. RAYCASTER NHẤP HOA ĐĂNG XEM LỜI NGUYỆN
@@ -639,12 +616,22 @@ export function SouthernRiverScene({
     };
   }, []);
 
+  const autoReleasedWishRef = useRef(false);
+
+  useEffect(() => {
+    const message = initialWish?.trim();
+    if (!ready || !message || autoReleasedWishRef.current) return;
+    if (!releaseLanternRef.current) return;
+
+    releaseLanternRef.current(message);
+    autoReleasedWishRef.current = true;
+  }, [initialWish, ready]);
+
   const handleRelease = () => {
-    const textToRelease = customWish.trim() || wishText.trim() || "Cầu vạn sự bình an, gia đạo thuận hòa.";
-    if (releaseLanternRef.current) {
-      releaseLanternRef.current(textToRelease);
-      if (onWishReleased) onWishReleased(textToRelease);
-    }
+    const textToRelease = customWish.trim();
+    if (!textToRelease || !releaseLanternRef.current) return;
+
+    releaseLanternRef.current(textToRelease);
     setCustomWish("");
     setShowInputModal(false);
   };
@@ -661,10 +648,12 @@ export function SouthernRiverScene({
       <div className="absolute top-3.5 left-4 pointer-events-none flex items-center gap-2">
         <span className="px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-black/65 text-emerald-300 border border-emerald-500/40 backdrop-blur-md flex items-center gap-2 shadow-sm">
           <Moon className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-          <span>SÔNG NƯỚC NAM BỘ 3D · ĐÊM HOA ĐĂNG CỬU LONG CHÂN THỰC</span>
+          <span>CẢNH QUAN 3D LẤY CẢM HỨNG TỪ SÔNG NƯỚC NAM BỘ</span>
         </span>
         <span className="hidden sm:inline-block text-[11px] text-stone-300 bg-black/50 px-2.5 py-0.5 rounded-full backdrop-blur-sm">
-          {lanternCount} ngọn đăng đang trôi
+          {lanternCount === 0
+            ? "Chưa thắp hoa đăng trong phiên này"
+            : `${lanternCount} hoa đăng đã thắp trong phiên này`}
         </span>
       </div>
 
@@ -684,13 +673,15 @@ export function SouthernRiverScene({
 
       {/* Modal Tooltip khi nhấp vào hoa đăng */}
       {selectedLanternWish && (
-        <div className="absolute inset-x-4 top-16 max-w-md mx-auto p-4 rounded-2xl bg-black/85 border border-emerald-500/50 text-white backdrop-blur-md shadow-2xl animate-fade-in z-20">
+        <div role="status" className="absolute inset-x-4 top-16 max-w-md mx-auto p-4 rounded-2xl bg-black/85 border border-emerald-500/50 text-white backdrop-blur-md shadow-2xl animate-fade-in z-20">
           <div className="flex items-center justify-between gap-2 mb-1.5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300 flex items-center gap-1">
               <span>🌸</span>
-              <span>LỜI NGUYỆN TỪ HOA ĐĂNG TRÊN SÔNG</span>
+              <span>LỜI NGUYỆN BẠN ĐÃ THẮP TRONG PHIÊN NÀY</span>
             </span>
             <button
+              type="button"
+              aria-label="Đóng lời nguyện đang xem"
               onClick={() => setSelectedLanternWish(null)}
               className="text-stone-400 hover:text-white text-xs p-1 cursor-pointer"
             >
@@ -701,8 +692,9 @@ export function SouthernRiverScene({
             “{selectedLanternWish}”
           </p>
           <div className="mt-2 pt-2 border-t border-white/10 flex justify-between items-center text-[10px] text-stone-400">
-            <span>Ân tình sông nước Cửu Long</span>
+            <span>Chỉ hiển thị trong cảnh đang mở</span>
             <button
+              type="button"
               onClick={() => setSelectedLanternWish(null)}
               className="text-emerald-400 hover:underline cursor-pointer"
             >
@@ -716,7 +708,7 @@ export function SouthernRiverScene({
       <div className="absolute bottom-3.5 inset-x-4 flex flex-col sm:flex-row items-center justify-between gap-2.5 bg-black/60 border border-white/10 p-2.5 sm:px-4 rounded-2xl backdrop-blur-md">
         <div className="text-xs text-stone-200 flex items-center gap-2">
           <span className="text-emerald-400 font-bold">✦</span>
-          <span>Dùng chuột/ngón tay xoay chiêm ngưỡng xuồng ba lá, rặng dừa nước và nhấp hoa đăng để đọc tâm nguyện</span>
+          <span>Hoa đăng do bạn tự thắp chỉ hiển thị trong cảnh đang mở; không được chia sẻ công khai.</span>
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -732,17 +724,44 @@ export function SouthernRiverScene({
         </div>
       </div>
 
+      {sessionWishes.length > 0 && (
+        <section aria-labelledby="session-lanterns-title" className="border-t border-emerald-900/40 bg-[#07111d] p-4 text-white">
+          <h2 id="session-lanterns-title" className="text-sm font-semibold text-emerald-200">
+            Hoa đăng trong phiên này ({sessionWishes.length})
+          </h2>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {sessionWishes.map((wish, index) => (
+              <li key={`${index}:${wish}`}>
+                <button
+                  type="button"
+                  aria-pressed={selectedLanternWish === wish}
+                  onClick={() => setSelectedLanternWish(wish)}
+                  className="min-h-11 max-w-full rounded-lg border border-emerald-500/30 px-3 py-2 text-left text-xs text-emerald-50 hover:bg-emerald-900/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-300"
+                >
+                  Hoa đăng {index + 1}: {wish}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {/* Modal Popup Nhập lời nguyện thả hoa đăng */}
       {showInputModal && (
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-30 animate-fade-in">
-          <div className="w-full max-w-sm rounded-2xl border border-emerald-500/40 bg-[#071626] p-5 shadow-2xl text-white space-y-3">
+        <AppDialog
+          labelledBy="lantern-dialog-title"
+          onClose={() => setShowInputModal(false)}
+          className="max-w-sm border-emerald-500/40 bg-[#071626] p-5 text-white"
+        >
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="font-display text-base font-bold text-emerald-300 flex items-center gap-1.5">
+              <h2 id="lantern-dialog-title" className="font-display text-base font-bold text-emerald-300 flex items-center gap-1.5">
                 <span>🏮</span>
                 <span>Thả hoa đăng cầu an trên sông</span>
-              </span>
+              </h2>
               <button
                 type="button"
+                aria-label="Đóng hộp thoại thả hoa đăng"
                 onClick={() => setShowInputModal(false)}
                 className="text-stone-400 hover:text-white text-sm cursor-pointer"
               >
@@ -751,16 +770,24 @@ export function SouthernRiverScene({
             </div>
 
             <p className="text-xs text-stone-300 leading-relaxed">
-              Viết lời chúc lành hoặc tâm nguyện để thắp sáng thêm một ngọn hoa đăng trên dòng sông phương Nam:
+              Viết lời chúc lành hoặc tâm nguyện của riêng bạn. Nội dung chỉ hiển thị trong cảnh đang mở, không được lưu hoặc chia sẻ công khai.
             </p>
 
+            <label htmlFor="lantern-wish-content" className="block text-xs font-semibold text-emerald-100">
+              Lời chúc hoặc tâm nguyện
+            </label>
             <textarea
+              id="lantern-wish-content"
               rows={3}
+              maxLength={280}
               value={customWish}
               onChange={(e) => setCustomWish(e.target.value)}
               placeholder="VD: Cầu cho gia đạo bình an, cha mẹ mạnh khỏe, mọi sự hanh thông thuận lợi…"
               className="w-full rounded-xl border border-emerald-500/30 bg-black/50 p-2.5 text-xs text-white placeholder:text-stone-500 focus:outline-none focus:ring-1 focus:ring-emerald-400 leading-relaxed"
             />
+            <p className="text-right text-[11px] text-stone-400" aria-live="polite">
+              {customWish.length}/280 ký tự
+            </p>
 
             <div className="flex items-center justify-end gap-2 pt-1">
               <Button
@@ -776,14 +803,15 @@ export function SouthernRiverScene({
                 type="button"
                 size="sm"
                 onClick={handleRelease}
-                className="text-xs rounded-xl bg-gradient-to-r from-emerald-600 to-amber-600 hover:from-emerald-500 hover:to-amber-500 text-white font-semibold cursor-pointer gap-1.5"
+                disabled={!customWish.trim()}
+                className="text-xs rounded-xl bg-gradient-to-r from-emerald-600 to-amber-600 hover:from-emerald-500 hover:to-amber-500 text-white font-semibold cursor-pointer gap-1.5 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Send className="w-3 h-3" />
                 <span>Thả đèn ngay</span>
               </Button>
             </div>
           </div>
-        </div>
+        </AppDialog>
       )}
 
       {error && (

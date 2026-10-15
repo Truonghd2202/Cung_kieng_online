@@ -12,7 +12,18 @@ async function createWish(req, res) { return sendSuccess(res, { statusCode: 201,
 async function updateWish(req, res) { return sendSuccess(res, { message: "Wish updated", data: await reflectionService.updateWishStar(req.user.id, req.params.id, req.body.starred) }); }
 async function deleteWish(req, res) { await reflectionService.deleteWish(req.user.id, req.params.id); return sendSuccess(res, { message: "Wish deleted" }); }
 async function createKeoSession(req, res) { return sendSuccess(res, { statusCode: 201, message: "Xin keo session created", data: await xinKeoService.createSession(req.user.id, req.body.question, req.body.drawId) }); }
-async function throwKeo(req, res) { return sendSuccess(res, { statusCode: 201, message: "Xin keo cast", data: await xinKeoService.throwKeo(req.user.id, req.params.id) }); }
+async function throwKeo(req, res) {
+  const result = await xinKeoService.throwKeo(
+    req.user.id,
+    req.params.id,
+    req.body.requestId
+  );
+
+  return sendSuccess(res, {
+    message: "Xin keo cast",
+    data: result,
+  });
+}
 async function listKeoSessions(req, res) { return sendSuccess(res, { message: "Xin keo sessions retrieved", data: { items: await xinKeoService.listSessions(req.user.id) } }); }
 async function tossKeo(req, res) {
   const session = req.body.sessionId
@@ -22,4 +33,43 @@ async function tossKeo(req, res) {
   return sendSuccess(res, { statusCode: 201, message: "Xin keo cast", data: { sessionId: session.id, ...result } });
 }
 
-module.exports = { drawXam, saveXam, listXam, updateXam, deleteXam, listWishes, createWish, updateWish, deleteWish, createKeoSession, throwKeo, listKeoSessions, tossKeo };
+async function getXamAvailability(req, res) {
+  const data = await reflectionService.getXamAvailability(
+    req.validated.query,
+  );
+
+  return sendSuccess(res, {
+    message: "Đã kiểm tra thư viện thẻ",
+    data,
+  });
+}
+
+async function getKeoSession(req, res) {
+  const session = await xinKeoService.getSession(
+    req.user.id,
+    req.params.id,
+  );
+
+  return sendSuccess(res, {
+    message: "Đã tải phiên xin keo",
+    data: session,
+  });
+}
+
+module.exports = {
+  getXamAvailability,
+  drawXam,
+  saveXam,
+  listXam,
+  updateXam,
+  deleteXam,
+  listWishes,
+  createWish,
+  updateWish,
+  deleteWish,
+  createKeoSession,
+  getKeoSession,
+  throwKeo,
+  listKeoSessions,
+  tossKeo,
+};

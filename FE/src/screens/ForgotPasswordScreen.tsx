@@ -152,7 +152,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
         return;
       }
       setEmail(cleanEmail);
-      setSubmitted(true); toast.info("Đã gửi mã xác minh 6 chữ số vào hộp thư của bạn.", "Kiểm tra hòm thư");
+      setSubmitted(true); toast.info("Yêu cầu đã được tiếp nhận. Nếu email gắn với tài khoản và dịch vụ gửi thư xác nhận, mã sẽ được chuyển tới hộp thư.", "Kiểm tra hòm thư");
       setIsCodeVerified(false);
       setCode("");
     } catch {
@@ -224,7 +224,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
       } else {
         setCode("");
         setIsCodeVerified(false);
-        setNoticeMessage("Đã gửi mã mới vào hộp thư. Mã cũ không còn hiệu lực.");
+        setNoticeMessage("Yêu cầu gửi lại đã được tiếp nhận. Chỉ dùng mã mới nếu bạn nhận được email; mã cũ không còn hiệu lực.");
       }
     } catch {
       setErrorMessage("Chưa gửi lại được mã. Vui lòng thử lại sau.");
@@ -439,13 +439,13 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
               <div className="p-3 rounded-xl bg-amber-50/80 dark:bg-stone-800/80 border border-amber-300/40 dark:border-amber-700/40 text-xs">
                 <div className="flex items-center gap-2 font-medium text-amber-900 dark:text-amber-200">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span>Mã xác minh đã gửi tới:</span>
+                    <span>Yêu cầu khôi phục đã tiếp nhận cho:</span>
                 </div>
                 <div className="mt-1 font-semibold text-ink break-all select-all font-mono">
                   {email}
                 </div>
                 <p className="mt-1 text-[11px] text-muted">
-                  Mã có hiệu lực trong 10 phút. Vui lòng kiểm tra cả thư mục Spam.
+                    Nếu địa chỉ gắn với tài khoản, hãy kiểm tra hộp thư và thư mục Spam để tìm mã còn hiệu lực 10 phút.
                 </p>
               </div>
 

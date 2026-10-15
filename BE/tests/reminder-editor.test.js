@@ -20,7 +20,7 @@ test("reminders use Vietnamese date across UTC midnight and year boundaries", ()
   assert.equal(anniversaryMatches({ calendar: "SOLAR", day: 4, month: 1, year: 2026, repeat_yearly: false }, new Date("2027-01-04T00:00:00Z")), false);
 });
 test("editor rejects impossible calendar days and forged approval fields", () => {
-  const draft = { title: "Lễ hội", description: "", category: "", calendar: "LUNAR", day: 30, month: 1, source: "https://example.org/source", region: "NATIONWIDE", reviewNote: "Bổ sung từ nguồn tham khảo" };
+  const draft = { title: "Lễ hội", description: "", category: "", calendar: "LUNAR", day: 30, month: 1, source: "https://example.org/source", region: "NATIONWIDE", reviewNote: "Bổ sung từ nguồn tham khảo", editorialStatus: "DRAFT" };
   assert.equal(schemas.calendar.safeParse(draft).success, true);
   assert.equal(schemas.calendar.safeParse({ ...draft, day: 31 }).success, false);
   assert.equal(schemas.calendar.safeParse({ ...draft, calendar: "SOLAR", month: 2, day: 30 }).success, false);

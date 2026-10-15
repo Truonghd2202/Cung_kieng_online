@@ -12,4 +12,18 @@ function removeInterest(email, client = prisma) {
   return client.membership_interests.deleteMany({ where: { email } });
 }
 
-module.exports = { registerInterest, removeInterest };
+function findInterest(email, client = prisma) {
+  return client.membership_interests.findUnique({
+    where: { email },
+    select: {
+      email: true,
+      created_at: true,
+    },
+  });
+}
+
+module.exports = {
+  registerInterest,
+  removeInterest,
+  findInterest,
+};

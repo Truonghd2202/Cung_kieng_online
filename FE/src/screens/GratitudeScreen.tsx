@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
+import { UnverifiedImage } from "../components/UnverifiedImage";
 import "@/src/styles/GratitudeScreen.css";
 
 interface GratitudeScreenProps {
@@ -222,7 +223,7 @@ export const GratitudeScreen: React.FC<GratitudeScreenProps> = ({
             {/* Visual Card: Thể hiện rõ trạng thái ban đầu chưa sáng, khi bấm CTA mới thắp sáng */}
             <div className={`gratitude-portrait-card ${isLampLit ? "lamp-lit" : ""}`}>
               <div className="relative aspect-4/3 w-full overflow-hidden bg-surface-soft">
-                <img
+                <UnverifiedImage
                   src="/images/ancestor_portrait.jpg"
                   alt="Chân dung người cao niên trong không gian truyền thống"
                   className={`w-full h-full object-cover transition-all duration-700 ease-out ${

@@ -13,6 +13,12 @@ test("accepts allowlisted analytics events and attribution sources", () => {
   assert.equal(eventSchema.safeParse(validEvent).success, true);
 });
 
+test("accepts completion events from all three MVP activation flows", () => {
+  for (const eventName of ["mood_checkin_completed", "culture_article_saved", "ritual_checklist_completed"]) {
+    assert.equal(eventSchema.safeParse({ ...validEvent, eventName }).success, true, eventName);
+  }
+});
+
 test("rejects event properties that could contain sensitive user data", () => {
   assert.equal(eventSchema.safeParse({ ...validEvent, mood: "sad" }).success, false);
   assert.equal(eventSchema.safeParse({ ...validEvent, note: "private journal text" }).success, false);

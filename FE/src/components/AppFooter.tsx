@@ -3,14 +3,11 @@ import { NavScreen } from "./AppHeader";
 import { DailyProverb, loadDailyProverb } from "../data/contentService";
 import {
   Sparkles,
-  ShieldCheck,
   ArrowRight,
   BookOpen,
   Compass,
-  Heart,
   Crown,
   Flower2,
-  Calendar,
   ScrollText,
 } from "lucide-react";
 
@@ -45,19 +42,19 @@ export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => {
 
   return (
     <footer className="site-footer" role="contentinfo">
-      {/* 1. THẺ NỔI BẬT: GÓI TÂM AN (PROMINENT MEMBERSHIP CTA) */}
+      {/* Trạng thái gói hội viên */}
       <div className="footer-membership-banner">
         <div className="footer-membership-card">
           <div className="footer-membership-left">
             <div className="footer-membership-badge">
               <Crown className="w-3.5 h-3.5 text-amber-300" />
-              <span>ĐẶC QUYỀN HỘI VIÊN · GÓI TÂM AN</span>
+              <span>GÓI ĐỀ XUẤT · CHƯA MỞ BÁN</span>
             </div>
             <h3 className="footer-membership-title">
-              Nuôi dưỡng an yên mỗi ngày cùng Tín Lam Premium
+              Gói hội viên Tâm An chưa mở bán
             </h3>
             <p className="footer-membership-desc">
-              Mở khóa trọn bộ phân tích chiêm nghiệm chuyên sâu, sổ tay nhật ký phản tư không giới hạn và không gian lưu giữ gia phả ký ức gia tiên.
+              Thanh toán và quyền lợi hội viên chưa khả dụng. Xem thông tin dự kiến và đăng ký nhận cập nhật khi có.
             </p>
           </div>
           <button
@@ -67,7 +64,7 @@ export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => {
             id="footer-membership-cta"
           >
             <Sparkles className="w-4 h-4 text-amber-200" />
-            <span>Khám phá Gói Tâm An</span>
+            <span>Xem trạng thái hội viên</span>
             <ArrowRight className="w-4 h-4 text-amber-200 transition-transform duration-300 group-hover:translate-x-1" />
           </button>
         </div>
@@ -82,57 +79,37 @@ export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => {
               <Flower2 className="w-4 h-4" />
             </span>
             <span className="font-display text-lg font-bold tracking-wide text-ink">
-              Tín Lắm Tâm Linh
+              Tin Lắm Tâm Linh
             </span>
           </div>
           <p className="footer-brand-desc">
-            Điểm tựa tinh thần &amp; khơi nguồn tri thức di sản Việt đương đại. Kết hợp mỹ học Giấy Dó, Gốm cổ và công nghệ chiêm nghiệm phi mê tín.
+            Tin Lắm Tâm Linh là dự án; Thích Cúng Kiếng là tên ứng dụng dành cho người dùng.
           </p>
           <p className="text-[11px] text-muted/70 mt-1.5 italic">
-            100% Phi mê tín dị đoan · Dữ liệu bảo chứng học thuật
+            MVP hiện tập trung vào tư liệu văn hóa, checklist nghi lễ và check-in chiêm nghiệm.
           </p>
         </div>
 
-        {/* Cột 2: Thực Hành Tâm An */}
+        {/* Cột 2: Các luồng MVP */}
         <div className="footer-nav-col">
           <h4 className="footer-nav-title">
             <Compass className="w-3.5 h-3.5 text-accent" />
-            <span>Thực hành Tâm An</span>
+            <span>Luồng hiện có</span>
           </h4>
           <ul className="footer-nav-list">
             <li>
-              <button type="button" onClick={() => goTo("today")} className="footer-link">
-                Điểm neo ngày mới
+                <button type="button" onClick={() => goTo("culture")} className="footer-link">
+                Khám phá tư liệu văn hóa
               </button>
             </li>
             <li>
-              <button type="button" onClick={() => goTo("mood")} className="footer-link">
-                Ghi nhận cảm xúc
+                <button type="button" onClick={() => goTo("rituals")} className="footer-link">
+                Hướng dẫn nghi lễ &amp; checklist
               </button>
             </li>
             <li>
-              <button type="button" onClick={() => goTo("xinxam")} className="footer-link">
-                Xin xăm Quan Âm
-              </button>
-            </li>
-            <li>
-              <button type="button" onClick={() => goTo("xinkeo")} className="footer-link">
-                Gieo keo Âm Dương
-              </button>
-            </li>
-            <li>
-              <button type="button" onClick={() => goTo("wish")} className="footer-link">
-                Cây nguyện ước
-              </button>
-            </li>
-            <li>
-              <button type="button" onClick={() => goTo("zen")} className="footer-link">
-                Thiền &amp; Chuông xoay
-              </button>
-            </li>
-            <li>
-              <button type="button" onClick={() => goTo("sanctuary")} className="footer-link">
-                Gian thờ gia tiên
+                <button type="button" onClick={() => goTo("mood")} className="footer-link">
+                Check-in cảm xúc
               </button>
             </li>
           </ul>
@@ -147,29 +124,17 @@ export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => {
           <ul className="footer-nav-list">
             <li>
               <button type="button" onClick={() => goTo("culture")} className="footer-link">
-                Thư viện 14 Di sản 3 miền
-              </button>
-            </li>
-            <li>
-              <button type="button" onClick={() => goTo("culture-map")} className="footer-link">
-                Bản đồ văn hóa vùng miền
+                Tư liệu văn hóa
               </button>
             </li>
             <li>
               <button type="button" onClick={() => goTo("rituals")} className="footer-link">
-                Cẩm nang nghi lễ &amp; Văn khấn
+                Cẩm nang nghi lễ
               </button>
             </li>
             <li>
-              <button type="button" onClick={() => goTo("calendar")} className="footer-link">
-                Lịch tiết khí &amp; Ngày sóc vọng
-              </button>
-            </li>
-            <li>
-              <button type="button" onClick={() => goTo("good-days")} className="footer-link">
-                Tra cứu ngày lành xuất hành
-              </button>
-            </li>
+                <button type="button" onClick={() => goTo("mood")} className="footer-link">Check-in &amp; suy ngẫm</button>
+              </li>
           </ul>
         </div>
 
@@ -188,7 +153,7 @@ export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => {
                 <p className="footer-proverb-meaning">{dailyProverb.meaning}</p>
                 <div className="footer-proverb-meta">
                   <span>Nguồn: Ngữ liệu Tục ngữ Việt Nam (VIVID)</span>
-                  <span>• Ngày {dailyProverb.sequence}/365</span>
+                  <span>• Mục {dailyProverb.sequence}/{dailyProverb.cycleLength}</span>
                 </div>
               </>
             ) : (
@@ -206,7 +171,7 @@ export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => {
       <div className="site-footer__lower">
         <div className="site-footer__lower-inner">
           <p>
-            © {new Date().getFullYear()} Tín Lam Tâm Linh. Dự án Khởi nghiệp Đổi mới Sáng tạo EXE101 · Đại học FPT.
+            © {new Date().getFullYear()} Tin Lắm Tâm Linh. Ứng dụng: Thích Cúng Kiếng.
           </p>
           <div className="footer-legal-links">
             <button type="button" onClick={() => goTo("account")} className="footer-legal-link">

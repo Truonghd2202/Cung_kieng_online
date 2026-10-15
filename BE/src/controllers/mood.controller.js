@@ -24,7 +24,7 @@ async function getToday(req, res) {
 }
 
 async function list(req, res) {
-  const items = await moodService.list(req.user.id, req.query);
+  const items = await moodService.list(req.user.id, req.validated.query);
   return sendSuccess(res, { message: "Mood check-ins retrieved", data: { items } });
 }
 

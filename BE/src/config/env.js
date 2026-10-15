@@ -24,6 +24,10 @@ const envSchema = z
     SMTP_FROM_EMAIL: z.preprocess(emptyToUndefined, z.string().email().optional()),
     APP_BASE_URL: z.string().url().default("http://localhost:3000"),
     GEMINI_MODEL: z.string().default("gemini-2.5-flash"),
+    MEMBERSHIP_SALES_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
     VNPAY_TMN_CODE: optionalString,
     VNPAY_HASH_SECRET: optionalString,
     VNPAY_PAYMENT_URL: z.preprocess(emptyToUndefined, z.string().url().default("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html")),

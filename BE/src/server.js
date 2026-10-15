@@ -4,6 +4,7 @@ const prisma = require("./config/prisma");
 const logger = require("./utils/logger");
 
 let server;
+// Trigger nodemon reload: 2026-10-13
 let stopReminders = () => {};
 
 async function start() {

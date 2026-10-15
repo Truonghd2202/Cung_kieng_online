@@ -39,11 +39,9 @@ async function loadAllItems(path: string): Promise<RemoteContentItem[]> {
 }
 
 export const loadCultureArticles = () => loadAllItems("/content/culture");
-export const loadRituals = () => loadAllItems(`/content/rituals${import.meta.env.DEV ? "?preview=true" : ""}`);
+export const loadRituals = () => loadAllItems("/content/rituals");
 export const loadRitual = (slug: string) =>
-  apiRequest<RemoteContentItem>(
-    `/content/rituals/${encodeURIComponent(slug)}${import.meta.env.DEV ? "?preview=true" : ""}`
-  );
+  apiRequest<RemoteContentItem>(`/content/rituals/${encodeURIComponent(slug)}`);
 export const loadCalendarEvents = () => loadAllItems("/content/calendar/events");
 export const loadCalendarEvent = (id: string) => apiRequest<RemoteContentItem>(`/content/calendar/events/${encodeURIComponent(id)}`);
 export const loadDailyProverb = () => apiRequest<DailyProverb>("/content/daily-proverb");

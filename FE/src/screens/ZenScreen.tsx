@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { UnverifiedImage } from "../components/UnverifiedImage";
 import {
   Volume2,
   VolumeX,
@@ -42,6 +43,8 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
   // Timer & Breathing Loop (3 minutes = 180 seconds)
   const [secondsRemaining, setSecondsRemaining] =
     useState(SESSION_SECONDS);
+  const [sessionSeconds, setSessionSeconds] =
+    useState(SESSION_SECONDS);
   const [isPaused, setIsPaused] = useState(false);
   const [isPageVisible, setIsPageVisible] = useState(
     () => document.visibilityState === "visible"
@@ -54,8 +57,12 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
   // Canvas ref for 3D Perspective Scene
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Web Audio Context for a synthesized 432 Hz tone and ambient breeze
+  // Ambient noise and a synthesized bell tone generated locally with Web Audio.
   const audioContextRef = useRef<AudioContext | null>(null);
+  const bellContextRef = useRef<AudioContext | null>(null);
+  const bellTimeoutRef = useRef<number | null>(null);
+  const bellVersionRef = useRef(0);
+  const [bellError, setBellError] = useState<string | null>(null);
   const activeNodesRef = useRef<{ [key: string]: any }>({});
 
   const startAmbientSound = () => {
@@ -99,7 +106,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
       noiseGain.connect(masterGain);
       whiteNoise.start();
 
-      // 2. Low ambient tones plus an explicit 432 Hz component.
+      // 2. Soft tones for a quiet ambient bed.
       const osc1 = ctx.createOscillator();
       const osc2 = ctx.createOscillator();
       const osc3 = ctx.createOscillator();
@@ -140,40 +147,109 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
     } catch {}
   };
 
-  const handleStrikeBell = async () => {
-    let temporaryContext: AudioContext | null = null;
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = audioContextRef.current || new AudioCtx();
-      if (!audioContextRef.current) temporaryContext = ctx;
-      await ctx.resume();
-      const now = ctx.currentTime;
-      const bell = ctx.createGain();
-      bell.gain.setValueAtTime(0.0001, now);
-      bell.gain.exponentialRampToValueAtTime(0.035, now + 0.04);
-      bell.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
-      bell.connect(ctx.destination);
+  const stopBell = () => {
+    bellVersionRef.current += 1;
 
-      for (const [frequency, level] of [[432, 1], [864, 0.22]] as const) {
-        const tone = ctx.createOscillator();
-        const partialGain = ctx.createGain();
-        tone.type = "sine";
-        tone.frequency.setValueAtTime(frequency, now);
-        partialGain.gain.setValueAtTime(level, now);
-        tone.connect(partialGain);
-        partialGain.connect(bell);
-        tone.start(now);
-        tone.stop(now + 3.25);
-      }
+    if (bellTimeoutRef.current !== null) {
+      window.clearTimeout(bellTimeoutRef.current);
+      bellTimeoutRef.current = null;
+    }
 
-      if (temporaryContext) {
-        window.setTimeout(() => void temporaryContext?.close().catch(() => {}), 3500);
-      }
-    } catch {
-      if (temporaryContext) void temporaryContext.close().catch(() => {});
+    const context = bellContextRef.current;
+    bellContextRef.current = null;
+
+    if (context && context.state !== "closed") {
+      void context.close().catch(() => {});
     }
   };
+
+  const handleStrikeBell = async () => {
+    if (
+      zenState !== "active" ||
+      isPaused ||
+      document.visibilityState !== "visible"
+    ) {
+      return;
+    }
+
+    stopBell();
+    setBellError(null);
+
+    const version = bellVersionRef.current;
+
+    try {
+      const AudioContextClass =
+        window.AudioContext ||
+        (
+          window as Window & {
+            webkitAudioContext?: typeof AudioContext;
+          }
+        ).webkitAudioContext;
+
+      if (!AudioContextClass) {
+        throw new Error("Audio unavailable");
+      }
+
+      const context = new AudioContextClass();
+      bellContextRef.current = context;
+
+      await context.resume();
+
+      // Người dùng có thể rời trang trong lúc trình duyệt mở âm thanh.
+      if (
+        version !== bellVersionRef.current ||
+        context.state !== "running" ||
+        document.visibilityState !== "visible"
+      ) {
+        if (bellContextRef.current === context) {
+          stopBell();
+        }
+        return;
+      }
+
+      const now = context.currentTime;
+      const gain = context.createGain();
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.035, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
+      gain.connect(context.destination);
+
+      [432, 864].forEach((frequency) => {
+        const oscillator = context.createOscillator();
+        oscillator.type = "sine";
+        oscillator.frequency.value = frequency;
+        oscillator.connect(gain);
+        oscillator.start(now);
+        oscillator.stop(now + 3.25);
+      });
+
+      bellTimeoutRef.current = window.setTimeout(() => {
+        if (version === bellVersionRef.current) {
+          stopBell();
+        }
+      }, 3500);
+    } catch {
+      if (version === bellVersionRef.current) {
+        stopBell();
+        setBellError(
+          "Chưa phát được âm chuông. Bạn có thể thử lại hoặc tiếp tục trong yên lặng."
+        );
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (
+      zenState !== "active" ||
+      isPaused ||
+      !isPageVisible
+    ) {
+      stopBell();
+    }
+
+    return () => stopBell();
+  }, [zenState, isPaused, isPageVisible]);
 
   const stopAmbientSound = () => {
     try {
@@ -248,7 +324,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
 
       const remaining = Math.max(
         0,
-        SESSION_SECONDS - Math.floor(elapsedMs / 1000)
+        sessionSeconds - Math.floor(elapsedMs / 1000)
       );
 
       setSecondsRemaining(remaining);
@@ -278,12 +354,12 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
 
       if (sessionVersionRef.current === version) {
         accumulatedTimeRef.current = Math.min(
-          SESSION_SECONDS * 1000,
+          sessionSeconds * 1000,
           previousTime + performance.now() - startedAt
         );
       }
     };
-  }, [zenState, isPaused, isPageVisible]);
+  }, [zenState, isPaused, isPageVisible, sessionSeconds]);
 
   // Canvas Floating Particles Engine (Light golden particles dancing in transparent atmosphere)
   useEffect(() => {
@@ -404,7 +480,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
     sessionVersionRef.current += 1;
     accumulatedTimeRef.current = 0;
 
-    setSecondsRemaining(SESSION_SECONDS);
+    setSecondsRemaining(sessionSeconds);
     setBreathPhase("inhale");
     setIsPaused(false);
     setZenState("active");
@@ -414,7 +490,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
     sessionVersionRef.current += 1;
     accumulatedTimeRef.current = 0;
 
-    setSecondsRemaining(SESSION_SECONDS);
+    setSecondsRemaining(sessionSeconds);
     setBreathPhase("inhale");
     setIsPaused(false);
     setZenState("ready");
@@ -427,7 +503,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
   };
 
   const elapsedSeconds =
-    SESSION_SECONDS - secondsRemaining;
+    sessionSeconds - secondsRemaining;
 
   const completedFullSession = secondsRemaining === 0;
 
@@ -510,12 +586,12 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
               {soundEnabled ? (
                 <>
                   <Volume2 className="w-3.5 h-3.5 text-amber-200" />
-                  <span>Âm nền 432 Hz & gió: Bật</span>
+        <span>Âm nền tổng hợp: Bật</span>
                 </>
               ) : (
                 <>
                   <VolumeX className="w-3.5 h-3.5 text-muted" />
-                  <span>Âm nền 432 Hz & gió: Tắt</span>
+        <span>Âm nền tổng hợp: Tắt</span>
                 </>
               )}
             </button>
@@ -535,7 +611,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
         {/* 16:9 Cinematic Canvas Scene */}
         <div className="relative h-[560px] sm:h-[600px] lg:h-auto lg:aspect-[16/9] w-full rounded-card overflow-hidden border border-line shadow-md bg-stone-950 mb-8 select-none">
           {/* Bức ảnh hiên chùa Bắc Bộ luôn luôn hiện rõ ràng, sắc nét */}
-          <img
+          <UnverifiedImage
             src="/images/temple_bac_bo.jpg"
             alt="Hiên nhà Việt tĩnh lặng"
             className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
@@ -605,7 +681,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
                 </div>
 
                 <h2 className="section-title text-xl sm:text-2xl mb-3 font-display font-bold text-white tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
-                  Bạn đã sẵn sàng cho 3 phút an trú?
+                  Bạn đã sẵn sàng cho {sessionSeconds / 60} phút an trú?
                 </h2>
 
                 <p className="text-sm text-stone-200 leading-relaxed mb-6 font-normal drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
@@ -613,13 +689,45 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
                   bản thân tạm gác lại mọi âu lo.
                 </p>
 
+                <fieldset className="mb-5">
+                  <legend className="mb-2 text-sm text-stone-200">
+                    Chọn thời lượng
+                  </legend>
+
+                  <div className="flex justify-center gap-2">
+                    {[60, 180, 300].map((seconds) => (
+                      <label
+                        key={seconds}
+                        className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-4 py-2 text-sm ${
+                          sessionSeconds === seconds
+                            ? "border-amber-300 bg-amber-400/20 text-white"
+                            : "border-white/20 bg-white/5 text-stone-200"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="zen-duration"
+                          value={seconds}
+                          checked={sessionSeconds === seconds}
+                          onChange={() => {
+                            setSessionSeconds(seconds);
+                            setSecondsRemaining(seconds);
+                          }}
+                          className="accent-amber-300"
+                        />
+                        {seconds / 60} phút
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+
                 <button
                   type="button"
                   onClick={handleStartZen}
                   className="zen-action-btn w-full text-sm font-semibold"
                 >
                   <span className="zen-btn-sheen" />
-                  <span>Bắt đầu 3 phút tĩnh tâm</span>
+                  <span>Bắt đầu {sessionSeconds / 60} phút tĩnh tâm</span>
                   <ArrowRight className="w-4 h-4 ml-1" />
                 </button>
               </div>
@@ -643,7 +751,9 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
                     <div className="font-sans tabular-nums text-2xl font-bold tracking-tight text-white mb-0.5">
                       {formatTime(secondsRemaining)}
                     </div>
-                    <div className="text-xs text-white/60">03:00</div>
+                    <div className="text-xs text-white/60">
+                      / {formatTime(sessionSeconds)}
+                    </div>
                   </div>
                 </div>
 
@@ -669,12 +779,13 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
                 <div className="flex items-center justify-center gap-3">
                   <button
                     type="button"
+                    disabled={isPaused || !isPageVisible}
                     onClick={() => void handleStrikeBell()}
-                    className="min-h-11 px-4 py-2.5 rounded-xl bg-amber-400/15 hover:bg-amber-400/25 text-xs font-semibold text-amber-100 backdrop-blur-xs transition-all flex items-center gap-1.5 cursor-pointer"
-                    aria-label="Gõ chuông âm tổng hợp 432 hertz"
+                    className="min-h-11 px-4 py-2.5 rounded-xl bg-amber-400/15 hover:bg-amber-400/25 text-xs font-semibold text-amber-100 backdrop-blur-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Gõ chuông âm tổng hợp"
                   >
                     <Volume2 className="w-3.5 h-3.5" />
-                    <span>Gõ chuông 432 Hz</span>
+                    <span>Gõ chuông tổng hợp</span>
                   </button>
 
                   <button
@@ -696,6 +807,12 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
                   </button>
                 </div>
 
+                {bellError && (
+                  <p role="status" className="mt-3 text-sm text-amber-200">
+                    {bellError}
+                  </p>
+                )}
+
                 <p className="mt-3 text-xs leading-relaxed text-white/60">
                   Phiên tự tạm dừng khi bạn chuyển sang tab khác.
                   Khi quay lại, bấm Tiếp tục để tiếp tục phiên.
@@ -716,7 +833,7 @@ export const ZenScreen: React.FC<ZenScreenProps> = ({
 
                 <h2 className="section-title text-xl sm:text-2xl mb-2.5 font-display font-bold text-white tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
                   {completedFullSession
-                    ? "Bạn đã dành ba phút cho mình"
+                    ? `Bạn đã dành ${sessionSeconds / 60} phút cho mình`
                     : "Bạn đã kết thúc phiên"}
                 </h2>
 

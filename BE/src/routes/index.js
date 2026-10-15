@@ -33,6 +33,11 @@ router.use("/horoscope", require("./horoscope.routes"));
 router.use("/push", require("./push.routes"));
 router.use("/analytics", analyticsRoutes);
 router.use("/admin", adminRoutes);
+router.get(
+  "/xam/availability",
+  validate(xinXamRequestSchema, "query"),
+  reflectionController.getXamAvailability,
+);
 router.post("/xam/draw", authenticate.optionalAuthenticate, validate(xinXamRequestSchema), reflectionController.drawXam);
 router.post("/xam/toss-keo", authenticate, validate(xinKeoTossSchema), reflectionController.tossKeo);
 

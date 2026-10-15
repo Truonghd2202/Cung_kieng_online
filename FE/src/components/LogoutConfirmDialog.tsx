@@ -4,6 +4,9 @@ import { LogOut, X } from "lucide-react";
 export interface LogoutConfirmDialogProps {
   open: boolean;
   userName?: string;
+  title?: string;
+  description?: string;
+  confirmText?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -11,6 +14,9 @@ export interface LogoutConfirmDialogProps {
 export const LogoutConfirmDialog: React.FC<LogoutConfirmDialogProps> = ({
   open,
   userName,
+  title,
+  description,
+  confirmText = "Đăng xuất",
   onConfirm,
   onCancel,
 }) => {
@@ -70,7 +76,7 @@ export const LogoutConfirmDialog: React.FC<LogoutConfirmDialogProps> = ({
           id="logout-dialog-title"
           className="font-serif text-xl sm:text-[22px] font-bold text-ink tracking-tight mb-1.5"
         >
-          Rời Khỏi Góc An Yên?
+          {title || "Rời Khỏi Góc An Yên?"}
         </h3>
 
         {/* Đường chỉ hoa văn ánh kim */}
@@ -82,8 +88,11 @@ export const LogoutConfirmDialog: React.FC<LogoutConfirmDialogProps> = ({
 
         {/* Lời nhắn */}
         <p className="text-xs sm:text-[13px] text-stone-600 dark:text-stone-300 leading-relaxed mb-6 font-sans">
-          {userName ? `Bạn có chắc muốn đăng xuất tài khoản "${userName}"? ` : "Bạn có chắc chắn muốn đăng xuất tài khoản? "}
-          Mọi quẻ xăm và hành trình tĩnh tại của bạn vẫn được lưu giữ an toàn.
+          {description || (
+            userName
+              ? `Bạn có chắc muốn đăng xuất tài khoản "${userName}"? Mọi quẻ xăm và hành trình tĩnh tại của bạn vẫn được lưu giữ an toàn.`
+              : "Bạn có chắc chắn muốn đăng xuất tài khoản? Mọi quẻ xăm và hành trình tĩnh tại của bạn vẫn được lưu giữ an toàn."
+          )}
         </p>
 
         {/* Hai nút hành động */}
@@ -100,7 +109,7 @@ export const LogoutConfirmDialog: React.FC<LogoutConfirmDialogProps> = ({
             onClick={onConfirm}
             className="flex-1 h-11 relative overflow-hidden rounded-xl font-serif font-bold text-sm text-amber-100 tracking-wider shadow-[0_4px_16px_rgba(139,26,26,0.35)] transition-all cursor-pointer flex items-center justify-center gap-1.5 border border-amber-400/50 hover:border-amber-300/80 hover:shadow-[0_6px_22px_rgba(139,26,26,0.45)] active:scale-[0.98] bg-gradient-to-r from-[#6b1414] via-[#8f1d1d] to-[#591010]"
           >
-            <span>Đăng xuất</span>
+            <span>{confirmText}</span>
           </button>
         </div>
       </div>

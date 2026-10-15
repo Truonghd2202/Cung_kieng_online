@@ -55,6 +55,10 @@ export function useReminderOverview(email?: string) {
   useEffect(() => {
     let active = true;
     const refreshMemorials = () => {
+      if (!email) {
+        if (active) setMemorialProfiles([]);
+        return;
+      }
       loadMemorialProfiles()
         .then((profiles) => { if (active) setMemorialProfiles(profiles); })
         .catch(() => { if (active) setMemorialProfiles([]); });

@@ -9,7 +9,24 @@ const payment = require("../controllers/payment.controller");
 router.get("/status", authenticate.optionalAuthenticate, payment.membership);
 router.post("/checkout", authenticate, payment.checkout);
 router.get("/orders/:id", authenticate, payment.order);
-router.post("/interests", validate(interestSchema), controller.registerInterest);
-router.delete("/interests", authenticate, validate(interestSchema), controller.removeInterest);
+router.get(
+  "/interests",
+  authenticate,
+  controller.getInterest,
+);
+
+router.post(
+  "/interests",
+  authenticate,
+  validate(interestSchema),
+  controller.registerInterest,
+);
+
+router.delete(
+  "/interests",
+  authenticate,
+  validate(interestSchema),
+  controller.removeInterest,
+);
 
 module.exports = router;

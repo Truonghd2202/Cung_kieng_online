@@ -1,4 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { UnverifiedImage } from "../components/UnverifiedImage";
 import {
   ArrowLeft,
   ArrowRight,
@@ -15,6 +21,12 @@ import { Card } from "../components/ui/card";
 import "../styles/WishScreen.css";
 import { SchoolSupportNotice } from "../components/SchoolSupportNotice";
 
+const SouthernRiverScene = React.lazy(() =>
+  import("../components/SouthernRiverScene").then((module) => ({
+    default: module.SouthernRiverScene,
+  }))
+);
+
 export type WishTopic = "Bình an" | "Gia đạo" | "Công danh" | "Tình duyên";
 export type WishMode = "journal" | "ephemeral";
 
@@ -23,7 +35,11 @@ interface WishScreenProps {
   onGoToDiary: () => void;
   onGoToHome: () => void;
   onGoToExplore: () => void;
-  onSaveJournal?: (text: string, topic: WishTopic) => boolean | Promise<boolean>;
+  onSaveJournal?: (
+    text: string,
+    topic: WishTopic,
+    requestId: string
+  ) => boolean | Promise<boolean>;
   isLoggedIn?: boolean;
   initialContent?: string;
   initialCategory?: string;
@@ -37,12 +53,46 @@ const SAMPLE_WISHES: Record<WishTopic, string> = {
   "Bình an":
     "Mong cho những ngày sắp tới trong lòng bớt xao động, công việc dẫu còn bộn bề nhưng mỗi chiều về nhà vẫn tìm được một khoảng bình an bên mâm cơm ấm.",
   "Gia đạo":
-    "Cầu chúc cho cha mẹ luôn mạnh khỏe, các thành viên trong gia đình luôn thấu hiểu, sẻ chia và bao dung cho nhau trước mọi sóng gió cuộc đời.",
+    "Mong mình có khoảng riêng để nghĩ về điều cần thiết trong các mối quan hệ và giữ những giới hạn phù hợp.",
   "Công danh":
     "Mong cho tâm trí luôn sáng suốt, bền chí trước những kỳ thi và thu nhận được nhiều tri thức hữu ích để vững bước trên con đường tương lai.",
   "Tình duyên":
     "Mong mỗi cuộc gặp gỡ được nuôi dưỡng bằng sự chân thành, lắng nghe và tôn trọng lựa chọn của nhau.",
 };
+
+class LanternSceneBoundary extends React.Component<
+  { children: React.ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    if (this.state.failed) {
+      return (
+        <div
+          role="status"
+          className="flex min-h-80 flex-col items-center justify-center gap-3 p-6 text-center text-stone-200"
+        >
+          <p className="font-semibold">
+            Chưa mở được cảnh hoa đăng.
+          </p>
+
+          <p className="max-w-md text-sm leading-relaxed">
+            Bạn vẫn có thể đọc lời vừa viết ở phía trên.
+            Nội dung chưa được lưu vào tài khoản.
+            Bạn có thể viết lời khác hoặc trở về Hôm nay.
+          </p>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 export const WishScreen: React.FC<WishScreenProps> = ({
   onBackToExperience,
@@ -77,6 +127,23 @@ export const WishScreen: React.FC<WishScreenProps> = ({
   const [mode, setMode] = useState<WishMode>("journal");
   const [hasActuallySaved, setHasActuallySaved] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitLockRef = useRef(false);
+  const saveAttemptRef = useRef<{
+    requestId: string;
+    content: string;
+    topic: WishTopic;
+  } | null>(null);
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+  const [pendingLanternWish, setPendingLanternWish] = useState("");
 
   useEffect(() => {
     const shouldKeepDraft =
@@ -112,7 +179,12 @@ export const WishScreen: React.FC<WishScreenProps> = ({
   };
 
   const handleWriteAnother = () => {
+    saveAttemptRef.current = null;
+
+    if (submitLockRef.current) return;
+
     setContent("");
+    setPendingLanternWish("");
     setHasActuallySaved(false);
     setSaveError("");
     setViewState("form");
@@ -125,55 +197,94 @@ export const WishScreen: React.FC<WishScreenProps> = ({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    // Ref khóa ngay, kể cả trước khi React cập nhật giao diện.
+    if (submitLockRef.current) return;
+
     setSaveError("");
 
     const cleanContent = content.trim();
-    if (!cleanContent) return;
+
+    if (!cleanContent) {
+      setSaveError("Bạn hãy viết lời gửi gắm trước khi tiếp tục.");
+      return;
+    }
 
     if (cleanContent.length > 1000) {
       setSaveError("Lời gửi gắm tối đa 1000 ký tự.");
       return;
     }
 
-    if (mode === "journal") {
-      if (!onSaveJournal) {
-        setSaveError("Chức năng lưu chưa sẵn sàng trong phiên này.");
-        return;
-      }
-
-      let saved = false;
-
-      try {
-        saved = await onSaveJournal(cleanContent, topic) === true;
-      } catch {
-        setSaveError("Chưa lưu được lời gửi gắm. Bạn hãy thử lại.");
-        return;
-      }
-
-      setHasActuallySaved(saved);
-
-      if (!saved) {
-        if (isLoggedIn) {
-          setSaveError(
-            "Chưa lưu được nội dung. Bạn hãy thử lại."
-          );
-        }
-
-        // Với khách, App chuyển sang đăng nhập.
-        return;
-      }
-
-      setViewState("variantA");
-    } else {
+    if (mode === "ephemeral") {
+      setPendingLanternWish(cleanContent);
       setContent("");
       setHasActuallySaved(false);
       setViewState("variantB");
+
+      window.scrollTo({ top: 0, behavior: "auto" });
+      return;
     }
 
-    window.scrollTo({
-      top: 0,
-      behavior: "auto",
-    });
+    if (!onSaveJournal) {
+      setSaveError("Chức năng lưu chưa sẵn sàng trong phiên này.");
+      return;
+    }
+
+    submitLockRef.current = true;
+    setIsSubmitting(true);
+
+    try {
+      let attempt = saveAttemptRef.current;
+
+      if (
+        !attempt ||
+        attempt.content !== cleanContent ||
+        attempt.topic !== topic
+      ) {
+        attempt = {
+          requestId: crypto.randomUUID(),
+          content: cleanContent,
+          topic,
+        };
+
+        saveAttemptRef.current = attempt;
+      }
+
+      const saved = await onSaveJournal(
+        attempt.content,
+        attempt.topic,
+        attempt.requestId
+      );
+
+      // App có thể đã chuyển khách sang trang đăng nhập.
+      if (!mountedRef.current) return;
+
+      if (saved !== true) {
+        if (isLoggedIn) {
+          setSaveError(
+            "Chưa xác nhận được việc lưu. Bạn hãy kiểm tra Góc của tôi trước khi lưu lại để tránh trùng nội dung."
+          );
+        }
+        return;
+      }
+
+      setHasActuallySaved(true);
+      setViewState("variantA");
+
+      window.scrollTo({ top: 0, behavior: "auto" });
+    } catch {
+      if (mountedRef.current) {
+        setSaveError(
+          "Chưa xác nhận được việc lưu. Nội dung vẫn còn ở đây; bạn hãy kiểm tra Góc của tôi trước khi thử lại."
+        );
+      }
+    } finally {
+      submitLockRef.current = false;
+
+      if (mountedRef.current) {
+        setIsSubmitting(false);
+      }
+    }
   };
 
   return (
@@ -220,7 +331,15 @@ export const WishScreen: React.FC<WishScreenProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
               {/* Left Column: Form & Options (7 columns) */}
               <div className="lg:col-span-7 space-y-6">
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-6"
+                  aria-busy={isSubmitting}
+                >
+                  <fieldset
+                    disabled={isSubmitting}
+                    className="min-w-0 space-y-6 border-0 p-0"
+                  >
                   {/* Card 1: Textarea Card (Parchment Box) */}
                   <div className="wish-parchment-box">
                     <div className="flex items-center justify-between mb-2">
@@ -329,7 +448,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                             value: "ephemeral",
                             title: "Thả hoa đăng (biểu tượng)",
                             description:
-                              "Chỉ là thao tác buông bỏ minh họa trên màn hình; chưa nối với hoa đăng WebGL. Nội dung không được lưu và sẽ bị xóa khi gửi.",
+                              "Thả lời viết thành hoa đăng trong cảnh sông 3D của riêng phiên này. Nội dung không lưu lên máy chủ hay chia sẻ công khai.",
                           },
                         ] satisfies {
                           value: WishMode;
@@ -397,33 +516,37 @@ export const WishScreen: React.FC<WishScreenProps> = ({
 
                     <button
                       type="submit"
-                      disabled={!content.trim()}
+                      disabled={isSubmitting || !content.trim()}
                       className="wish-submit-btn w-full sm:w-auto"
                     >
                       <span className="wish-btn-sheen" />
                       <span>
-                        {mode === "journal"
-                          ? isLoggedIn
-                            ? "Lưu vào Góc của tôi"
-                            : "Đăng nhập để lưu"
-                          : "Thả hoa đăng — không lưu"}
+                        {isSubmitting
+                          ? "Đang lưu…"
+                          : mode === "journal"
+                            ? isLoggedIn
+                              ? "Lưu vào Góc của tôi"
+                              : "Đăng nhập để lưu"
+                            : "Thả hoa đăng — không lưu"}
                       </span>
                       <ArrowRight className="w-4 h-4 ml-1" />
                     </button>
                   </div>
-                </form>
+                </fieldset>
+              </form>
 
-                <p className="text-xs leading-relaxed text-muted">
-                  Lời gửi gắm không được đăng lên bảng công khai trong trải nghiệm này.
-                  Bạn quyết định lưu lại hoặc chọn hiệu ứng buông bỏ trước khi gửi.
-                </p>
+              <p className="text-xs leading-relaxed text-muted">
+                {mode === "ephemeral"
+                  ? "Ở chế độ hoa đăng, lời viết chỉ dùng trong phiên này, không gửi lên máy chủ và không chia sẻ công khai. Tải lại trang sẽ mất nội dung."
+                  : "Ở chế độ lưu riêng, lời viết được gửi lên máy chủ để lưu theo tài khoản. Chỉ thông báo lưu thành công sau khi nhận được xác nhận."}
+              </p>
               </div>
 
               {/* Sacred Wishing Tree & Silk Streamer Companion */}
               <aside className="self-start lg:col-span-5 lg:sticky lg:top-24">
                 <div className="wishing-sacred-tree-card">
                   <div className="wishing-tree-visual">
-                    <img
+                    <UnverifiedImage
                       src="/images/temple_bac_bo.jpg"
                       alt="Cây ước nguyện cổ thụ sân đình"
                       loading="lazy"
@@ -461,7 +584,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
 
                       <ul className="mt-2 list-disc space-y-2 pl-5 text-xs sm:text-sm leading-relaxed text-muted">
                         <li>Điều gì khiến bạn băn khoăn nhất lúc này?</li>
-                        <li>Một lời chúc bình an bạn muốn trao gửi người thân yêu?</li>
+                        <li>Có điều gì bạn muốn ghi lại hoặc gửi đến ai đó, nếu thấy phù hợp?</li>
                         <li>Một việc thiện lành bạn tự nhủ sẽ làm trong hôm nay?</li>
                       </ul>
                     </details>
@@ -724,8 +847,8 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                 <span>Bạn đã gửi gắm một khoảng lòng</span>
               </h1>
               <p className="text-sm text-muted max-w-xl mx-auto leading-relaxed">
-                Ưu tư hay ước vọng như cánh hoa đăng trôi theo dòng nước biếc. Nhẹ lòng buông
-                xuống để tâm trí được thảnh thơi đón nhận ngày mới.
+                Lời bạn viết vừa được thả thành hoa đăng trong cảnh sông 3D riêng của phiên này.
+                Nội dung chỉ tồn tại trong lúc bạn đang trải nghiệm và sẽ mất khi rời màn hình.
               </p>
             </div>
 
@@ -746,19 +869,46 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                   </div>
 
                   <h4 className="font-bold text-base text-ink mb-1.5 font-display">
-                    Nội dung vừa viết không được lưu và không thể xem lại.
+                    Hoa đăng chỉ hiển thị trong phiên riêng này.
                   </h4>
                   <p className="text-sm text-muted leading-relaxed">
-                    Nội dung đã được xóa khỏi ô viết và không được thêm vào nhật ký.
-                    Đây là hiệu ứng biểu tượng trong giao diện, chưa tạo hoặc thả hoa đăng WebGL.
-                    Bạn có thể bắt đầu một lời gửi gắm mới.
+                    Lời viết không được gửi lên máy chủ, lưu vào nhật ký hoặc chia sẻ công khai.
+                    Khi rời màn hình, phiên hoa đăng sẽ kết thúc.
                   </p>
                 </div>
               </div>
 
+              {pendingLanternWish && (
+                <div className="mb-5 rounded-xl border border-amber-500/20 bg-surface-soft/70 p-4 text-left">
+                  <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-accent">
+                    Lời viết gắn với hoa đăng của bạn
+                  </div>
+                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-ink">
+                    {pendingLanternWish}
+                  </p>
+                </div>
+              )}
+
+              <div className="overflow-hidden rounded-xl border border-line bg-stone-950">
+                <LanternSceneBoundary>
+                  <Suspense
+                    fallback={
+                      <div
+                        role="status"
+                        className="flex min-h-80 items-center justify-center p-6 text-sm text-stone-200"
+                      >
+                        Đang chuẩn bị cảnh hoa đăng…
+                      </div>
+                    }
+                  >
+                    <SouthernRiverScene initialWish={pendingLanternWish} />
+                  </Suspense>
+                </LanternSceneBoundary>
+              </div>
+
               <div className="pt-4 border-t border-line text-center text-xs text-muted italic">
-                “Cảm nhận sự nhẹ nhõm nơi lồng ngực. Mọi việc rồi sẽ an bài theo cách tự
-                nhiên nhất.”
+                Bạn không cần cảm thấy khác đi ngay lúc này.
+                Có thể dừng lại một chút rồi chọn việc nhỏ tiếp theo phù hợp với mình.
               </div>
             </div>
 

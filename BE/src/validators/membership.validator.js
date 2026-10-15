@@ -1,5 +1,6 @@
 const { z } = require("zod");
 
-const interestSchema = z.object({ email: z.string().trim().email().max(254) });
+// Email được lấy từ tài khoản, không nhận từ trình duyệt.
+const interestSchema = z.object({}).strict();
 
 module.exports = { interestSchema };

@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   Flower2,
   BookOpen,
-  Wind,
   Compass,
   Bell,
   Sparkles,
@@ -18,10 +17,11 @@ import {
   CULTURAL_TOPICS,
   sanitizeCulturalTopics,
 } from "../data/culturalTopics";
+import { UnverifiedImage } from "../components/UnverifiedImage";
 import "../styles/TodayScreen.css";
 
 interface TodayScreenProps {
-  signal: SignalData;
+  signal?: SignalData | null;
   isCheckedIn?: boolean;
   isActionDone?: boolean;
   mood?: MoodKey;
@@ -64,20 +64,20 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
   const today = new Date();
   const currentHour = today.getHours();
 
-  // Lời chào động giàu cảm xúc theo buổi trong ngày
+  // Lời chào theo buổi trong ngày
   const timeGreeting =
     currentHour < 12
-      ? "Sớm mai an lành"
+      ? "Chào buổi sáng"
       : currentHour < 18
-      ? "Một chiều an yên"
-      : "Đêm về tĩnh lặng";
+      ? "Chào buổi chiều"
+      : "Chào buổi tối";
 
   const timeSubtext =
     currentHour < 12
-      ? "Dành một khoảnh khắc tĩnh tại buổi sớm để lắng nghe chính mình trước khi bắt đầu ngày mới."
+      ? "Bạn muốn ghi lại tâm trạng, đọc bài văn hóa hay xem hướng dẫn nghi lễ?"
       : currentHour < 18
-      ? "Chậm lại một nhịp giữa bộn bề công việc, thả lỏng đôi vai và nạp lại năng lượng bình an."
-      : "Khép lại một ngày dài, gửi gắm tâm sự và tìm về chốn an trú thanh tịnh cho tâm hồn.";
+      ? "Chọn điều bạn muốn xem. Bạn có thể bỏ qua mục không phù hợp."
+      : "Bạn có thể xem nội dung hoặc quay lại sau, tùy ý.";
 
   const localDateISO = [
     today.getFullYear(),
@@ -175,31 +175,31 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
 
   const activities = [
     {
-      title: "Khám phá văn hóa Việt",
+      title: "Đọc bài viết văn hóa",
       description:
-        "Tìm hiểu những câu chuyện, tín ngưỡng Thờ Mẫu và di sản ba miền Bắc - Trung - Nam.",
+        "Khám phá các bài viết sâu sắc về phong tục, tín ngưỡng và di sản ba miền.",
       icon: BookOpen,
-      image: "/images/do_paper_still_life.jpg",
+      image: "/images/temple_bac_bo.jpg",
       onClick: onGoToCulture,
-      buttonLabel: "Dạo cảnh di sản",
+      buttonLabel: "Tìm bài viết",
     },
     {
-      title: "Trải nghiệm thực hành số",
+      title: "Cẩm nang nghi lễ",
       description:
-        "Xin xăm Quan Âm, thả hoa đăng số cầu an hoặc thắp nén nhang tri ân gia tiên.",
+        "Xem các bước chuẩn bị và lưu ý thực hành nghi lễ chu đáo theo nếp nhà.",
       icon: Compass,
-      image: "/images/tea_bowl.jpg",
-      onClick: onGoToExperience,
-      buttonLabel: "Vào trải nghiệm",
+      image: "/images/ritual_ram.jpg",
+      onClick: onGoToRituals,
+      buttonLabel: "Mở cẩm nang nghi lễ",
     },
     {
-      title: "Khoảng nghỉ thiền tịnh",
+      title: "Không gian thiền an trú",
       description:
-        "Tạm gác âu lo và dành vài phút thư giãn cùng chuông thiền và tiếng thở dịu êm.",
-      icon: Wind,
+        "Lắng đọng tâm tư, thả lỏng thân tâm và tìm lại sự bình an nội tại.",
+      icon: Flower2,
       image: "/images/zen_meditation.jpg",
       onClick: onGoToZen,
-      buttonLabel: "Không gian thiền",
+      buttonLabel: "Vào không gian thiền",
     },
   ];
 
@@ -217,28 +217,28 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
     cadao: {
       title: "Một lời chiêm nghiệm",
       description:
-        "Bắt đầu từ cảm xúc của bạn để nhận góc nhìn tích cực từ kho tàng dân gian.",
+        "Chọn cảm xúc và bối cảnh để xem nội dung gợi ý.",
       buttonLabel: "Chọn tâm trạng",
       onClick: onSelectMoodClick,
     },
     xinxam: {
       title: "Xin xăm theo chủ đề",
       description:
-        "Chọn vùng và chủ đề để trải nghiệm rút một quẻ thẻ chiêm nghiệm an lành.",
+        "Chọn vùng và chủ đề nếu bạn muốn xem nội dung của bộ thẻ.",
       buttonLabel: "Mở xin xăm",
       onClick: onGoToXinXam,
     },
     bamien: {
       title: "Khám phá văn hóa ba miền",
       description:
-        "Dạo bước qua kho tàng phong tục, lễ hội và tín ngưỡng bản địa đặc sắc.",
+        "Xem bài viết về phong tục, lễ hội và tín ngưỡng theo vùng miền.",
       buttonLabel: "Chọn vùng văn hóa",
       onClick: onGoToCultureMap,
     },
     nghile: {
       title: "Phong tục và nghi lễ",
       description:
-        "Cẩm nang nghi thức chuẩn mực, giải nghĩa phong tục cổ truyền khoa học.",
+        "Xem các bước chuẩn bị và lưu ý; cách thực hành có thể khác theo địa phương.",
       buttonLabel: "Mở cẩm nang",
       onClick: onGoToRituals,
     },
@@ -274,7 +274,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
                 {formattedDate}
               </time>
               <span className="text-line">•</span>
-              <span className="text-accent font-medium">Trạm dừng tĩnh tại</span>
+              <span className="text-accent font-medium">Tin Lắm Tâm Linh</span>
             </div>
 
             {/* Nút Thỉnh chuông thiền sớm */}
@@ -287,7 +287,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
               title="Thỉnh chuông tĩnh tâm"
             >
               <Bell className={`w-3.5 h-3.5 ${bellRinging ? "animate-bounce text-amber-600" : ""}`} />
-              <span>Thỉnh chuông sớm</span>
+                <span>Phát tiếng chuông</span>
             </button>
           </div>
 
@@ -309,7 +309,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
         {/* ========================================================= */}
         {/* 2. KHU VỰC TRỌNG TÂM: ĐÃ CHECK-IN HOẶC CHƯA CHECK-IN       */}
         {/* ========================================================= */}
-        {isCheckedIn ? (
+        {isCheckedIn && signal ? (
           /* TRƯỜNG HỢP A: BỨC TRƯỚNG LỜI GỢI MỞ CHIÊM NGHIỆM */
           <section
             aria-labelledby="today-signal-title"
@@ -401,24 +401,23 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
           /* TRƯỜNG HỢP B: BÀN TRÀ SỚM MỜI GỌI CHECK-IN */
           <section
             aria-labelledby="today-checkin-title"
-            className="today-tea-intro-card grid grid-cols-1 md:grid-cols-12"
+            className="today-tea-intro-card grid grid-cols-1 md:grid-cols-12 overflow-hidden"
           >
             <div className="md:col-span-7 p-6 sm:p-10 flex flex-col justify-center">
               <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent mb-3">
                 <Flower2 className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Bắt đầu ngày mới từ cảm xúc</span>
+                <span>{isCheckedIn ? "Lần check-in trước" : "Bắt đầu ngày mới từ cảm xúc"}</span>
               </div>
 
               <h2
                 id="today-checkin-title"
                 className="font-display text-2xl sm:text-3xl lg:text-4xl font-semibold text-ink leading-snug mb-3"
               >
-                Hôm nay bạn đang cảm thấy thế nào?
+                {isCheckedIn ? "Bạn đang cảm thấy thế nào hôm nay?" : "Hôm nay bạn đang cảm thấy thế nào?"}
               </h2>
 
               <p className="text-base text-muted leading-relaxed max-w-lg mb-6">
-                Chạm vào cảm xúc để nhận một lời gợi mở được biên soạn
-                và một hành động nhỏ dịu dàng nuôi dưỡng tâm hồn bạn.
+                Chạm vào cảm xúc để nhận một lời gợi mở chiêm nghiệm và một hành động nhỏ dịu dàng nuôi dưỡng tâm hồn bạn.
               </p>
 
               <div>
@@ -428,7 +427,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
                   className="today-primary-btn group"
                 >
                   <span className="today-btn-sheen" />
-                  <span>Chọn tâm trạng ngay</span>
+                  <span>{isCheckedIn ? "Cập nhật tâm trạng" : "Chọn tâm trạng ngay"}</span>
                   <ArrowRight
                     className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
                     aria-hidden="true"
@@ -442,13 +441,16 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
               </p>
             </div>
 
-            <div className="hidden md:block md:col-span-5 relative overflow-hidden">
-              <img
-                src="/images/tea_bowl.jpg"
-                alt="Chén trà trong không gian yên tĩnh thanh tịnh"
-                className="w-full h-full min-h-[19rem] object-cover transition-transform duration-700 hover:scale-103"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-surface via-transparent to-transparent pointer-events-none" />
+            <div className="md:col-span-5 p-4 sm:p-6 flex items-center justify-center">
+              <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-sm border border-line/60 bg-surface-soft">
+                <img
+                  src="/images/tea_bowl.jpg"
+                  alt="Chén trà trong không gian yên tĩnh thanh tịnh"
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover transition-transform duration-700 hover:scale-103"
+                />
+              </div>
             </div>
           </section>
         )}
@@ -526,10 +528,10 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
               id="today-explore-title"
               className="font-display text-xl sm:text-2xl font-semibold text-ink mb-1.5"
             >
-              Bạn muốn dành thời gian cho điều gì?
+              Bạn muốn tìm gì?
             </h2>
             <p className="text-sm sm:text-base text-muted">
-              Tự do dạo cảnh và trải nghiệm văn hóa bất cứ lúc nào trong ngày.
+              Chọn bài viết văn hóa hoặc hướng dẫn nghi lễ.
             </p>
           </div>
 
@@ -540,7 +542,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
               return (
                 <article
                   key={activity.title}
-                  className="today-heritage-card"
+                  className="today-heritage-card overflow-hidden flex flex-col"
                 >
                   <CornerOrnament className="today-card-corner today-card-corner--tl" />
                   <CornerOrnament className="today-card-corner today-card-corner--br" />
@@ -549,9 +551,10 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
                     <div className="today-card-image-box">
                       <img
                         src={activity.image}
-                        alt=""
+                        alt={activity.title}
                         loading="lazy"
                         decoding="async"
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-103"
                       />
                     </div>
                   )}

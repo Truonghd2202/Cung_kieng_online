@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+.unverified-image {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    repeating-radial-gradient(circle at center, transparent 0 2.5rem, color-mix(in srgb, var(--ui-accent) 8%, transparent) 2.55rem 2.6rem),
+    var(--ui-surface-soft);
+  color: var(--ui-muted);
+  text-align: center;
+}
+
+.unverified-image > span {
+  max-width: 18rem;
+  padding: 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {

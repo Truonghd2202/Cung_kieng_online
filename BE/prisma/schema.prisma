@@ -6,6 +6,15 @@ datasource db {
   provider = "postgresql"
 }
 
+enum content_editorial_status {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  PUBLISHED
+  HIDDEN
+  REVOKED
+}
+
 model ai_generation_logs {
   id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id         String?  @db.Uuid
@@ -71,6 +80,7 @@ model calendar_events {
   region         vietnam_region?  @default(NATIONWIDE)
   category       String?          @db.VarChar(100)
   source         String?
+  editorial_status content_editorial_status @default(DRAFT)
   verified       Boolean          @default(false)
   active         Boolean          @default(true)
   created_at     DateTime         @default(now()) @db.Timestamptz(6)
@@ -101,6 +111,7 @@ model culture_articles {
   image_url  String?
   content    Json
   source     String?
+  editorial_status content_editorial_status @default(DRAFT)
   verified   Boolean         @default(false)
   active     Boolean         @default(true)
   created_at DateTime        @default(now()) @db.Timestamptz(6)
@@ -306,6 +317,7 @@ model mood_checkins {
   mood        mood_type
   context_key String    @default("general") @db.VarChar(30)
   signal_snapshot Json?
+  idempotency_key String?   @db.Uuid
   note        String?
   intensity   Int?      @db.SmallInt
   signal_id   String?   @db.Uuid
@@ -318,6 +330,7 @@ model mood_checkins {
   @@index([created_at(sort: Desc)], map: "idx_mood_checkins_created_at")
   @@index([user_id], map: "idx_mood_checkins_user_id")
   @@index([user_id, saved_at])
+  @@unique([user_id, idempotency_key], map: "uq_mood_checkins_user_idempotency")
 }
 
 model notifications {
@@ -376,6 +389,7 @@ model prayers {
   region         vietnam_region? @default(NATIONWIDE)
   language_style String?         @default("NOM") @db.VarChar(100)
   source         String?
+  editorial_status content_editorial_status @default(DRAFT)
   verified       Boolean         @default(false)
   active         Boolean         @default(true)
   created_at     DateTime        @default(now()) @db.Timestamptz(6)
@@ -474,6 +488,9 @@ model rituals {
   region           vietnam_region?    @default(NATIONWIDE)
   calendar         calendar_type?
   source           String?
+  editorial_status content_editorial_status @default(DRAFT)
+  checklists       Json               @default("[]") @db.JsonB
+  content_provenance Json             @default("{}") @db.JsonB
   verified         Boolean            @default(false)
   active           Boolean            @default(true)
   created_at       DateTime           @default(now()) @db.Timestamptz(6)
@@ -506,13 +523,20 @@ model signals {
   context_key   String?         @db.VarChar(30)
   proverb_id    String?         @db.Uuid
   source        String?
-  active        Boolean         @default(true)
+  active        Boolean         @default(false)
+  editorial_status content_editorial_status @default(DRAFT)
+  reviewed_by   String?         @db.Uuid
+  reviewed_at   DateTime?       @db.Timestamptz(6)
+  approved_content_hash String?  @db.Char(64)
   created_at    DateTime        @default(now()) @db.Timestamptz(6)
   updated_at    DateTime        @default(now()) @db.Timestamptz(6)
   mood_checkins mood_checkins[]
   proverbs      proverbs?       @relation(fields: [proverb_id], references: [id], onUpdate: NoAction)
+  reviewer      users?          @relation("signal_reviewers", fields: [reviewed_by], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   @@index([mood], map: "idx_signals_mood")
+  @@index([editorial_status, active], map: "idx_signals_publication")
+  @@index([mood, context_key, editorial_status], map: "idx_signals_mood_context_status")
 }
 
 model subscriptions {
@@ -616,6 +640,7 @@ model users {
   push_subscriptions   push_subscriptions[]
   analytics_events     analytics_events[]
   admin_audit_logs     admin_audit_logs[]
+  reviewed_signals     signals[]              @relation("signal_reviewers")
   user_divinations     user_divinations[]
   user_settings        user_settings?
   user_topics          user_topics[]
@@ -761,6 +786,7 @@ model xin_xam {
   meaning       String?
   advice        String?
   source        String?
+  editorial_status content_editorial_status @default(DRAFT)
   verified      Boolean         @default(false)
   active        Boolean         @default(true)
   created_at    DateTime        @default(now()) @db.Timestamptz(6)

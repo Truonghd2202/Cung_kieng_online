@@ -38,6 +38,8 @@ interface MoodCheckInScreenProps {
   onChangeJournal: (text: string) => void;
   onBackToToday: () => void;
   onSubmit: (contextKey: MoodContextKey) => void;
+  isSubmitting?: boolean;
+  isLoggedIn?: boolean;
   contextKey: MoodContextKey;
   onChangeContext: (contextKey: MoodContextKey) => void;
 }
@@ -91,6 +93,8 @@ export const MoodCheckInScreen: React.FC<MoodCheckInScreenProps> = ({
   onChangeJournal,
   onBackToToday,
   onSubmit,
+  isSubmitting = false,
+  isLoggedIn = false,
   contextKey,
   onChangeContext,
 }) => {
@@ -355,12 +359,12 @@ export const MoodCheckInScreen: React.FC<MoodCheckInScreenProps> = ({
 
             <div className="flex-1">
               <span className="block text-sm font-semibold text-ink">
-                Viết thêm vài dòng tâm sự gửi gió mây
+                Viết thêm nếu bạn muốn
               </span>
               <span className="block text-xs text-muted mt-0.5">
                 {journalText.trim()
-                  ? "Đã có vài dòng trải lòng trong lượt này"
-                  : "Tùy chọn — một khoảng không gian riêng tư dành cho bạn"}
+                  ? "Đã có vài dòng trong lượt này"
+                  : "Tùy chọn. Có thể để trống."}
               </span>
             </div>
 
@@ -388,6 +392,12 @@ export const MoodCheckInScreen: React.FC<MoodCheckInScreenProps> = ({
               aria-describedby="mood-journal-note"
               className="resize-y bg-surface border-line focus:border-accent text-sm leading-relaxed"
             />
+
+            <p id="mood-journal-note" className="mt-2 text-xs text-muted leading-relaxed">
+              {isLoggedIn
+                ? "Khi gửi check-in, đoạn này được gửi tới máy chủ cùng cảm xúc và bối cảnh. Tránh ghi tên hoặc thông tin nhận dạng."
+                : "Chưa đăng nhập: đoạn này không gửi cùng check-in. Nếu đăng nhập để lưu kết quả, nội dung sẽ được gửi cùng bản lưu. Tránh ghi tên hoặc thông tin nhận dạng."}
+            </p>
 
             <div className="flex items-center justify-between text-xs text-muted mt-2">
               
@@ -423,13 +433,14 @@ export const MoodCheckInScreen: React.FC<MoodCheckInScreenProps> = ({
 
             <button
               type="button"
+              disabled={isSubmitting}
               onClick={() => onSubmit(contextKey)}
               aria-label="Nhận lời chiêm nghiệm"
               className="mood-submit-btn flex-1 sm:flex-none sm:min-w-64"
             >
               <span className="mood-submit-sheen" />
               <ButtonOrnament className="w-6 h-4 text-amber-200/80 shrink-0 hidden sm:block" />
-              <span>NHẬN LỜI CHIÊM NGHIỆM</span>
+              <span>{isSubmitting ? "ĐANG GỬI CHECK-IN…" : "NHẬN LỜI CHIÊM NGHIỆM"}</span>
               <ArrowRight className="h-4 w-4 shrink-0 text-amber-200" aria-hidden="true" />
             </button>
           </div>

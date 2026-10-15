@@ -262,7 +262,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   <h3 className="font-display font-bold text-base text-ink">
                     {displayName}
                   </h3>
-                  <p className="text-sm text-muted">Tâm thức an hòa • Bản demo</p>
+                  <p className="text-sm text-muted">Tâm thức an hòa</p>
                 </div>
               </div>
             </Card>
@@ -327,7 +327,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               >
                 <div className="flex items-center gap-2.5">
                   <ShieldCheck className="w-4 h-4" />
-                  <span>Dữ liệu bản demo</span>
+                  <span>Dữ liệu trên thiết bị</span>
                 </div>
                 {activeSection === "data" && <span className="w-1.5 h-1.5 rounded-full bg-action" />}
               </button>
@@ -452,7 +452,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 <div>
                   <div className="block text-xs font-semibold text-ink mb-1.5">Địa chỉ hòm thư (Email):</div>
                   <div className="px-3.5 py-2.5 rounded-xl border border-line bg-surface-soft text-xs font-medium text-muted flex items-center justify-between">
-                    <span className="font-sans tabular-nums text-xs">{user?.email || "annhien@tinlamtamlinh.vn"}</span>
+                    <span className="font-sans tabular-nums text-xs">{user?.email || "Chưa có thông tin"}</span>
                     <span className="text-xs text-muted">
                       Tài khoản đã xác thực
                     </span>
@@ -680,17 +680,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               </div>
             </Card>
 
-            {/* Block 4: Dữ liệu bản demo & Lưu trữ thiết bị */}
+            {/* Block 4: Dữ liệu trên thiết bị & Lưu trữ */}
             <Card className="p-6 sm:p-8 rounded-card bg-surface border border-line shadow-xs">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent mb-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>DỮ LIỆU BẢN DEMO & LƯU TRỮ THIẾT BỊ</span>
+                <span>DỮ LIỆU CÁ NHÂN & QUYỀN RIÊNG TƯ</span>
               </div>
               <h3 className="font-display font-bold text-xl text-ink mb-2">
-                Minh bạch lưu trữ trên trình duyệt
+                Minh bạch về dữ liệu tài khoản
               </h3>
               <p className="text-sm text-muted mb-5 leading-relaxed">
-                Nội dung quẻ xăm, điều ước và nhật ký tâm trạng không được gửi vào analytics. Nếu đồng ý bên dưới,
+                Lời gửi gắm, lịch sử xin xăm và nhật ký tâm trạng được lưu theo tài khoản để bạn xem lại; nội dung này không được gửi vào analytics. Nếu đồng ý bên dưới,
                 ứng dụng chỉ ghi nhận sự kiện sử dụng và nguồn chiến dịch đã chuẩn hóa để đo lường sản phẩm.
               </p>
 
@@ -770,7 +770,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   Đang đăng nhập dưới phiên: {displayName}
                 </div>
                 <div className="text-xs text-muted mt-0.5">
-                  Khi đăng xuất, dữ liệu demo trên trình duyệt này vẫn được bảo lưu cho tài khoản.
+                  Khi đăng xuất, dữ liệu cục bộ trên trình duyệt này vẫn được giữ trên thiết bị.
                 </div>
               </div>
 

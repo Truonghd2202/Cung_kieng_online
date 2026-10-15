@@ -2,7 +2,7 @@ export function clearPersonalStorage(email: string) {
   const account = email.trim().toLowerCase();
   const corner = `tltl-user-corner-${account}`;
   const keys = [corner, `tltl-calendar-personal-notes_${account}`, `tltl-memorial-${account}`, `tltl-selected-memorial-${account}`, `tltl-reminders:${account}`,
-    ...["tltl-action-done-date", "tltl-last-checkin-date", "tltl-today-mood", "tltl-current-signal-id"].map((base) => `${base}_${account}`)];
+    ...["tltl-action-done-date", "tltl-last-checkin-date", "tltl-today-mood", "tltl-current-signal-id", "tltl-current-checkin-id"].map((base) => `${base}_${account}`)];
   const prefixes = [
     `tltl-ritual-checklist-${account}-`,
     `tltl-ritual-bookmark-${account}-`,

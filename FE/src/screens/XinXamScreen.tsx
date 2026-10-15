@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { UnverifiedImage } from "../components/UnverifiedImage";
 import {
   ArrowLeft,
   ArrowRight,
@@ -26,13 +27,16 @@ import { Badge } from "../components/ui/badge";
 import { Card } from "../components/ui/card";
 import { AppDialog } from "../components/AppDialog";
 import { ContentProvenance } from "../components/ContentProvenance";
-import { TraditionalXamPreview } from "../components/TraditionalXamPreview";
 import {
   RegionType,
   TopicType,
   XinXamResult,
 } from "../data/xinXamData";
-import { drawXinXam } from "../data/reflectionService";
+import {
+  drawXinXam,
+  loadXinXamAvailability,
+  type XinXamAvailability,
+} from "../data/reflectionService";
 import { ApiError } from "../lib/api";
 import { isPublishableXamCard } from "../../../shared/xin-xam-publication.mjs";
 
@@ -69,6 +73,69 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   const [selectedRegion, setSelectedRegion] = useState<RegionType>("Bắc Bộ");
   const [selectedTopic, setSelectedTopic] = useState<TopicType>("Bình an");
 
+  const [availability, setAvailability] =
+    useState<XinXamAvailability | null>(null);
+
+  const [availabilityLoading, setAvailabilityLoading] =
+    useState(true);
+
+  const [availabilityError, setAvailabilityError] =
+    useState("");
+
+  const [availabilityAttempt, setAvailabilityAttempt] =
+    useState(0);
+
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+
+    setAvailability(null);
+    setAvailabilityLoading(true);
+    setAvailabilityError("");
+
+    void loadXinXamAvailability(
+      selectedRegion,
+      selectedTopic,
+      { signal: controller.signal },
+    )
+      .then((result) => {
+        if (!active) return;
+        setAvailability(result);
+      })
+      .catch(() => {
+        if (!active) return;
+
+        setAvailabilityError(
+          "Chưa kiểm tra được thư viện thẻ. Bạn hãy kiểm tra kết nối rồi thử lại.",
+        );
+      })
+      .finally(() => {
+        if (active) {
+          setAvailabilityLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [
+    selectedRegion,
+    selectedTopic,
+    availabilityAttempt,
+  ]);
+
+  const availabilityMatchesSelection =
+    availability?.region === selectedRegion &&
+    availability?.topic === selectedTopic;
+
+  const canContinueDraw =
+    !availabilityLoading &&
+    !availabilityError &&
+    availabilityMatchesSelection &&
+    availability?.available === true &&
+    availability.count > 0;
+
   // Step 2 Interactive States
   const [drawPhase, setDrawPhase] = useState<"idle" | "shaking" | "dropped">("idle");
   const [isShaking, setIsShaking] = useState(false);
@@ -86,149 +153,303 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
     ReturnType<typeof setTimeout> | null
   >(null);
   const requestLockRef = useRef(false);
+
+  const [isRequestingDraw, setIsRequestingDraw] =
+    useState(false);
+
+  const drawRequestVersionRef = useRef(0);
+
+  const drawRequestControllerRef =
+    useRef<AbortController | null>(null);
+
+  const drawRequestTimeoutRef =
+    useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [currentResult, setCurrentResult] = useState<XinXamResult | null>(null);
 
-  useEffect(() => {
+  const cancelDrawRequest = () => {
+    drawRequestVersionRef.current += 1;
+
+    drawRequestControllerRef.current?.abort();
+    drawRequestControllerRef.current = null;
+
+    if (drawRequestTimeoutRef.current !== null) {
+      clearTimeout(drawRequestTimeoutRef.current);
+      drawRequestTimeoutRef.current = null;
+    }
+
     if (drawTimerRef.current !== null) {
       clearTimeout(drawTimerRef.current);
       drawTimerRef.current = null;
     }
 
+    if (holdTimerRef.current !== null) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+
+    requestLockRef.current = false;
+  };
+
+  // Đổi vùng/chủ đề: hủy lượt cũ và xóa kết quả cũ.
+  useEffect(() => {
+    cancelDrawRequest();
+
     setCurrentResult(null);
-    setDrawPhase("idle");
-    setIsShaking(false);
     setCurrentDrawId(null);
+    setIsRequestingDraw(false);
+    setIsShaking(false);
+    setDrawPhase("idle");
     setIsActionDone(false);
     setSaveError("");
     setDrawNotice("");
-      requestLockRef.current = false;
   }, [selectedRegion, selectedTopic]);
 
-  // Hủy lượt đang chạy khi rời bước rút thẻ.
+  // Rời bước rút: không nhận thêm phản hồi của lượt đang chạy.
+  // Giữ currentResult để bước 3 vẫn đọc được kết quả đã nhận.
   useEffect(() => {
     if (step !== 2) {
-      if (holdTimerRef.current !== null) {
-        clearTimeout(holdTimerRef.current);
-        holdTimerRef.current = null;
-      }
-      if (drawTimerRef.current !== null) {
-        clearTimeout(drawTimerRef.current);
-        drawTimerRef.current = null;
-      }
+      cancelDrawRequest();
 
+      setIsRequestingDraw(false);
       setIsShaking(false);
       setDrawPhase("idle");
-      requestLockRef.current = false;
     }
   }, [step]);
 
-  // Không để timer tiếp tục khi đã rời màn xin xăm.
+  // Rời màn hình: dọn request và timer.
   useEffect(() => {
     return () => {
-      if (holdTimerRef.current !== null) clearTimeout(holdTimerRef.current);
-      if (drawTimerRef.current !== null) {
-        clearTimeout(drawTimerRef.current);
-      }
-      requestLockRef.current = false;
+      cancelDrawRequest();
     };
   }, []);
 
   const handleStartDraw = async () => {
-    if (requestLockRef.current || drawTimerRef.current !== null) return;
+    if (step !== 2) return;
+
+    if (!canContinueDraw) {
+      setDrawNotice(
+        "Lựa chọn này chưa sẵn sàng. Hãy quay lại bước chọn và kiểm tra thư viện.",
+      );
+      return;
+    }
+
+    if (
+      requestLockRef.current ||
+      drawTimerRef.current !== null
+    ) {
+      return;
+    }
+
     requestLockRef.current = true;
+
+    const version = ++drawRequestVersionRef.current;
+    const controller = new AbortController();
+
+    drawRequestControllerRef.current = controller;
+
+    let timedOut = false;
+
+    setIsRequestingDraw(true);
     setCurrentResult(null);
     setCurrentDrawId(null);
     setDrawPhase("idle");
     setIsShaking(false);
+    setDrawNotice("");
+    setSaveError("");
+
+    drawRequestTimeoutRef.current = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, 12_000);
 
     let remote: Awaited<ReturnType<typeof drawXinXam>>;
+
     try {
-      remote = await drawXinXam(selectedRegion, selectedTopic);
-    } catch (error) {
-      setDrawNotice(
-        error instanceof ApiError && error.status === 404
-          ? "Hiện chưa có quẻ đủ điều kiện xuất bản cho lựa chọn này."
-          : "Chưa lấy được quẻ từ thư viện. Bạn hãy thử lại khi kết nối ổn định."
+      remote = await drawXinXam(
+        selectedRegion,
+        selectedTopic,
+        undefined,
+        { signal: controller.signal },
       );
+    } catch (error) {
+      // Lượt đã bị hủy hoặc thay thế: không cập nhật UI.
+      if (version !== drawRequestVersionRef.current) return;
+
+      setDrawNotice(
+        timedOut
+          ? "Máy chủ phản hồi chậm. Chưa có kết quả được xác nhận để hiển thị. Bạn có thể thử lại."
+          : error instanceof ApiError &&
+              error.status === 404
+            ? "Hiện chưa có thẻ đủ điều kiện phát hành cho lựa chọn này."
+            : "Chưa lấy được thẻ. Bạn hãy kiểm tra kết nối rồi thử lại.",
+      );
+
+      setIsRequestingDraw(false);
+      requestLockRef.current = false;
+      return;
+    } finally {
+      if (version === drawRequestVersionRef.current) {
+        if (drawRequestTimeoutRef.current !== null) {
+          clearTimeout(drawRequestTimeoutRef.current);
+          drawRequestTimeoutRef.current = null;
+        }
+
+        drawRequestControllerRef.current = null;
+      }
+    }
+
+    if (version !== drawRequestVersionRef.current) return;
+
+    if (controller.signal.aborted) {
+      setDrawNotice(
+        "Yêu cầu đã hết thời gian chờ. Hãy thử lại.",
+      );
+
+      setIsRequestingDraw(false);
       requestLockRef.current = false;
       return;
     }
 
-    const poemLines = (remote.poem || "").split(/\r?\n/).map((line) => line.trim());
-    if (!isPublishableXamCard({
+    const poemLines = (remote.poem || "")
+      .split(/\r?\n/)
+      .map((line) => line.trim());
+
+    const publishable = isPublishableXamCard({
       active: remote.active,
       verified: remote.verified,
       xam_type: remote.xamType,
       source: remote.source,
       poem: poemLines,
-      interpretations: [remote.meaning, remote.advice],
-    })) {
-      setDrawNotice("Thẻ nhận được chưa đạt điều kiện phát hành. Nội dung chưa được hiển thị.");
+      interpretations: [
+        remote.meaning,
+        remote.advice,
+      ],
+    });
+
+    if (!publishable) {
+      setDrawNotice(
+        "Thẻ nhận được chưa đủ điều kiện phát hành nên chưa được hiển thị.",
+      );
+
+      setIsRequestingDraw(false);
       requestLockRef.current = false;
       return;
     }
 
     const nextDrawId = remote.drawId || remote.id;
-    const source = remote.source || "";
+
     const chosen: XinXamResult = {
+      resultToken: remote.resultToken,
       metadata: remote.originalContent.metadata,
       aiExplanation: remote.aiExplanation || undefined,
-      source,
+      source: remote.source || "",
       verified: remote.verified,
       stickNumber: remote.stickNumber,
+
       region: selectedRegion,
       regionSub: selectedRegion,
       topic: selectedTopic,
       topicTag: remote.category || selectedTopic,
-      title: `Thẻ xin xăm ${remote.stickNumber} — ${remote.classification}`,
+
+      title:
+        `Thẻ xin xăm ${remote.stickNumber} — ${remote.classification}`,
+
       quote: remote.originalContent.poem || "",
-      poem: { line1: poemLines[0], line2: poemLines[1], line3: poemLines[2], line4: poemLines[3] },
+
+      poem: {
+        line1: poemLines[0],
+        line2: poemLines[1],
+        line3: poemLines[2],
+        line4: poemLines[3],
+      },
+
       sealText: remote.classification,
       fortuneType: remote.classification,
       category: remote.category,
       insight: remote.classification,
-      reflectionParagraphs: [remote.originalContent.meaning, remote.disclaimer],
-      tips: [
-        ...(remote.proverb ? [{ title: "Thành ngữ hoặc tục ngữ đi cùng thẻ", desc: `“${remote.proverb.content}” — ${remote.proverb.meaning} (Nguồn: VIVID)` }] : []),
-        { title: "Gợi ý chiêm nghiệm", desc: remote.originalContent.advice },
-        ...(remote.aiExplanation ? [{ title: "Gợi ý do AI tạo", desc: remote.aiExplanation.content }] : []),
-        { title: "Lưu ý tham khảo", desc: remote.interpretation.warning },
+
+      reflectionParagraphs: [
+        remote.originalContent.meaning,
+        remote.disclaimer,
       ],
+
+      tips: [
+        ...(remote.proverb
+          ? [
+              {
+                title: "Thành ngữ hoặc tục ngữ đi cùng thẻ",
+                desc:
+                  `“${remote.proverb.content}” — ` +
+                  `${remote.proverb.meaning} (Nguồn: VIVID)`,
+              },
+            ]
+          : []),
+
+        {
+          title: "Gợi ý chiêm nghiệm",
+          desc: remote.originalContent.advice,
+        },
+
+        ...(remote.aiExplanation
+          ? [
+              {
+                title: "Gợi ý do AI tạo",
+                desc: remote.aiExplanation.content,
+              },
+            ]
+          : []),
+
+        {
+          title: "Lưu ý tham khảo",
+          desc: remote.interpretation.warning,
+        },
+      ],
+
       culturalAspect: "",
       relatedArticleId: "",
       relatedArticleTitle: "",
-      microAction: { title: "", desc: "", duration: "" },
+
+      microAction: {
+        title: "",
+        desc: "",
+        duration: "",
+      },
     };
 
-    setDrawNotice(isLoggedIn ? "" : "Kết quả chưa được lưu vào tài khoản.");
-
-    setCurrentDrawId(null);
-    setSaveError("");
+    setIsRequestingDraw(false);
     setIsShaking(true);
     setIsActionDone(false);
     setDrawPhase("shaking");
 
+    setDrawNotice(
+      isLoggedIn
+        ? ""
+        : "Kết quả chưa được lưu vào tài khoản.",
+    );
+
     const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
+      "(prefers-reduced-motion: reduce)",
     ).matches;
 
     if (!reducedMotion) {
       try {
         navigator.vibrate?.([60, 40, 60]);
       } catch {
-        // Một số thiết bị không hỗ trợ rung.
+        // Rung chỉ là hiệu ứng bổ trợ.
       }
     }
 
     drawTimerRef.current = setTimeout(() => {
+      if (version !== drawRequestVersionRef.current) return;
+
       drawTimerRef.current = null;
       requestLockRef.current = false;
 
       setCurrentResult(chosen);
       setCurrentDrawId(nextDrawId);
-
       setIsShaking(false);
       setDrawPhase("dropped");
     }, reducedMotion ? 200 : 1800);
@@ -329,6 +550,49 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
   return (
     <div className="screen-shell">
       <main className="page-container max-w-5xl">
+        {isRequestingDraw && (
+          <p
+            role="status"
+            className="mb-5 rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted"
+          >
+            Đang lấy thẻ từ thư viện…
+          </p>
+        )}
+        {step === 1 && (
+          <section
+            aria-label="Trạng thái thư viện thẻ"
+            className="mb-5 rounded-xl border border-line bg-surface p-4"
+          >
+            <p
+              role={availabilityError ? "alert" : "status"}
+              className="text-sm leading-relaxed text-muted"
+            >
+              {availabilityLoading || (
+                !availabilityError &&
+                !availabilityMatchesSelection
+              )
+                ? "Đang kiểm tra thư viện cho lựa chọn của bạn…"
+                : availabilityError
+                  ? availabilityError
+                  : canContinueDraw
+                    ? `Có ${availability?.count} thẻ đủ điều kiện phát hành cho ${selectedRegion} · ${selectedTopic}.`
+                    : `Chưa có thẻ được phát hành cho ${selectedRegion} · ${selectedTopic}. Bạn có thể chọn vùng hoặc chủ đề khác.`}
+            </p>
+
+            {!availabilityLoading && (
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-3"
+                onClick={() => {
+                  setAvailabilityAttempt((value) => value + 1);
+                }}
+              >
+                Kiểm tra lại thư viện
+              </Button>
+            )}
+          </section>
+        )}
         {saveError && (
           <p
             role="alert"
@@ -429,7 +693,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                         : "border-line bg-surface"
                     }`}
                   >
-                    <img
+                    <UnverifiedImage
                       src={region.image}
                       alt=""
                       className="h-16 w-20 shrink-0 rounded-panel object-cover"
@@ -527,9 +791,15 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                 <Button
                   variant="default"
                   size="default"
+                  disabled={!canContinueDraw}
                   onClick={() => {
+                    if (!canContinueDraw) return;
+
                     setStep(2);
-                    window.scrollTo({ top: 0, behavior: "auto" });
+                    window.scrollTo({
+                      top: 0,
+                      behavior: "auto",
+                    });
                   }}
                   className="w-full sm:w-auto font-semibold shadow-xs gap-2"
                 >
@@ -539,18 +809,6 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
               </div>
             </Card>
 
-            {import.meta.env.DEV && (
-              <details className="mb-6 rounded-card border border-line bg-surface p-4">
-                <summary className="min-h-11 cursor-pointer rounded-control py-3 text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-                  Đọc thử thẻ Quan Thánh — kiểm tra nội dung
-                </summary>
-
-                <div className="mt-4 border-t border-line pt-5">
-                  <TraditionalXamPreview />
-                </div>
-              </details>
-            )}
-
             {/* Editorial Principle Disclaimer */}
             <div className="p-5 rounded-panel bg-surface border border-line flex items-start gap-3.5 text-xs text-muted leading-relaxed mb-12">
               <Info className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
@@ -558,13 +816,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                 <div className="font-bold text-accent uppercase tracking-wider mb-1">
                   GHI CHÚ VĂN HÓA & NGUYÊN TẮC TRẢI NGHIỆM
                 </div>
-                <p>
-                  Bộ thẻ hiện là nội dung mẫu phục vụ trải nghiệm giao diện,
-                  chưa phải bộ xăm truyền thống đã được đối chiếu nguồn.
-                  Mỗi vùng và chủ đề hiện có một thẻ nên rút lại sẽ nhận
-                  cùng nội dung. Kết quả được chọn theo vùng và chủ đề,
-                  chưa dùng AI hoặc nội dung tâm sự để diễn giải.
-                </p>
+                <p>Thẻ chỉ hiển thị khi nội dung có nguồn và đã được duyệt. Lời quẻ là tư liệu tham khảo, không dự báo tương lai hoặc thay thế quyết định cá nhân.</p>
               </div>
             </div>
           </div>
@@ -844,7 +1096,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                       onPointerCancel={cancelHeldDraw}
                       onPointerLeave={cancelHeldDraw}
                       onClick={handleKeyboardDraw}
-                      disabled={isShaking}
+                      disabled={isRequestingDraw || isShaking}
                       className="text-xs text-muted hover:text-accent font-medium py-1 transition-colors cursor-pointer flex items-center gap-1.5"
                     >
                       <RotateCcw className="w-3 h-3" />
@@ -860,11 +1112,17 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
                     onPointerCancel={cancelHeldDraw}
                     onPointerLeave={cancelHeldDraw}
                     onClick={handleKeyboardDraw}
-                    disabled={isShaking}
+                    disabled={isRequestingDraw || isShaking}
                     className="w-full sm:w-auto px-8 py-3.5 font-semibold shadow-md gap-2 text-base cursor-pointer mx-auto"
                   >
                     <Sparkles className="w-4 h-4 shrink-0" />
-                    <span>{isShaking ? "Đang lắng đọng rút thẻ..." : "Giữ 1,5 giây để lắc ống xăm"}</span>
+                    <span>
+                      {isRequestingDraw
+                        ? "Đang lấy thẻ…"
+                        : isShaking
+                          ? "Đang rút thẻ…"
+                          : "Giữ 1,5 giây để lắc ống xăm"}
+                    </span>
                   </Button>
                 )}
 
@@ -931,7 +1189,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
               <div className="space-y-1.5 text-xs text-muted flex-shrink-0">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
-                  <span>Miễn phí trong bản thử nghiệm</span>
+                  <span>Miễn phí</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-accent" />

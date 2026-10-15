@@ -4,19 +4,16 @@ const signalRepository = require("../repositories/signal.repository");
 const moodRepository = require("../repositories/mood.repository");
 const ApiError = require("../utils/api-error");
 const aiService = require("./ai.service");
+const checkInCatalog = require("../../../shared/checkin-catalog.json");
+const { removeLegacyEditorialState } = require("./signal-publication");
+const {
+  issueResult,
+  readResult,
+} = require("../utils/signal-result-token");
 
-const MOOD_TO_DB = Object.freeze({
-  "An yên": "PEACEFUL",
-  "Chênh vênh": "UNSTABLE",
-  "Băn khoăn": "WORRIED",
-  "Nôn nóng": "IMPATIENT",
-  "Biết ơn": "GRATEFUL",
-  "Cần điểm tựa": "NEED_SUPPORT",
-  "Áp lực": "PRESSURED",
-  "Cô đơn": "LONELY",
-  "Vui vẻ": "HAPPY",
-  "Mông lung": "OTHER",
-});
+const MOOD_TO_DB = Object.freeze(Object.fromEntries(
+  checkInCatalog.moods.map(({ label, key }) => [label, key]),
+));
 
 const DB_TO_MOOD = Object.freeze(Object.fromEntries(
   Object.entries(MOOD_TO_DB).map(([label, value]) => [value, label]),
@@ -52,7 +49,13 @@ function parseContent(row) {
 }
 
 function toPublicSignal(row) {
-  const content = parseContent(row);
+  const content = removeLegacyEditorialState(parseContent(row)) || parseContent(row);
+  const editorialStatus = row.active === false
+    ? (row.editorial_status === "REVOKED" ? "revoked" : "hidden")
+    : String(row.editorial_status || "DRAFT").toLowerCase().replaceAll("_", "-");
+  const reviewProfile = row.reviewed_by && row.reviewed_at && row.reviewer?.full_name
+    ? { reviewedBy: row.reviewer.full_name, reviewedOn: new Date(row.reviewed_at).toISOString().slice(0, 10) }
+    : {};
   return {
     id: row.source || row.id,
     dbId: row.id,
@@ -62,12 +65,10 @@ function toPublicSignal(row) {
     category: row.category,
     source: row.source,
     ...content,
-    metadata: content.metadata || {
-      contentKind: "editorial",
-      editorialStatus: "approved",
-      sources: [],
-      quotationVerified: true,
-      editorialNote: "Thông điệp đã được duyệt biên tập.",
+    metadata: {
+      ...(content.metadata || {}),
+      editorialStatus,
+      ...reviewProfile,
     },
   };
 }
@@ -78,9 +79,22 @@ function formatDate(date) {
 
 function toCheckInSignal(checkIn) {
   if (!checkIn.signals) return null;
+  const currentSignal = toPublicSignal(checkIn.signals);
+  const snapshot = checkIn.signal_snapshot || {};
+  const snapshotMetadata = { ...(snapshot.metadata || {}) };
+  delete snapshotMetadata.reviewedBy;
+  delete snapshotMetadata.reviewedOn;
+  const currentMetadata = currentSignal.metadata || {};
   return {
-    ...toPublicSignal(checkIn.signals),
-    ...(checkIn.signal_snapshot || {}),
+    ...currentSignal,
+    ...snapshot,
+    metadata: {
+      ...currentMetadata,
+      ...snapshotMetadata,
+      editorialStatus: currentMetadata.editorialStatus,
+      ...(currentMetadata.reviewedBy ? { reviewedBy: currentMetadata.reviewedBy } : {}),
+      ...(currentMetadata.reviewedOn ? { reviewedOn: currentMetadata.reviewedOn } : {}),
+    },
     id: checkIn.signals.source || checkIn.signals.id,
     mood: toMoodLabel(checkIn.mood),
     contextKey: checkIn.context_key || "general",
@@ -95,12 +109,15 @@ function toSavedSignal(checkIn, starredIds = new Set()) {
     signalId: signal.id,
     mood: signal.mood,
     contextKey: checkIn.context_key || "general",
+    signalSnapshot: signal,
+    actionDone: checkIn.action_done,
     date: formatDate(checkIn.created_at),
     createdAt: checkIn.created_at.getTime(),
     journal: checkIn.note || undefined,
     poemLine1: signal.poem.line1,
     poemLine2: signal.poem.line2,
     actionTitle: signal.action.title,
+    contentStatus: signalRepository.isPublishable(checkIn.signals) ? "available" : "withdrawn",
     starred: starredIds.has(checkIn.signals.id),
   };
 }
@@ -126,8 +143,12 @@ async function analyzeForMood({ mood, contextKey = "general", signalId, excludeS
 
 async function getSignal(id) {
   const row = await signalRepository.findActiveByIdOrSource(id);
-  if (!row) throw new ApiError(404, "Signal not found");
-  return toPublicSignal(row);
+
+  if (!row) {
+    throw new ApiError(404, "Signal not found");
+  }
+
+  return issueResult(toPublicSignal(row));
 }
 
 async function resolveForMood(mood, signalId, contextKey = "general") {
@@ -150,45 +171,182 @@ async function getSavedSignals(userId, limit = 100) {
 }
 
 async function saveSignal(userId, signalId, input) {
-  const mood = input.mood ? toDbMood(input.mood) : undefined;
-  const contextKey = input.contextKey || "general";
-  const row = await resolveForMood(mood, signalId, contextKey);
-  const snapshot = input.signalSnapshot;
-  if (snapshot && (snapshot.mood !== toMoodLabel(row.mood) || snapshot.contextKey !== contextKey || (snapshot.id && snapshot.id !== (row.source || row.id)))) {
-    throw new ApiError(422, "Signal snapshot does not match the selected signal");
+  function assertSameSavedRequest(existing) {
+    const differentMood =
+      input.mood &&
+      existing.mood !== toDbMood(input.mood);
+
+    const differentContext =
+      input.contextKey &&
+      (existing.context_key || "general") !== input.contextKey;
+
+    const differentNote =
+      input.note !== undefined &&
+      (existing.note || null) !== (input.note || null);
+
+    const differentSignal =
+      signalId &&
+      ![
+        existing.signals?.id,
+        existing.signals?.source,
+      ].includes(signalId);
+
+    const differentCheckIn =
+      input.checkInId &&
+      input.checkInId !== existing.id;
+
+    if (
+      differentMood ||
+      differentContext ||
+      differentNote ||
+      differentSignal ||
+      differentCheckIn
+    ) {
+      throw new ApiError(
+        409,
+        "Idempotency key was already used for a different saved result",
+      );
+    }
   }
-  const enriched = snapshot
-    ? { signal: snapshot }
-    : await aiService.enrichSignal(toPublicSignal(row), { mood: toMoodLabel(row.mood), contextKey });
-  const signal = enriched.signal;
+
+  // Nếu lần lưu trước đã thành công, trả lại bản đó.
+  if (input.idempotencyKey) {
+    const existing = await moodRepository.findByIdempotencyKey(
+      userId,
+      input.idempotencyKey,
+    );
+
+    if (existing?.saved_at) {
+      assertSameSavedRequest(existing);
+      return toSavedSignal(existing);
+    }
+  }
+
+  const mood = input.mood
+    ? toDbMood(input.mood)
+    : undefined;
+
+  const contextKey = input.contextKey || "general";
+
+  const row = await resolveForMood(
+    mood,
+    signalId,
+    contextKey,
+  );
+
   let checkIn;
 
   if (input.checkInId) {
-    checkIn = await moodRepository.findByIdForUser(input.checkInId, userId);
-    if (!checkIn) throw new ApiError(404, "Check-in not found");
-    if (!checkIn.signals || checkIn.signals.id !== row.id) throw new ApiError(422, "Check-in does not match the signal");
-    const updated = await moodRepository.update(input.checkInId, userId, {
-      saved_at: checkIn.saved_at || new Date(),
-      ...(input.note !== undefined ? { note: input.note || null } : {}),
-      ...(input.actionDone !== undefined ? { action_done: input.actionDone } : {}),
-    });
-    checkIn = updated.count
-      ? await moodRepository.findByIdForUser(input.checkInId, userId)
-      : checkIn;
+    // Người đã đăng nhập: dùng kết quả có sẵn trên server.
+    checkIn = await moodRepository.findByIdForUser(
+      input.checkInId,
+      userId,
+    );
+
+    if (!checkIn) {
+      throw new ApiError(404, "Check-in not found");
+    }
+
+    if (
+      !checkIn.signals ||
+      checkIn.signals.id !== row.id
+    ) {
+      throw new ApiError(
+        422,
+        "Check-in does not match the signal",
+      );
+    }
+
+    const updated = await moodRepository.update(
+      input.checkInId,
+      userId,
+      {
+        saved_at: checkIn.saved_at || new Date(),
+
+        ...(input.note !== undefined
+          ? { note: input.note || null }
+          : {}),
+
+        ...(input.actionDone !== undefined
+          ? { action_done: input.actionDone }
+          : {}),
+      },
+    );
+
+    if (updated.count !== 1) {
+      throw new ApiError(404, "Check-in not found");
+    }
+
+    checkIn = await moodRepository.findByIdForUser(
+      input.checkInId,
+      userId,
+    );
+
+    if (!checkIn) {
+      throw new ApiError(404, "Check-in not found");
+    }
   } else {
-    checkIn = await moodRepository.create({
-      user_id: userId,
-      mood: row.mood,
-      context_key: contextKey,
-      signal_id: row.id,
-      signal_snapshot: signal,
-      note: input.note || null,
-      action_done: Boolean(input.actionDone),
-      saved_at: new Date(),
-    });
+    // Khách vừa đăng nhập: chỉ nhận kết quả có chữ ký server.
+    const signal = readResult(input.resultToken);
+
+    if (
+      signal.dbId !== row.id ||
+      signal.id !== (row.source || row.id) ||
+      signal.mood !== toMoodLabel(row.mood) ||
+      signal.contextKey !== contextKey
+    ) {
+      throw new ApiError(
+        422,
+        "Kết quả không khớp với cảm xúc và chủ đề đã chọn.",
+      );
+    }
+
+    try {
+      checkIn = await moodRepository.create({
+        user_id: userId,
+        mood: row.mood,
+        context_key: contextKey,
+        signal_id: row.id,
+        signal_snapshot: signal,
+        note: input.note || null,
+        action_done: Boolean(input.actionDone),
+        saved_at: new Date(),
+        idempotency_key: input.idempotencyKey || null,
+      });
+    } catch (error) {
+      // Hai request lưu cùng lúc: giữ lại một bản.
+      if (
+        input.idempotencyKey &&
+        error.code === "P2002"
+      ) {
+        const existing =
+          await moodRepository.findByIdempotencyKey(
+            userId,
+            input.idempotencyKey,
+          );
+
+        if (existing?.saved_at) {
+          assertSameSavedRequest(existing);
+          return toSavedSignal(existing);
+        }
+      }
+
+      throw error;
+    }
   }
 
   return toSavedSignal(checkIn);
+}
+
+async function getSavedSignal(userId, checkInId) {
+  const checkIn = await moodRepository.findByIdForUser(checkInId, userId);
+  if (!checkIn?.saved_at || !checkIn.signals) throw new ApiError(404, "Saved signal not found");
+  const item = toSavedSignal(checkIn);
+  return {
+    item,
+    signal: toCheckInSignal(checkIn),
+    contentStatus: signalRepository.isPublishable(checkIn.signals) ? "available" : "withdrawn",
+  };
 }
 
 async function updateSavedSignal(userId, checkInId, starred) {
@@ -222,6 +380,7 @@ module.exports = {
   getSignal,
   resolveForMood,
   getSavedSignals,
+  getSavedSignal,
   saveSignal,
   updateSavedSignal,
   deleteSavedSignal,

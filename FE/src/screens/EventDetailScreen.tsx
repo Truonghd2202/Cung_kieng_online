@@ -1,4 +1,5 @@
 import { toast } from "../components/ui/Toast";
+import { UnverifiedImage } from "../components/UnverifiedImage";
 import React, { useState, useEffect, useMemo } from "react";
 import {
   ArrowLeft,
@@ -22,7 +23,7 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
-import { getCalendarEventById, getReliableLunarDate, CalendarEventItem } from "../data/calendarData";
+import { getReliableLunarDate, CalendarEventItem } from "../data/calendarData";
 import { loadCalendarEvent } from "../data/contentService";
 import { DetailNotFound } from "../components/DetailNotFound";
 import { ScrollReveal } from "../components/ScrollReveal";
@@ -46,14 +47,12 @@ const EventDetailContent: React.FC<EventDetailScreenProps> = ({
   onGoToHome,
   onGoToExplore,
 }) => {
-  const staticEvent = getCalendarEventById(eventId);
   const [remoteEvent, setRemoteEvent] = useState<CalendarEventItem | null>(null);
   const [remoteLoadFailed, setRemoteLoadFailed] = useState(false);
   const eventParts = eventId.split(":");
   const isApiEvent = eventParts.length === 5 && eventParts[0] === "api";
-  const isSampleEvent = eventParts.length === 5 && eventParts[0] === "sample";
-  const isDynamicEvent = isApiEvent || isSampleEvent;
-  const event = staticEvent || remoteEvent || {
+  const isDynamicEvent = isApiEvent;
+  const event = remoteEvent || {
     id: eventId,
     title: "Đang tải sự kiện",
     day: Number(eventParts[4]) || 1,
@@ -87,23 +86,9 @@ const EventDetailContent: React.FC<EventDetailScreenProps> = ({
     let cancelled = false;
     setRemoteEvent(null);
     setRemoteLoadFailed(false);
-    if (isSampleEvent) {
-      const sample = getCalendarEventById(eventParts[1]);
-      if (sample) {
-        setRemoteEvent({
-          ...sample,
-          id: eventId,
-          year: Number(eventParts[2]),
-          month: Number(eventParts[3]),
-          day: Number(eventParts[4]),
-        });
-      } else {
-        setRemoteLoadFailed(true);
-      }
-      return () => { cancelled = true; };
-    }
     void loadCalendarEvent(eventParts[1]).then((item) => {
       if (cancelled) return;
+      if (item.verified !== true) throw new Error("Sự kiện này chưa được duyệt xuất bản.");
       const day = Number(eventParts[4]);
       const month = Number(eventParts[3]);
       const year = Number(eventParts[2]);
@@ -125,7 +110,7 @@ const EventDetailContent: React.FC<EventDetailScreenProps> = ({
       if (!cancelled) setRemoteLoadFailed(true);
     });
     return () => { cancelled = true; };
-  }, [eventId, isDynamicEvent, isSampleEvent]);
+  }, [eventId, isDynamicEvent]);
 
   const eventDate = new Date(event.year, event.month - 1, event.day);
   const eventDateLabel = eventDate.toLocaleDateString("vi-VN", {
@@ -456,7 +441,7 @@ const EventDetailContent: React.FC<EventDetailScreenProps> = ({
 
           <div className="ml-auto hidden sm:flex items-center gap-1.5 text-xs text-muted">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Tư liệu lịch pháp & Khảo cứu chính thống</span>
+            <span>Nguồn tham khảo</span>
           </div>
         </div>
 
@@ -543,7 +528,7 @@ const EventDetailContent: React.FC<EventDetailScreenProps> = ({
             <ScrollReveal variant="scale">
               <div className="rounded-3xl overflow-hidden bg-surface border border-amber-500/30 shadow-md">
                 <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full bg-surface overflow-hidden">
-                  <img
+                  <UnverifiedImage
                     src={event.heroImage || "/images/ritual_ram.jpg"}
                     alt={event.title}
                     className="w-full h-full object-cover"
@@ -759,18 +744,17 @@ const EventDetailContent: React.FC<EventDetailScreenProps> = ({
                   id="event-sources-title"
                   className="font-display font-bold text-lg text-ink"
                 >
-                  Nguồn thư tịch & Cơ sở khảo cứu
+                  Nguồn tham khảo
                 </h2>
               </div>
 
               <div className="p-4 rounded-2xl bg-surface-soft/60 border border-line/60 text-xs sm:text-sm text-ink leading-relaxed mb-3">
-                {event.verifiedSource ||
-                  "Tư liệu khảo cứu chính thống từ Viện Văn hóa Dân gian & các trước tác phong tục học Việt Nam."}
+                {event.verifiedSource || "Chưa có thông tin nguồn cho nội dung này."}
               </div>
 
               <div className="flex items-center gap-2 text-xs text-muted">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Nội dung đã được thẩm định chuẩn mực, loại bỏ các yếu tố mê tín dị đoan.</span>
+                <span>Thông tin sự kiện để tham khảo; phong tục có thể khác theo địa phương.</span>
               </div>
             </ScrollReveal>
           </div>
@@ -878,9 +862,8 @@ const EventDetailContent: React.FC<EventDetailScreenProps> = ({
 
 export const EventDetailScreen: React.FC<EventDetailScreenProps> = (props) => {
   const eventId = props.eventId ?? "le-soc-vong-ngay-ram";
-  const event = getCalendarEventById(eventId);
-
-  if (!event) {
+  const isApiEvent = eventId.startsWith("api:");
+  if (!isApiEvent) {
     return (
       <DetailNotFound
         title="Không tìm thấy sự kiện văn hóa"

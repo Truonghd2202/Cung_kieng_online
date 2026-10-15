@@ -1,4 +1,5 @@
 import { toast } from "../components/ui/Toast";
+import { UnverifiedImage } from "../components/UnverifiedImage";
 import React, { useState, useEffect, useMemo } from "react";
 import {
   ArrowLeft,
@@ -26,7 +27,9 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
-import { RITUAL_GUIDES, getRitualById, adaptRemoteRitual, type RitualGuideItem } from "../data/ritualData";
+import { adaptRemoteRitual, getRitualById, type RitualGuideItem } from "../data/ritualData";
+import { reconcileChecklistProgress, updateChecklistProgress } from "../data/ritualChecklistProgress";
+import { clearRitualChecklistProgress, getRitualChecklistStorageKey } from "../data/ritualChecklistStorage";
 import { ApiError } from "../lib/api";
 import { loadRitual } from "../data/contentService";
 import { DetailNotFound } from "../components/DetailNotFound";
@@ -38,6 +41,7 @@ import { ContentProvenance } from "../components/ContentProvenance";
 import { RitualPrayerSection } from "../components/RitualPrayerSection";
 import { getRitualMetadata } from "../data/readingMetadata";
 import { ScrollReveal } from "../components/ScrollReveal";
+import { trackProductEvent } from "../data/productAnalytics";
 
 interface RitualDetailScreenProps {
   ritualId?: string;
@@ -74,11 +78,15 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
   const detail = ritual.detail!;
 
   const accountId = currentUserEmail?.trim().toLowerCase() || "guest";
-  const checklistStorageKey = `tltl-ritual-checklist-${accountId}-${ritual.id}`;
+  const checklistStorageKey = getRitualChecklistStorageKey(ritual.id, currentUserEmail);
 
   const validChecklistIds = useMemo(
     () => new Set(detail.checklists.map((item) => item.id)),
     [detail.checklists]
+  );
+  const previousChecklist = useMemo(
+    () => getRitualById(ritual.id)?.detail?.checklists || [],
+    [ritual.id],
   );
 
   const readChecklist = (key: string): string[] => {
@@ -133,9 +141,8 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
     setRitualSaveError("");
   }, [checklistStorageKey]);
 
-  const completedChecklistCount = checkedIds.filter((id) =>
-    validChecklistIds.has(id)
-  ).length;
+  const reconciledProgress = reconcileChecklistProgress(checkedIds, previousChecklist, detail.checklists);
+  const completedChecklistCount = reconciledProgress.checkedIds.length;
 
   const isAllChecklistDone =
     detail.checklists.length > 0 &&
@@ -145,13 +152,12 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
     if (!validChecklistIds.has(id)) return;
     setRitualSaveError("");
 
-    const currentValidIds = checkedIds.filter((checkedId) =>
-      validChecklistIds.has(checkedId)
-    );
+    const currentValidIds = reconciledProgress.checkedIds;
 
-    const updatedIds = currentValidIds.includes(id)
+    const nextCurrentIds = currentValidIds.includes(id)
       ? currentValidIds.filter((checkedId) => checkedId !== id)
       : [...currentValidIds, id];
+    const updatedIds = updateChecklistProgress(checkedIds, nextCurrentIds, previousChecklist, detail.checklists);
 
     try {
       localStorage.setItem(checklistStorageKey, JSON.stringify(updatedIds));
@@ -163,15 +169,18 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
     }
 
     setCheckedIds(updatedIds);
+    if (nextCurrentIds.length === detail.checklists.length && completedChecklistCount < detail.checklists.length) {
+      trackProductEvent("ritual_checklist_completed");
+    }
   };
 
   const handleResetChecklist = () => {
-    setCheckedIds([]);
-    try {
-      localStorage.removeItem(checklistStorageKey);
-    } catch {
-      // ignore
+    if (!clearRitualChecklistProgress(checklistStorageKey)) {
+      setRitualSaveError("Chưa đặt lại được checklist trên thiết bị này. Tiến độ hiện tại được giữ nguyên.");
+      return;
     }
+    setCheckedIds([]);
+    setRitualSaveError("");
   };
 
   const handleToggleBookmark = () => {
@@ -308,7 +317,7 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
     onGoToExperience,
   ]);
 
-  const relatedRituals = RITUAL_GUIDES.filter((item) => item.id !== ritual.id).slice(0, 3);
+  const relatedRituals: RitualGuideItem[] = [];
 
   return (
     <div className="screen-shell relative">
@@ -320,11 +329,6 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
       />
 
       <main className="page-container max-w-6xl pt-4 pb-20">
-        {import.meta.env.DEV && ritual.preview && (
-          <aside role="note" className="mb-5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
-            Bản demo từ dữ liệu seed, chưa được thẩm định để dùng như hướng dẫn nghi lễ chính thức.
-          </aside>
-        )}
         {ritualSaveError && (
           <p
             role="alert"
@@ -474,11 +478,11 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="px-3 py-1.5 rounded-full bg-surface border border-line text-ink font-medium flex items-center gap-1.5">
               <Check className="w-3.5 h-3.5 text-accent" />
-              <span>{detail.steps.length} bước chuẩn mực</span>
+              <span>{detail.steps.length ? `${detail.steps.length} bước` : "Chưa có bước hướng dẫn"}</span>
             </span>
             <span className="px-3 py-1.5 rounded-full bg-surface border border-line text-ink font-medium flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-accent" />
-              <span>{ritual.timeEstimate}</span>
+              {ritual.timeEstimate && <span>{ritual.timeEstimate}</span>}
             </span>
             <span className="px-3 py-1.5 rounded-full bg-surface border border-line text-ink font-medium flex items-center gap-1.5">
               <Home className="w-3.5 h-3.5 text-accent" />
@@ -492,13 +496,16 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
         </div>
 
         {/* Hero Artwork Banner */}
-        <ScrollReveal variant="scale" className="mb-8">
+        {detail.heroImage && <ScrollReveal variant="scale" className="mb-8">
           <div className="rounded-3xl overflow-hidden border border-amber-500/30 bg-surface shadow-md">
             <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden bg-surface">
-              <img
+              <UnverifiedImage
                 src={detail.heroImage}
                 alt={detail.fullTitle}
-                className="w-full h-full object-cover"
+                allowExpand={true}
+                title={detail.fullTitle}
+                description={detail.heroCaption}
+                className="w-full h-full object-cover object-[center_30%]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
               <div className="absolute bottom-3 left-4 right-4 text-white/90 text-xs sm:text-sm font-medium drop-shadow-md">
@@ -510,7 +517,7 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
               <span>{detail.heroArtCredit}</span>
             </div>
           </div>
-        </ScrollReveal>
+        </ScrollReveal>}
 
         {/* Two Columns Layout: Main Guide (8 cols) & Sticky Checklist (4 cols) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
@@ -526,6 +533,9 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
               </div>
 
               <div className={`space-y-4 text-ink ${textSizeClass}`}>
+                {detail.meaningParagraphs.length === 0 && (
+                  <p className="text-sm text-muted" role="status">Chưa có nội dung ý nghĩa do BE cung cấp cho hướng dẫn này.</p>
+                )}
                 {detail.meaningParagraphs.map((paragraph, index) => {
                   if (index === 0) {
                     const firstChar = paragraph.charAt(0);
@@ -568,12 +578,12 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
               </div>
 
               {/* Lời khuyên hiền triết */}
-              <div className="p-4 rounded-2xl bg-amber-500/[0.05] border border-amber-500/25 flex items-start gap-3">
+              {detail.offeringAdvice && <div className="p-4 rounded-2xl bg-amber-500/[0.05] border border-amber-500/25 flex items-start gap-3">
                 <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-sm text-ink leading-relaxed">
                   {detail.offeringAdvice}
                 </p>
-              </div>
+              </div>}
 
               {/* Offerings Grid Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
@@ -602,6 +612,7 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
                     </div>
                   </div>
                 ))}
+                {detail.offerings.length === 0 && <p className="text-sm text-muted" role="status">Chưa có dữ liệu lễ vật do BE cung cấp.</p>}
               </div>
             </ScrollReveal>
 
@@ -638,6 +649,7 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
                     </span>
                   </div>
                 ))}
+                {detail.steps.length === 0 && <p className="text-sm text-muted" role="status">Chưa có bước hướng dẫn do BE cung cấp.</p>}
               </div>
             </ScrollReveal>
 
@@ -753,7 +765,7 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
                 id="ritual-sources-title"
                 className="mb-4 font-display text-lg sm:text-xl font-bold text-ink flex items-center gap-2"
               >
-                <span>Nguồn khảo cứu & Hội đồng biên tập</span>
+                <span>Nguồn khảo cứu & Người phụ trách duyệt nội dung</span>
               </h2>
               <ContentProvenance metadata={getRitualMetadata(ritual)} />
             </ScrollReveal>
@@ -778,8 +790,19 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
                 </div>
 
                 <p className="text-xs text-muted leading-relaxed mb-4">
-                  Đánh dấu từng việc để kiểm tra không gian thờ an yên mà không áp lực gánh nặng nghi lễ.
+                  Đánh dấu từng việc để theo dõi tiến độ chuẩn bị.
                 </p>
+
+                {detail.checklists.length === 0 ? (
+                  <p className="text-sm text-muted" role="status">
+                    Hướng dẫn này chưa có checklist được lưu. Vui lòng quay lại sau khi nội dung được cập nhật.
+                  </p>
+                ) : (
+                <>
+
+                {reconciledProgress.unmatchedIds.length > 0 && <p className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200" role="status">
+                  Có {reconciledProgress.unmatchedIds.length} mục tiến độ cũ không thể đối chiếu chắc chắn với checklist hiện tại. Tiến độ cũ vẫn được giữ trên thiết bị nhưng không tính vào tổng hoàn thành; hãy xem lại hoặc đặt lại danh sách nếu muốn xóa.
+                </p>}
 
                 {/* Progress Bar */}
                 <div className="space-y-2 mb-5">
@@ -822,7 +845,7 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
                 {/* Checkboxes List */}
                 <div className="space-y-2.5 mb-5 max-h-[380px] overflow-y-auto pr-1">
                   {detail.checklists.map((chk) => {
-                    const isDone = checkedIds.includes(chk.id);
+                    const isDone = reconciledProgress.checkedIds.includes(chk.id);
                     return (
                       <label
                         key={chk.id}
@@ -860,6 +883,8 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Đặt lại danh sách từ đầu</span>
                   </button>
+                )}
+                </>
                 )}
               </Card>
 
@@ -902,7 +927,7 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
               >
                 <div>
                   <div className="relative h-44 w-full overflow-hidden bg-surface">
-                    <img
+                    <UnverifiedImage
                       src={item.image}
                       alt={item.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -944,57 +969,141 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
   );
 };
 
-export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = (props) => {
-  const ritualId = props.ritualId ?? "chuan-bi-ngay-ram";
-  const [ritual, setRitual] = useState<RitualGuideItem | null>(null);
+export const RitualDetailScreen: React.FC<
+  RitualDetailScreenProps
+> = (props) => {
+  const ritualId =
+    props.ritualId ?? "chuan-bi-ngay-ram";
+
+  const [ritual, setRitual] =
+    useState<RitualGuideItem | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [usingFallback, setUsingFallback] = useState(false);
+  const [notFound, setNotFound] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
+
     setLoading(true);
     setError(null);
-    setUsingFallback(false);
+    setNotFound(false);
     setRitual(null);
-    void loadRitual(ritualId).then((remote) => {
-      if (!active) return;
-      setRitual(adaptRemoteRitual(remote));
-    }).catch((cause: unknown) => {
-      if (!active) return;
-      if (cause instanceof ApiError && cause.status === 0) {
-        const local = getRitualById(ritualId);
-        if (local?.detail) {
-          setRitual(local);
-          setUsingFallback(true);
-          return;
+
+    void loadRitual(ritualId)
+      .then((remote) => {
+        if (!active) return;
+
+        setRitual(adaptRemoteRitual(remote));
+      })
+      .catch((cause: unknown) => {
+        if (!active) return;
+
+        const unavailable =
+          cause instanceof ApiError &&
+          cause.status === 404;
+
+        setNotFound(unavailable);
+
+        setError(
+          unavailable
+            ? "Hướng dẫn này không còn được phát hành hoặc đường dẫn không tồn tại."
+            : "Chưa tải được hướng dẫn. Bạn hãy kiểm tra kết nối rồi thử lại.",
+        );
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
         }
-      }
-      setError(cause instanceof ApiError && cause.status === 404
-        ? "Không tìm thấy hướng dẫn nghi lễ này."
-        : "Chưa tải được hướng dẫn nghi lễ. Vui lòng thử lại.");
-    }).finally(() => {
-      if (active) setLoading(false);
-    });
-    return () => { active = false; };
-  }, [ritualId]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [ritualId, loadAttempt]);
 
   if (loading) {
-    return <div className="page-container py-16 text-center text-muted" role="status">Đang tải hướng dẫn nghi lễ…</div>;
+    return (
+      <div className="screen-shell">
+        <main className="page-container">
+          <p
+            role="status"
+            className="py-16 text-center text-muted"
+          >
+            Đang tải hướng dẫn nghi lễ…
+          </p>
+        </main>
+      </div>
+    );
   }
 
-  if (error || !ritual || !ritual.detail) {
+  if (notFound) {
     return (
       <DetailNotFound
-        title={error || "Hướng dẫn này chưa có nội dung chi tiết"}
+        title={error || "Không tìm thấy hướng dẫn"}
         backLabel="Về Cẩm nang nghi lễ"
         onBack={props.onBackToRitualList}
       />
     );
   }
 
-  return <>
-    {usingFallback && <p role="status" className="mx-auto mt-4 max-w-5xl rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted">Không kết nối được máy chủ. Đang hiển thị bản dự phòng có sẵn trong ứng dụng.</p>}
-    <RitualDetailContent {...props} ritualId={ritualId} ritual={ritual} key={`${ritualId}-${ritual.id}`} />
-  </>;
+  if (error || !ritual) {
+    return (
+      <div className="screen-shell">
+        <main className="page-container max-w-3xl">
+          <section className="rounded-2xl border border-line bg-surface p-6 sm:p-8">
+            <h1 className="page-title mb-3">
+              Chưa tải được hướng dẫn
+            </h1>
+
+            <p
+              role="alert"
+              className="text-sm leading-relaxed text-muted"
+            >
+              {error || "Đã xảy ra lỗi khi tải dữ liệu."}
+            </p>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button
+                type="button"
+                onClick={() => {
+                  setLoadAttempt((value) => value + 1);
+                }}
+              >
+                Tải lại
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={props.onBackToRitualList}
+              >
+                Về danh sách hướng dẫn
+              </Button>
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  if (!ritual.detail) {
+    return (
+      <DetailNotFound
+        title="Hướng dẫn này chưa có nội dung chi tiết"
+        backLabel="Về Cẩm nang nghi lễ"
+        onBack={props.onBackToRitualList}
+      />
+    );
+  }
+
+  return (
+    <RitualDetailContent
+      {...props}
+      ritualId={ritualId}
+      ritual={ritual}
+      key={`${ritualId}-${ritual.id}-${props.currentUserEmail || "guest"}`}
+    />
+  );
 };

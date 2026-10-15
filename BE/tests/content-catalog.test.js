@@ -31,6 +31,10 @@ test("culture catalogue pagination permits traversal beyond the first API page",
   assert.deepEqual(listQuerySchema.parse({ limit: "100", offset: "400" }), {
     limit: 100,
     offset: 400,
+    preview: false,
   });
   assert.equal(listQuerySchema.safeParse({ offset: "5001" }).success, false);
+  assert.equal(listQuerySchema.parse({ preview: "true" }).preview, true);
+  assert.equal(listQuerySchema.parse({ preview: "false" }).preview, false);
+  assert.equal(listQuerySchema.safeParse({ preview: "yes" }).success, false);
 });

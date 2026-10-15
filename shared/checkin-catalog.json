@@ -1,0 +1,21 @@
+{
+  "moods": [
+    { "key": "PEACEFUL", "label": "An yên" },
+    { "key": "UNSTABLE", "label": "Chênh vênh" },
+    { "key": "WORRIED", "label": "Băn khoăn" },
+    { "key": "IMPATIENT", "label": "Nôn nóng" },
+    { "key": "GRATEFUL", "label": "Biết ơn" },
+    { "key": "NEED_SUPPORT", "label": "Cần điểm tựa" },
+    { "key": "PRESSURED", "label": "Áp lực" },
+    { "key": "LONELY", "label": "Cô đơn" },
+    { "key": "HAPPY", "label": "Vui vẻ" },
+    { "key": "OTHER", "label": "Mông lung" }
+  ],
+  "contexts": [
+    { "key": "general", "label": "Chưa muốn chọn" },
+    { "key": "study", "label": "Học tập" },
+    { "key": "work", "label": "Công việc" },
+    { "key": "family", "label": "Gia đình" },
+    { "key": "relationship", "label": "Tình cảm" }
+  ]
+}

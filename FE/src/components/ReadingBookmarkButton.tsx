@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Bookmark } from "lucide-react";
+import { trackProductEvent } from "../data/productAnalytics";
 import { Button } from "./ui/button";
 import {
   type ReadingKind,
@@ -44,6 +45,8 @@ export function ReadingBookmarkButton({
             setError(
               "Chưa cập nhật được dấu lưu. Bạn hãy thử lại."
             );
+          } else if (!saved && kind === "culture") {
+            trackProductEvent("culture_article_saved");
           }
         }}
       >

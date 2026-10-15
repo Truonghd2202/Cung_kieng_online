@@ -13,6 +13,7 @@ import {
   Sparkle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { UnverifiedImage } from "../components/UnverifiedImage";
 import "../styles/ExperienceScreen.css";
 
 interface ExperienceScreenProps {
@@ -66,7 +67,7 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
           id: "zen",
           title: "Thiền ngắn an tịnh",
           description:
-            "Dành vài phút chú ý đến hơi thở bên tiếng chuông xoay Tây Tạng và không gian tĩnh mặc.",
+            "Dành vài phút chú ý đến hơi thở trong không gian yên tĩnh với âm thanh tổng hợp tùy chọn.",
           label: "Mở phiên thiền",
           icon: Wind,
           image: "/images/zen_meditation.jpg",
@@ -152,10 +153,10 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
         },
         {
           id: "astrology",
-          title: "Biểu tượng ngày sinh & Ngũ hành",
+          title: "Tư liệu biểu tượng ngày sinh",
           description:
-            "Đối chiếu ngày sinh với lịch âm, thiên can địa chi và ngũ hành tương sinh để hiểu thêm về chính mình.",
-          label: "Khám phá can chi ngũ hành",
+            "Tính năng này chưa mở cho tới khi phương pháp và nguồn tư liệu được thẩm định.",
+          label: "Xem trạng thái tính năng",
           icon: Sparkles,
           image: "/images/hue_trung_bo.jpg",
           badge: "Can chi & Ngũ hành",
@@ -252,7 +253,7 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
 
                       {/* Khung ảnh đại diện chân thực */}
                       <div className="experience-card-image-box">
-                        <img
+                        <UnverifiedImage
                           src={item.image}
                           alt={item.title}
                           loading="lazy"
@@ -340,7 +341,7 @@ export const ExperienceScreen: React.FC<ExperienceScreenProps> = ({
               className="experience-primary-btn group shrink-0"
             >
               <span className="experience-btn-sheen" />
-              <span>Khám phá kho tàng văn hóa</span>
+              <span>Đọc bài viết văn hóa</span>
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </button>
           </div>

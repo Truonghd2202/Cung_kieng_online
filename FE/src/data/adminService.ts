@@ -3,6 +3,13 @@ import { apiRequest } from "../lib/api";
 export interface AdminPage<T> {
   items: T[];
   pagination: { page: number; pageSize: number; total: number; pageCount: number };
+  stats?: {
+    total: number;
+    statuses: Record<"DRAFT" | "IN_REVIEW" | "APPROVED" | "PUBLISHED" | "HIDDEN" | "REVOKED", number>;
+    missingSource: number;
+    withSource: number;
+    regions: Record<string, number>;
+  };
 }
 
 export interface AdminOverview {
@@ -14,6 +21,11 @@ export interface AdminOverview {
     retention: Array<{ day: string; cohortSize: number; retained: number; ratePercent: number | null }>;
     activeSubscriptions: number;
     unavailableMetrics: string[];
+    trends?: Array<{ date: string; label: string; value: number; secondary: number }>;
+    sparklines?: {
+      dau: number[];
+      engagements: number[];
+    };
   };
   content: {
     activeArticles: number;
@@ -34,6 +46,7 @@ export interface AdminRecord extends Record<string, unknown> {
   id: string;
   verified?: boolean;
   active?: boolean;
+  editorial_status?: "DRAFT" | "IN_REVIEW" | "APPROVED" | "PUBLISHED" | "HIDDEN" | "REVOKED";
   source?: string | null;
 }
 
@@ -41,9 +54,10 @@ export function loadAdminOverview() {
   return apiRequest<AdminOverview>("/admin/overview");
 }
 
-export function loadAdminList<T extends AdminRecord>(section: string, page: number, q: string) {
+export function loadAdminList<T extends AdminRecord>(section: string, page: number, q: string, status = "all") {
   const params = new URLSearchParams({ page: String(page) });
   if (q.trim()) params.set("q", q.trim());
+  if (status !== "all") params.set("status", status);
   return apiRequest<AdminPage<T>>(`/admin/${section}?${params.toString()}`);
 }
 

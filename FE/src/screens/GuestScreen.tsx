@@ -7,59 +7,17 @@ import {
   Heart,
   ScrollText,
   ShieldCheck,
-  Sparkles,
   SunMedium,
   Bell,
-  Sparkle,
+  Sparkles,
 } from "lucide-react";
 import "../styles/GuestScreen.css";
 
 interface GuestScreenProps {
   onSelectMood: () => void;
   onGoToCulture: () => void;
-  onGoToExperience: () => void;
+  onGoToRituals: () => void;
 }
-
-interface MoodPreviewData {
-  label: string;
-  icon: string;
-  quote: string;
-  action: string;
-}
-
-// 5 trạng thái cảm xúc tiêu biểu kèm lời gợi mở minh họa
-const MOOD_TEASER_CHIPS: MoodPreviewData[] = [
-  {
-    label: "Chênh vênh",
-    icon: "🌱",
-    quote: "“Gió đưa cành trúc la đà — Lòng yên một khắc, sự đời nhẹ buông.”",
-    action: "Uống một ngụm nước ấm, thở chậm ba nhịp",
-  },
-  {
-    label: "Áp lực",
-    icon: "🍃",
-    quote: "“Nước chảy đá mòn, kiên tâm ắt phẳng lặng — Đừng gánh cả bầu trời trên vai.”",
-    action: "Thả lỏng đôi vai, nhắm mắt tĩnh tại 30 giây",
-  },
-  {
-    label: "Mông lung",
-    icon: "☁️",
-    quote: "“Đường xa vạn dặm khởi từ một bước chân — Cứ đi ắt tới bến bình minh.”",
-    action: "Viết ra một điều nhỏ bé khiến bạn thấy biết ơn",
-  },
-  {
-    label: "Cần động viên",
-    icon: "☀️",
-    quote: "“Mưa thuận gió hòa, hạt mầm thiện lành ắt sẽ trổ hoa rực rỡ.”",
-    action: "Mỉm cười với chính mình trước gương",
-  },
-  {
-    label: "Bình yên",
-    icon: "🌸",
-    quote: "“Tâm an vạn sự an — Tận hưởng khoảnh khắc hiện tại tròn đầy.”",
-    action: "Dành trọn vẹn một phút lắng nghe hơi thở",
-  },
-];
 
 interface SteamParticle {
   x: number;
@@ -77,9 +35,8 @@ interface SteamParticle {
 export const GuestScreen: React.FC<GuestScreenProps> = ({
   onSelectMood,
   onGoToCulture,
-  onGoToExperience,
+  onGoToRituals,
 }) => {
-  const [activeMoodIndex, setActiveMoodIndex] = useState<number>(0);
   const [bellRinging, setBellRinging] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -153,10 +110,10 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
   const handleRingBell = () => {
     setBellRinging(true);
     playZenBellSound();
-    setTimeout(() => setBellRinging(false), 900);
+    setTimeout(() => setBellRinging(false), 1200);
   };
 
-  // Canvas hiệu ứng hơi khói trà bốc lên nhẹ nhàng từ chén trà
+  // Hiệu ứng Canvas hơi khói trà bốc lên nhẹ nhàng từ chén trà
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -266,8 +223,6 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
     };
   }, []);
 
-  const activeMood = MOOD_TEASER_CHIPS[activeMoodIndex] || MOOD_TEASER_CHIPS[0];
-
   return (
     <div className="screen-shell relative overflow-hidden">
       {/* Vầng sáng nền mang sắc ấm mỹ học truyền thống */}
@@ -286,12 +241,13 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
 
       <main className="page-container max-w-6xl relative z-10 py-6 sm:py-10">
         {/* ========================================================= */}
-        {/* 1. HERO SECTION (GIỚI THIỆU & 2 LUỒNG CHÍNH ĐỘC LẬP)      */}
+        {/* 1. HERO SECTION (GIỚI THIỆU & CỤM THỊ GIÁC CHÉN TRÀ KHÓI)  */}
         {/* ========================================================= */}
         <section
           aria-labelledby="guest-intro-title"
           className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center"
         >
+          {/* Cột trái: Định vị & Hành động */}
           <div className="lg:col-span-7 flex flex-col justify-center">
             {/* Hàng định vị: Pill Badge + Nút Thỉnh chuông an yên */}
             <div className="flex flex-wrap items-center gap-3 mb-5">
@@ -347,12 +303,9 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
               <div className="h-px w-16 bg-gradient-to-l from-transparent to-accent/40" />
             </div>
 
-            {/* Đoạn mở đầu định vị */}
             <p className="text-base sm:text-lg text-muted leading-relaxed max-w-xl mb-7">
-              <strong className="font-semibold text-ink">Tin Lắm Tâm Linh</strong>{" "}
-              kết nối kho tàng văn hóa dân gian Việt với nhịp sống số hiện đại,
-              mang đến điểm tựa tinh thần nhẹ nhàng và những câu chuyện cội nguồn
-              gần gũi cho người trẻ.
+              Tìm bài viết văn hóa, xem hướng dẫn nghi lễ hoặc ghi lại tâm trạng.
+              Bạn có thể bỏ qua mục nào không phù hợp với mình.
             </p>
 
             {/* Hai nút hành động: CTA đỏ trầm son ánh kim + Nút viền đồng */}
@@ -364,7 +317,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
               >
                 <span className="guest-primary-sheen" />
                 <ButtonOrnament className="w-6 h-4 text-amber-200/80 shrink-0" />
-                <span>Chọn tâm trạng hôm nay</span>
+                <span>Ghi lại tâm trạng</span>
                 <ArrowRight
                   className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
                   aria-hidden="true"
@@ -380,7 +333,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                   className="w-4 h-4 text-accent transition-transform duration-300 group-hover:scale-110"
                   aria-hidden="true"
                 />
-                <span>Khám phá văn hóa</span>
+                <span>Đọc bài văn hóa</span>
               </button>
             </div>
 
@@ -392,11 +345,11 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <SunMedium className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
-                Tự do trải nghiệm
+                Tự chọn nội dung
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-success" aria-hidden="true" />
-                Không hù dọa · Phi mê tín
+                Không quyết định thay bạn
               </span>
             </div>
           </div>
@@ -422,7 +375,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
 
               {/* Chú thích trang nhã đặt dưới ảnh */}
               <figcaption className="mt-3 text-sm text-muted text-center sm:text-left flex items-center justify-center sm:justify-start gap-1.5">
-                <Sparkle className="w-3 h-3 text-amber-600/70" />
+                <Flower2 className="w-3.5 h-3.5 text-accent" />
                 <span>Một khoảng dừng nhỏ giữa nhịp sống thường ngày.</span>
               </figcaption>
             </figure>
@@ -430,86 +383,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
         </section>
 
         {/* ========================================================= */}
-        {/* 2. CHẠM CẢM XÚC NHANH (INTERACTIVE MOOD TEASER 10/10)      */}
-        {/* ========================================================= */}
-        <section
-          aria-labelledby="mood-teaser-title"
-          className="mt-14 sm:mt-20 rounded-3xl border border-line/80 bg-gradient-to-br from-surface via-surface-soft/40 to-surface p-6 sm:p-8 shadow-xs relative overflow-hidden"
-        >
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-            <div>
-              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent mb-2">
-                <Heart className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Góc lắng đọng cảm xúc</span>
-              </div>
-
-              <h2
-                id="mood-teaser-title"
-                className="font-display text-2xl sm:text-3xl font-semibold text-ink tracking-tight mb-2"
-              >
-                Hôm nay bạn đang cảm thấy thế nào?
-              </h2>
-
-              <p className="text-sm sm:text-base text-muted max-w-2xl leading-relaxed">
-                Rê chuột vào một cảm xúc để xem lời gợi mở minh họa,
-                hoặc nhấn vào để bắt đầu buổi check-in an lòng.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={onSelectMood}
-              className="guest-secondary-btn shrink-0 w-full sm:w-auto text-sm"
-            >
-              <span>Vào check-in tâm trạng</span>
-              <ArrowRight className="w-4 h-4 text-accent" />
-            </button>
-          </div>
-
-          {/* Các nút chip cảm xúc */}
-          <div className="mt-6 pt-5 border-t border-line/60 flex flex-wrap items-center gap-2.5">
-            <span className="text-xs font-medium text-subtle mr-1">
-              Gợi ý cảm xúc:
-            </span>
-            {MOOD_TEASER_CHIPS.map((chip, index) => {
-              const isSelected = activeMoodIndex === index;
-              return (
-                <button
-                  key={chip.label}
-                  type="button"
-                  onMouseEnter={() => setActiveMoodIndex(index)}
-                  onClick={onSelectMood}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-xs sm:text-sm font-medium transition-all cursor-pointer shadow-xs active:scale-95 ${
-                    isSelected
-                      ? "border-accent bg-accent text-on-accent shadow-sm scale-102"
-                      : "border-line bg-surface hover:border-accent/60 hover:bg-accent-soft/40 text-ink"
-                  }`}
-                >
-                  <span>{chip.icon}</span>
-                  <span>{chip.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Hộp xem trước lời gợi mở (Micro-quote preview) */}
-          {activeMood && (
-            <div className="guest-mood-preview-box mt-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <p className="guest-mood-quote-text m-0">
-                  {activeMood.quote}
-                </p>
-                <div className="guest-mood-action-tag shrink-0">
-                  <Flower2 className="w-3.5 h-3.5 text-accent" />
-                  <span>{activeMood.action}</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* ========================================================= */}
-        {/* 3. BA TRỤ CỘT HỆ SINH THÁI — CHẤT LIỆU THẺ BÀI CỔ PHONG     */}
+        {/* 2. BA TRỤ CỘT HỆ SINH THÁI — CHẤT LIỆU THẺ BÀI CỔ PHONG     */}
         {/* ========================================================= */}
         <section
           aria-labelledby="guest-pillars-title"
@@ -525,12 +399,11 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                 id="guest-pillars-title"
                 className="font-display text-2xl sm:text-3xl font-semibold text-ink tracking-tight"
               >
-                Khám phá hệ sinh thái Tin Lắm Tâm Linh
+                Chọn nội dung bạn cần
               </h2>
             </div>
             <p className="text-sm sm:text-base text-muted max-w-md">
-              Hai luồng tiếp cận tự do: khởi đầu từ cảm xúc cá nhân hoặc trực
-              tiếp khám phá di sản và nghi thức dân gian.
+              Chọn một trong ba mục. Bạn có thể dừng hoặc bỏ qua bất cứ lúc nào.
             </p>
           </div>
 
@@ -567,25 +440,24 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                 </h3>
 
                 <p className="text-sm sm:text-base text-muted leading-relaxed mb-4">
-                  Gửi gắm tâm sự khi áp lực, chênh vênh. Nhận lời gợi mở biên soạn
-                  và thông điệp tích cực cá nhân hóa cho ngày hôm nay.
+                  Chọn cảm xúc và bối cảnh để xem gợi ý. Bạn có thể bỏ qua phần chia sẻ.
                 </p>
 
                 <div className="flex flex-wrap gap-1.5 mb-4">
                   <span className="text-[11px] font-medium text-subtle bg-surface-soft px-2 py-0.5 rounded-md">
-                    Check-in tâm trạng
+                    Ghi lại tâm trạng
                   </span>
                   <span className="text-[11px] font-medium text-subtle bg-surface-soft px-2 py-0.5 rounded-md">
                     Lời gợi mở minh họa
                   </span>
                   <span className="text-[11px] font-medium text-subtle bg-surface-soft px-2 py-0.5 rounded-md">
-                    Hành động an yên
+                    Gợi ý tùy chọn
                   </span>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-line/60 flex items-center justify-between text-sm font-semibold text-accent group-hover:text-accent-strong">
-                <span>Khởi tâm lắng nghe</span>
+                <span>Chọn tâm trạng</span>
                 <ArrowRight
                   className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1.5"
                   aria-hidden="true"
@@ -616,7 +488,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                     <BookOpen className="w-6 h-6" aria-hidden="true" />
                   </div>
                   <span className="text-xs font-medium text-gold bg-gold/10 px-2.5 py-1 rounded-full border border-gold/20">
-                    Di sản ba miền
+                    Bài viết văn hóa
                   </span>
                 </div>
 
@@ -625,26 +497,24 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                 </h3>
 
                 <p className="text-sm sm:text-base text-muted leading-relaxed mb-4">
-                  Dạo bước qua kho tàng văn hóa Bắc, Trung, Nam: Tín ngưỡng Thờ
-                  Mẫu & điệu hát Chầu Văn, di sản Cố đô, tục thờ cá Ông và sông
-                  nước miệt vườn.
+                  Đọc bài viết về phong tục, tín ngưỡng, lễ hội và đời sống văn hóa ở nhiều vùng miền.
                 </p>
 
                 <div className="flex flex-wrap gap-1.5 mb-4">
                   <span className="text-[11px] font-medium text-subtle bg-surface-soft px-2 py-0.5 rounded-md">
-                    Thờ Mẫu & Chầu Văn
+                    Phong tục
                   </span>
                   <span className="text-[11px] font-medium text-subtle bg-surface-soft px-2 py-0.5 rounded-md">
-                    Cố đô & Biển cả
+                    Lễ hội
                   </span>
                   <span className="text-[11px] font-medium text-subtle bg-surface-soft px-2 py-0.5 rounded-md">
-                    Văn hóa sông nước
+                    Tín ngưỡng
                   </span>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-line/60 flex items-center justify-between text-sm font-semibold text-gold group-hover:text-amber-800 dark:group-hover:text-amber-300">
-                <span>Vào dạo cảnh di sản</span>
+                <span>Tìm bài viết văn hóa</span>
                 <ArrowRight
                   className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1.5"
                   aria-hidden="true"
@@ -652,15 +522,15 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
               </div>
             </article>
 
-            {/* Trụ cột 3: Trải nghiệm thực hành số */}
+            {/* Trụ cột 3: Tìm hiểu nghi lễ */}
             <article
               role="button"
               tabIndex={0}
-              onClick={onGoToExperience}
+              onClick={onGoToRituals}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  onGoToExperience();
+                  onGoToRituals();
                 }
               }}
               className="guest-pillar-card group cursor-pointer"
@@ -675,35 +545,33 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                     <ScrollText className="w-6 h-6" aria-hidden="true" />
                   </div>
                   <span className="text-xs font-medium text-success bg-success/10 px-2.5 py-1 rounded-full border border-success/20">
-                    Tương tác trực tiếp
+                    Hướng dẫn tham khảo
                   </span>
                 </div>
 
                 <h3 className="font-display text-xl sm:text-2xl font-semibold text-ink mb-2.5 group-hover:text-success transition-colors duration-200">
-                  Thực hành tâm an
+                  Tìm hiểu nghi lễ
                 </h3>
 
                 <p className="text-sm sm:text-base text-muted leading-relaxed mb-4">
-                  Xin xăm văn hóa truyền thống (Quan Âm, Quan Thánh), thả hoa
-                  đăng số gửi gắm điều ước thiện lành, hoặc thắp nén nhang lòng tri
-                  ân tổ tiên.
+                  Xem các bước chuẩn bị và thông tin thực hành. Tập tục có thể khác nhau theo nơi và hoàn cảnh.
                 </p>
 
                 <div className="flex flex-wrap gap-1.5 mb-4">
                   <span className="text-[11px] font-medium text-subtle bg-surface-soft px-2 py-0.5 rounded-md">
-                    Xăm Quan Âm / Quan Thánh
+                    Chuẩn bị
                   </span>
                   <span className="text-[11px] font-medium text-subtle bg-surface-soft px-2 py-0.5 rounded-md">
-                    Đèn hoa đăng số
+                    Tập tục địa phương
                   </span>
                   <span className="text-[11px] font-medium text-subtle bg-surface-soft px-2 py-0.5 rounded-md">
-                    Tri ân gia tiên
+                    Lưu ý an toàn
                   </span>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-line/60 flex items-center justify-between text-sm font-semibold text-success group-hover:text-emerald-800 dark:group-hover:text-emerald-300">
-                <span>Vào phòng trải nghiệm</span>
+                <span>Mở cẩm nang nghi lễ</span>
                 <ArrowRight
                   className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1.5"
                   aria-hidden="true"
@@ -714,7 +582,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
         </section>
 
         {/* ========================================================= */}
-        {/* 4. CAM KẾT VĂN HÓA & TRIẾT LÝ SẢN PHẨM (MỤC I.4 REQUIREMENTS)*/}
+        {/* 3. CAM KẾT VĂN HÓA & TRIẾT LÝ SẢN PHẨM                   */}
         {/* ========================================================= */}
         <div className="mt-14 pt-7 border-t border-line/60 flex items-start sm:items-center gap-3.5 text-xs sm:text-sm text-muted">
           <ShieldCheck
@@ -723,11 +591,10 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
           />
           <p className="leading-relaxed">
             <strong className="text-ink font-semibold">
-              Triết lý văn hóa văn minh:
+              Lưu ý:
             </strong>{" "}
-            “Tôn trọng văn hóa gốc – Chạm cảm xúc trẻ – Nuôi dưỡng tinh thần tích
-            cực”. Trải nghiệm hoàn toàn tự nguyện; không mang tính mê tín dị
-            đoan, không phán xét, không hù dọa và không quyết định thay bạn.
+            Nội dung để tham khảo; trải nghiệm là tùy chọn và không quyết định
+            thay bạn. Hướng dẫn nghi lễ có thể khác nhau theo nơi và hoàn cảnh.
           </p>
         </div>
       </main>

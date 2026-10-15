@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   Sparkles,
@@ -13,7 +13,11 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
-import { castXinKeo, createXinKeoSession, loadReflectionProverb } from "../data/reflectionService";
+import {
+  castXinKeo,
+  createXinKeoSession,
+  loadXinKeoSession,
+} from "../data/reflectionService";
 import type { SourcedProverb } from "../data/reflectionService";
 
 interface XinKeoScreenProps {
@@ -45,38 +49,35 @@ const KEO_OUTCOMES: Record<KeoResultType, KeoOutcome> = {
     type: "nhat-am-nhat-duong",
     title: "Nhất Âm Nhất Dương",
     subTitle: "Một Ngửa (Âm) • Một Úp (Dương)",
-    statusLabel: "Được keo • Hòa hợp",
+    statusLabel: "Một âm • Một dương",
     badgeColor: "bg-success-soft text-success border border-success/30",
-    meaning:
-      "Dân gian xem đây là thế đại cát và thông thuận nhất; lòng người và thời thế hòa quyện, âm dương lưỡng nghi tương sinh cân bằng tuyệt hảo.",
+    meaning: "Lượt gieo này cho kết quả một mặt âm và một mặt dương.",
     guidance:
-      "Tâm trí bạn hiện đã đạt độ trong sáng và chín muồi. Hãy vững tâm tự tin triển khai các dự định thiện lành, từng bước chắc chắn mà không cần hoài nghi hay chùn bước.",
+      "Hãy xem đây là lời nhắc để cân nhắc câu hỏi từ nhiều phía. Kết quả gieo ngẫu nhiên không xác nhận quyết định nào là đúng; hãy dựa vào thông tin thực tế và trao đổi với người bạn tin cậy.",
     piece1: "am",
     piece2: "duong",
   },
   "nhi-duong": {
     type: "nhi-duong",
-    title: "Nhị Dương (Keo Tiếu)",
+    title: "Nhị Dương",
     subTitle: "Cùng Sấp • Hai mặt cong úp xuống",
-    statusLabel: "Keo cười • Khoan vội",
+    statusLabel: "Hai mặt dương",
     badgeColor: "bg-gold-soft text-gold border border-gold/40",
-    meaning:
-      "Thế quẻ biểu thị nụ cười hiền hậu của tiền nhân, nhắc nhở người hỏi rằng thời cơ chưa hẳn đã trọn vẹn, chớ nên nóng vội hay hấp tấp khởi sự.",
+    meaning: "Lượt gieo này cho kết quả hai mặt dương.",
     guidance:
-      "Hãy bình tâm quan sát lại nội lực bản thân và các phương án dự phòng. Một nhịp dừng đúng lúc sẽ giúp bạn tránh được những sơ sót không đáng có trên đường dài.",
+      "Nếu câu hỏi vẫn còn băn khoăn, hãy dành thời gian kiểm tra giả định, rủi ro và phương án dự phòng trước khi quyết định.",
     piece1: "duong",
     piece2: "duong",
   },
   "nhi-am": {
     type: "nhi-am",
-    title: "Nhị Âm (Chưa Ứng)",
+    title: "Nhị Âm",
     subTitle: "Cùng Ngửa • Hai mặt phẳng ngửa lên",
-    statusLabel: "Chưa ứng • Cần tĩnh xét",
+    statusLabel: "Hai mặt âm",
     badgeColor: "bg-surface-soft text-muted border border-line",
-    meaning:
-      "Thế quẻ khuyên người hỏi nên lắng lòng định trí, việc trăn trở hiện thời chưa hội đủ duyên lành hoặc chưa thực sự phù hợp với mục tiêu sâu xa của bạn.",
+    meaning: "Lượt gieo này cho kết quả hai mặt âm.",
     guidance:
-      "Hãy tạm gác âu lo sang một bên, dành thời gian lắng nghe thêm ý kiến của các bậc tiền bối và tự hỏi bản thân điều gì mới thực sự mang lại an yên bền vững.",
+      "Kết quả này không dự báo điều xấu. Hãy xem lại điều mình biết, điều còn chưa rõ và người có thể giúp bạn đánh giá tình huống.",
     piece1: "am",
     piece2: "am",
   },
@@ -310,6 +311,132 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
   const [requestError, setRequestError] = useState("");
   const requestLockRef = useRef(false);
 
+  const [isRequestingKeo, setIsRequestingKeo] =
+    useState(false);
+
+  const [sessionLoading, setSessionLoading] =
+    useState(false);
+
+  const [sessionReady, setSessionReady] =
+    useState(!isLoggedIn);
+
+  const [sessionReload, setSessionReload] =
+    useState(0);
+
+  const sessionVersionRef = useRef(0);
+
+  const animationTimerRef =
+    useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const keoAttemptRef = useRef<{
+    sessionId: string;
+    requestId: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const version = ++sessionVersionRef.current;
+
+    requestLockRef.current = false;
+
+    setSessionId(null);
+    setThrowCount(0);
+    setCastResult(null);
+    setLandingResult(null);
+    setIsCasting(false);
+    setIsRequestingKeo(false);
+    setRequestError("");
+
+    const savedSessionId = new URLSearchParams(
+      window.location.search,
+    ).get("keoSessionId");
+
+    setSessionLoading(Boolean(isLoggedIn && savedSessionId));
+    setSessionReady(!isLoggedIn || !savedSessionId);
+
+    if (isLoggedIn && savedSessionId) {
+      void loadXinKeoSession(savedSessionId)
+        .then((session) => {
+          if (version !== sessionVersionRef.current) return;
+
+          if ((session.drawId || null) !== (drawId || null)) {
+            throw new Error(
+              "Phiên xin keo không khớp với lượt xin xăm đang mở.",
+            );
+          }
+
+          const pendingAttempt = keoAttemptRef.current;
+
+          if (
+            pendingAttempt?.sessionId === session.id &&
+            session.throws.some(
+              (item) => item.id === pendingAttempt.requestId
+            )
+          ) {
+            // BE đã xác nhận lượt đang chờ: lần bấm sau là lượt mới.
+            keoAttemptRef.current = null;
+          }
+
+          setSessionId(session.id);
+          setThrowCount(session.throws.length);
+
+          const last = session.throws.at(-1);
+
+          if (last) {
+            const restored: KeoOutcome = {
+              ...KEO_OUTCOMES[last.type],
+              piece1: last.piece1,
+              piece2: last.piece2,
+              proverb: last.proverb,
+            };
+
+            setLandingResult(restored);
+            setCastResult(restored);
+          }
+
+          setSessionReady(true);
+        })
+        .catch(() => {
+          if (version !== sessionVersionRef.current) return;
+
+          setSessionReady(false);
+          setRequestError(
+            "Chưa khôi phục được phiên. Hãy kiểm tra kết nối và tài khoản rồi tải lại phiên.",
+          );
+        })
+        .finally(() => {
+          if (version === sessionVersionRef.current) {
+            setSessionLoading(false);
+          }
+        });
+    }
+
+    return () => {
+      sessionVersionRef.current += 1;
+
+      if (animationTimerRef.current !== null) {
+        clearTimeout(animationTimerRef.current);
+        animationTimerRef.current = null;
+      }
+    };
+  }, [drawId, isLoggedIn, sessionReload]);
+
+  const handleNewSession = () => {
+    if (requestLockRef.current || sessionLoading) return;
+
+    keoAttemptRef.current = null;
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete("keoSessionId");
+
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${url.pathname}${url.search}${url.hash}`,
+    );
+
+    setSessionReload((value) => value + 1);
+  };
+
   const topics = [
     { id: "hoctap", label: "Học tập & Thi cử" },
     { id: "congviec", label: "Công việc & Sự nghiệp" },
@@ -318,86 +445,233 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
   ];
 
   const handleCastKeo = async () => {
-    if (requestLockRef.current) return;
-    requestLockRef.current = true;
-    setRequestError("");
-    const weightedPool: KeoResultType[] = [
-      "nhat-am-nhat-duong",
-      "nhat-am-nhat-duong",
-      "nhi-duong",
-      "nhi-am",
-    ];
-    let picked = weightedPool[Math.floor(Math.random() * weightedPool.length)];
-    let sourcedProverb: SourcedProverb | null = null;
-    let nextSessionId = sessionId;
+    if (
+      requestLockRef.current ||
+      sessionLoading ||
+      !sessionReady
+    ) {
+      return;
+    }
 
-    let castSaved = false;
-    if (isLoggedIn) {
-      try {
-        if (!nextSessionId || throwCount >= 3) {
+    if (drawId && !isLoggedIn) {
+      setRequestError(
+        "Hãy đăng nhập để sử dụng phiên liên kết với lượt xin xăm.",
+      );
+      return;
+    }
+
+    if (throwCount >= 3) {
+      setRequestError(
+        "Phiên đã đủ ba lượt. Bạn có thể bắt đầu phiên mới nếu muốn.",
+      );
+      return;
+    }
+
+    const version = sessionVersionRef.current;
+
+    requestLockRef.current = true;
+    setIsRequestingKeo(true);
+    setRequestError("");
+
+    let nextSessionId = sessionId;
+    let outcome: KeoOutcome;
+
+    try {
+      if (isLoggedIn) {
+        if (!nextSessionId) {
+          const topicLabel =
+            topics.find((item) => item.id === selectedTopic)
+              ?.label || "Bình an";
+
           const session = await createXinKeoSession(
-            reflectionText.trim() || `Chiêm nghiệm chủ đề ${selectedTopic}`,
+            `Chủ đề: ${topicLabel}`,
             drawId || undefined,
           );
+
+          if (version !== sessionVersionRef.current) return;
+
           nextSessionId = session.id;
           setSessionId(session.id);
-          setThrowCount(0);
+
+          const url = new URL(window.location.href);
+          url.searchParams.set("keoSessionId", session.id);
+
+          window.history.replaceState(
+            window.history.state,
+            "",
+            `${url.pathname}${url.search}${url.hash}`,
+          );
         }
-        const cast = await castXinKeo(nextSessionId);
-        picked = cast.type;
-        sourcedProverb = cast.proverb;
+
+        // Lấy số lượt thật trước khi gieo tiếp.
+        const current = await loadXinKeoSession(nextSessionId);
+
+        if (version !== sessionVersionRef.current) return;
+
+        if ((current.drawId || null) !== (drawId || null)) {
+          throw new Error("Phiên không khớp lượt xin xăm.");
+        }
+
+        const pendingAttempt = keoAttemptRef.current;
+
+        if (
+          pendingAttempt?.sessionId === current.id &&
+          current.throws.some(
+            (item) => item.id === pendingAttempt.requestId
+          )
+        ) {
+          keoAttemptRef.current = null;
+        }
+
+        setThrowCount(current.throws.length);
+
+        if (current.throws.length >= 3) {
+          setRequestError(
+            "Phiên đã đủ ba lượt. Hãy xem lại kết quả hoặc chủ động bắt đầu phiên mới.",
+          );
+
+          setSessionReload((value) => value + 1);
+          return;
+        }
+
+        let attempt = keoAttemptRef.current;
+
+        if (!attempt || attempt.sessionId !== nextSessionId) {
+          attempt = {
+            sessionId: nextSessionId,
+            requestId: crypto.randomUUID(),
+          };
+
+          keoAttemptRef.current = attempt;
+        }
+
+        const cast = await castXinKeo(
+          nextSessionId,
+          attempt.requestId
+        );
+
+        // Chỉ bỏ mã sau khi đã nhận được kết quả.
+        if (keoAttemptRef.current === attempt) {
+          keoAttemptRef.current = null;
+        }
+
+        if (version !== sessionVersionRef.current) return;
+
+        setThrowCount(cast.throwNumber);
+
+        outcome = {
+          ...KEO_OUTCOMES[cast.type],
+          piece1: cast.piece1,
+          piece2: cast.piece2,
+          proverb: cast.proverb,
+        };
+      } else {
+        const sides = new Uint8Array(2);
+        crypto.getRandomValues(sides);
+
+        const piece1 = sides[0] & 1 ? "duong" : "am";
+        const piece2 = sides[1] & 1 ? "duong" : "am";
+
+        const type: KeoResultType =
+          piece1 !== piece2
+            ? "nhat-am-nhat-duong"
+            : piece1 === "duong"
+              ? "nhi-duong"
+              : "nhi-am";
+
+        outcome = {
+          ...KEO_OUTCOMES[type],
+          piece1,
+          piece2,
+          proverb: null,
+        };
+
         setThrowCount((count) => count + 1);
-        castSaved = true;
-      } catch (error) {
-        setRequestError(error instanceof Error ? error.message : "Chưa lưu được lượt xin keo. Vui lòng thử lại.");
+        setRequestError(
+          "Lượt gieo cục bộ, chưa được lưu vào tài khoản.",
+        );
+      }
+
+      if (version !== sessionVersionRef.current) return;
+
+      setLandingResult(outcome);
+      setCastResult(null);
+      setIsCasting(true);
+
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+
+      animationTimerRef.current = setTimeout(() => {
+        if (version !== sessionVersionRef.current) return;
+
+        animationTimerRef.current = null;
+        setCastResult(outcome);
+        setIsCasting(false);
         requestLockRef.current = false;
-        return;
-      }
-    }
-    if (!sourcedProverb) {
-      try {
-        sourcedProverb = await loadReflectionProverb("KEO");
-      } catch {
-        // Không thay bằng nội dung tự sinh nếu nguồn dữ liệu tạm thời không khả dụng.
-      }
-    }
-    const outcome = { ...KEO_OUTCOMES[picked], proverb: sourcedProverb };
-    if (!castSaved) setRequestError("Kết quả này được gieo cục bộ và chưa lưu vào tài khoản.");
-
-    setLandingResult(outcome);
-    setCastResult(null);
-    setIsCasting(true);
-
-    // Haptic feedback
-    try {
-      if (typeof navigator !== "undefined" && navigator.vibrate) {
-        navigator.vibrate([60, 40, 80]);
-      }
+      }, reducedMotion ? 200 : 2200);
     } catch {
-      // ignore
-    }
+      if (version !== sessionVersionRef.current) return;
 
-    // Chừa một frame sau khi CSS animation kết thúc để trạng thái cố định
-    // nhận đúng vị trí/góc tiếp đất, không bị kéo về giữa khi công bố quẻ.
-    setTimeout(() => {
-      setCastResult(outcome);
-      setIsCasting(false);
-      requestLockRef.current = false;
-      try {
-        if (typeof navigator !== "undefined" && navigator.vibrate) {
-          navigator.vibrate([140]);
-        }
-      } catch {
-        // ignore
+      setRequestError(
+        "Chưa xác nhận được lượt gieo. Hãy tải lại phiên để kiểm tra kết quả trước khi gieo tiếp.",
+      );
+
+      if (isLoggedIn && nextSessionId) {
+        setSessionReady(false);
       }
-    }, 2200);
+    } finally {
+      if (version === sessionVersionRef.current) {
+        setIsRequestingKeo(false);
+
+        if (animationTimerRef.current === null) {
+          requestLockRef.current = false;
+        }
+      }
+    }
   };
 
   return (
     <div className="screen-shell">
       <main className="page-container max-w-6xl">
+        <section className="mb-5 rounded-xl border border-line bg-surface p-4">
+          <p role="status" className="text-sm text-muted">
+            {sessionLoading
+              ? "Đang khôi phục phiên…"
+              : isRequestingKeo
+                ? "Đang xử lý lượt gieo…"
+                : !sessionReady
+                  ? "Cần tải lại phiên trước khi tiếp tục."
+                  : `Đã gieo ${throwCount}/3 lượt trong phiên này.`}
+          </p>
+
+          {isLoggedIn && !sessionReady && !sessionLoading && (
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-3"
+              onClick={() => {
+                setSessionReload((value) => value + 1);
+              }}
+            >
+              Tải lại phiên
+            </Button>
+          )}
+
+          {sessionReady && throwCount >= 3 && (
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-3"
+              disabled={isCasting || isRequestingKeo}
+              onClick={handleNewSession}
+            >
+              Bắt đầu phiên mới
+            </Button>
+          )}
+        </section>
         {requestError && <p role="status" className="mb-5 rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted">{requestError}</p>}
-        {drawId && isLoggedIn && <p className="mb-5 rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted">Lượt xin keo này sẽ được liên kết với quẻ xin xăm đã lưu trong tài khoản của bạn.</p>}
+        {drawId && isLoggedIn && <p className="mb-5 rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted">Bạn đang mở xin keo từ một lượt xin xăm. Máy chủ sẽ kiểm tra quyền truy cập khi tạo phiên liên kết.</p>}
         {/* Top Breadcrumb & Status Ribbon */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 text-xs text-muted">
           <div className="flex items-center gap-2">
@@ -444,10 +718,9 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
             Xin keo âm dương
           </h1>
           <p className="text-sm sm:text-base text-ink leading-relaxed max-w-4xl">
-            Tục gieo keo (âm dương bối) là nét văn hóa dân gian truyền thống lâu đời của người Việt,
-            được tiền nhân xem như phương tiện thanh tịnh để lắng lòng, tự soi tỏ các mối phân vân
-            trước khi khởi sự việc lớn. Mọi trải nghiệm tại đây nhằm giúp bạn an định tâm trí,
-            hoàn toàn không mang tính mê tín dị đoan.
+            Trên ứng dụng, hai mặt keo được gieo ngẫu nhiên. Kết quả chỉ mô tả tổ hợp xuất hiện;
+            phần gợi mở giúp bạn tự cân nhắc, không xác nhận ý nguyện, dự đoán tương lai hay thay
+            bạn đưa ra quyết định.
           </p>
         </div>
 
@@ -478,6 +751,13 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
                     <button
                       key={t.id}
                       type="button"
+                      disabled={
+                        isCasting ||
+                        isRequestingKeo ||
+                        sessionLoading ||
+                        Boolean(sessionId) ||
+                        throwCount > 0
+                      }
                       onClick={() => setSelectedTopic(t.id)}
                       className={`p-3 rounded-panel border text-left text-xs font-semibold transition-all flex items-center justify-between cursor-pointer ${
                         isSelected
@@ -507,7 +787,7 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
                   className="w-full p-3.5 rounded-panel border border-line focus:border-accent focus:ring-1 focus:ring-accent text-xs outline-none resize-none bg-surface/70 placeholder:text-subtle text-ink leading-relaxed"
                 />
                 <p className="text-xs text-muted mt-2 leading-relaxed">
-                  ⓘ Nội dung bạn viết chỉ nhằm giúp tâm trí tập trung hơn, hệ thống hoàn toàn không lưu trữ nếu chưa có sự đồng ý của bạn.
+                  Ghi chú chỉ nằm trong màn hình này, không được gửi lên máy chủ và sẽ mất khi tải lại hoặc rời màn hình. Khi đăng nhập và gieo, hệ thống lưu chủ đề và kết quả vào tài khoản.
                 </p>
               </div>
             </div>
@@ -619,7 +899,13 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
                   variant="default"
                   size="lg"
                   onClick={handleCastKeo}
-                  disabled={isCasting}
+                  disabled={
+                    isCasting ||
+                    isRequestingKeo ||
+                    sessionLoading ||
+                    !sessionReady ||
+                    throwCount >= 3
+                  }
                   className="w-full py-4 text-base font-semibold shadow-md bg-action text-white hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <Sparkles className="w-5 h-5 shrink-0" />
@@ -728,8 +1014,8 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
                 <span>BA THẾ KEO DÂN GIAN • Ý NGHĨA BIỂU TƯỢNG</span>
               </div>
 
-              <p className="text-sm text-muted leading-relaxed mb-6">
-                Khi bạn gieo, hai mảnh keo sẽ rơi tự nhiên và dừng lại ở một trong ba thế dưới đây. Mỗi thế tượng trưng cho một gợi mở triết lý nhân sinh:
+                <p className="text-sm text-muted leading-relaxed mb-6">
+                Dưới đây là ba tổ hợp có trong ứng dụng. Tên gọi mô tả mặt keo xuất hiện; chúng không dự báo tương lai hoặc quyết định thay bạn:
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
@@ -744,7 +1030,7 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
                     </span>
                   </div>
                   <p className="text-xs text-ink/80 leading-relaxed">
-                    Thế thông thuận; lòng người và hoàn cảnh hòa hợp, gợi ý bạn vững tâm tự tin tiến bước với dự định của mình.
+                    Đây là tổ hợp một mặt ngửa và một mặt úp. Hãy tự cân nhắc các dữ kiện liên quan trước khi quyết định.
                   </p>
                 </div>
 
@@ -759,7 +1045,7 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
                     </span>
                   </div>
                   <p className="text-xs text-ink/80 leading-relaxed">
-                    Chưa nên vội vàng; nhắc nhở người hỏi nên xem xét lại động cơ nội tại hoặc chuẩn bị thêm phương án chu đáo hơn.
+                    Đây là tổ hợp hai mặt úp. Tên gọi chỉ mô tả kết quả gieo, không phải lời khuyên hành động.
                   </p>
                 </div>
 
@@ -774,13 +1060,13 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
                     </span>
                   </div>
                   <p className="text-xs text-ink/80 leading-relaxed">
-                    Gợi ý tĩnh tâm suy xét thấu đáo, lắng đọng một nhịp để quan sát toàn cảnh trước khi đưa ra các quyết định hệ trọng.
+                    Đây là tổ hợp hai mặt ngửa. Tên gọi chỉ mô tả kết quả gieo, không dự báo thuận lợi hay bất lợi.
                   </p>
                 </div>
               </div>
 
               <div className="p-4 rounded-panel bg-surface-soft border border-line text-xs text-ink/80 italic leading-relaxed text-center">
-                “Mỗi quẻ keo là một chiếc gương soi chiếu để người trẻ chiêm nghiệm lại chính tâm nguyện của mình, hoàn toàn không phải lời phán quyết bất di bất dịch của thần linh hay số phận.”
+                “Kết quả gieo không phải lời phán quyết của thần linh hay số phận. Hãy dựa vào dữ kiện thực tế và lựa chọn của chính bạn.”
               </div>
             </div>
           )}

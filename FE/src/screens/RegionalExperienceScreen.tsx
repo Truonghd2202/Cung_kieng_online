@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { UnverifiedImage } from "../components/UnverifiedImage";
 import {
   ArrowLeft,
   BookOpen,
@@ -523,7 +524,7 @@ export const RegionalExperienceScreen: React.FC<RegionalExperienceScreenProps> =
               {/* Right Column: Visual Artwork */}
               <div className="lg:col-span-5 relative flex flex-col justify-center">
                 <div className="relative overflow-hidden rounded-2xl shadow-md border border-line bg-surface-soft h-72 sm:h-80 lg:h-full min-h-[340px]">
-                  <img
+                  <UnverifiedImage
                     src="/images/temple_bac_bo.jpg"
                     alt="Đình làng và không gian thờ Mẫu Bắc Bộ"
                     className="w-full h-full object-cover"
@@ -723,7 +724,7 @@ export const RegionalExperienceScreen: React.FC<RegionalExperienceScreenProps> =
               {/* Right Column: Visual Artwork */}
               <div className="lg:col-span-5 relative flex flex-col justify-center">
                 <div className="relative overflow-hidden rounded-2xl shadow-md border border-line bg-surface-soft h-72 sm:h-80 lg:h-full min-h-[340px]">
-                  <img
+                  <UnverifiedImage
                     src="/images/hue_trung_bo.jpg"
                     alt="Biển miền Trung và lăng tẩm Cố đô"
                     className="w-full h-full object-cover"
@@ -945,7 +946,7 @@ export const RegionalExperienceScreen: React.FC<RegionalExperienceScreenProps> =
               {/* Right Column: Visual Artwork */}
               <div className="lg:col-span-5 relative flex flex-col justify-center">
                 <div className="relative overflow-hidden rounded-2xl shadow-md border border-line bg-surface-soft h-72 sm:h-80 lg:h-full min-h-[340px]">
-                  <img
+                  <UnverifiedImage
                     src="/images/mekong_nam_bo.jpg"
                     alt="Sông nước miền Tây Nam Bộ"
                     className="w-full h-full object-cover"
@@ -1051,7 +1052,7 @@ export const RegionalExperienceScreen: React.FC<RegionalExperienceScreenProps> =
               <div className="rounded-xl overflow-hidden border border-line">
                 <SceneErrorBoundary onClose={() => {}}>
                   <Suspense fallback={<p className="text-xs text-stone-500 py-10 text-center">Đang tải cảnh sông nước 3D...</p>}>
-                    <SouthernRiverScene wishText={note} />
+                    <SouthernRiverScene />
                   </Suspense>
                 </SceneErrorBoundary>
               </div>

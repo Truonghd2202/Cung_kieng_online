@@ -1,20 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
-import type { SignalData } from "../data/demoSignals";
-
 interface SignalLoadingScreenProps {
-  signal: SignalData;
+  requestNotice?: string | null;
   onFinishLoading: () => boolean | Promise<boolean>;
   onCancel: () => void;
 }
 
 export const SignalLoadingScreen = ({
-  signal,
+  requestNotice,
   onFinishLoading,
   onCancel,
 }: SignalLoadingScreenProps) => {
-  const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState<"loading" | "error">("loading");
 
   const finishRef = useRef(onFinishLoading);
@@ -47,7 +44,7 @@ export const SignalLoadingScreen = ({
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [signal.id, attempt]);
+  }, []);
 
   useEffect(() => {
     if (status === "error") {
@@ -60,7 +57,7 @@ export const SignalLoadingScreen = ({
       <main className="page-container max-w-3xl">
         <Card className="p-6 text-center sm:p-10">
           <p className="text-xs font-semibold uppercase tracking-wide text-accent">
-            Nội dung thử nghiệm
+            CHECK-IN CẢM XÚC
           </p>
 
           <h1 className="page-title mt-4">
@@ -83,7 +80,7 @@ export const SignalLoadingScreen = ({
               </p>
 
               <p className="mt-3 text-sm leading-relaxed text-muted">
-                {signal.loadingFacts.breathingText}
+                Thả lỏng vai, để hơi thở trở về nhịp tự nhiên trong lúc máy chủ xử lý yêu cầu.
               </p>
             </div>
           ) : (
@@ -97,26 +94,21 @@ export const SignalLoadingScreen = ({
               </h2>
 
               <p role="alert" className="mt-3 text-sm text-muted">
-                Trình duyệt chưa lưu được trạng thái lượt check-in.
-                Bạn có thể thử lại hoặc quay lại chỉnh nội dung.
+                {requestNotice || "Máy chủ chưa trả về kết quả và chưa xác nhận lưu lượt check-in."}
               </p>
 
               <Button
                 type="button"
                 className="mt-4"
-                onClick={() => {
-                  setStatus("loading");
-                  setAttempt((value) => value + 1);
-                }}
+                onClick={onCancel}
               >
-                Thử lại
+                Quay lại thử lại
               </Button>
             </div>
           )}
 
           <p className="mt-6 text-xs leading-relaxed text-muted">
-            Bạn có thể nhận gợi ý biên soạn sẵn hoặc hỗ trợ AI theo tâm trạng và chủ đề đã chọn.
-            Khi bạn đăng nhập, tâm sự được gửi tới máy chủ để lưu vào tài khoản. Dịch vụ AI nhận tâm trạng và chủ đề bạn chọn, không nhận nội dung tâm sự.
+            Gợi mở chỉ xuất hiện khi máy chủ trả về nội dung đã được phép phát hành. Nội dung tâm sự không được dùng để tạo ra câu trích dẫn dân gian.
           </p>
 
           <Button

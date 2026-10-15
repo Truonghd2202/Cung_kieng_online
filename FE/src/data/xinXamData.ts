@@ -7,6 +7,7 @@ export type RegionType = "Bắc Bộ" | "Trung Bộ" | "Nam Bộ";
 export type TopicType = "Học tập" | "Công việc" | "Gia đình" | "Bình an";
 
 export interface XinXamResult {
+  resultToken?: string;
   metadata: ContentMetadata;
   aiExplanation?: {
     content: string;
@@ -100,23 +101,23 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
     topic: "Gia đình",
     topicTag: "Thuận hòa nếp nhà",
     title: "GIA ĐÌNH • HIẾU NGHĨA TRƯỚC SAU",
-    quote: "Thuận vợ thuận chồng tát bể Đông cũng cạn. Trong ấm ngoài êm, phúc lộc tự sinh.",
+    quote: "Mỗi người có hoàn cảnh riêng; hãy chọn cách kết nối hoặc giữ khoảng cách phù hợp với mình.",
     poem: {
-      line1: "Tre già ấp ủ măng non mọc,",
-      line2: "Mái rạ khói lam ấm bếp hồng.",
-      line3: "Một dạ thương nhau qua giông bão,",
-      line4: "Tình nhà bền chặt tựa non sông.",
+      line1: "Đường xa mình chọn bước đi,",
+      line2: "Điều cần có thể nói khi sẵn sàng.",
+      line3: "Gần nhau hay giữ khoảng riêng,",
+      line4: "Tùy theo hoàn cảnh của mình hôm nay.",
     },
     sealText: "THUẬN HÒA",
     insight: "Bao dung",
     reflectionParagraphs: [
-      "Văn hóa gia đình xứ Bắc coi trọng tôn ti trật tự nhưng cốt lõi vẫn là chữ Tình và lòng Hiếu kính. Mọi mâu thuẫn vụn vặt thường nhật sẽ tan biến khi mỗi người biết hạ bớt cái tôi và mở lòng lắng nghe.",
-      "Gia đình là bến đỗ bình yên nhất; hãy trân quý những bữa cơm sum vầy và lời thăm hỏi ân cần dành cho cha mẹ, người thân.",
+      "Một số nếp nhà ở miền Bắc coi trọng thứ bậc và việc tưởng nhớ tổ tiên. Mỗi gia đình và mỗi người có cách thực hành riêng.",
+      "Mỗi người có hoàn cảnh riêng trong các mối quan hệ. Hãy chọn cách kết nối phù hợp với mình, hoặc giữ khoảng cách khi cần.",
     ],
     tips: [
       {
         title: "Lắng nghe không định kiến",
-        desc: "Dành trọn sự chú tâm khi trò chuyện cùng người thân trong gia đình.",
+        desc: "Nếu muốn trò chuyện, chọn người và thời điểm khiến bạn thấy phù hợp; bạn cũng có thể bỏ qua.",
       },
       {
         title: "Bày tỏ lòng biết ơn",
@@ -124,12 +125,12 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
       },
     ],
     culturalAspect:
-      "Lễ cúng gia tiên và sum vầy con cháu nơi đất Bắc luôn nhắc nhở về cội nguồn 'Uống nước nhớ nguồn', xem sự hòa thuận giữa các thế hệ là phúc lành lớn nhất của dòng tộc.",
+      "Ở một số nơi tại miền Bắc, lễ cúng gia tiên là dịp tưởng nhớ tổ tiên. Tập tục và cách tham gia tùy theo từng nhà.",
     relatedArticleId: "dinh-lang-bac-bo",
     relatedArticleTitle: "Đình làng Bắc Bộ & Không gian tín ngưỡng dân gian",
     microAction: {
       title: "Gửi một lời hỏi thăm ấm áp",
-      desc: "Nhắn tin hoặc gọi điện hỏi thăm sức khỏe cha mẹ hay người thân bằng tất cả sự chân thành.",
+      desc: "Nếu muốn liên hệ ai đó, hãy chọn người khiến bạn thấy phù hợp; bạn cũng có thể bỏ qua gợi ý này.",
       duration: "3 phút thực hành",
     },
   },
@@ -281,26 +282,26 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
     sealText: "THỦY CHUNG",
     insight: "Chắt chiu",
     reflectionParagraphs: [
-      "Đất miền Trung chịu nhiều gió bão, nắng lửa mưa dầm nên tình cảm gia đình nơi đây được tôi luyện bằng đức hy sinh và lòng thủy chung son sắt. Chữ 'thương' của người miền Trung thầm lặng mà da diết.",
-      "Gia đình là điểm tựa vững chãi nhất chở che bạn qua những dông bão cuộc đời. Hãy trân quý từng giọt mồ hôi và tình thương vô bờ bến của đấng sinh thành.",
+      "Mỗi người có hoàn cảnh riêng trong các mối quan hệ. Nếu muốn, bạn có thể tìm một người đáng tin cậy hoặc dành thời gian cho mình.",
+      "Bạn có thể chọn cách gần gũi hoặc giữ giới hạn trong các mối quan hệ, tùy điều phù hợp với mình.",
     ],
     tips: [
       {
         title: "Đồng cam cộng khổ",
-        desc: "Chia sẻ gánh nặng cùng người thân bằng những việc làm giản dị mỗi ngày.",
+        desc: "Nếu thấy phù hợp, chia sẻ một việc nhỏ với người bạn chọn; không cần làm nếu bạn không muốn.",
       },
       {
         title: "Trân quý bữa cơm nhà",
-        desc: "Tự tay vào bếp chuẩn bị một món ăn ấm cúng cho cả nhà cùng thưởng thức.",
+        desc: "Nếu phù hợp, chuẩn bị một món ăn bạn thích cho riêng mình hoặc chia sẻ với người bạn chọn.",
       },
     ],
     culturalAspect:
-      "Tục thờ cúng tổ tiên và cúng xóm ở miền Trung luôn chứa chan đạo lý gia đình bền chặt, coi trọng lòng thảo thơm hơn mâm cao cỗ đầy.",
+      "Một số cộng đồng ở miền Trung có tập tục thờ cúng tổ tiên và cúng xóm. Cách thực hành tùy địa phương và từng nhà.",
     relatedArticleId: "dien-hon-chen",
     relatedArticleTitle: "Nếp nhà và đạo hiếu nghĩa xứ Quảng - Huế",
     microAction: {
-      title: "Nấu một bữa cơm ấm cúng",
-      desc: "Vào bếp chuẩn bị một món canh thanh mát hay phụ giúp dọn dẹp gian bếp gia đình.",
+      title: "Chọn một việc vừa sức",
+      desc: "Nếu muốn, chuẩn bị một món ăn bạn thích hoặc làm một việc nhỏ cho bản thân.",
       duration: "15 phút thực hành",
     },
   },
@@ -452,17 +453,17 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
     sealText: "ẤM ÊM",
     insight: "Hòa thuận",
     reflectionParagraphs: [
-      "Nếp nhà phương Nam mộc mạc, bình dị mà chan chứa ân tình. Người Nam Bộ coi trọng chữ hiếu qua những cử chỉ thực tế: bát canh thơm ngon mời cha mẹ, nụ cười vui vẻ giữa anh em lối xóm.",
-      "Đừng để những lo toan vật chất che mờ niềm hạnh phúc giản đơn khi được ở bên cạnh những người thân yêu trong gia đình.",
+      "Ở một số nơi tại Nam Bộ, việc thờ cúng tổ tiên gắn với sinh hoạt của gia đình và cộng đồng. Mỗi nhà có cách riêng.",
+      "Hãy chọn điều giúp bạn thấy dễ chịu lúc này; bạn cũng có thể dành thời gian một mình.",
     ],
     tips: [
       {
         title: "Chia sẻ niềm vui",
-        desc: "Kể một câu chuyện vui trong ngày để mang lại tiếng cười cho cả nhà.",
+        desc: "Nếu muốn, ghi lại một điều khiến bạn bật cười hôm nay.",
       },
       {
-        title: "Chăm sóc cha mẹ",
-        desc: "Hỏi han sức khỏe hoặc xoa bóp vai cho cha mẹ sau một ngày lao động vất vả.",
+        title: "Liên hệ nếu bạn muốn",
+        desc: "Nếu muốn hỏi thăm ai đó, hãy chọn người khiến bạn thấy thoải mái; bạn có thể bỏ qua gợi ý này.",
       },
     ],
     culturalAspect:
@@ -470,8 +471,8 @@ export const XIN_XAM_RESULTS: Record<string, XinXamResult> = {
     relatedArticleId: "mieu-ba-chua-xu",
     relatedArticleTitle: "Nét văn hóa Nam Bộ & Tấm lòng thảo thơm",
     microAction: {
-      title: "Gọi điện về cho gia đình",
-      desc: "Dành 5 phút gọi điện tâm sự nhẹ nhàng cùng người thân nơi quê nhà.",
+      title: "Chọn cách kết nối",
+      desc: "Nếu phù hợp, nhắn tin cho người bạn chọn hoặc dành thời gian cho một việc riêng của mình.",
       duration: "5 phút kết nối",
     },
   },

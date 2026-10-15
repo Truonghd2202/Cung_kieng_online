@@ -192,14 +192,16 @@
 .today-card-image-box {
   position: relative;
   width: 100%;
-  height: 150px;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
+  background-color: var(--surface-soft, rgba(0, 0, 0, 0.04));
 }
 
 .today-card-image-box img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   transition: transform 600ms ease;
 }
 
