@@ -4,13 +4,13 @@
 ### HỆ SINH THÁI SỐ BẢO TỒN VĂN HÓA TÍN NGƯỠNG & ĐỒNG HÀNH TINH THẦN CHO THẾ HỆ TRẺ VIỆT NAM
 
 
-## PHẠM VI MVP VÀ TRẠNG THÁI TRIỂN KHAI (CẬP NHẬT 13/10/2026)
+## PHẠM VI MVP VÀ TRẠNG THÁI TRIỂN KHAI (CẬP NHẬT 19/10/2026)
 
-Tài liệu này giữ cả tầm nhìn sản phẩm và yêu cầu tương lai. Mã nguồn có một số cảnh 3D/WebGL ở bàn thờ và trải nghiệm vùng miền, nhưng các cảnh đó nằm ngoài ba luồng MVP đã chốt và không đồng nghĩa các luồng 3D đã hoàn thiện. Xin xăm 3D, tích hợp hoa đăng từ `WishScreen`, gói năm 199.000đ, thư viện hội viên độc quyền và các quyền lợi Premium ngoài diễn giải AI là **lộ trình**, chưa phải chức năng đã bàn giao. Gói hội viên chưa thể mua/kích hoạt; các khoản giá và vật phẩm trong phần mô hình kinh doanh là giả định đề xuất.
+Tài liệu này giữ cả tầm nhìn sản phẩm và yêu cầu tương lai. Mã nguồn có một số cảnh 3D/WebGL ở bàn thờ và trải nghiệm vùng miền, nhưng các cảnh đó nằm ngoài ba luồng MVP đã chốt và không đồng nghĩa các luồng 3D đã hoàn thiện. Xin xăm 3D, tích hợp hoa đăng từ `WishScreen`, thư viện hội viên và quyền lợi Premium ngoài diễn giải AI vẫn thuộc **lộ trình**. Mã nguồn hiện có API trạng thái/quyền lợi hội viên và tích hợp checkout/IPN SePay, nhưng khả năng checkout phụ thuộc cờ bán và cấu hình runtime; trạng thái môi trường chưa được xác minh trong đợt này. Vì vậy không tuyên bố gói đã mở bán hoặc đã có giao dịch. Mức giá trong phần mô hình kinh doanh là giả định đề xuất, không phải chứng cứ giao dịch.
 
-**Ba luồng MVP được chốt trong tài liệu này:** (1) khám phá văn hóa → đọc/lưu/xem lại bài; (2) hướng dẫn nghi lễ → checklist/lưu tiến độ; (3) check-in → nhận/lưu/xem lại lời chiêm nghiệm. Kho FE hiện có 14 mục nội dung văn hóa; chưa có bộ hơn 200 bài được bàn giao và thẩm định. Các con số 200+ là mục tiêu roadmap, không phải nội dung đã có. Mỗi nội dung phải có nguồn hoặc ghi rõ do nhóm biên soạn; trích dẫn văn hóa cần được đối chiếu và tài sản phải có căn cứ quyền phù hợp trước khi phát hành. Nội dung chưa đạt điều kiện không được giới thiệu là đã xác minh. Các luồng xin xăm, xin keo, điều ước/hoa đăng, không gian thờ 3D, lịch/nhắc giỗ, hội viên và các phân hệ khác chưa thuộc ba luồng MVP đã chốt; xem roadmap. Chức năng hỗ trợ MVP gồm đăng ký, đăng nhập, khôi phục phiên, quản lý nội dung đã lưu, xóa nội dung cá nhân và quản trị/duyệt nội dung. Tử vi AI hiện chỉ tạo diễn giải để suy ngẫm, không tính lá số. SMTP, Gemini và VAPID đã có giá trị cấu hình trong BE/.env nhưng chưa được xác thực hoặc kiểm thử hoạt động thực tế. Thông tin merchant VNPay và hotline chính thức của trường chưa được cấu hình nên chưa thể kiểm thử các tích hợp này.
+**Ba luồng MVP được chốt trong tài liệu này:** (1) khám phá văn hóa → đọc/lưu/xem lại bài; (2) hướng dẫn nghi lễ → checklist/lưu tiến độ; (3) check-in → nhận/lưu/xem lại lời chiêm nghiệm. Kho FE có dữ liệu nội bộ nhưng danh mục hiển thị cho người dùng phụ thuộc cổng public BE và bài đủ điều kiện; không coi số lượng bản ghi draft là số bài đã duyệt. Mỗi nội dung phải có nguồn hoặc ghi rõ do nhóm biên soạn; trích dẫn văn hóa cần được đối chiếu và tài sản phải có căn cứ quyền phù hợp trước khi phát hành. Nội dung chưa đạt điều kiện không được giới thiệu là đã xác minh. Các luồng xin xăm, xin keo, điều ước/hoa đăng, không gian thờ 3D, lịch/nhắc giỗ, hội viên và các phân hệ khác chưa thuộc ba luồng MVP đã chốt; xem roadmap. Chức năng hỗ trợ MVP gồm đăng ký, đăng nhập, khôi phục phiên, quản lý nội dung đã lưu, xóa nội dung cá nhân và quản trị/duyệt nội dung. Tử vi AI hiện chỉ tạo diễn giải để suy ngẫm, không tính lá số. Mã nguồn có tích hợp SMTP, Gemini, Google login, Web Push và SePay; cấu hình runtime và hoạt động thực tế chưa được xác minh chỉ từ code. Không mở bán thật.
 
-Các yêu cầu ngoài ba luồng MVP được chốt ở trên là **roadmap**; việc một màn hình hoặc thành phần đã tồn tại trong mã nguồn không tự động đưa nó vào phạm vi MVP. Gói hội viên chỉ có thể triển khai sau khi cấu hình và kiểm thử thanh toán.
+Các yêu cầu ngoài ba luồng MVP được chốt ở trên là **roadmap hoặc phần mở rộng có giới hạn**; việc một màn hình hoặc thành phần đã tồn tại trong mã nguồn không tự động đưa nó vào phạm vi MVP. Đợt này có bổ sung minh bạch AI, tổng kết check-in và hiển thị quyền lợi/quota hội viên; các phần này không mở rộng ba luồng MVP và không đồng nghĩa tích hợp ngoài đã được kiểm thử đầu-cuối. Checkout chỉ dùng sandbox và chỉ khả dụng khi cờ bán/cấu hình runtime cho phép.
 
 ---
 
@@ -142,7 +142,7 @@ Theo kết quả kiểm đếm hiện có, khảo sát ghi nhận **148 lượt 
 | **3. Tuyên ngôn giá trị độc nhất (UVP, mục tiêu)** | *"Hệ sinh thái tâm linh số bản sắc Việt – Điểm tựa tinh thần an yên, kết nối cội nguồn bằng trải nghiệm số và AI có trách nhiệm."* Đây là định vị đề xuất, không phải cam kết mọi công nghệ đã hoàn tất. |
 | **4. Giải pháp (Solution, gồm MVP và hướng phát triển)** | - MVP gồm đúng ba luồng: khám phá văn hóa → đọc/lưu/xem lại bài; hướng dẫn nghi lễ → checklist/lưu tiến độ; check-in → nhận/lưu/xem lại lời chiêm nghiệm.<br>- Nội dung văn hóa và lời chiêm nghiệm cần nêu nguồn/trạng thái kiểm chứng phù hợp; chưa đạt điều kiện phát hành thì không giới thiệu là đã xác minh.<br>- Các phân hệ và mở rộng ngoài ba luồng này được ghi trong roadmap. |
 | **5. Kênh tiếp cận (Channels)** | - Trực tiếp tại Campus: QR code chiến dịch mùa thi, CLB Văn hóa, sự kiện Vu Lan/Tết.<br>- Trực tuyến: Kênh TikTok/Threads viral "Tín hiệu vũ trụ dân gian", Instagram Aesthetic.<br>- Hợp tác: Hội sinh viên, các bảo tàng, làng nghề thủ công truyền thống. |
-| **6. Dòng doanh thu (giả định mô hình, chưa phát sinh trong MVP)** | - Đề xuất gói hội viên "Tâm An" (29k/tháng hoặc 199k/năm); chưa mở thanh toán/kích hoạt.<br>- Vật phẩm số trang trí (9k–49k) là ý tưởng; chưa bán trong MVP.<br>- Hợp tác B2B/quà tặng văn hóa là hướng khảo sát, chưa phải doanh thu hiện có. |
+| **6. Dòng doanh thu (giả định mô hình, chưa phát sinh trong MVP)** | - Đề xuất gói hội viên "Tâm An" (29k/tháng hoặc 199k/năm); code có checkout/IPN SePay sandbox nhưng trạng thái runtime và giao dịch chưa xác minh, không coi là đã mở bán.<br>- Vật phẩm số trang trí (9k–49k) là ý tưởng; không kết luận đã bán.<br>- Hợp tác B2B/quà tặng văn hóa là hướng khảo sát, chưa phải doanh thu hiện có. |
 | **7. Cơ cấu chi phí (Cost Structure)** | - Hạ tầng máy chủ Cloud, Database, CDN tài nguyên 3D/Audio: ~25%.<br>- Chi phí Marketing, Campus Tour & Vận hành cộng đồng: ~40%.<br>- Chi phí Nghiên cứu, Cố vấn văn hóa & Bản quyền tư liệu: ~20%.<br>- Quản lý vận hành & Chi phí dự phòng: ~15%. |
 | **8. Chỉ số then chốt (Key Metrics)** | - DAU / MAU (Daily/Monthly Active Users).<br>- Retention Rate mục tiêu (D1 > 45%, D7 > 35%, D30 > 22%), cần kiểm chứng.<br>- Tỷ lệ chuyển đổi Freemium -> Premium mục tiêu (> 4.8%), cần kiểm chứng.<br>- LTV / CAC chưa chốt; cần mô hình và dữ liệu phù hợp. |
 | **9. Lợi thế cần xây dựng (chưa phải lợi thế đã được chứng minh)** | - Xây dựng kho ngữ liệu văn hóa dân gian có nguồn và được chuyên gia thẩm định; hiện nội dung còn cần rà soát.<br>- Mở rộng, đo hiệu năng các cảnh WebGL trên thiết bị thực; hiện chỉ một số cảnh 3D đã có, chưa có số đo chứng minh chạy mượt trên mọi thiết bị. |
@@ -227,7 +227,7 @@ Backend: Node.js, Express, Zod validation, JWT authentication và các middlewar
 
 Database: PostgreSQL, Prisma ORM.
 
-Tích hợp: Google login, SMTP, Gemini, VNPay và Web Push.
+Tích hợp: Google login, SMTP, Gemini, SePay và Web Push. Trạng thái cấu hình/kiểm thử của từng dịch vụ cần được xác nhận riêng theo môi trường; việc có mã tích hợp không chứng minh dịch vụ đang hoạt động.
 
 Trạng thái cấu hình và kiểm thử được ghi riêng cho từng dịch vụ:
 
@@ -236,7 +236,7 @@ Trạng thái cấu hình và kiểm thử được ghi riêng cho từng dịch
 | Google login | Chưa xác minh cấu hình | Chưa xác minh hoạt động thực tế. |
 | SMTP | Có giá trị cấu hình trong `BE/.env` | Chưa xác thực/kiểm thử hoạt động thực tế. |
 | Gemini | Có giá trị cấu hình trong `BE/.env` | Chưa xác thực/kiểm thử hoạt động thực tế. |
-| VNPay | Thông tin merchant chưa được cấu hình | Chưa thể kiểm thử checkout. |
+| SePay | Luồng checkout/IPN và đối soát có trong code; khả năng mở checkout phụ thuộc cờ bán, cấu hình SePay và điều kiện dịch vụ | Chưa xác minh đầu-cuối với SePay sandbox trong đợt kiểm tra này; không bật bán thật. |
 | Web Push | Có giá trị VAPID trong `BE/.env` | Chưa xác thực/kiểm thử hoạt động thực tế. |
 
 ---
@@ -332,14 +332,18 @@ model MemorialRecord {
 | `POST` | `/api/v1/auth/register` | Đăng ký tài khoản sinh viên/người dùng | Public |
 | `POST` | `/api/v1/auth/login` | Đăng nhập nhận JWT Token | Public |
 | `POST` | `/api/v1/mood/analyze-signal` | Gửi tâm trạng + ngữ cảnh -> Nhận tín hiệu ca dao | Public / User |
-| `POST` | `/api/v1/mood/save-signal` | Lưu tín hiệu vào Góc Tâm An | Authenticated |
+| `POST` | `/api/v1/mood/check-ins` | Ghi check-in theo tài khoản; trả lời chiêm nghiệm được phép và lưu snapshot | Authenticated |
+| `GET` | `/api/v1/mood/check-ins/history` | Tổng kết tuần/tháng, bộ lọc cảm xúc và phân trang; thống kê gồm mọi check-in còn lưu của tài khoản | Authenticated |
+| `POST` | `/api/v1/mood/save-signal` | Lưu lời chiêm nghiệm có chữ ký kết quả hợp lệ | Authenticated |
 | `POST` | `/api/v1/xam/draw` | Rút xăm — ngoài MVP | Public / User |
 | `POST` | `/api/v1/xam/toss-keo` | Gieo keo — cần đăng nhập, ngoài MVP | Authenticated |
 | `POST` | `/api/v1/wishes` | Tạo điều ước / Thả đèn hoa đăng số | Authenticated |
 | `GET` | `/api/v1/memorials` | Lấy danh sách hồ sơ bàn thờ gia tiên & ngày giỗ | Authenticated |
 | `POST` | `/api/v1/memorials/:id/incense` | Thao tác thắp nén nhang lòng tri ân | Authenticated |
-| `GET` | `/api/v1/content/rituals/:slug` | Chi tiết nghi lễ | Public |
-| `POST` | `/api/v1/membership/checkout` | Checkout hội viên — ngoài MVP | Authenticated |
+| `GET` | `/api/v1/content/culture` | Danh sách bài văn hóa qua cổng public và điều kiện phát hành | Public |
+| `GET` | `/api/v1/content/rituals/:slug` | Chi tiết nghi lễ đủ hồ sơ phát hành; preview chỉ ở môi trường development | Public |
+| `GET` | `/api/v1/membership/status` | Bảng quyền lợi/gói, trạng thái tài khoản và quota AI hiện tại | Public / User |
+| `POST` | `/api/v1/membership/checkout` | Tạo checkout SePay khi các cờ bán và cấu hình môi trường cho phép | Authenticated |
 
 ---
 
@@ -350,7 +354,7 @@ model MemorialRecord {
 * **MVP:** Ba luồng: khám phá văn hóa → đọc/lưu/xem lại bài; hướng dẫn nghi lễ → checklist/lưu tiến độ; check-in → nhận/lưu/xem lại lời chiêm nghiệm.
 * **Điều kiện phát hành MVP:** Nội dung dùng trong ba luồng phải có nguồn hoặc ghi rõ do nhóm biên soạn; trích dẫn văn hóa phải được đối chiếu; tài sản được sử dụng phải có căn cứ quyền phù hợp. Nội dung chưa đạt điều kiện không được giới thiệu là đã xác minh.
 * **Chức năng hỗ trợ MVP:** Đăng ký, đăng nhập, khôi phục phiên, quản lý nội dung đã lưu, xóa nội dung cá nhân và quản trị/duyệt nội dung.
-* **Roadmap:** Mở rộng kho nội dung; bản đồ và trải nghiệm vùng miền nâng cao; xin xăm/xin keo; hoa đăng; không gian thờ; lịch/nhắc giỗ; Zen; hội viên, thanh toán và các tính năng AI mở rộng.
+* **Roadmap/mở rộng đã có một phần code:** Mở rộng kho nội dung; bản đồ và trải nghiệm vùng miền nâng cao; xin xăm/xin keo; hoa đăng; không gian thờ; lịch/nhắc giỗ; Zen; hội viên, thanh toán và các tính năng AI mở rộng. Minh bạch AI, xem tổng kết check-in và hiển thị quyền lợi/quota hội viên được bổ sung để demo; chúng không thay đổi ba luồng MVP hoặc chứng minh dịch vụ ngoài đang khả dụng.
 * Các thành phần roadmap có thể đã tồn tại trong mã nguồn. Trạng thái triển khai được ghi riêng, không đồng nghĩa chúng đã được nghiệm thu hoặc phát hành.
 * **Could Have (mở rộng sau roadmap nền tảng):** Luận giải tử vi chuyên sâu bằng AI, âm nhạc Chầu Văn tương tác 360 độ, đố vui văn hóa nhận quà.
 * **Won't Have (Tuyệt đối không làm):** Bói toán hù dọa tang tóc, Dịch vụ cúng sao giải hạn thu tiền triệu, Mua bán bùa ngải.
@@ -374,6 +378,8 @@ model MemorialRecord {
   - Người dùng có thể mở lại và xóa bản ghi đã lưu; không truy cập được dữ liệu của tài khoản khác.
   - F5 hoặc mở đường dẫn kết quả phải tải lại nội dung tương ứng nếu nội dung còn khả dụng. Nếu nội dung đã bị thu hồi, hiển thị thông báo phù hợp.
   - Khi API lỗi hoặc timeout, hiển thị lỗi và cho phép thử lại; không dùng dữ liệu mẫu để báo thành công.
+  - Tại nơi dùng AI, giải thích dữ liệu gửi, mục đích, nhà cung cấp, giới hạn và phạm vi xóa theo đúng request hiện tại. Check-in chỉ gửi lựa chọn cảm xúc/bối cảnh cho Gemini khi nhánh AI được dùng; ghi chú và lịch sử không được đính kèm. Diễn giải theo năm cần đồng ý riêng và gửi ngày sinh/năm đã chọn. Nội dung không phải chẩn đoán hoặc dự đoán chắc chắn; xóa bản ghi trong ứng dụng không đồng nghĩa xóa dữ liệu phía nhà cung cấp.
+  - Người dùng có thể xem tổng kết theo tuần/tháng và lọc cảm xúc. Thống kê được tính ở BE từ mọi check-in còn lưu của đúng tài khoản, trước phân trang, theo ngày Việt Nam; bộ lọc chỉ áp dụng danh sách. Ngày không có check-in là thiếu dữ liệu. Đây là mô tả hoạt động, không phải đánh giá hay chẩn đoán tâm lý.
   - Thời gian phản hồi được đo trong kiểm thử; chưa cam kết tối đa 2,5 giây khi chưa xác định điều kiện thiết bị, mạng và dịch vụ AI.
 
 ---
@@ -472,15 +478,17 @@ model MemorialRecord {
 ---
 
 ### Module 8: Chiêm Tinh, Tử Vi AI, Gói Hội Viên "Tâm An" & Quản Lý Hồ Sơ
-* **Trạng thái phạm vi:** Roadmap, ngoại trừ chức năng xem lại lời chiêm nghiệm đã lưu thuộc luồng MVP 3.
+* **Trạng thái phạm vi:** Phần lớn là mở rộng ngoài MVP, ngoại trừ xem lại lời chiêm nghiệm đã lưu thuộc luồng MVP 3. Trang quyền lợi, trạng thái hội viên và quota AI đã có một phần triển khai; không được hiểu là dịch vụ đã mở bán.
 * **Màn hình:** `AstrologyHubScreen`, `HoroscopeScreen`, `MembershipScreen`, `AccountScreen`, `SettingsScreen`, `NotificationScreen`.
-* **Trạng thái:** checkout VNPay và kích hoạt hội viên chưa khả dụng; `MembershipScreen` hiện nhận email quan tâm. User story/quyền lợi trả phí bên dưới là mục tiêu roadmap, không phải dịch vụ có thể mua ở MVP.
+* **Trạng thái hiện biết từ code:** FE, BE dùng `/membership/status` làm nguồn dữ liệu quyền lợi, gói, thời hạn, hạn mức AI và trạng thái checkout. Checkout/IPN dùng SePay; quyền bắt đầu checkout phụ thuộc cờ bán và cấu hình môi trường. Không xác nhận cờ runtime, giao dịch sandbox, nội dung thư viện hoặc khả năng mua thật chỉ từ code; không bật bán thật.
 * **User Story:**
   > *Là một người dùng trung thành của ứng dụng,*
   > *Tôi muốn nâng cấp gói hội viên Tâm An và quản lý toàn bộ kỷ niệm tâm linh,*
   > *Để nhận luận giải tử vi định hướng trọn năm và lưu giữ mọi khoảnh khắc an yên.*
 * **Acceptance Criteria:**
-  - **Roadmap:** cho phép đăng ký/quản lý gói Premium "Tâm An" sau khi checkout, webhook và cấp quyền lợi được triển khai/kiểm thử (mức giá đề xuất 29.000 VNĐ/tháng).
+  - Trang hội viên, chân trang, tài khoản và màn hình chiêm nghiệm năm hiển thị cùng dữ liệu BE về Free/Premium, hạn dùng, giới hạn, lượt đã dùng/còn lại và thời điểm có thể dùng tiếp. Quota AI theo cửa sổ trượt 24 giờ: tối đa 3 bản thành công/đang xử lý và 5 lần gọi; lần lỗi tính vào số lần gọi, yêu cầu đang xử lý giữ suất tối đa 10 phút.
+  - Quyền lợi chưa khả dụng (ví dụ thư viện xin xăm chưa được xác nhận) được ghi rõ trạng thái. Không hứa dùng thử 7 ngày hoặc AI không giới hạn.
+  - Chỉ cho phép mua khi cờ bán và các điều kiện môi trường được nhóm xác nhận; khi có giao dịch demo phải giữ SePay sandbox. Không kích hoạt bán thật trong phạm vi này.
   - Quản lý kho tín hiệu đã lưu, lịch sử quẻ xăm, hòm thư điều ước bí mật và sổ giỗ cá nhân trong `AccountScreen`.
 
 ---
@@ -604,7 +612,7 @@ flowchart TD
 
 ### Flow 6 (Roadmap): Luồng dự kiến cho Hội viên & Quản Lý Góc Tâm An
 
-> **Trạng thái MVP:** chưa có checkout VNPay khả dụng, chưa ghi nhận thanh toán và chưa kích hoạt quyền lợi hội viên. `MembershipScreen` hiện nhận email quan tâm; sơ đồ dưới đây là luồng mục tiêu sau khi tích hợp thanh toán và kiểm thử quyền lợi.
+> **Trạng thái hiện tại:** `MembershipScreen` tải quyền lợi, hạn dùng, quota và khả năng checkout từ API BE. Code tích hợp SePay checkout/IPN nhưng khả năng tạo đơn phụ thuộc cờ bán/cấu hình runtime; chưa xác minh trạng thái runtime, giao dịch hoặc quyền lợi trên DB trong đợt này. Sơ đồ mô tả luồng dự kiến khi môi trường test được chuẩn bị, không phải xác nhận mua bán đã hoạt động.
 
 ```mermaid
 flowchart TD
@@ -612,11 +620,11 @@ flowchart TD
     B --> C[Xem quyền lợi hiện có và mục tiêu roadmap]
     C --> D{Chọn chu kỳ thanh toán}
     
-    D -- Gói Tháng: 29.000 VNĐ --> E[Cổng thanh toán MoMo / VNPay / QR Code]
+    D -- Gói Tháng: 29.000 VNĐ --> E[SePay sandbox nếu được bật cho môi trường test]
     D -- Gói Năm: 199.000 VNĐ --> E
     
-    E --> F[Webhook xác nhận thanh toán sau khi tích hợp]
-    F --> G[Kích hoạt quyền lợi đã triển khai và công bố]
+    E --> F[Webhook/IPN xác nhận giao dịch trong sandbox]
+    F --> G[Kích hoạt quyền lợi theo dữ liệu và kết quả BE]
     G --> H[AccountScreen: Quản lý Góc Tâm An, xem toàn bộ kho lưu trữ]
 ```
 
@@ -833,7 +841,7 @@ Các mốc trên là thứ tự dự kiến, chưa phải cam kết thời hạn
 > **Đáp án:** MVP tập trung vào ba luồng: khám phá văn hóa để đọc/lưu bài, xem hướng dẫn nghi lễ và checklist, check-in để nhận/lưu/xem lại lời chiêm nghiệm. Nội dung cần hiển thị đúng trạng thái nguồn và thẩm định; các phân hệ mở rộng nằm trong roadmap. Chúng em không khẳng định nội dung luôn chuẩn mực hoặc tiện lợi hơn mọi nguồn tra cứu; giá trị hướng tới là trải nghiệm có ngữ cảnh và minh bạch trạng thái kiểm chứng.
 
 ### ❓ Câu 3: Mức giá 29.000 VNĐ/tháng có khả thi với sinh viên không?
-> **Đáp án:** 29.000 VNĐ/tháng là mức giá giả định cần kiểm chứng bằng khảo sát và thử nghiệm thực tế. Gói chưa mở thanh toán; diễn giải AI theo năm, không gian 3D riêng và thư viện độc quyền chưa phải quyền lợi có thể mua ở MVP. Trong thời gian rà trùng, thống kê mô tả cần ghi rõ mẫu số và trạng thái dữ liệu chưa khử trùng; không suy rộng cho toàn bộ người trẻ Việt Nam.
+> **Đáp án:** 29.000 VNĐ/tháng là mức giá giả định cần kiểm chứng bằng khảo sát và thử nghiệm thực tế. Code có checkout SePay sandbox và API quyền lợi/quota, nhưng trạng thái runtime chưa xác minh và không mở bán thật. Diễn giải AI theo năm cần hội viên hiệu lực và bị giới hạn theo quota BE; nội dung thư viện chỉ khả dụng khi được phát hành. Trong thời gian rà trùng, thống kê mô tả cần ghi rõ mẫu số và trạng thái dữ liệu chưa khử trùng; không suy rộng cho toàn bộ người trẻ Việt Nam.
 
 ### ❓ Câu 4: Các bạn làm thế nào để đạt 15.000 người dùng đầu tiên mà không tốn nhiều tiền Marketing?
 > **Đáp án:** Dạ, chúng em tận dụng 2 kênh tiếp cận chi phí 0 đồng:

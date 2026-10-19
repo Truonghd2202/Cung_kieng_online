@@ -68,56 +68,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
         .join(" · ")
     : "Giá và trạng thái được tải từ máy chủ";
 
-  const featureMatrix = [
-    {
-      name: "Check-in tâm trạng & Lắng nghe cảm xúc",
-      desc: "Lắng nghe tâm tư và nhận lời gợi mở an yên để chiêm nghiệm",
-      currentStatus: "Đang hoạt động",
-      futureVision: "Định hướng bổ sung thống kê nhịp điệu tâm hồn",
-      status: "Đang mở miễn phí",
-      statusColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30",
-    },
-    {
-      name: "Chiêm nghiệm xin xăm & Gieo keo",
-      desc: "Giải tỏa những đắn đo, tìm thấu hiểu tinh thần",
-      currentStatus: "Gieo keo đang hoạt động; thư viện xin xăm chờ thẩm định nội dung và quyền sử dụng",
-      futureVision: "Đồng bộ lịch sử quẻ xăm đa thiết bị an toàn",
-      status: "Đang mở miễn phí",
-      statusColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30",
-    },
-    {
-      name: "Cẩm nang nghi lễ & Lịch văn hóa nếp nhà",
-      desc: "Thông tin ngày sóc vọng, phong tục dân gian và nghi thức tại gia",
-      currentStatus: "Lịch âm/dương và ghi chú cá nhân đang hoạt động; cẩm nang chờ duyệt",
-      futureVision: "Mở rộng tập quán chi tiết các làng xã truyền thống",
-      status: "Đang mở miễn phí",
-      statusColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30",
-    },
-    {
-      name: "Hồ sơ cá nhân 'Góc của tôi'",
-      desc: "Không gian lưu lại các thẻ quẻ, lời ước và suy ngẫm riêng tư",
-      currentStatus: "Bộ nhớ mã hóa trên thiết bị và dữ liệu đồng bộ theo tài khoản",
-      futureVision: "Bảo mật mã hóa đầu cuối và đồng bộ đám mây",
-      status: "Đang mở miễn phí",
-      statusColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30",
-    },
-    {
-      name: "Khảo cứu nguồn tư liệu chuyên đề",
-      desc: "Bản dịch Hán Nôm, di sản đình làng và phong tục cổ truyền",
-      currentStatus: "Kho bài nghiên cứu chuyên sâu chưa hoàn tất",
-      futureVision: "Số hóa tư liệu văn bia Hán Nôm cùng chuyên gia Viện nghiên cứu",
-      status: "Kế hoạch nghiên cứu",
-      statusColor: "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30",
-    },
-    {
-      name: "Quảng cáo thương mại / Pop-up gây phiền",
-      desc: "Cam kết không quấy rầy thương mại, không tạo áp lực tài chính",
-      currentStatus: "Hiện không hiển thị quảng cáo",
-      futureVision: "Cam kết duy trì không gian thanh tịnh vĩnh viễn",
-      status: "Nguyên tắc cốt lõi",
-      statusColor: "bg-red-500/15 text-red-800 dark:text-red-300 border-red-500/30",
-    },
-  ];
+  const featureMatrix = membershipStatus?.benefits ?? [];
 
   return (
     <div className="screen-shell">
@@ -318,6 +269,15 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
           </Card>
         </div>
 
+        <section className="mb-10 rounded-3xl border border-line bg-surface p-5 sm:p-7" aria-labelledby="membership-current-title">
+          <h2 id="membership-current-title" className="font-display text-xl font-semibold text-ink">Trạng thái tài khoản</h2>
+          {!membershipStatus ? <p className="mt-2 text-sm text-muted">Chưa tải được dữ liệu hội viên từ máy chủ.</p> : <>
+            <p className="mt-2 text-sm text-ink">{membershipStatus.subscription ? `Tâm An đang hoạt động đến ${new Date(membershipStatus.subscription.expires_at).toLocaleString("vi-VN")}.` : "Tài khoản hiện chưa có gói Tâm An đang hoạt động."}</p>
+            <p className="mt-2 text-sm text-muted">AI theo năm: {membershipStatus.aiUsage.successfulUsed} bản thành công, {membershipStatus.aiUsage.inProgress} lượt đang xử lý; còn {membershipStatus.aiUsage.successfulRemaining}/{membershipStatus.aiUsage.successfulLimit} suất. Đã gọi {membershipStatus.aiUsage.attemptsUsed}/{membershipStatus.aiUsage.providerAttemptLimit} lần trong 24 giờ; lượt lỗi vẫn tính số lần gọi.</p>
+            {membershipStatus.aiUsage.nextUsableAt && <p className="mt-1 text-sm text-muted">Lượt tiếp theo dự kiến từ {new Date(membershipStatus.aiUsage.nextUsableAt).toLocaleString("vi-VN")}.</p>}
+          </>}
+        </section>
+
         {/* Feature Comparison Matrix Table */}
         <section className="membership-matrix-frame mb-10 p-6 sm:p-8 rounded-3xl bg-surface border border-line shadow-xs">
           <div className="mb-6">
@@ -325,7 +285,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
               So Sánh Tính Năng Trực Quan
             </h3>
             <p className="text-xs text-stone-500">
-              Trạng thái hiện tại và các quyền lợi dự kiến được tách riêng để tránh hiểu nhầm về tính năng hoặc khoản phí.
+              Bảng Free/Premium và trạng thái khả dụng được tải từ máy chủ; giá và trạng thái thanh toán hiển thị theo cấu hình hiện tại.
             </p>
           </div>
 
@@ -333,28 +293,21 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-line text-stone-500 uppercase text-[10px] tracking-wider font-bold">
-                  <th className="py-3 px-3">Tính năng / Giá trị trải nghiệm</th>
-                  <th className="py-3 px-3">Tình trạng hiện tại</th>
-                  <th className="py-3 px-3">Định Hướng Tâm An</th>
-                  <th className="py-3 px-3">Trạng thái</th>
+                  <th className="py-3 px-3">Quyền lợi</th>
+                  <th className="py-3 px-3">Free</th>
+                  <th className="py-3 px-3">Premium</th>
+                  <th className="py-3 px-3">Khả dụng</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
-                {featureMatrix.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-surface-soft/60 transition-colors">
-                    <td className="py-3.5 px-3">
-                      <div className="font-semibold text-ink">{row.name}</div>
-                      <div className="text-[11px] text-stone-500 mt-0.5">{row.desc}</div>
-                    </td>
-                    <td className="py-3.5 px-3 text-ink font-medium">{row.currentStatus}</td>
-                    <td className="py-3.5 px-3 text-amber-800 dark:text-amber-300 font-medium">{row.futureVision}</td>
-                    <td className="py-3.5 px-3">
-                      <span className={`inline-flex rounded-lg border px-2.5 py-1 text-[11px] font-semibold ${row.statusColor}`}>
-                        {row.status}
-                      </span>
-                    </td>
+                {featureMatrix.length ? featureMatrix.map((row) => (
+                  <tr key={row.name} className="hover:bg-surface-soft/60 transition-colors">
+                    <td className="py-3.5 px-3 font-semibold text-ink">{row.name}</td>
+                    <td className="py-3.5 px-3 text-ink">{row.free}</td>
+                    <td className="py-3.5 px-3 text-ink">{row.premium}</td>
+                    <td className="py-3.5 px-3 text-muted">{row.availability}</td>
                   </tr>
-                ))}
+                )) : <tr><td className="py-4 px-3 text-muted" colSpan={4}>Đang tải quyền lợi và giá gói từ máy chủ.</td></tr>}
               </tbody>
             </table>
           </div>
@@ -380,7 +333,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
               <div className="font-bold text-amber-700 dark:text-amber-400 mb-1 flex items-center gap-1.5">
                 <span>📖 Tự nguyện & Minh bạch nguồn cội</span>
               </div>
-              Tính năng cơ bản miễn phí; gói Tâm An tính phí 29.000đ/tháng khi cổng thanh toán sẵn sàng. Nguồn tham khảo và phạm vi áp dụng được công khai để người dùng tự đối chiếu.
+              Tính năng cơ bản miễn phí. Giá gói và trạng thái thanh toán hiện tại: {membershipPriceLabel}. Nguồn tham khảo và phạm vi áp dụng được công khai để người dùng tự đối chiếu.
             </div>
 
             <div className="p-4 rounded-2xl bg-surface-soft border border-line">

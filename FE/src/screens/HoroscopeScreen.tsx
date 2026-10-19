@@ -19,6 +19,7 @@ interface MembershipStatus {
     id: string;
     expires_at: string;
   } | null;
+  aiUsage: { successfulUsed: number; inProgress: number; successfulRemaining: number; successfulLimit: number; attemptsUsed: number; attemptsRemaining: number; providerAttemptLimit: number; nextUsableAt: string | null };
 }
 
 export const HoroscopeScreen = ({
@@ -156,6 +157,7 @@ export const HoroscopeScreen = ({
               <YearlyReading
                 key={currentUserEmail}
                 canGenerate={canGenerate}
+                usage={status.aiUsage}
               />
             </>
           )}

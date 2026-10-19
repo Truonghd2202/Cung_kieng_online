@@ -4,6 +4,7 @@ const authenticate = require("../middleware/auth.middleware");
 const { getMembership } = require("../services/payment.service");
 const ApiError = require("../utils/api-error");
 const { sendSuccess } = require("../utils/response");
+const { isCultureArticlePublished } = require("../services/culture-publication");
 
 const router = express.Router();
 
@@ -50,14 +51,23 @@ router.get("/", async (req, res) => {
       slug: true,
       title: true,
       excerpt: true,
+      image_url: true,
+      content: true,
+      members_only: true,
+      active: true,
+      verified: true,
+      editorial_status: true,
     },
   });
 
   const hasMore = rows.length > 20;
+  const items = rows.slice(0, 20)
+    .filter((row) => isCultureArticlePublished(row, { membersOnly: true }))
+    .map(({ slug, title, excerpt }) => ({ slug, title, excerpt }));
 
   return sendSuccess(res, {
     data: {
-      items: rows.slice(0, 20),
+      items,
       nextOffset: hasMore ? offset + 20 : null,
     },
   });
@@ -78,10 +88,15 @@ router.get("/:slug", async (req, res) => {
       excerpt: true,
       source: true,
       content: true,
+      image_url: true,
+      members_only: true,
+      active: true,
+      verified: true,
+      editorial_status: true,
     },
   });
 
-  if (!row) {
+  if (!row || !isCultureArticlePublished(row, { membersOnly: true })) {
     throw new ApiError(
       404,
       "Bài không tồn tại hoặc hiện không được phát hành."

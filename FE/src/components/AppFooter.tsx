@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { NavScreen } from "./AppHeader";
 import { DailyProverb, loadDailyProverb } from "../data/contentService";
+import { apiRequest } from "../lib/api";
 import {
   Sparkles,
   ArrowRight,
@@ -15,9 +16,18 @@ interface AppFooterProps {
   onNavigate?: (screen: NavScreen) => void;
 }
 
+interface FooterMembershipStatus {
+  salesEnabled: boolean;
+  checkoutAvailable: boolean;
+  paymentEnvironment: "sandbox" | "production";
+  subscription: { started_at: string; expires_at: string } | null;
+  aiUsage: { successfulUsed: number; inProgress: number; successfulRemaining: number; successfulLimit: number; attemptsUsed: number; attemptsRemaining: number; providerAttemptLimit: number; nextUsableAt: string | null };
+}
+
 export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => {
   const [dailyProverb, setDailyProverb] = useState<DailyProverb | null>(null);
   const [proverbLoadFailed, setProverbLoadFailed] = useState(false);
+  const [membershipStatus, setMembershipStatus] = useState<FooterMembershipStatus | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -32,6 +42,31 @@ export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    apiRequest<FooterMembershipStatus>("/membership/status")
+      .then((status) => { if (active) setMembershipStatus(status); })
+      .catch(() => { if (active) setMembershipStatus(null); });
+    return () => { active = false; };
+  }, []);
+
+  const membershipTitle = membershipStatus?.subscription
+    ? "Hội viên Tâm An đang hoạt động"
+    : !membershipStatus
+      ? "Chưa tải được trạng thái hội viên"
+      : !membershipStatus.salesEnabled
+        ? "Chưa mở đăng ký và gia hạn"
+        : !membershipStatus.checkoutAvailable
+          ? "Thanh toán đang tạm thời không khả dụng"
+          : membershipStatus.paymentEnvironment === "sandbox"
+            ? "Thanh toán hội viên đang ở chế độ thử nghiệm"
+            : "Đang mở đăng ký và gia hạn";
+  const membershipDescription = membershipStatus?.subscription
+    ? `Có hiệu lực đến ${new Date(membershipStatus.subscription.expires_at).toLocaleDateString("vi-VN")}. AI theo năm: ${membershipStatus.aiUsage.successfulUsed} bản thành công, ${membershipStatus.aiUsage.inProgress} lượt đang xử lý; còn ${membershipStatus.aiUsage.successfulRemaining}/${membershipStatus.aiUsage.successfulLimit} suất và ${membershipStatus.aiUsage.attemptsUsed}/${membershipStatus.aiUsage.providerAttemptLimit} lần gọi đã dùng trong 24 giờ.${membershipStatus.aiUsage.nextUsableAt ? ` Dùng tiếp từ ${new Date(membershipStatus.aiUsage.nextUsableAt).toLocaleString("vi-VN")}.` : ""}`
+    : !membershipStatus
+      ? "Mở trang hội viên để xem trạng thái trực tiếp từ máy chủ."
+      : `${!membershipStatus.salesEnabled ? "Đăng ký và gia hạn chưa được mở. " : !membershipStatus.checkoutAvailable ? "Thanh toán hiện chưa khả dụng. " : membershipStatus.paymentEnvironment === "sandbox" ? "Thanh toán chỉ phục vụ thử nghiệm sandbox. " : ""}Gói Free; AI theo năm cần hội viên đang hiệu lực. Hạn mức 24 giờ hiện ghi nhận ${membershipStatus.aiUsage.successfulUsed} bản thành công, ${membershipStatus.aiUsage.inProgress} đang xử lý và ${membershipStatus.aiUsage.attemptsUsed}/${membershipStatus.aiUsage.providerAttemptLimit} lần gọi.${membershipStatus.aiUsage.nextUsableAt ? ` Dùng tiếp từ ${new Date(membershipStatus.aiUsage.nextUsableAt).toLocaleString("vi-VN")}.` : ""}`;
 
   const goTo = (screen: NavScreen) => {
     if (onNavigate) {
@@ -48,13 +83,13 @@ export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate }) => {
           <div className="footer-membership-left">
             <div className="footer-membership-badge">
               <Crown className="w-3.5 h-3.5 text-amber-300" />
-              <span>GÓI ĐỀ XUẤT · CHƯA MỞ BÁN</span>
+              <span>{membershipStatus?.subscription ? "HỘI VIÊN ĐANG HOẠT ĐỘNG" : membershipStatus?.salesEnabled ? "TRẠNG THÁI GÓI HỘI VIÊN" : "CHƯA MỞ ĐĂNG KÝ"}</span>
             </div>
             <h3 className="footer-membership-title">
-              Gói hội viên Tâm An chưa mở bán
+              {membershipTitle}
             </h3>
             <p className="footer-membership-desc">
-              Thanh toán và quyền lợi hội viên chưa khả dụng. Xem thông tin dự kiến và đăng ký nhận cập nhật khi có.
+              {membershipDescription}
             </p>
           </div>
           <button

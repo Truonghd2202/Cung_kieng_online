@@ -38,8 +38,32 @@ async function loadAllItems(path: string): Promise<RemoteContentItem[]> {
   }
 }
 
-export const loadCultureArticles = () => loadAllItems("/content/culture");
-export const loadRituals = () => loadAllItems("/content/rituals");
+export const loadCultureArticles = async () => {
+  const pageSize = 100;
+  const items: RemoteContentItem[] = [];
+  let offset = 0;
+  for (;;) {
+    const page = await apiRequest<{ items: RemoteContentItem[]; nextOffset: number | null }>(
+      `/content/culture?limit=${pageSize}&offset=${offset}`,
+    );
+    items.push(...page.items);
+    if (page.nextOffset === null) return items;
+    offset = page.nextOffset;
+  }
+};
+export const loadRituals = async () => {
+  const pageSize = 100;
+  const items: RemoteContentItem[] = [];
+  let offset = 0;
+  for (;;) {
+    const page = await apiRequest<{ items: RemoteContentItem[]; nextOffset: number | null }>(
+      `/content/rituals?limit=${pageSize}&offset=${offset}`,
+    );
+    items.push(...page.items);
+    if (page.nextOffset === null) return items;
+    offset = page.nextOffset;
+  }
+};
 export const loadRitual = (slug: string) =>
   apiRequest<RemoteContentItem>(`/content/rituals/${encodeURIComponent(slug)}`);
 export const loadCalendarEvents = () => loadAllItems("/content/calendar/events");

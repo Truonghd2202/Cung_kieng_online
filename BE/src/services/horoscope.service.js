@@ -132,4 +132,29 @@ async function listYearly(userId) {
   const rows = await prisma.horoscope_readings.findMany({ where: { user_id: userId, status: "SUCCEEDED", prompt_version: "yearly-reflection-v1" }, orderBy: { created_at: "desc" }, take: 20 });
   return rows.map((row) => ({ id: row.id, year: row.target_date.getUTCFullYear(), ...JSON.parse(row.content) }));
 }
-module.exports = { generateYearly, listYearly, parseYearlyReading };
+async function getYearlyUsage(userId) {
+  const now = new Date();
+  if (!userId) return { windowHours: 24, successfulLimit: 3, providerAttemptLimit: 5, successfulUsed: 0, inProgress: 0, successfulRemaining: 3, attemptsUsed: 0, attemptsRemaining: 5, nextUsableAt: null };
+  const rows = await prisma.horoscope_readings.findMany({
+    where: { user_id: userId, period_type: "YEARLY", created_at: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) } },
+    select: { created_at: true, status: true },
+    orderBy: { created_at: "asc" },
+  });
+  const occupied = rows.filter((row) => row.status === "SUCCEEDED" || (row.status === "PENDING" && now.getTime() - row.created_at.getTime() <= 10 * 60 * 1000));
+  const attemptRecovery = rows.length >= 5 ? rows[rows.length - 5].created_at.getTime() + 24 * 60 * 60 * 1000 + 1 : null;
+  const occupiedExpiries = occupied.map((row) => row.created_at.getTime() + (row.status === "PENDING" ? 10 * 60 * 1000 : 24 * 60 * 60 * 1000) + 1).sort((a, b) => a - b);
+  const occupiedRecovery = occupied.length >= 3 ? occupiedExpiries[occupied.length - 3] : null;
+  const blockedUntil = [attemptRecovery, occupiedRecovery].filter((value) => value !== null);
+  return {
+    windowHours: 24,
+    successfulLimit: 3,
+    providerAttemptLimit: 5,
+    successfulUsed: rows.filter((row) => row.status === "SUCCEEDED").length,
+    inProgress: rows.filter((row) => row.status === "PENDING" && now.getTime() - row.created_at.getTime() <= 10 * 60 * 1000).length,
+    successfulRemaining: Math.max(0, 3 - occupied.length),
+    attemptsUsed: rows.length,
+    attemptsRemaining: Math.max(0, 5 - rows.length),
+    nextUsableAt: blockedUntil.length ? new Date(Math.max(...blockedUntil)).toISOString() : null,
+  };
+}
+module.exports = { generateYearly, listYearly, parseYearlyReading, getYearlyUsage };

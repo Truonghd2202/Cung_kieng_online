@@ -110,6 +110,7 @@ export function ContentEditor({
   const [activeTab, setActiveTab] = useState<"info" | "content" | "media" | "preview">("info");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [slugUnlocked, setSlugUnlocked] = useState(!id);
+  const [expectedUpdatedAt, setExpectedUpdatedAt] = useState<string>();
 
   const [values, setValues] = useState<Record<string, string>>({
     title: "",
@@ -207,6 +208,7 @@ export function ContentEditor({
     let active = true;
     apiRequest<Record<string, unknown>>(`/admin/${kind}/${id}`)
       .then((record) => {
+        setExpectedUpdatedAt(typeof record.updated_at === "string" ? record.updated_at : undefined);
         if (!active) return;
         const next: Record<string, string> = {};
         for (const [key, value] of Object.entries(record)) {
@@ -366,6 +368,7 @@ export function ContentEditor({
       source: values.source.trim(),
       reviewNote: values.reviewNote.trim() || (submitForReview ? "Gửi duyệt nội dung" : "Lưu bản nháp"),
       editorialStatus: submitForReview ? "IN_REVIEW" : "DRAFT",
+      ...(id && expectedUpdatedAt ? { expectedUpdatedAt } : {}),
     };
 
     if (kind === "culture") {

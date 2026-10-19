@@ -7,6 +7,7 @@ const listSchema = z.object({
 });
 const idParamsSchema = z.object({ id: z.string().uuid() });
 const reviewSchema = z.object({
+  expectedUpdatedAt: z.iso.datetime(),
   active: z.boolean().optional(),
   verified: z.boolean().optional(),
   rightsConfirmed: z.boolean().optional(),

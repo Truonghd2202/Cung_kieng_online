@@ -93,30 +93,14 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
     { key: "Bắc Bộ", label: "Bắc Bộ" },
     { key: "Trung Bộ", label: "Trung Bộ" },
     { key: "Nam Bộ", label: "Nam Bộ" },
+    { key: "Toàn quốc", label: "Toàn quốc" },
   ];
 
   const CATEGORIES = [
     { key: "all", label: "Tất cả" },
-    {
-      key: "Lễ hội truyền thống",
-      label: "Lễ hội",
-    },
-    {
-      key: "Phong tục & Nghi lễ",
-      label: "Phong tục & nghi lễ",
-    },
-    {
-      key: "Điển tích xưa",
-      label: "Điển tích",
-    },
-    {
-      key: "Không gian tín ngưỡng",
-      label: "Không gian tín ngưỡng",
-    },
-    {
-      key: "Sinh hoạt văn hóa",
-      label: "Sinh hoạt văn hóa",
-    },
+    ...Array.from(new Set(articles.map((article) => article.category).filter((value): value is string => typeof value === "string" && value.trim().length > 0)))
+      .sort((left, right) => left.localeCompare(right, "vi"))
+      .map((category) => ({ key: category, label: category })),
   ];
 
   const filteredArticles = useMemo(() => {

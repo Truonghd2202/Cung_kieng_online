@@ -47,6 +47,7 @@ export interface AdminRecord extends Record<string, unknown> {
   verified?: boolean;
   active?: boolean;
   editorial_status?: "DRAFT" | "IN_REVIEW" | "APPROVED" | "PUBLISHED" | "HIDDEN" | "REVOKED";
+  updated_at?: string;
   source?: string | null;
 }
 
@@ -61,7 +62,7 @@ export function loadAdminList<T extends AdminRecord>(section: string, page: numb
   return apiRequest<AdminPage<T>>(`/admin/${section}?${params.toString()}`);
 }
 
-export function reviewAdminRecord(section: "culture" | "calendar" | "xam" | "rituals" | "prayers", id: string, input: { verified?: boolean; active?: boolean; reviewNote: string; rightsConfirmed?: boolean; source?: string; sourceLocator?: string; usageRights?: "confirmed" | "public-domain" | "permission-required" | "unknown" }) {
+export function reviewAdminRecord(section: "culture" | "calendar" | "xam" | "rituals" | "prayers", id: string, input: { expectedUpdatedAt: string; verified?: boolean; active?: boolean; reviewNote: string; rightsConfirmed?: boolean; source?: string; sourceLocator?: string; usageRights?: "confirmed" | "public-domain" | "permission-required" | "unknown" }) {
   return apiRequest<AdminRecord>(`/admin/${section}/${encodeURIComponent(id)}/review`, {
     method: "PATCH",
     body: JSON.stringify(input),

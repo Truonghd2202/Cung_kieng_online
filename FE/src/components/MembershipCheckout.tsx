@@ -53,6 +53,12 @@ export interface Status {
     id: string;
     expires_at: string;
   } | null;
+  benefits: Array<{ name: string; free: string; premium: string; availability: string }>;
+  aiUsage: {
+    windowHours: number; successfulLimit: number; providerAttemptLimit: number;
+    successfulUsed: number; inProgress: number; successfulRemaining: number; attemptsUsed: number;
+    attemptsRemaining: number; nextUsableAt: string | null;
+  };
 }
 
 interface MembershipCheckoutProps {

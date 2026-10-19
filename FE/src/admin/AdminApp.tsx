@@ -482,6 +482,7 @@ export default function AdminApp() {
         reviewField === "verified" &&
         reviewValue;
       await reviewAdminRecord(section, reviewRecord.id, {
+        expectedUpdatedAt: String(reviewRecord.updated_at || ""),
         [reviewField]: reviewValue,
         reviewNote,
         ...(needsRights
@@ -1409,18 +1410,18 @@ function OverviewPanel({
 
   const metricCards = [
     {
-      label: "Người dùng hoạt động hôm nay",
+      label: "Visitor ID hoạt động hôm nay",
       value: overview.analytics.dau,
-      note: "DAU · Chấp thuận telemetry",
+      note: "DAU · ngày Asia/Ho_Chi_Minh · có consent telemetry",
       icon: Activity,
       color: "metric-crimson",
       sparkColor: "#8b252e",
       sparkData: overview.analytics.sparklines?.dau || [],
     },
     {
-      label: "Lượt hoạt động tháng này",
+      label: "Visitor ID hoạt động tháng này",
       value: overview.analytics.mau,
-      note: "MAU · Visitor ID ẩn danh",
+      note: "MAU tháng lịch Asia/Ho_Chi_Minh · anonymous_id · có consent telemetry",
       icon: UsersRound,
       color: "metric-gold",
       sparkColor: "#c89655",

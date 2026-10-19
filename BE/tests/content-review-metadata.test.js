@@ -90,7 +90,7 @@ test("public ritual DTO carries provenance and actual group-authored review meta
   const priorPrayerLogs = repository.findPrayerReviewLogs;
   repository.findRitual = async () => ({
     id: "ritual-db-id", slug: "original-ritual", title: "Original", description: "Description",
-    occasion: "Rằm", region: "NATIONWIDE", source: null, verified: true, active: true,
+    occasion: "Rằm", region: "NATIONWIDE", source: null, verified: true, active: true, editorial_status: "PUBLISHED",
     content_provenance: { contentType: "GROUP_AUTHORED", authorOrOrganization: "Nhóm", scope: "Tùy gia đình", contentRightsBasis: "Nguyên bản của nhóm" },
     checklists: [{ id: "stable", label: "An toàn" }], ritual_steps: [], ritual_offerings: [], prayers: [],
   });
@@ -102,6 +102,29 @@ test("public ritual DTO carries provenance and actual group-authored review meta
     assert.equal(dto.reviewMetadata.reviewedBy, "Reviewer");
     assert.equal(dto.reviewMetadata.reviewedOn, "2026-10-15");
     assert.equal(dto.reviewMetadata.sourceLocator, undefined);
+  } finally {
+    repository.findRitual = priorFind;
+    repository.findRitualReviewLogs = priorLogs;
+    repository.findPrayerReviewLogs = priorPrayerLogs;
+  }
+});
+
+test("a previously approved but not published ritual is withheld from public detail", async () => {
+  const repository = require("../src/repositories/content.repository");
+  const contentService = require("../src/services/content.service");
+  const priorFind = repository.findRitual;
+  const priorLogs = repository.findRitualReviewLogs;
+  const priorPrayerLogs = repository.findPrayerReviewLogs;
+  repository.findRitual = async () => ({
+    id: "ritual-draft-id", slug: "old-approved-guide", title: "Approved but not published",
+    verified: true, active: false, editorial_status: "APPROVED",
+    content_provenance: { contentType: "GROUP_AUTHORED", authorOrOrganization: "Nhóm", scope: "Tùy gia đình", contentRightsBasis: "Nguyên bản" },
+    checklists: [{ id: "stable", label: "An toàn" }], ritual_steps: [], ritual_offerings: [], prayers: [],
+  });
+  repository.findRitualReviewLogs = async () => [{ ...approvedLog, target_id: "ritual-draft-id", details: { before: { verified: false }, after: { verified: true }, rightsConfirmed: true, reviewNote: "Đã duyệt" } }];
+  repository.findPrayerReviewLogs = async () => [];
+  try {
+    await assert.rejects(contentService.getRitual("old-approved-guide"), (error) => error.statusCode === 404);
   } finally {
     repository.findRitual = priorFind;
     repository.findRitualReviewLogs = priorLogs;

@@ -3,6 +3,8 @@ const ApiError = require("../utils/api-error");
 const env = require("../config/env");
 const { pickVerifiedProverb, toProverbDto } = require("./proverb.service");
 const { resolveReviewMetadata } = require("./content-review-metadata");
+const { isCultureArticlePublished } = require("./culture-publication");
+const { hasUsableChecklist } = require("./ritual-publication");
 
 const DAILY_PROVERB_EPOCH = Date.UTC(2026, 0, 1) / 86_400_000;
 
@@ -27,8 +29,31 @@ const REGION_LABELS = { NORTH: "Bắc Bộ", CENTRAL: "Trung Bộ", SOUTH: "Nam 
 function articleDto(row) { return { id: row.slug, slug: row.slug, title: row.title, excerpt: row.excerpt, category: row.category, region: REGION_LABELS[row.region] || row.region, image: row.image_url, source: row.source, verified: row.verified, ...row.content }; }
 function ritualDto(row, previewMode = false) { return { id: row.slug, slug: row.slug, title: row.title, desc: row.description, occasion: row.occasion, region: REGION_LABELS[row.region] || row.region, source: row.source, verified: row.verified, contentProvenance: row.content_provenance || null, checklists: Array.isArray(row.checklists) ? row.checklists : [], preview: previewMode && (row.verified !== true || row.prayers.some((item) => item.verified !== true)), reviewMetadata: row.reviewMetadata, steps: row.ritual_steps.map((step) => ({ stepNumber: String(step.step_number), title: step.title, desc: step.description })), offerings: row.ritual_offerings.map((item) => ({ id: item.offerings.id, name: item.offerings.name, desc: item.offerings.description || item.note || "", quantity: item.quantity, required: item.required })), prayers: row.prayers.map((item) => ({ title: item.title, content: item.content, source: item.source, verified: item.verified, preview: previewMode && (item.verified !== true || !item.reviewMetadata), reviewMetadata: item.reviewMetadata, applicableTo: row.occasion })) }; }
 function calendarDto(row) { return { id: row.id, title: row.title, shortDesc: row.description || "", day: row.day, month: row.month, type: "festival", typeLabel: row.category || "Sự kiện văn hóa", region: REGION_LABELS[row.region] || row.region, source: row.source, verified: row.verified, calendar: row.calendar }; }
-async function listArticles(query) { return (await repository.listArticles(query)).map(articleDto); }
-async function getArticle(slug) { const row = await repository.findArticle(slug); if (!row) throw new ApiError(404, "Culture article not found"); return articleDto(row); }
+async function listArticlesPage(query) {
+  const pageSize = query.limit;
+  const rawPageSize = 100;
+  let scanOffset = query.offset || 0;
+  const selected = [];
+
+  while (selected.length < pageSize) {
+    const rows = await repository.listArticles({ ...query, limit: rawPageSize, offset: scanOffset });
+    if (!rows.length) break;
+    for (let index = 0; index < rows.length; index += 1) {
+      if (!isCultureArticlePublished(rows[index])) continue;
+      selected.push(articleDto(rows[index]));
+      if (selected.length === pageSize) {
+        const nextOffset = scanOffset + index + 1;
+        return { items: selected, nextOffset: nextOffset <= 5000 ? nextOffset : null };
+      }
+    }
+    if (rows.length < rawPageSize) break;
+    scanOffset += rows.length;
+  }
+
+  return { items: selected, nextOffset: null };
+}
+async function listArticles(query) { return (await listArticlesPage(query)).items; }
+async function getArticle(slug) { const row = await repository.findArticle(slug); if (!row || !isCultureArticlePublished(row)) throw new ApiError(404, "Culture article not found"); return articleDto(row); }
 async function attachPrayerReviewMetadata(rows, { includeDrafts = false } = {}) {
   const records = Array.isArray(rows) ? rows : [rows];
   const ids = [...new Set(records.flatMap((row) => row.prayers.map((prayer) => prayer.id)))];
@@ -42,7 +67,7 @@ async function attachPrayerReviewMetadata(rows, { includeDrafts = false } = {}) 
   for (const row of records) {
     row.prayers = row.prayers.filter((prayer) => {
       const review = resolveReviewMetadata(logsByTarget.get(prayer.id) || [], prayer.verified === true);
-      if (prayer.verified !== true || !review || !/^https:\/\//i.test(prayer.source || "")) {
+      if (prayer.verified !== true || (!includeDrafts && prayer.editorial_status !== "PUBLISHED") || !review || !/^https:\/\//i.test(prayer.source || "")) {
         prayer.reviewMetadata = null;
         return includeDrafts;
       }
@@ -69,8 +94,34 @@ async function attachRitualReviewMetadata(rows) {
   );
   return rows;
 }
-async function listRituals(query) { const previewMode = query.preview === true && env.NODE_ENV === "development"; const rows = await repository.listRituals({ ...query, preview: previewMode }); await Promise.all([attachPrayerReviewMetadata(rows, { includeDrafts: previewMode }), attachRitualReviewMetadata(rows)]); return rows.filter((row) => previewMode || row.reviewMetadata).map((row) => ritualDto(row, previewMode)); }
-async function getRitual(slug, requestedPreview = false) { const previewMode = requestedPreview && env.NODE_ENV === "development"; const row = await repository.findRitual(slug, undefined, previewMode); if (!row) throw new ApiError(404, "Ritual not found"); await Promise.all([attachPrayerReviewMetadata(row, { includeDrafts: previewMode }), attachRitualReviewMetadata(row)]); if (!previewMode && !row.reviewMetadata) throw new ApiError(404, "Ritual is not eligible for public delivery"); return ritualDto(row, previewMode); }
+async function listRitualsPage(query) {
+  const previewMode = query.preview === true && env.NODE_ENV === "development";
+  const pageSize = query.limit;
+  const rawPageSize = 100;
+  let scanOffset = query.offset || 0;
+  const selected = [];
+
+  while (selected.length < pageSize) {
+    const rows = await repository.listRituals({ ...query, limit: rawPageSize, offset: scanOffset, preview: previewMode });
+    if (!rows.length) break;
+    await Promise.all([attachPrayerReviewMetadata(rows, { includeDrafts: previewMode }), attachRitualReviewMetadata(rows)]);
+    for (let index = 0; index < rows.length; index += 1) {
+      const row = rows[index];
+      if (!previewMode && (row.editorial_status !== "PUBLISHED" || !row.reviewMetadata || !hasUsableChecklist(row.checklists))) continue;
+      selected.push(ritualDto(row, previewMode));
+      if (selected.length === pageSize) {
+        const nextOffset = scanOffset + index + 1;
+        return { items: selected, nextOffset: nextOffset <= 5000 ? nextOffset : null };
+      }
+    }
+    if (rows.length < rawPageSize) break;
+    scanOffset += rows.length;
+  }
+
+  return { items: selected, nextOffset: null };
+}
+async function listRituals(query) { return (await listRitualsPage(query)).items; }
+async function getRitual(slug, requestedPreview = false) { const previewMode = requestedPreview && env.NODE_ENV === "development"; const row = await repository.findRitual(slug, undefined, previewMode); if (!row) throw new ApiError(404, "Ritual not found"); await Promise.all([attachPrayerReviewMetadata(row, { includeDrafts: previewMode }), attachRitualReviewMetadata(row)]); if (!previewMode && (row.editorial_status !== "PUBLISHED" || !row.reviewMetadata || !hasUsableChecklist(row.checklists))) throw new ApiError(404, "Ritual is not eligible for public delivery"); return ritualDto(row, previewMode); }
 async function listCalendarEvents(query) { return (await repository.listCalendarEvents(query)).map(calendarDto); }
 async function getCalendarEvent(id) { const row = await repository.findCalendarEvent(id); if (!row || !row.active) throw new ApiError(404, "Calendar event not found"); return calendarDto(row); }
 async function getDailyProverb(date = vietnamDateKey()) {
@@ -105,4 +156,4 @@ async function getReflectionProverb(context) {
   return toProverbDto(proverb);
 }
 
-module.exports = { listArticles, getArticle, listRituals, getRitual, listCalendarEvents, getCalendarEvent, getDailyProverb, getReflectionProverb, dailyProverbIndex, vietnamDateKey };
+module.exports = { listArticles, listArticlesPage, getArticle, listRituals, listRitualsPage, getRitual, listCalendarEvents, getCalendarEvent, getDailyProverb, getReflectionProverb, dailyProverbIndex, vietnamDateKey };

@@ -48,6 +48,7 @@ const content = z.object({
 }).passthrough();
 
 const signalDraftSchema = z.object({
+  expectedUpdatedAt: z.iso.datetime().optional(),
   source: text.min(3).max(120).regex(/^[a-z0-9]+(?:[-_][a-z0-9]+)*$/),
   title: text.min(1).max(255),
   mood: moods,
@@ -65,6 +66,7 @@ const signalListSchema = listSchema.extend({
 });
 
 const reviewSchema = z.object({
+  expectedUpdatedAt: z.iso.datetime(),
   active: z.boolean().optional(),
   verified: z.boolean().optional(),
   rightsConfirmed: z.boolean().optional(),
