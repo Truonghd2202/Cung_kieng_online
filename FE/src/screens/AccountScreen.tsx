@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Flower2,
   Scroll,
@@ -26,6 +26,12 @@ import { Card } from "../components/ui/card";
 import { MoodKey, type MoodContextKey, type SignalData } from "../data/demoSignals";
 import { SavedItemActions } from "../components/SavedItemActions";
 import { AppDialog } from "../components/AppDialog";
+import { apiRequest } from "../lib/api";
+
+interface AccountMembershipStatus {
+  subscription: { started_at: string; expires_at: string } | null;
+  aiUsage: { successfulUsed: number; inProgress: number; successfulRemaining: number; successfulLimit: number; attemptsUsed: number; attemptsRemaining: number; providerAttemptLimit: number; nextUsableAt: string | null };
+}
 
 export interface SavedSignalItem {
   id: string;
@@ -164,6 +170,16 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
   const [openedWish, setOpenedWish] = useState<SavedWishItem | null>(null);
   const [openedXam, setOpenedXam] = useState<SavedXinXamItem | null>(null);
+  const [membershipStatus, setMembershipStatus] = useState<AccountMembershipStatus | null>(null);
+  const [membershipLoadFailed, setMembershipLoadFailed] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    apiRequest<AccountMembershipStatus>("/membership/status")
+      .then((value) => { if (active) setMembershipStatus(value); })
+      .catch(() => { if (active) setMembershipLoadFailed(true); });
+    return () => { active = false; };
+  }, [currentUser?.email]);
 
   // Helper date parsing (DD/MM/YYYY)
   const parseVnDate = (value: string): number => {
@@ -507,6 +523,15 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
             )}
           </div>
         </div>
+
+        <Card className="mb-8 border-line bg-surface p-5">
+          <h2 className="font-display text-lg font-semibold text-ink">Hội viên và lượt AI</h2>
+          {membershipLoadFailed ? <p role="alert" className="mt-2 text-sm text-danger">Chưa tải được trạng thái tài khoản từ máy chủ.</p> : !membershipStatus ? <p role="status" className="mt-2 text-sm text-muted">Đang tải trạng thái từ máy chủ…</p> : <>
+            <p className="mt-2 text-sm text-ink">{membershipStatus.subscription ? `Tâm An đang hoạt động · hết hạn ${new Date(membershipStatus.subscription.expires_at).toLocaleString("vi-VN")}` : "Gói Free · chưa có hội viên đang hoạt động"}</p>
+            <p className="mt-1 text-sm text-muted">AI theo năm (chỉ dùng được khi có hội viên hiệu lực): {membershipStatus.aiUsage.successfulUsed} bản thành công, {membershipStatus.aiUsage.inProgress} lượt đang xử lý; còn {membershipStatus.aiUsage.successfulRemaining}/{membershipStatus.aiUsage.successfulLimit} suất và {membershipStatus.aiUsage.attemptsUsed}/{membershipStatus.aiUsage.providerAttemptLimit} lần gọi đã dùng trong 24 giờ.</p>
+            {membershipStatus.aiUsage.nextUsableAt && <p className="mt-1 text-sm text-muted">Dự kiến dùng tiếp từ {new Date(membershipStatus.aiUsage.nextUsableAt).toLocaleString("vi-VN")}.</p>}
+          </>}
+        </Card>
 
         {onGoToMoodJourney && (
           <Card

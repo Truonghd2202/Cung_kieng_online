@@ -38,4 +38,9 @@ async function statistics(req, res) {
   return sendSuccess(res, { message: "Mood statistics retrieved", data: result });
 }
 
-module.exports = { analyzeSignal, saveSignal, createCheckIn, getToday, list, updateAction, statistics };
+async function history(req, res) {
+  const result = await moodService.history(req.user.id, req.validated.query);
+  return sendSuccess(res, { message: "Mood check-in history retrieved", data: result });
+}
+
+module.exports = { analyzeSignal, saveSignal, createCheckIn, getToday, list, updateAction, statistics, history };

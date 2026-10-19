@@ -29,6 +29,14 @@ const checkInQuerySchema = z.object({
   mood: moodSchema.optional(),
 });
 
+const moodHistoryQuerySchema = z.object({
+  period: z.enum(["week", "month"]).default("week"),
+  anchor: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  mood: moodSchema.optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).default(20),
+});
+
 const savedSignalSchema = z.object({
   checkInId: z.string().uuid().optional(),
   mood: moodSchema.optional(),
@@ -59,6 +67,7 @@ module.exports = {
   checkInSchema,
   analyzeSignalSchema,
   checkInQuerySchema,
+  moodHistoryQuerySchema,
   savedSignalSchema,
   savedSignalUpdateSchema,
   signalQuerySchema,

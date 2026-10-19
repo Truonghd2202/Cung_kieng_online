@@ -27,7 +27,7 @@ function legacyNoteValue(note, label) {
   return match?.[1]?.trim() || "";
 }
 async function save(kind, id, actorId, input) {
-  const { reviewNote, editorialStatus, provenance, ...data } = input;
+  const { reviewNote, editorialStatus, provenance, expectedUpdatedAt, ...data } = input;
   if (kind === "culture") {
     data.content = { sections: data.sections, contentKind: "article", provenance, review: null };
     delete data.sections;
@@ -41,9 +41,25 @@ async function save(kind, id, actorId, input) {
   // Any editorial change must be reviewed and published again.
   Object.assign(data, stateAfterEdit(editorialStatus === "IN_REVIEW"));
   return prisma.$transaction(async (tx) => {
-    if (id && !await tx[models[kind]].findUnique({ where: { id }, select: { id: true } })) return null;
+    if (id) {
+      const before = await tx[models[kind]].findUnique({ where: { id }, select: { id: true, updated_at: true } });
+      if (!before) return null;
+      if (!expectedUpdatedAt || new Date(expectedUpdatedAt).getTime() !== before.updated_at.getTime()) return { versionConflict: true };
+      data.updated_at = new Date(Math.max(Date.now(), before.updated_at.getTime() + 1));
+    }
     const { ritual_steps: steps, ...recordData } = data;
-    const record = id ? await tx[models[kind]].update({ where: { id }, data: recordData }) : await tx[models[kind]].create({ data: recordData });
+    let record;
+    if (id) {
+      const versionStart = new Date(expectedUpdatedAt);
+      const result = await tx[models[kind]].updateMany({
+        where: { id, updated_at: { gte: versionStart, lt: new Date(versionStart.getTime() + 1) } },
+        data: recordData,
+      });
+      if (result.count !== 1) return { versionConflict: true };
+      record = await tx[models[kind]].findUnique({ where: { id } });
+    } else {
+      record = await tx[models[kind]].create({ data: recordData });
+    }
     if (kind === "rituals") {
       await tx.ritual_steps.deleteMany({ where: { ritual_id: record.id } });
       await tx.ritual_steps.createMany({ data: steps.map((step, index) => ({ ritual_id: record.id, step_number: index + 1, title: step.title, description: step.description })) });

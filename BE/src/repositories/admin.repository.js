@@ -3,7 +3,7 @@ const { hasCompleteXamContent } = require("../../../shared/xin-xam-publication.m
 const { hasUsableChecklist, isGroupAuthoredRitual, ritualApprovalIssue } = require("../services/ritual-publication");
 const { reviewAuditAction } = require("../services/content-review-metadata");
 const { stateAfterReview } = require("../services/editorial-workflow");
-const { hasPublishableCultureContent } = require("../services/culture-publication");
+const { hasPublishableCultureContent, cultureContentHash } = require("../services/culture-publication");
 const PAGE_SIZE = 25;
 
 function pageResult(items, total, page, stats) {
@@ -71,9 +71,9 @@ async function getOverview() {
 
 function listArticles(params) { return listContent("culture_articles", params, [{ editorial_status: "asc" }, { updated_at: "desc" }], { id: true, slug: true, title: true, category: true, region: true, source: true, content: true, verified: true, active: true, editorial_status: true, updated_at: true }); }
 
-function listCalendarEvents(params) { return listContent("calendar_events", params, [{ editorial_status: "asc" }, { month: "asc" }, { day: "asc" }], { id: true, title: true, description: true, calendar: true, day: true, month: true, region: true, category: true, source: true, verified: true, active: true, editorial_status: true }); }
+function listCalendarEvents(params) { return listContent("calendar_events", params, [{ editorial_status: "asc" }, { month: "asc" }, { day: "asc" }], { id: true, title: true, description: true, calendar: true, day: true, month: true, region: true, category: true, source: true, verified: true, active: true, editorial_status: true, updated_at: true }); }
 
-function listXamLots(params) { return listContent("xin_xam", params, [{ editorial_status: "asc" }, { xam_type: "asc" }, { stick_number: "asc" }], { id: true, stick_number: true, name: true, xam_type: true, region: true, category: true, fortune_level: true, source: true, verified: true, active: true, editorial_status: true }); }
+function listXamLots(params) { return listContent("xin_xam", params, [{ editorial_status: "asc" }, { xam_type: "asc" }, { stick_number: "asc" }], { id: true, stick_number: true, name: true, xam_type: true, region: true, category: true, fortune_level: true, source: true, verified: true, active: true, editorial_status: true, updated_at: true }); }
 
 function listRituals(params) { return listContent("rituals", params, [{ editorial_status: "asc" }, { updated_at: "desc" }], { id: true, slug: true, title: true, occasion: true, region: true, source: true, content_provenance: true, checklists: true, verified: true, active: true, editorial_status: true, updated_at: true }); }
 
@@ -96,13 +96,16 @@ async function listAuditLogs({ page }) {
   return pageResult(items, total, page);
 }
 
-async function updateReview({ model, id, actorId, patch, reviewNote, rightsConfirmed, source, sourceLocator, usageRights }) {
+async function updateReview({ model, id, actorId, patch, expectedUpdatedAt, reviewNote, rightsConfirmed, source, sourceLocator, usageRights }) {
   return prisma.$transaction(async (tx) => {
     const before = await tx[model].findUnique({ where: { id } });
     if (!before) return null;
+    if (!expectedUpdatedAt || new Date(expectedUpdatedAt).getTime() !== before.updated_at.getTime()) return { versionConflict: true };
     const effectiveSource = typeof source === "string" ? source.trim() : before.source;
     if (source !== undefined && source.trim() && !/^https:\/\/[^\s]+$/i.test(source.trim())) return { sourceInvalid: true };
     const nextWorkflow = stateAfterReview(before, patch);
+    if (nextWorkflow.reviewRequired) return { reviewRequired: true };
+    if (nextWorkflow.reviewAndPublishInOneStep) return { reviewAndPublishInOneStep: true };
     if (nextWorkflow.approvalRequired) return { approvalRequired: true };
     const groupAuthoredRitual = model === "rituals" && isGroupAuthoredRitual(before.content_provenance);
     if (patch.verified === true && model !== "culture_articles" && !groupAuthoredRitual && !/^https:\/\//i.test(effectiveSource || "")) return { sourceRequired: true };
@@ -135,22 +138,32 @@ async function updateReview({ model, id, actorId, patch, reviewNote, rightsConfi
       }
       if (patch.verified !== undefined) {
         const reviewer = patch.verified ? await tx.users.findUnique({ where: { id: actorId }, select: { full_name: true } }) : null;
+        if (patch.verified && !reviewer?.full_name?.trim()) return { reviewerRequired: true };
+        const content = { ...before.content, provenance: { ...(before.content?.provenance || {}), ...(effectiveSource ? { sourceUrl: effectiveSource } : {}) } };
         data.content = {
-          ...before.content,
+          ...content,
           review: patch.verified ? {
-            reviewerName: reviewer?.full_name || "",
+            reviewerName: reviewer.full_name.trim(),
             reviewedOn: new Date().toISOString().slice(0, 10),
             note: reviewNote,
+            rightsConfirmed: rightsConfirmed === true,
             quotationVerified: before.content?.provenance?.contentType === "QUOTATION",
             usageRights,
+            versionHash: cultureContentHash({ content, imageUrl: before.image_url }),
           } : null,
         };
       }
     }
     if (Object.prototype.hasOwnProperty.call(before, "updated_at")) {
-      data.updated_at = new Date();
+      data.updated_at = new Date(Math.max(Date.now(), before.updated_at.getTime() + 1));
     }
-    const updated = await tx[model].update({ where: { id }, data, select: { id: true, active: true, verified: true, editorial_status: true } });
+    const versionStart = before.updated_at;
+    const updateResult = await tx[model].updateMany({
+      where: { id, updated_at: { gte: versionStart, lt: new Date(versionStart.getTime() + 1) } },
+      data,
+    });
+    if (updateResult.count !== 1) return { versionConflict: true };
+    const updated = await tx[model].findUnique({ where: { id }, select: { id: true, active: true, verified: true, editorial_status: true, updated_at: true } });
     await tx.admin_audit_logs.create({ data: {
       actor_id: actorId,
       action: reviewAuditAction(patch),

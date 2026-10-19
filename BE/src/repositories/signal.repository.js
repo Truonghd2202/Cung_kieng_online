@@ -42,6 +42,7 @@ function findNextForMoodContext(mood, contextKey, currentId, client = prisma) {
   return client.signals.findMany({
     where: { active: true, editorial_status: "PUBLISHED", mood, context_key: contextKey },
     orderBy: { created_at: "asc" },
+    include: reviewerInclude,
   }).then((rows) => {
     const published = rows.filter(isPublishable);
     if (!published.length) return null;

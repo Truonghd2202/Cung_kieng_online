@@ -11,10 +11,12 @@ import {
 } from "lucide-react";
 
 import type { SavedSignalItem } from "./AccountScreen";
+import { MoodHistoryPanel } from "../components/MoodHistoryPanel";
 import "../styles/MoodJourneyScreen.css";
 
 interface MoodJourneyScreenProps {
   savedSignals: SavedSignalItem[];
+  isLoggedIn: boolean;
   onBack: () => void;
   onGoToMood: () => void;
   onGoToSignalResult: (entryId: string) => void;
@@ -50,21 +52,11 @@ const parseSavedDate = (value: string): number => {
 
 export const MoodJourneyScreen: React.FC<MoodJourneyScreenProps> = ({
   savedSignals,
+  isLoggedIn,
   onBack,
   onGoToMood,
   onGoToSignalResult,
 }) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
-  const sevenDaysAgo = new Date(today);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-
   const entries = savedSignals
     .map((item, index) => {
       const timestamp = parseSavedDate(item.date);
@@ -92,52 +84,6 @@ export const MoodJourneyScreen: React.FC<MoodJourneyScreenProps> = ({
 
       return b.sortTimestamp - a.sortTimestamp || a.index - b.index;
     });
-
-  const recentCount = entries.filter(
-    ({ timestamp }) =>
-      timestamp >= sevenDaysAgo.getTime() && timestamp < tomorrow.getTime()
-  ).length;
-
-  const monthCount = entries.filter(
-    ({ timestamp }) =>
-      timestamp >= monthStart.getTime() && timestamp < tomorrow.getTime()
-  ).length;
-
-  const recentSavedDaysCount = new Set(
-    entries
-      .filter(
-        ({ timestamp }) =>
-          timestamp >= sevenDaysAgo.getTime() && timestamp < tomorrow.getTime()
-      )
-      .map(({ timestamp }) => timestamp)
-  ).size;
-
-  const statistics = [
-    {
-      label: "Tổng bản ghi đã lưu",
-      count: savedSignals.length,
-      icon: ScrollText,
-      unit: "lời gợi mở",
-    },
-    {
-      label: "Bản ghi trong 7 ngày",
-      count: recentCount,
-      icon: Sparkles,
-      unit: "lượt gần đây",
-    },
-    {
-      label: "Ngày lưu trong 7 ngày",
-      count: recentSavedDaysCount,
-      icon: Calendar,
-      unit: "ngày an yên",
-    },
-    {
-      label: "Bản ghi tháng này",
-      count: monthCount,
-      icon: Flower2,
-      unit: "lượt trong tháng",
-    },
-  ];
 
   return (
     <div className="screen-shell relative overflow-hidden">
@@ -193,6 +139,8 @@ export const MoodJourneyScreen: React.FC<MoodJourneyScreenProps> = ({
           </div>
         </header>
 
+        <MoodHistoryPanel isLoggedIn={isLoggedIn} />
+
         {entries.length === 0 ? (
           /* ========================================================= */
           /* 2. TRẠNG THÁI RỖNG (EMPTY STATE 10/10)                    */
@@ -225,29 +173,6 @@ export const MoodJourneyScreen: React.FC<MoodJourneyScreenProps> = ({
         ) : (
           <>
             {/* ========================================================= */}
-            {/* 3. BỐN PHIẾN THẠCH NGỌC THỐNG KÊ (JOURNEY STATS)          */}
-            {/* ========================================================= */}
-            <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-10">
-              {statistics.map(({ label, count, icon: Icon, unit }) => (
-                <div key={label} className="journey-stat-card">
-                  <div className="flex items-center justify-between">
-                    <div className="journey-stat-icon-box">
-                      <Icon className="w-4 h-4" aria-hidden="true" />
-                    </div>
-                    <span className="text-[11px] font-medium text-muted bg-surface-soft px-2 py-0.5 rounded-md border border-line/50">
-                      {unit}
-                    </span>
-                  </div>
-
-                  <div>
-                    <dd className="journey-stat-number">{count}</dd>
-                    <dt className="journey-stat-label">{label}</dt>
-                  </div>
-                </div>
-              ))}
-            </dl>
-
-            {/* ========================================================= */}
             {/* 4. DÒNG THỜI GIAN KÝ ỨC (TIMELINE ENTRIES)                */}
             {/* ========================================================= */}
             <section aria-labelledby="saved-timeline-title">
@@ -257,7 +182,7 @@ export const MoodJourneyScreen: React.FC<MoodJourneyScreenProps> = ({
                   className="font-display text-xl sm:text-2xl font-semibold text-ink tracking-tight flex items-center gap-2"
                 >
                   <ScrollText className="w-5 h-5 text-accent" />
-                  <span>Những trang nhật ký chiêm nghiệm</span>
+                  <span>Lời chiêm nghiệm đã lưu</span>
                 </h2>
                 <span className="text-xs text-muted">
                   Hiển thị theo thứ tự gần đây nhất

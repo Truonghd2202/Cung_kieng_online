@@ -6,7 +6,38 @@ process.env.VNPAY_TMN_CODE = "TESTCODE";
 process.env.VNPAY_HASH_SECRET = "test-only-vnpay-secret";
 process.env.VNPAY_RETURN_URL = "https://example.test/membership";
 const { signature, verifyCallback, encodedParams, addMembershipMonth } = require("../src/utils/vnpay");
-const { processIpn } = require("../src/services/payment.service");
+const { processIpn, getMembership } = require("../src/services/payment.service");
+const paymentService = require("../src/services/payment.service");
+const horoscopeService = require("../src/services/horoscope.service");
+const paymentController = require("../src/controllers/payment.controller");
+
+test("membership status supplies server-owned Free/Premium benefits and current quota limits", async () => {
+  const status = await getMembership();
+  assert.equal(status.subscription, null);
+  assert.deepEqual(status.aiLimits, { successfulReadingsPer24Hours: 3, providerAttemptsPer24Hours: 5 });
+  assert.deepEqual(status.plans.map(({ term }) => term), ["monthly", "yearly"]);
+  assert.ok(status.benefits.some((benefit) => benefit.name === "Thư viện xin xăm đã thẩm định" && benefit.availability.includes("Chờ nhóm xác nhận")));
+  assert.equal(typeof status.salesEnabled, "boolean");
+  assert.equal(typeof status.checkoutAvailable, "boolean");
+});
+
+test("membership status API response combines account plan and live quota data", async () => {
+  const originalMembership = paymentService.getMembership;
+  const originalUsage = horoscopeService.getYearlyUsage;
+  paymentService.getMembership = async (userId) => ({ subscription: null, userId, salesEnabled: false });
+  horoscopeService.getYearlyUsage = async (userId) => ({ attemptsUsed: 2, attemptsRemaining: 3, userId });
+  let body;
+  const response = { status() { return this; }, json(value) { body = value; return value; } };
+  try {
+    await paymentController.membership({ user: { id: "user-123" } }, response);
+    assert.equal(body.success, true);
+    assert.equal(body.data.userId, "user-123");
+    assert.deepEqual(body.data.aiUsage, { attemptsUsed: 2, attemptsRemaining: 3, userId: "user-123" });
+  } finally {
+    paymentService.getMembership = originalMembership;
+    horoscopeService.getYearlyUsage = originalUsage;
+  }
+});
 function callback(patch = {}) {
   const query = { vnp_TmnCode: "TESTCODE", vnp_TxnRef: "order1", vnp_Amount: "2900000", vnp_TransactionNo: "123456", vnp_ResponseCode: "00", vnp_TransactionStatus: "00", ...patch };
   return { ...query, vnp_SecureHash: signature(query, process.env.VNPAY_HASH_SECRET) };

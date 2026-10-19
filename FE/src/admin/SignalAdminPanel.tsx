@@ -44,7 +44,7 @@ type SignalContent = {
   action: { title: string; duration: string; description: string; buttonLabel: string; tag: string; [key: string]: unknown };
   [key: string]: unknown;
 };
-type SignalRow = { id: string; source: string; title: string | null; mood: string | null; context_key: string | null; category: string | null; content: string | SignalContent; editorial_status: EditorialStatus; active: boolean; verified: boolean; reviewed_at?: string | null; reviewer?: { full_name: string } | null };
+type SignalRow = { id: string; source: string; title: string | null; mood: string | null; context_key: string | null; category: string | null; content: string | SignalContent; editorial_status: EditorialStatus; active: boolean; verified: boolean; updated_at: string; reviewed_at?: string | null; reviewer?: { full_name: string } | null };
 type AuditRow = { id: string; action: string; details: Record<string, unknown>; created_at: string; users?: { full_name: string } | null };
 type Coverage = Record<string, Record<string, number>>;
 type SignalPage = { items: SignalRow[]; pagination: { page: number; pageSize: number; total: number; pageCount: number }; stats: { total: number; statuses: Record<EditorialStatus, number>; coverage: Coverage } };
@@ -104,7 +104,7 @@ export function SignalAdminPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [editing, setEditing] = useState<{ id?: string; form: DraftForm } | null>(null);
+  const [editing, setEditing] = useState<{ id?: string; expectedUpdatedAt?: string; form: DraftForm } | null>(null);
   const [sourcesText, setSourcesText] = useState("[]");
   const [editorialNote, setEditorialNote] = useState("");
   const [selected, setSelected] = useState<(SignalRow & { auditLogs?: AuditRow[] }) | null>(null);
@@ -150,7 +150,7 @@ export function SignalAdminPanel() {
       const content = parseContent(row.content);
       setSourcesText(JSON.stringify(content.metadata.sources, null, 2));
       setEditorialNote(content.metadata.editorialNote);
-      setEditing({ id, form: { source: row.source, title: row.title || "", mood: row.mood || checkInCatalog.moods[0].key, contextKey: row.context_key || "general", category: row.category || "editorial", editorialStatus: "DRAFT", reviewNote: "", content } });
+      setEditing({ id, expectedUpdatedAt: row.updated_at, form: { source: row.source, title: row.title || "", mood: row.mood || checkInCatalog.moods[0].key, contextKey: row.context_key || "general", category: row.category || "editorial", editorialStatus: "DRAFT", reviewNote: "", content } });
     } catch (loadError) { setError(loadError instanceof Error ? loadError.message : "Không tải được bản thảo."); }
   }
 
@@ -177,7 +177,7 @@ export function SignalAdminPanel() {
       sources = parsed as SourceRecord[];
     } catch (parseError) { setError(parseError instanceof Error ? parseError.message : "Hồ sơ nguồn không hợp lệ."); return; }
     const content: SignalContent = { ...editing.form.content, metadata: { ...editing.form.content.metadata, contentType: editing.form.content.metadata.contentKind === "folk" ? "QUOTATION" : "GROUP_AUTHORED", sources, editorialNote, ...(editing.form.content.metadata.contentKind === "editorial" ? { quotationVerified: false } : {}) } };
-    const body = { ...editing.form, editorialStatus: nextStatus, content };
+    const body = { ...editing.form, editorialStatus: nextStatus, content, ...(editing.id ? { expectedUpdatedAt: editing.expectedUpdatedAt } : {}) };
     setSaving(true); setError("");
     try {
       await apiRequest<SignalRow>(editing.id ? "/admin/signals/" + encodeURIComponent(editing.id) : "/admin/signals", { method: editing.id ? "PUT" : "POST", body: JSON.stringify(body) });
@@ -194,7 +194,7 @@ export function SignalAdminPanel() {
     if (patch.verified === true && !rightsConfirmed) { setError("Cần xác nhận đã đối chiếu quyền sử dụng thực tế trước khi duyệt."); return; }
     setSaving(true); setError("");
     try {
-      await apiRequest<SignalRow>("/admin/signals/" + encodeURIComponent(selected.id) + "/review", { method: "PATCH", body: JSON.stringify({ ...patch, reviewNote, ...(patch.verified === true ? { rightsConfirmed } : {}) }) });
+      await apiRequest<SignalRow>("/admin/signals/" + encodeURIComponent(selected.id) + "/review", { method: "PATCH", body: JSON.stringify({ ...patch, expectedUpdatedAt: selected.updated_at, reviewNote, ...(patch.verified === true ? { rightsConfirmed } : {}) }) });
       setNotice(patch.verified === true ? "Đã duyệt phiên bản nội dung hiện tại." : patch.verified === false ? "Đã thu hồi duyệt và gỡ nội dung khỏi phát hành." : patch.active === false ? "Đã ẩn nội dung; hồ sơ duyệt được giữ nguyên." : "Đã phát hành lại phiên bản đã duyệt.");
       setReviewNote(""); setRightsConfirmed(false); await loadPage(page); await openDetail(selected.id);
     } catch (reviewError) { setError(reviewError instanceof Error ? reviewError.message : "Không cập nhật được trạng thái."); }

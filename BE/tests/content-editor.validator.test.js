@@ -90,3 +90,26 @@ test("culture submission persists structured provenance and requires a content t
   assert.equal(result.data.provenance.contentType, "GROUP_AUTHORED");
   assert.equal(schemas.culture.safeParse({ ...result.data, provenance: undefined }).success, false);
 });
+
+test("calendar editing uses updated_at as a compare-and-set version", async (context) => {
+  const prisma = require("../src/config/prisma");
+  const repository = require("../src/repositories/content-editor.repository");
+  const originalTransaction = prisma.$transaction;
+  const updatedAt = new Date("2026-10-19T10:00:00.000Z");
+  let where;
+  prisma.$transaction = async (callback) => callback({
+    calendar_events: {
+      findUnique: async () => ({ id: "event-1", updated_at: updatedAt }),
+      updateMany: async (args) => { where = args.where; return { count: 1 }; },
+    },
+    admin_audit_logs: { create: async () => ({ id: "audit-1" }) },
+  });
+  context.after(() => { prisma.$transaction = originalTransaction; });
+
+  await repository.save("calendar", "event-1", "admin-1", {
+    expectedUpdatedAt: updatedAt.toISOString(), editorialStatus: "DRAFT", reviewNote: "Edit calendar event",
+    title: "Event", description: "Description", category: "Culture", calendar: "LUNAR", day: 1, month: 1,
+    region: "NATIONWIDE", source: "",
+  });
+  assert.deepEqual(where.updated_at, { gte: updatedAt, lt: new Date(updatedAt.getTime() + 1) });
+});

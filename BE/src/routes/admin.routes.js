@@ -44,6 +44,7 @@ for (const kind of ["culture", "calendar", "xam", "rituals", "prayers"]) {
   router.put(`/${kind}/:id`, validate(idParamsSchema, "params"), validate(schemas[kind]), async (req, res) => {
     const record = await editor.save(kind, req.params.id, req.user.id, req.body);
     if (!record) throw new ApiError(404, "Không tìm thấy nội dung.");
+    if (record.versionConflict) throw new ApiError(409, "Nội dung đã được thay đổi sau khi bạn mở. Tải lại rồi thử lại.");
     return sendSuccess(res, { data: record });
   });
 }

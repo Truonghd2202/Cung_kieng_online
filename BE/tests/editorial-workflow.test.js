@@ -20,3 +20,18 @@ test("revocation blocks republishing and editing an approved item clears approva
   assert.deepEqual(stateAfterEdit(false), { editorial_status: "DRAFT", verified: false, active: false });
   assert.deepEqual(stateAfterEdit(true), { editorial_status: "IN_REVIEW", verified: false, active: false });
 });
+
+test("review requires IN_REVIEW and publication is a separate transition", () => {
+  assert.deepEqual(
+    stateAfterReview({ verified: false, active: false, editorial_status: "DRAFT" }, { verified: true }),
+    { reviewRequired: true },
+  );
+  assert.deepEqual(
+    stateAfterReview({ verified: false, active: false, editorial_status: "IN_REVIEW" }, { verified: true, active: true }),
+    { reviewAndPublishInOneStep: true },
+  );
+  assert.deepEqual(
+    stateAfterReview({ verified: false, active: false, editorial_status: "IN_REVIEW" }, { verified: true }),
+    { verified: true, active: false, editorial_status: "APPROVED" },
+  );
+});

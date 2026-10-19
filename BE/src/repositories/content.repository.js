@@ -1,8 +1,8 @@
 const prisma = require("../config/prisma");
 const { DAILY_PROVERB_SOURCE } = require("../constants/content");
 
-function listArticles({ region, category, limit, offset = 0 }, client = prisma) { return client.culture_articles.findMany({ where: { active: true, verified: true, members_only: false, ...(region ? { region } : {}), ...(category ? { category } : {}) }, orderBy: [{ created_at: "asc" }, { slug: "asc" }], skip: offset, take: limit }); }
-function findArticle(slug, client = prisma) { return client.culture_articles.findFirst({ where: { slug, active: true, verified: true, members_only: false } }); }
+function listArticles({ region, category, limit, offset = 0 }, client = prisma) { return client.culture_articles.findMany({ where: { active: true, verified: true, editorial_status: "PUBLISHED", members_only: false, ...(region ? { region } : {}), ...(category ? { category } : {}) }, orderBy: [{ created_at: "asc" }, { id: "asc" }], skip: offset, take: limit }); }
+function findArticle(slug, client = prisma) { return client.culture_articles.findFirst({ where: { slug, active: true, verified: true, editorial_status: "PUBLISHED", members_only: false } }); }
 function listRituals(
   { region, category: occasion, limit, offset = 0, preview = false },
   client = prisma,
@@ -10,11 +10,11 @@ function listRituals(
   return client.rituals.findMany({
     where: {
       active: true,
-      ...(preview ? {} : { verified: true }),
+      ...(preview ? {} : { verified: true, editorial_status: "PUBLISHED" }),
       ...(region ? { region } : {}),
       ...(occasion ? { occasion } : {}),
     },
-    orderBy: [{ created_at: "asc" }, { slug: "asc" }],
+    orderBy: [{ created_at: "asc" }, { id: "asc" }],
     skip: offset,
     take: limit,
     include: {
@@ -23,13 +23,13 @@ function listRituals(
       prayers: {
         where: {
           active: true,
-          ...(preview ? {} : { verified: true }),
+          ...(preview ? {} : { verified: true, editorial_status: "PUBLISHED" }),
         },
       },
     },
   });
 }
-function findRitual(slug, client = prisma, preview = false) { return client.rituals.findFirst({ where: { slug, active: true, ...(preview ? {} : { verified: true }) }, include: { ritual_steps: { orderBy: { step_number: "asc" } }, ritual_offerings: { include: { offerings: true } }, prayers: { where: { active: true, ...(preview ? {} : { verified: true }) } } } }); }
+function findRitual(slug, client = prisma, preview = false) { return client.rituals.findFirst({ where: { slug, active: true, ...(preview ? {} : { verified: true, editorial_status: "PUBLISHED" }) }, include: { ritual_steps: { orderBy: { step_number: "asc" } }, ritual_offerings: { include: { offerings: true } }, prayers: { where: { active: true, ...(preview ? {} : { verified: true, editorial_status: "PUBLISHED" }) } } } }); }
 function findPrayerReviewLogs(ids, client = prisma) {
   return client.admin_audit_logs.findMany({ where: { target_type: "prayers", target_id: { in: ids }, action: "CONTENT_REVIEW_UPDATED" }, orderBy: { created_at: "desc" }, select: { target_id: true, details: true, created_at: true, users: { select: { full_name: true } } } });
 }

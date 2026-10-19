@@ -348,6 +348,15 @@ export const MoodCheckInScreen: React.FC<MoodCheckInScreenProps> = ({
           </div>
         </fieldset>
 
+        <details className="mb-6 rounded-2xl border border-line bg-surface p-4">
+          <summary className="cursor-pointer text-sm font-semibold text-ink">AI và dữ liệu trong lời gợi mở này</summary>
+          <div className="mt-3 space-y-2 text-sm leading-relaxed text-muted">
+            <p>{isLoggedIn ? "Check-in gửi cảm xúc và bối cảnh đã chọn tới máy chủ Tin Lắm Tâm Linh." : "Khi đăng nhập để ghi nhận check-in, cảm xúc và bối cảnh đã chọn sẽ được gửi tới máy chủ Tin Lắm Tâm Linh."} Khi bạn chọn một bối cảnh cụ thể và Gemini được cấu hình, máy chủ chỉ gửi hai lựa chọn này tới Google Gemini để viết lời gợi mở. Ghi chú và lịch sử check-in không được gửi sang Gemini.</p>
+            <p>Nếu chọn “Chưa muốn chọn”, hoặc Gemini không khả dụng, hệ thống dùng nội dung biên tập sẵn. Lời gợi mở không phải chẩn đoán hay dự đoán.</p>
+            <p>Check-in được lưu theo tài khoản để xem lại; bạn có thể xóa bản lưu tại ứng dụng trong Cài đặt → Xóa dữ liệu cá nhân. Việc này cũng xóa lịch sử chiêm nghiệm AI theo năm, nhưng ứng dụng không có chức năng xóa yêu cầu đã được gửi ở phía Gemini.</p>
+          </div>
+        </details>
+
         {/* ========================================================= */}
         {/* 4. TRANG GIẤY DÓ TÂM SỰ (GHI CHÉP TÙY CHỌN)               */}
         {/* ========================================================= */}

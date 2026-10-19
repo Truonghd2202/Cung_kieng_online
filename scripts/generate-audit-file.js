@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { getCultureReviewStatus } = require("./culture-review-status");
 
 const batchesDir = path.join(__dirname, "../editorial/culture-batches");
 const files = fs.readdirSync(batchesDir).filter(f => f.endsWith(".json")).sort();
@@ -32,7 +33,7 @@ files.forEach((file, bIdx) => {
       }
     }
 
-    let status = "VERIFIED_WITH_SOURCE";
+    const status = getCultureReviewStatus(a);
 
     allArticles.push({
       batch: file,
@@ -64,18 +65,17 @@ let auditMd = `# Kiểm Kê Nguồn & Đối Chiếu Dữ Liệu Từng Bài (B�
 > **Dự án:** Tin Lắm Tâm Linh (Startup EXE101 - Thích Cúng Kiếng)  
 > **Thời điểm cập nhật:** 18/10/2026  
 > **Phương pháp kiểm kê:** Độc lập từng bài (Itemized per-article audit)  
-> **Nguyên tắc cốt lõi:**
-> 1. Không đánh dấu hoàn tất chỉ vì JSON hợp lệ. Đã trực tiếp tra cứu, đối chiếu và trích xuất nguồn cụ thể (hồ sơ di sản, văn bản luật/quyết định, chuyên khảo học thuật có thẩm quyền) cho từng bài.
-> 2. Tuyệt đối không dùng URL trang chủ để lấp trường. Đã gỡ bỏ 100% URL trang chủ (0 homepage URL còn lại). Nguồn sách/chuyên khảo dùng thư mục chuẩn và vị trí tham chiếu thật; chỉ giữ URL khi dẫn trực tiếp đến hồ sơ di sản chính thức (UNESCO ICH/WHC hoặc DSVH).
-> 3. Phân định rạch ròi giữa dữ kiện lịch sử/khoa học với truyền thuyết dân gian, niềm tin tín ngưỡng và diễn giải của tác giả.
-> 4. Không kéo dài văn phong bằng câu đệm vô nghĩa để làm đầy số từ. Báo cáo độc lập số từ phần thân bài và số từ toàn bài.
+> **Giới hạn:** Báo cáo này kiểm kê metadata trong JSON. Script không đọc hoặc thẩm định tài liệu nguồn, không xác nhận quyền sử dụng, không duyệt nội dung và không đọc trạng thái xuất bản từ database.
 
 ---
 
 ## 1. Tổng Hợp Kết Quả Rà Soát Nguồn Độc Lập
 
 - **Tổng số bài viết:** 200 bài (20 batch, mỗi batch 10 bài).
-- **Trạng thái thẩm định toàn bộ bộ bài:** **200/200 bài (100.0%)** đạt trạng thái \`VERIFIED_WITH_SOURCE\`.
+- **Cấu trúc:** trạng thái được tính từ các trường JSON cơ bản; cần chạy validator riêng để xác nhận schema.
+- **Nguồn được nhận dạng:** trạng thái \`SOURCE_IDENTIFIED\` chỉ cho biết draft có tên, locator và URL/thư mục tham chiếu; không có nghĩa nguồn đã được mở hoặc đối chiếu.
+- **Nguồn đã đối chiếu / nội dung đã review:** chỉ ghi nhận hồ sơ người duyệt có thời điểm, bằng chứng và hash khớp phiên bản. Hồ sơ hiện có: ${allArticles.filter((article) => article.status.sourceChecked).length} nguồn; ${allArticles.filter((article) => article.status.contentReviewed).length} nội dung.
+- **Đã phát hành:** không thể suy ra từ các file draft này; kiểm tra qua API/database ở môi trường được phép.
 - **Tổng số URL trang chủ còn lại:** **0/200 bài (0%)** — 100% URL trang chủ chung chung đã được loại bỏ triệt để.
 - **Tổng số URL hồ sơ cụ thể chính thức:** **24 bài** (23 bài UNESCO ICH/WHC chính thức + 1 bài hồ sơ Di tích quốc gia đặc biệt DSVH).
 - **Tổng số bài trích dẫn thư mục chuẩn mực có định vị (không dùng URL giả mạo):** **176 bài** (Quyết định xếp hạng của Thủ tướng Chính phủ / Bộ VHTTDL, Bảo vật quốc gia, Luật chuyên ngành, Biên niên sử Hán Nôm và các công trình chuyên khảo dân tộc học kinh điển).
@@ -137,7 +137,10 @@ for (let b = 1; b <= 20; b++) {
   const title = batchTitles[b] || `Lô ${b}`;
 
   auditMd += `### Lô ${String(b).padStart(2, "0")}: ${title} (\`${batchFile}\`)\n\n`;
-  auditMd += `> **Trạng thái thẩm định lô:** **ĐÃ ĐỐI CHIẾU NGUỒN CỤ THỂ (VERIFIED_WITH_SOURCE)**\n\n`;
+  const identified = items.filter((item) => item.status.sourceIdentified).length;
+  const checked = items.filter((item) => item.status.sourceChecked).length;
+  const reviewed = items.filter((item) => item.status.contentReviewed).length;
+  auditMd += `> Nguồn được nhận dạng: ${identified}/${items.length}; có hồ sơ đối chiếu nguồn: ${checked}; có hồ sơ review nội dung: ${reviewed}. Trạng thái phát hành không có trong draft JSON.\n\n`;
   auditMd += `| ID | Slug | Tài liệu cụ thể & Nguồn tham chiếu | Vị trí tham chiếu (Locator) | Nội dung được hỗ trợ | Điểm chưa xác minh / Ghi chú niềm tin | Trạng thái thẩm định |\n`;
   auditMd += `| :-: | :--- | :--- | :--- | :--- | :--- | :-: |\n`;
 
@@ -154,8 +157,8 @@ for (let b = 1; b <= 20; b++) {
     let locatorCol = it.sourceLocator ? it.sourceLocator.replace(/\|/g, "/") : "Chưa có locator chi tiết";
     sourceCol = sourceCol.replace(/\|/g, "/");
 
-    let supportedCol = "";
-    let unverifiedCol = "";
+    let supportedCol = "Chưa có đối chiếu claim trong hồ sơ máy sinh này.";
+    let unverifiedCol = "Cần người duyệt mở nguồn và đối chiếu từng nhận định.";
 
     if (b === 1) {
       supportedCol = "Hồ sơ UNESCO chính thức: Bối cảnh không gian di sản, cộng đồng chủ thể thực hành, tiêu chí ghi danh và cam kết bảo tồn bền vững.";
@@ -222,12 +225,18 @@ for (let b = 1; b <= 20; b++) {
       unverifiedCol = `Nguồn hiện tại (${it.sourceUrl || 'chưa có URL'}) là trang chủ/nguồn chung. Cần người duyệt đọc trực tiếp tài liệu gốc, đối chiếu từng nhận định và gỡ bỏ URL trang chủ.`;
     }
 
+    supportedCol = "Chưa có đối chiếu claim trong hồ sơ máy sinh này.";
+    unverifiedCol = "Cần người duyệt mở nguồn và đối chiếu từng nhận định.";
     supportedCol = supportedCol.replace(/\|/g, "/");
     unverifiedCol = unverifiedCol.replace(/\|/g, "/");
 
-    const statusBadge = it.status === "VERIFIED_WITH_SOURCE" 
-      ? "\`VERIFIED_WITH_SOURCE\`" 
-      : "\`NEEDS_SOURCE\`";
+    const statusBadge = [
+      it.status.structureValid ? "STRUCTURE_VALID" : "STRUCTURE_INVALID",
+      it.status.sourceIdentified ? "SOURCE_IDENTIFIED" : "SOURCE_NEEDED",
+      it.status.sourceChecked ? "SOURCE_CHECKED" : "SOURCE_NOT_RECORDED",
+      it.status.contentReviewed ? "CONTENT_REVIEWED" : "CONTENT_NOT_RECORDED",
+      "PUBLISHED_STATE_UNAVAILABLE",
+    ].map((value) => `\`${value}\``).join("; ");
 
     auditMd += `| ${it.overallIndex} | \`${it.slug}\` | ${sourceCol} | ${locatorCol} | ${supportedCol} | ${unverifiedCol} | ${statusBadge} |\n`;
   });

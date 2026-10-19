@@ -56,6 +56,7 @@ async function getMembership(userId) {
     orderBy: { expires_at: "desc" },
     select: { id: true, started_at: true, expires_at: true },
   }) : null;
+  const aiLimits = { successfulReadingsPer24Hours: 3, providerAttemptsPer24Hours: 5 };
   return {
     subscription,
     price: PLANS.monthly.price,
@@ -67,10 +68,15 @@ async function getMembership(userId) {
     })),
     currency: "VND",
     paymentEnvironment: env.SEPAY_ENV,
-    aiLimits: {
-      successfulReadingsPer24Hours: 3,
-      providerAttemptsPer24Hours: 5,
-    },
+    aiLimits,
+    benefits: [
+      { name: "Check-in cảm xúc", free: "Có", premium: "Có", availability: "Đang hoạt động" },
+      { name: "Lưu và xem lại lời chiêm nghiệm", free: "Có, theo tài khoản", premium: "Có, theo tài khoản", availability: "Đang hoạt động" },
+      { name: "AI chiêm nghiệm theo năm", free: "Chưa khả dụng", premium: `Tối đa ${aiLimits.successfulReadingsPer24Hours} bản thành công và ${aiLimits.providerAttemptsPer24Hours} lần gọi trong 24 giờ`, availability: env.GEMINI_API_KEY ? "Yêu cầu hội viên đang hiệu lực" : "AI chưa được cấu hình" },
+      { name: "Thư viện hội viên", free: "Không bao gồm", premium: "Các bài đã phát hành", availability: "Phụ thuộc bài đã được phát hành" },
+      { name: "Thư viện xin xăm đã thẩm định", free: "Chưa khả dụng", premium: "Chưa khả dụng", availability: "Chờ nhóm xác nhận nội dung và quyền sử dụng" },
+      { name: "Quà trang trí gói năm", free: "Không bao gồm", premium: "Cấp sau khi máy chủ xác nhận đơn năm", availability: "Theo điều kiện gói năm" },
+    ],
     salesEnabled: env.MEMBERSHIP_SALES_ENABLED === true,
     checkoutAvailable: canStartCheckout(),
   };

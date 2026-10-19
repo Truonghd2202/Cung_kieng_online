@@ -9,7 +9,82 @@ const moodRepository = require("../src/repositories/mood.repository");
 const signalRepository = require("../src/repositories/signal.repository");
 const signalService = require("../src/services/signal.service");
 const moodService = require("../src/services/mood.service");
+const horoscopeService = require("../src/services/horoscope.service");
+const prisma = require("../src/config/prisma");
 const { signalContentHash } = require("../src/services/signal-publication");
+
+test("mood history repository scopes records to owner and Vietnam period before pagination", async () => {
+  const calls = [];
+  const client = {
+    mood_checkins: {
+      count: async (query) => { calls.push(["count", query]); return 1; },
+      findMany: async (query) => { calls.push(["findMany", query]); return []; },
+      groupBy: async (query) => { calls.push(["groupBy", query]); return [{ mood: "PEACEFUL", _count: { _all: 2 } }]; },
+    },
+    $queryRaw: async (strings, ...values) => { calls.push(["daily", strings.join("?"), values]); return [{ day: "2026-10-19", count: 2 }]; },
+  };
+  const result = await moodRepository.historyForUser("owner-id", {
+    start: new Date("2026-10-18T17:00:00Z"), end: new Date("2026-10-25T17:00:00Z"), mood: "PEACEFUL", skip: 20, take: 20,
+  }, client);
+  assert.equal(result.total, 1);
+  assert.equal(calls[0][1].where.user_id, "owner-id");
+  assert.equal(calls[0][1].where.mood, "PEACEFUL");
+  assert.equal(calls[1][1].skip, 20);
+  assert.equal(calls[2][1].where.mood, undefined);
+  assert.match(calls[3][1], /Asia\/Ho_Chi_Minh/);
+});
+
+test("mood history service calculates a Monday-based Vietnam week and summarizes before page slicing", async () => {
+  const original = moodRepository.historyForUser;
+  let query;
+  moodRepository.historyForUser = async (_userId, input) => {
+    query = input;
+    return {
+      total: 1,
+      items: [],
+      byMood: [{ mood: "PEACEFUL", _count: { _all: 3 } }, { mood: "WORRIED", _count: { _all: 1 } }],
+      byDay: [{ day: "2026-10-19", count: 4 }],
+    };
+  };
+  try {
+    const result = await moodService.history("owner-id", { period: "week", anchor: "2026-10-21", page: 2, pageSize: 1 });
+    assert.equal(query.start.toISOString(), "2026-10-18T17:00:00.000Z");
+    assert.equal(query.end.toISOString(), "2026-10-25T17:00:00.000Z");
+    assert.equal(query.skip, 1);
+    assert.equal(result.summary.total, 4);
+    assert.deepEqual(result.summary.byDay, [{ day: "2026-10-19", count: 4 }]);
+    assert.deepEqual(result.range, { start: "2026-10-19", end: "2026-10-25" });
+    assert.equal(result.scope, "all_check_ins");
+    const monthly = await moodService.history("owner-id", { period: "month", anchor: "2026-10-21", page: 1, pageSize: 20 });
+    assert.equal(query.start.toISOString(), "2026-09-30T17:00:00.000Z");
+    assert.equal(query.end.toISOString(), "2026-10-31T17:00:00.000Z");
+    assert.deepEqual(monthly.range, { start: "2026-10-01", end: "2026-10-31" });
+  } finally {
+    moodRepository.historyForUser = original;
+  }
+});
+
+test("yearly AI usage reports rolling attempt and occupied reading quotas from account rows", async () => {
+  const original = prisma.horoscope_readings.findMany;
+  const now = Date.now();
+  prisma.horoscope_readings.findMany = async ({ where, orderBy }) => {
+    assert.equal(where.user_id, "owner-id");
+    assert.equal(orderBy.created_at, "asc");
+    return ["PENDING", "SUCCEEDED", "FAILED", "SUCCEEDED", "FAILED"].map((status, index) => ({
+      created_at: new Date(now - (5 - index) * 60_000), status,
+    }));
+  };
+  try {
+    const usage = await horoscopeService.getYearlyUsage("owner-id");
+    assert.equal(usage.attemptsUsed, 5);
+    assert.equal(usage.attemptsRemaining, 0);
+    assert.equal(usage.successfulUsed, 2);
+    assert.equal(usage.successfulRemaining, 0);
+    assert.ok(Date.parse(usage.nextUsableAt) > now);
+  } finally {
+    prisma.horoscope_readings.findMany = original;
+  }
+});
 
 test("a signal awaiting editorial approval is not eligible for public check-in delivery", () => {
   const signal = {
@@ -28,6 +103,26 @@ test("a signal awaiting editorial approval is not eligible for public check-in d
   assert.equal(signalRepository.isPublishable({ ...approved, editorial_status: "HIDDEN", active: false }), false);
   assert.equal(signalRepository.isPublishable({ ...approved, editorial_status: "REVOKED", active: false, reviewed_by: null, reviewed_at: null, approved_content_hash: null }), false);
   assert.equal(signalRepository.isPublishable({ ...approved, content: JSON.stringify({ metadata: { editorialStatus: "approved" } }) }), false);
+});
+
+test("changing a check-in signal includes the real reviewer projection", async () => {
+  let query;
+  const reviewer = { full_name: "Reviewer thật" };
+  const next = {
+    id: "next", source: "next", mood: "PEACEFUL", context_key: "general", title: "T", category: "editorial", advice: "Bước nhỏ", region: null,
+    active: true, editorial_status: "PUBLISHED", reviewed_by: "admin-1", reviewed_at: new Date("2026-10-15T00:00:00Z"), reviewer,
+    content: JSON.stringify({ metadata: { contentKind: "editorial", contentType: "GROUP_AUTHORED", contentAuthor: "Nhóm", contentRightsBasis: "Tự biên soạn", quotationVerified: false } }),
+  };
+  next.approved_content_hash = signalContentHash(next);
+  const selected = await signalRepository.findNextForMoodContext(
+    "PEACEFUL",
+    "general",
+    "current",
+    { signals: { findMany: async (input) => { query = input; return [next]; } } },
+  );
+
+  assert.deepEqual(query.include, { reviewer: { select: { full_name: true } } });
+  assert.equal(selected.reviewer.full_name, "Reviewer thật");
 });
 
 test("check-in snapshot keeps its content while publication status and reviewer come from the real signal row", () => {

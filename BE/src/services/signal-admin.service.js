@@ -39,35 +39,48 @@ async function get(id, client = prisma) {
 }
 
 async function save(id, actorId, input, client = prisma) {
+  const { expectedUpdatedAt, ...draft } = input;
   return client.$transaction(async (tx) => {
     const existing = id ? await repository.findById(id, tx) : null;
     if (id && !existing) return null;
-    if (existing && input.source !== existing.source) {
+    if (id && (!expectedUpdatedAt || new Date(expectedUpdatedAt).getTime() !== existing.updated_at.getTime())) {
+      throw new ApiError(409, "Signal changed after it was opened. Reload before saving.");
+    }
+    if (existing && draft.source !== existing.source) {
       throw new ApiError(422, "Signal source key is stable and cannot be changed.");
     }
-    if (!existing && await repository.findBySource(input.source, tx)) {
+    if (!existing && await repository.findBySource(draft.source, tx)) {
       throw new ApiError(409, "Signal source key already exists.");
     }
 
-    const content = normalizeContent(input.content);
+    const content = normalizeContent(draft.content);
     const data = {
-      source: input.source,
-      title: input.title,
-      mood: input.mood,
-      context_key: input.contextKey,
-      category: input.category || "editorial",
+      source: draft.source,
+      title: draft.title,
+      mood: draft.mood,
+      context_key: draft.contextKey,
+      category: draft.category || "editorial",
       content: JSON.stringify(content),
       advice: content.reflection.advice,
-      editorial_status: input.editorialStatus,
+      editorial_status: draft.editorialStatus,
       active: false,
       reviewed_by: null,
       reviewed_at: null,
       approved_content_hash: null,
-      updated_at: new Date(),
+      updated_at: new Date(Math.max(Date.now(), (existing?.updated_at?.getTime() || 0) + 1)),
     };
-    const record = existing
-      ? await tx.signals.update({ where: { id }, data })
-      : await tx.signals.create({ data: { ...data, region: null } });
+    let record;
+    if (existing) {
+      const versionStart = new Date(expectedUpdatedAt);
+      const result = await tx.signals.updateMany({
+        where: { id, updated_at: { gte: versionStart, lt: new Date(versionStart.getTime() + 1) } },
+        data,
+      });
+      if (result.count !== 1) throw new ApiError(409, "Signal changed after it was opened. Reload before saving.");
+      record = await repository.findById(id, tx);
+    } else {
+      record = await tx.signals.create({ data: { ...data, region: null } });
+    }
     await tx.admin_audit_logs.create({ data: {
       actor_id: actorId,
       action: existing ? "CONTENT_EDITED" : "CONTENT_CREATED",
@@ -76,7 +89,7 @@ async function save(id, actorId, input, client = prisma) {
       details: {
         before: existing ? { editorial_status: existing.editorial_status, active: existing.active } : null,
         after: { editorial_status: record.editorial_status, active: record.active },
-        reviewNote: input.reviewNote,
+        reviewNote: draft.reviewNote,
         fields: ["title", "mood", "context_key", "content", "editorial_status"],
       },
     } });
@@ -88,6 +101,9 @@ async function review(id, actorId, input, client = prisma) {
   return client.$transaction(async (tx) => {
     const before = await repository.findById(id, tx);
     if (!before) return null;
+    if (!input.expectedUpdatedAt || new Date(input.expectedUpdatedAt).getTime() !== before.updated_at.getTime()) {
+      throw new ApiError(409, "Signal changed after it was opened. Reload before reviewing.");
+    }
     const approvalCurrent = hasCurrentApproval(before);
     const workflowBefore = {
       verified: approvalCurrent,
@@ -95,6 +111,8 @@ async function review(id, actorId, input, client = prisma) {
       editorial_status: before.editorial_status,
     };
     const nextWorkflow = stateAfterReview(workflowBefore, input);
+    if (nextWorkflow.reviewRequired) throw new ApiError(422, "Submit the signal for review before approving it.");
+    if (nextWorkflow.reviewAndPublishInOneStep) throw new ApiError(422, "Approve the signal first, then publish it in a separate action.");
     if (nextWorkflow.approvalRequired) throw new ApiError(422, "Approve the current signal version before publishing it.");
 
     if (input.verified === true) {
@@ -114,7 +132,7 @@ async function review(id, actorId, input, client = prisma) {
     const data = {
       active: nextWorkflow.active,
       editorial_status: nextWorkflow.editorial_status,
-      updated_at: new Date(),
+      updated_at: new Date(Math.max(Date.now(), before.updated_at.getTime() + 1)),
     };
     if (input.verified === true) {
       data.reviewed_by = actorId;
@@ -132,7 +150,13 @@ async function review(id, actorId, input, client = prisma) {
       data.approved_content_hash = null;
     }
 
-    const updated = await tx.signals.update({ where: { id }, data });
+    const versionStart = new Date(input.expectedUpdatedAt);
+    const updateResult = await tx.signals.updateMany({
+      where: { id, updated_at: { gte: versionStart, lt: new Date(versionStart.getTime() + 1) } },
+      data,
+    });
+    if (updateResult.count !== 1) throw new ApiError(409, "Signal changed after it was opened. Reload before reviewing.");
+    const updated = await repository.findById(id, tx);
     await tx.admin_audit_logs.create({ data: {
       actor_id: actorId,
       action: reviewAuditAction(input),

@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { getCultureReviewStatus } = require("./culture-review-status");
 
 const batchesDir = path.join(__dirname, "../editorial/culture-batches");
 const files = fs.readdirSync(batchesDir).filter(f => f.endsWith(".json")).sort();
@@ -7,9 +8,9 @@ const files = fs.readdirSync(batchesDir).filter(f => f.endsWith(".json")).sort()
 const countWords = (text) => text ? text.trim().split(/\s+/).filter(Boolean).length : 0;
 
 let totalArticles = 0;
-let verifiedCount = 0;
-let needsSourceCount = 0;
-let blockedCount = 0;
+let sourceIdentifiedCount = 0;
+let sourceCheckedCount = 0;
+let contentReviewedCount = 0;
 
 const batchDetails = [];
 
@@ -40,15 +41,10 @@ files.forEach((file, bIdx) => {
       }
     }
 
-    // Determine status
-    let status = "NEEDS_SOURCE";
-    // Batch 1, 2, 3 have been reviewed and verified
-    if (bIdx === 0 || bIdx === 1 || bIdx === 2) {
-      status = "VERIFIED_WITH_SOURCE";
-      verifiedCount++;
-    } else {
-      needsSourceCount++;
-    }
+    const reviewStatus = getCultureReviewStatus(a);
+    if (reviewStatus.sourceIdentified) sourceIdentifiedCount++;
+    if (reviewStatus.sourceChecked) sourceCheckedCount++;
+    if (reviewStatus.contentReviewed) contentReviewedCount++;
 
     // Analysis of supported content & unverified points
     let supportedContent = "";
@@ -87,9 +83,9 @@ files.forEach((file, bIdx) => {
       sourceLocator: a.provenance?.sourceLocator || "",
       bodyWords,
       totalWords,
-      status,
-      supportedContent,
-      unverifiedPoints
+      status: reviewStatus,
+      supportedContent: "Chưa có đối chiếu từng claim; người duyệt cần xác minh nội dung với tài liệu gốc.",
+      unverifiedPoints: "Chưa có hồ sơ xác nhận nguồn hoặc nội dung cho phiên bản này."
     });
   });
 
@@ -100,4 +96,4 @@ files.forEach((file, bIdx) => {
   });
 });
 
-console.log({ totalArticles, verifiedCount, needsSourceCount, blockedCount });
+console.log({ totalArticles, sourceIdentifiedCount, sourceCheckedCount, contentReviewedCount });

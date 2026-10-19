@@ -43,6 +43,26 @@ function listForUser(userId, { limit, mood } = {}, client = prisma) {
   }).then((rows) => rows.map(decoded));
 }
 
+async function historyForUser(userId, { start, end, mood, skip, take } = {}, client = prisma) {
+  const where = { user_id: userId, created_at: { gte: start, lt: end } };
+  const itemWhere = { ...where, ...(mood ? { mood } : {}) };
+  const [total, items, grouped, daily] = await Promise.all([
+    client.mood_checkins.count({ where: itemWhere }),
+    client.mood_checkins.findMany({ where: itemWhere, orderBy: { created_at: "desc" }, skip, take, include: signalInclude }),
+    client.mood_checkins.groupBy({ by: ["mood"], where, _count: { _all: true } }),
+    client.$queryRaw`SELECT (created_at AT TIME ZONE 'Asia/Ho_Chi_Minh')::date::text AS day, COUNT(*)::int AS count
+      FROM mood_checkins
+      WHERE user_id = ${userId}::uuid AND created_at >= ${start} AND created_at < ${end}
+      GROUP BY day ORDER BY day`,
+  ]);
+  return {
+    total,
+    items: items.map(decoded),
+    byMood: grouped,
+    byDay: daily,
+  };
+}
+
 function update(id, userId, data, client = prisma) {
   return client.mood_checkins.updateMany({
     where: { id, user_id: userId },
@@ -54,4 +74,4 @@ function remove(id, userId, client = prisma) {
   return client.mood_checkins.deleteMany({ where: { id, user_id: userId } });
 }
 
-module.exports = { create, findByIdForUser, findByIdempotencyKey, findLatestForUser, listForUser, update, remove };
+module.exports = { create, findByIdForUser, findByIdempotencyKey, findLatestForUser, listForUser, historyForUser, update, remove };

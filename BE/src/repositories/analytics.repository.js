@@ -10,10 +10,10 @@ async function getSummary() {
   const [activity, signupSources, activation, retention, subscribers, dailyTrends] = await Promise.all([
     prisma.$queryRaw`
       SELECT
-        COUNT(DISTINCT anonymous_id) FILTER (WHERE created_at >= date_trunc('day', CURRENT_TIMESTAMP))::int AS dau,
-        COUNT(DISTINCT anonymous_id) FILTER (WHERE created_at >= date_trunc('month', CURRENT_TIMESTAMP))::int AS mau
+        COUNT(DISTINCT anonymous_id) FILTER (WHERE created_at >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh') AT TIME ZONE 'Asia/Ho_Chi_Minh')::int AS dau,
+        COUNT(DISTINCT anonymous_id) FILTER (WHERE created_at >= date_trunc('month', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh') AT TIME ZONE 'Asia/Ho_Chi_Minh')::int AS mau
       FROM analytics_events
-      WHERE created_at >= date_trunc('month', CURRENT_TIMESTAMP)
+      WHERE created_at >= date_trunc('month', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh') AT TIME ZONE 'Asia/Ho_Chi_Minh'
     `,
     prisma.analytics_events.groupBy({
       by: ["campaign_source"],
@@ -39,25 +39,25 @@ async function getSummary() {
         CASE WHEN cohort_size = 0 THEN NULL ELSE ROUND(retained::numeric * 100 / cohort_size, 2) END AS rate_percent
       FROM (
         SELECT 'D1' AS metric,
-          COUNT(*) FILTER (WHERE u.created_at::date = CURRENT_DATE - 1)::int AS cohort_size,
-          COUNT(*) FILTER (WHERE u.created_at::date = CURRENT_DATE - 1 AND EXISTS (
-            SELECT 1 FROM analytics_events e WHERE e.user_id = u.id AND e.created_at::date = CURRENT_DATE
+          COUNT(*) FILTER (WHERE (u.created_at AT TIME ZONE 'Asia/Ho_Chi_Minh')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date - 1)::int AS cohort_size,
+          COUNT(*) FILTER (WHERE (u.created_at AT TIME ZONE 'Asia/Ho_Chi_Minh')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date - 1 AND EXISTS (
+            SELECT 1 FROM analytics_events e WHERE e.user_id = u.id AND (e.created_at AT TIME ZONE 'Asia/Ho_Chi_Minh')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
           ))::int AS retained
         FROM users u
         WHERE EXISTS (SELECT 1 FROM analytics_events consent WHERE consent.user_id = u.id AND consent.event_name = 'signup_completed')
         UNION ALL
         SELECT 'D7',
-          COUNT(*) FILTER (WHERE u.created_at::date = CURRENT_DATE - 7)::int,
-          COUNT(*) FILTER (WHERE u.created_at::date = CURRENT_DATE - 7 AND EXISTS (
-            SELECT 1 FROM analytics_events e WHERE e.user_id = u.id AND e.created_at::date = CURRENT_DATE
+          COUNT(*) FILTER (WHERE (u.created_at AT TIME ZONE 'Asia/Ho_Chi_Minh')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date - 7)::int,
+          COUNT(*) FILTER (WHERE (u.created_at AT TIME ZONE 'Asia/Ho_Chi_Minh')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date - 7 AND EXISTS (
+            SELECT 1 FROM analytics_events e WHERE e.user_id = u.id AND (e.created_at AT TIME ZONE 'Asia/Ho_Chi_Minh')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
           ))::int
         FROM users u
         WHERE EXISTS (SELECT 1 FROM analytics_events consent WHERE consent.user_id = u.id AND consent.event_name = 'signup_completed')
         UNION ALL
         SELECT 'D30',
-          COUNT(*) FILTER (WHERE u.created_at::date = CURRENT_DATE - 30)::int,
-          COUNT(*) FILTER (WHERE u.created_at::date = CURRENT_DATE - 30 AND EXISTS (
-            SELECT 1 FROM analytics_events e WHERE e.user_id = u.id AND e.created_at::date = CURRENT_DATE
+          COUNT(*) FILTER (WHERE (u.created_at AT TIME ZONE 'Asia/Ho_Chi_Minh')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date - 30)::int,
+          COUNT(*) FILTER (WHERE (u.created_at AT TIME ZONE 'Asia/Ho_Chi_Minh')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date - 30 AND EXISTS (
+            SELECT 1 FROM analytics_events e WHERE e.user_id = u.id AND (e.created_at AT TIME ZONE 'Asia/Ho_Chi_Minh')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
           ))::int
         FROM users u
         WHERE EXISTS (SELECT 1 FROM analytics_events consent WHERE consent.user_id = u.id AND consent.event_name = 'signup_completed')
@@ -69,8 +69,8 @@ async function getSummary() {
         d.day::date::text AS date,
         COUNT(DISTINCT e.anonymous_id)::int AS visits,
         COUNT(e.id)::int AS engagements
-      FROM generate_series(CURRENT_DATE - INTERVAL '6 days', CURRENT_DATE, '1 day') AS d(day)
-      LEFT JOIN analytics_events e ON e.created_at >= d.day AND e.created_at < d.day + INTERVAL '1 day'
+      FROM generate_series((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date - INTERVAL '6 days', (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, '1 day') AS d(day)
+      LEFT JOIN analytics_events e ON e.created_at >= (d.day AT TIME ZONE 'Asia/Ho_Chi_Minh') AND e.created_at < ((d.day + INTERVAL '1 day') AT TIME ZONE 'Asia/Ho_Chi_Minh')
       GROUP BY d.day
       ORDER BY d.day ASC
     `,
@@ -104,7 +104,7 @@ async function getSummary() {
     referralKFactor: null,
     ltvToCac: null,
     unavailableMetrics: [
-      "Paid conversion: chưa có luồng thanh toán tích hợp để xác nhận giao dịch",
+      "Paid conversion: cần đối chiếu đơn thanh toán đã xác nhận với sự kiện analytics để tính tỷ lệ chuyển đổi",
       "Referral K-factor: chưa có cơ chế referral attribution",
       "LTV/CAC: chưa có dữ liệu doanh thu và chi phí thu hút đáng tin cậy",
     ],

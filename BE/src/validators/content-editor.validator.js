@@ -1,6 +1,7 @@
 const { z } = require("zod");
 const text = z.string().trim();
 const common = {
+  expectedUpdatedAt: z.iso.datetime().optional(),
   source: text.max(2000).refine((value) => !value || /^https:\/\//i.test(value), "Nguồn phải là URL HTTPS"),
   region: z.enum(["NORTH", "CENTRAL", "SOUTH", "NATIONWIDE"]),
   reviewNote: text.min(8).max(500),

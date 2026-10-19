@@ -3369,6 +3369,7 @@ export default function App() {
         {screen === "mood-journey" && (
           <MoodJourneyScreen
             savedSignals={userCornerData.signals}
+            isLoggedIn={Boolean(currentUser)}
             onBack={() => navigateTo("account")}
             onGoToMood={() => navigateTo("mood")}
             onGoToSignalResult={handleOpenSavedSignal}
