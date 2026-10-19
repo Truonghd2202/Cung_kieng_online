@@ -19,10 +19,55 @@ async function generateYearly(userId, input) {
   // Provider-attempt quota includes failures; successful-reading quota is separate.
   const reservation = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM users WHERE id = ${userId}::uuid FOR UPDATE`;
+
+    const staleBefore = new Date(
+      Date.now() - 10 * 60 * 1000
+    );
+
+    await tx.horoscope_readings.updateMany({
+      where: {
+        user_id: userId,
+        period_type: "YEARLY",
+        status: "PENDING",
+        created_at: {
+          lt: staleBefore,
+        },
+      },
+      data: {
+        status: "FAILED",
+        prompt_version: "yearly-reflection-expired",
+      },
+    });
+
     const windowStart = new Date(Date.now() - 86400000);
     const quota = { user_id: userId, period_type: "YEARLY", created_at: { gte: windowStart } };
-    if (await tx.horoscope_readings.count({ where: quota }) >= 5) throw new ApiError(429, "Bạn đã dùng đủ 5 lượt gọi AI trong 24 giờ. Các lượt thất bại cũng được tính để kiểm soát chi phí.");
-    if (await tx.horoscope_readings.count({ where: { ...quota, status: "SUCCEEDED" } }) >= 3) throw new ApiError(429, "Bạn đã nhận đủ 3 bản diễn giải thành công trong 24 giờ.");
+    const attempts = await tx.horoscope_readings.count({
+      where: quota,
+    });
+
+    if (attempts >= 5) {
+      throw new ApiError(
+        429,
+        "Bạn đã dùng đủ 5 lượt gọi AI trong 24 giờ. Các lượt thất bại cũng được tính."
+      );
+    }
+    // Đếm trong một truy vấn để việc chuyển PENDING → SUCCEEDED
+    // không làm một lượt bị bỏ sót giữa hai lần đếm.
+    const occupied = await tx.horoscope_readings.count({
+      where: {
+        ...quota,
+        status: {
+          in: ["PENDING", "SUCCEEDED"],
+        },
+      },
+    });
+
+    if (occupied >= 3) {
+      throw new ApiError(
+        429,
+        "Bạn đã nhận đủ hoặc đang xử lý đủ 3 bản diễn giải trong 24 giờ. Hãy đọc lại kết quả đã lưu hoặc chờ lượt đang xử lý hoàn tất."
+      );
+    }
     return tx.horoscope_readings.create({ data: { user_id: userId, period_type: "YEARLY", target_date: target, content: "{}", model: env.GEMINI_MODEL, prompt_version: "yearly-reflection-pending", status: "PENDING" } });
   });
   const markFailed = async () => {
@@ -48,8 +93,40 @@ async function generateYearly(userId, input) {
     await markFailed();
     throw new ApiError(503, "Bản diễn giải chưa đạt kiểm tra nội dung. Vui lòng thử lại sau.");
   }
-  const record = await prisma.horoscope_readings.update({ where: { id: reservation.id }, data: { content: JSON.stringify(reading), prompt_version: "yearly-reflection-v1", status: "SUCCEEDED" } });
-  return { id: record.id, year: input.year, ...reading };
+  await prisma.$transaction(async (tx) => {
+    // Dùng cùng khóa với bước dọn PENDING và giữ suất.
+    await tx.$queryRaw`
+      SELECT id FROM users
+      WHERE id = ${userId}::uuid
+      FOR UPDATE
+    `;
+
+    const updated = await tx.horoscope_readings.updateMany({
+      where: {
+        id: reservation.id,
+        user_id: userId,
+        status: "PENDING",
+      },
+      data: {
+        content: JSON.stringify(reading),
+        prompt_version: "yearly-reflection-v1",
+        status: "SUCCEEDED",
+      },
+    });
+
+    if (updated.count !== 1) {
+      throw new ApiError(
+        409,
+        "Lượt diễn giải này đã kết thúc hoặc quá thời gian xử lý. Hãy kiểm tra các bản đã lưu trước khi tạo lượt khác."
+      );
+    }
+  });
+
+  return {
+    id: reservation.id,
+    year: input.year,
+    ...reading,
+  };
 }
 async function listYearly(userId) {
   const rows = await prisma.horoscope_readings.findMany({ where: { user_id: userId, status: "SUCCEEDED", prompt_version: "yearly-reflection-v1" }, orderBy: { created_at: "desc" }, take: 20 });

@@ -14,6 +14,7 @@ import {
   Volume2,
   Moon,
 } from "lucide-react";
+import { useRoyalLantern } from "../data/inventoryService";
 
 interface FloatingLantern {
   group: THREE.Group;
@@ -26,6 +27,7 @@ interface FloatingLantern {
 
 interface SouthernRiverSceneProps {
   initialWish?: string;
+  currentUserEmail?: string;
 }
 
 // Tạo Procedural Normal Map cho dòng sông trôi êm ả
@@ -76,7 +78,10 @@ function createRiverNormalTexture(): THREE.CanvasTexture {
   return texture;
 }
 
-export function SouthernRiverScene({ initialWish }: SouthernRiverSceneProps) {
+export function SouthernRiverScene({
+  initialWish,
+  currentUserEmail,
+}: SouthernRiverSceneProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
@@ -86,7 +91,26 @@ export function SouthernRiverScene({ initialWish }: SouthernRiverSceneProps) {
   const [showInputModal, setShowInputModal] = useState(false);
   const [selectedLanternWish, setSelectedLanternWish] = useState<string | null>(null);
 
-  const releaseLanternRef = useRef<((msg: string) => void) | null>(null);
+  const [lanternStyle, setLanternStyle] =
+    useState<"standard" | "royal">("standard");
+
+  const [usingRoyal, setUsingRoyal] = useState(false);
+  const [royalError, setRoyalError] = useState("");
+
+  const royalLockRef = useRef(false);
+  const aliveRef = useRef(false);
+
+  useEffect(() => {
+    aliveRef.current = true;
+
+    return () => {
+      aliveRef.current = false;
+    };
+  }, []);
+
+  const releaseLanternRef = useRef<
+    ((message: string, royal?: boolean) => void) | null
+  >(null);
   const resetSceneRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -411,13 +435,18 @@ export function SouthernRiverScene({ initialWish }: SouthernRiverSceneProps) {
     // ==========================================
     const lanterns: FloatingLantern[] = [];
 
-    const createLotusLantern = (message: string, posX: number, posZ: number): FloatingLantern => {
+    const createLotusLantern = (
+      message: string,
+      posX: number,
+      posZ: number,
+      royal = false
+    ): FloatingLantern => {
       const group = new THREE.Group();
 
       // Đế lá sen xanh biếc
       const baseGeo = new THREE.CylinderGeometry(0.35, 0.3, 0.04, 16);
       const baseMat = new THREE.MeshStandardMaterial({
-        color: "#14532d",
+        color: royal ? "#b45309" : "#14532d",
         roughness: 0.6,
       });
       const base = new THREE.Mesh(baseGeo, baseMat);
@@ -426,8 +455,8 @@ export function SouthernRiverScene({ initialWish }: SouthernRiverSceneProps) {
 
       // Cánh hoa sen kép xếp so le (Tầng ngoài & Tầng trong)
       const outerPetalMat = new THREE.MeshStandardMaterial({
-        color: "#f472b6",
-        emissive: "#9d174d",
+        color: royal ? "#fbbf24" : "#f472b6",
+        emissive: royal ? "#92400e" : "#9d174d",
         emissiveIntensity: 0.4,
         roughness: 0.35,
       });
@@ -443,8 +472,8 @@ export function SouthernRiverScene({ initialWish }: SouthernRiverSceneProps) {
       }
 
       const innerPetalMat = new THREE.MeshStandardMaterial({
-        color: "#fb7185",
-        emissive: "#e11d48",
+        color: royal ? "#fde68a" : "#fb7185",
+        emissive: royal ? "#d97706" : "#e11d48",
         emissiveIntensity: 0.6,
         roughness: 0.3,
       });
@@ -492,10 +521,20 @@ export function SouthernRiverScene({ initialWish }: SouthernRiverSceneProps) {
       };
     };
 
-    releaseLanternRef.current = (message: string) => {
+    releaseLanternRef.current = (
+      message: string,
+      royal = false
+    ) => {
       const spawnX = (Math.random() - 0.5) * 4.2;
       const spawnZ = 4.2;
-      const newLantern = createLotusLantern(message, spawnX, spawnZ);
+
+      const newLantern = createLotusLantern(
+        message,
+        spawnX,
+        spawnZ,
+        royal
+      );
+
       lanterns.unshift(newLantern);
       setLanternCount(lanterns.length);
       setSessionWishes((wishes) => [...wishes, message]);
@@ -591,6 +630,20 @@ export function SouthernRiverScene({ initialWish }: SouthernRiverSceneProps) {
       renderer.render(scene, camera);
     };
 
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      releaseLanternRef.current = null;
+      setReady(false);
+      setError(
+        "Cảnh 3D đã bị gián đoạn. Hãy tải lại trang để mở lại cảnh."
+      );
+    };
+
+    canvas.addEventListener(
+      "webglcontextlost",
+      handleContextLost
+    );
+
     animate();
 
     const handleResize = () => {
@@ -603,6 +656,12 @@ export function SouthernRiverScene({ initialWish }: SouthernRiverSceneProps) {
     window.addEventListener("resize", handleResize);
 
     return () => {
+      releaseLanternRef.current = null;
+
+      canvas.removeEventListener(
+        "webglcontextlost",
+        handleContextLost
+      );
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", handleResize);
       canvas.removeEventListener("click", handleCanvasClick);
@@ -627,13 +686,88 @@ export function SouthernRiverScene({ initialWish }: SouthernRiverSceneProps) {
     autoReleasedWishRef.current = true;
   }, [initialWish, ready]);
 
-  const handleRelease = () => {
-    const textToRelease = customWish.trim();
-    if (!textToRelease || !releaseLanternRef.current) return;
+  const handleRelease = async () => {
+    const text = customWish.trim();
 
-    releaseLanternRef.current(textToRelease);
-    setCustomWish("");
-    setShowInputModal(false);
+    if (
+      !text ||
+      !ready ||
+      !releaseLanternRef.current ||
+      royalLockRef.current
+    ) {
+      return;
+    }
+
+    setRoyalError("");
+
+    if (lanternStyle === "standard") {
+      releaseLanternRef.current(text);
+      setCustomWish("");
+      setShowInputModal(false);
+      return;
+    }
+
+    if (!currentUserEmail) {
+      setRoyalError(
+        "Hãy đăng nhập để dùng đèn trong kho. Đèn thường vẫn miễn phí."
+      );
+      return;
+    }
+
+    royalLockRef.current = true;
+    setUsingRoyal(true);
+
+    const storageKey =
+      `tltl-royal-lantern-request:${currentUserEmail.trim().toLowerCase()}`;
+
+    try {
+      // Chỉ lưu mã thao tác; không lưu lời viết.
+      // Nếu không giữ được mã thì chưa gọi API trừ lượt.
+      let requestId = sessionStorage.getItem(storageKey);
+
+      if (
+        !requestId ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          requestId
+        )
+      ) {
+        requestId = crypto.randomUUID();
+      }
+
+      sessionStorage.setItem(storageKey, requestId);
+
+      await useRoyalLantern(requestId);
+
+      if (!aliveRef.current) return;
+
+      if (!releaseLanternRef.current) {
+        throw new Error(
+          "Lượt dùng đã được ghi nhận nhưng cảnh bị gián đoạn. Tải lại trang và thử dùng đèn lần nữa trong cùng tab để khôi phục bằng mã cũ."
+        );
+      }
+
+      releaseLanternRef.current(text, true);
+
+      // Chỉ bỏ mã khi đã thêm đèn vào cảnh.
+      sessionStorage.removeItem(storageKey);
+
+      setCustomWish("");
+      setShowInputModal(false);
+    } catch (reason) {
+      if (!aliveRef.current) return;
+
+      setRoyalError(
+        reason instanceof Error
+          ? reason.message
+          : "Chưa hoàn tất lượt đèn. Hãy thử lại trong cùng tab."
+      );
+    } finally {
+      royalLockRef.current = false;
+
+      if (aliveRef.current) {
+        setUsingRoyal(false);
+      }
+    }
   };
 
   return (
@@ -750,7 +884,9 @@ export function SouthernRiverScene({ initialWish }: SouthernRiverSceneProps) {
       {showInputModal && (
         <AppDialog
           labelledBy="lantern-dialog-title"
-          onClose={() => setShowInputModal(false)}
+          onClose={() => {
+            if (!usingRoyal) setShowInputModal(false);
+          }}
           className="max-w-sm border-emerald-500/40 bg-[#071626] p-5 text-white"
         >
           <div className="space-y-3">
@@ -762,7 +898,9 @@ export function SouthernRiverScene({ initialWish }: SouthernRiverSceneProps) {
               <button
                 type="button"
                 aria-label="Đóng hộp thoại thả hoa đăng"
-                onClick={() => setShowInputModal(false)}
+                onClick={() => {
+                  if (!usingRoyal) setShowInputModal(false);
+                }}
                 className="text-stone-400 hover:text-white text-sm cursor-pointer"
               >
                 ✕
@@ -773,6 +911,48 @@ export function SouthernRiverScene({ initialWish }: SouthernRiverSceneProps) {
               Viết lời chúc lành hoặc tâm nguyện của riêng bạn. Nội dung chỉ hiển thị trong cảnh đang mở, không được lưu hoặc chia sẻ công khai.
             </p>
 
+            <fieldset
+              disabled={usingRoyal}
+              className="space-y-2 text-sm"
+            >
+              <legend className="mb-2 font-semibold">
+                Chọn loại đèn
+              </legend>
+
+              <label className="flex min-h-11 items-center gap-2">
+                <input
+                  type="radio"
+                  name="lantern-style"
+                  checked={lanternStyle === "standard"}
+                  onChange={() => setLanternStyle("standard")}
+                />
+                Đèn thường — miễn phí
+              </label>
+
+              <label className="flex min-h-11 items-center gap-2">
+                <input
+                  type="radio"
+                  name="lantern-style"
+                  checked={lanternStyle === "royal"}
+                  onChange={() => setLanternStyle("royal")}
+                />
+                Đèn hoàng gia — dùng 1 lượt trong kho
+              </label>
+            </fieldset>
+
+            {lanternStyle === "royal" && (
+              <p className="text-xs leading-relaxed text-stone-300">
+                Chỉ là kiểu trang trí khác; không làm lời nguyện có
+                hiệu lực hơn. Bấm thả đèn sẽ yêu cầu dùng một lượt.
+              </p>
+            )}
+
+            {royalError && (
+              <p role="alert" className="text-sm text-amber-200">
+                {royalError}
+              </p>
+            )}
+
             <label htmlFor="lantern-wish-content" className="block text-xs font-semibold text-emerald-100">
               Lời chúc hoặc tâm nguyện
             </label>
@@ -781,6 +961,7 @@ export function SouthernRiverScene({ initialWish }: SouthernRiverSceneProps) {
               rows={3}
               maxLength={280}
               value={customWish}
+              disabled={usingRoyal}
               onChange={(e) => setCustomWish(e.target.value)}
               placeholder="VD: Cầu cho gia đạo bình an, cha mẹ mạnh khỏe, mọi sự hanh thông thuận lợi…"
               className="w-full rounded-xl border border-emerald-500/30 bg-black/50 p-2.5 text-xs text-white placeholder:text-stone-500 focus:outline-none focus:ring-1 focus:ring-emerald-400 leading-relaxed"
@@ -794,7 +975,9 @@ export function SouthernRiverScene({ initialWish }: SouthernRiverSceneProps) {
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowInputModal(false)}
+                onClick={() => {
+                  if (!usingRoyal) setShowInputModal(false);
+                }}
                 className="text-xs text-stone-400 hover:text-white cursor-pointer"
               >
                 Hủy
@@ -802,12 +985,18 @@ export function SouthernRiverScene({ initialWish }: SouthernRiverSceneProps) {
               <Button
                 type="button"
                 size="sm"
-                onClick={handleRelease}
-                disabled={!customWish.trim()}
+                onClick={() => void handleRelease()}
+                disabled={
+                  usingRoyal ||
+                  !ready ||
+                  !customWish.trim()
+                }
                 className="text-xs rounded-xl bg-gradient-to-r from-emerald-600 to-amber-600 hover:from-emerald-500 hover:to-amber-500 text-white font-semibold cursor-pointer gap-1.5 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Send className="w-3 h-3" />
-                <span>Thả đèn ngay</span>
+                <span>
+                  {usingRoyal ? "Đang xác nhận lượt…" : "Thả đèn"}
+                </span>
               </Button>
             </div>
           </div>

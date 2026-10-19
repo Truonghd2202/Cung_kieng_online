@@ -1,6 +1,11 @@
 import * as THREE from "three";
 
-export type DecorationId = "lotus-vase" | "river-lantern";
+export type DecorationId =
+  | "lotus-vase"
+  | "river-lantern"
+  | "jade-lotus"
+  | "golden-lotus"
+  | "incense-burner";
 
 export function createDigitalDecoration(
   id: DecorationId
@@ -24,10 +29,62 @@ export function createDigitalDecoration(
     return mesh;
   };
 
-  if (id === "lotus-vase") {
+  if (id === "incense-burner") {
+    const bronze = "#a7783c";
+
+    addMesh(
+      new THREE.CylinderGeometry(0.13, 0.10, 0.12, 24),
+      bronze,
+      [0, 0.12, 0]
+    );
+
+    addMesh(
+      new THREE.CylinderGeometry(0.10, 0.13, 0.07, 24),
+      bronze,
+      [0, 0.215, 0]
+    );
+
+    addMesh(
+      new THREE.SphereGeometry(0.025, 12, 8),
+      "#d4ad62",
+      [0, 0.27, 0]
+    );
+
+    for (let i = 0; i < 3; i++) {
+      const angle = (i / 3) * Math.PI * 2;
+
+      addMesh(
+        new THREE.CylinderGeometry(0.018, 0.025, 0.07, 10),
+        bronze,
+        [
+          Math.cos(angle) * 0.075,
+          0.035,
+          Math.sin(angle) * 0.075,
+        ]
+      );
+    }
+
+    for (const side of [-1, 1]) {
+      const handle = addMesh(
+        new THREE.TorusGeometry(0.04, 0.009, 8, 16),
+        bronze,
+        [side * 0.14, 0.15, 0]
+      );
+
+      handle.rotation.y = Math.PI / 2;
+    }
+  } else if (
+    id === "lotus-vase" ||
+    id === "jade-lotus" ||
+    id === "golden-lotus"
+  ) {
     addMesh(
       new THREE.CylinderGeometry(0.08, 0.11, 0.24, 20),
-      "#b47b55",
+      id === "jade-lotus"
+        ? "#6ee7b7"
+        : id === "golden-lotus"
+          ? "#d4a437"
+          : "#b47b55",
       [0, 0.12, 0]
     );
 
@@ -47,7 +104,11 @@ export function createDigitalDecoration(
 
         const petal = addMesh(
           new THREE.SphereGeometry(0.045, 12, 8),
-          "#d99b9b",
+          id === "jade-lotus"
+            ? "#ecfdf5"
+            : id === "golden-lotus"
+              ? "#ffe39a"
+              : "#d99b9b",
           [
             x + Math.cos(angle) * 0.025,
             flowerY,

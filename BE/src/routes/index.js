@@ -28,11 +28,27 @@ router.use("/memory", memoryRoutes);
 router.use("/content", contentRoutes);
 router.use("/memorials", memorialRoutes);
 router.use("/wishes", wishRoutes);
+router.use(
+  "/membership/library",
+  require("./member-library.routes")
+);
 router.use("/membership", membershipRoutes);
 router.use("/horoscope", require("./horoscope.routes"));
 router.use("/push", require("./push.routes"));
 router.use("/analytics", analyticsRoutes);
 router.use("/admin", adminRoutes);
+router.use(
+  "/inventory",
+  require("./inventory.routes")
+);
+router.use(
+  "/partnerships",
+  require("./partnership.routes")
+);
+router.use(
+  "/shop",
+  require("./digital-shop.routes")
+);
 router.get(
   "/xam/availability",
   validate(xinXamRequestSchema, "query"),
@@ -41,4 +57,20 @@ router.get(
 router.post("/xam/draw", authenticate.optionalAuthenticate, validate(xinXamRequestSchema), reflectionController.drawXam);
 router.post("/xam/toss-keo", authenticate, validate(xinKeoTossSchema), reflectionController.tossKeo);
 
+router.use(
+  "/payments",
+  require("./payment-reconcile.routes")
+);
+
+router.use(
+  "/admin/payments",
+  require("./admin-payment.routes")
+);
+
+router.use(
+  "/partner-gifts",
+  require("./partner-gift.routes")
+);
+
 module.exports = router;
+

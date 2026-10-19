@@ -8,21 +8,34 @@ import type { MemorialRecord } from "./MemorialSpaceScreen";
 
 interface MemorialFormScreenProps {
   initialValue?: MemorialRecord | null;
+  isLoggedIn: boolean;
   onBack: () => void;
-  onSave: (memorial: MemorialRecord) => Promise<MemorialRecord | null>;
+  onSave: (
+    memorial: MemorialRecord,
+    options: { createAnnualReminder: boolean }
+  ) => Promise<MemorialRecord | null>;
 }
 
 const MAX_MEMORIAL_NAME_LENGTH = 100;
 const MAX_MEMORIAL_RELATION_LENGTH = 80;
 const MAX_MEMORIAL_NOTE_LENGTH = 2000;
 
-export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialValue, onBack, onSave }) => {
+export const MemorialFormScreen: React.FC<
+  MemorialFormScreenProps
+> = ({
+  initialValue,
+  isLoggedIn,
+  onBack,
+  onSave,
+}) => {
   const [name, setName] = useState(initialValue?.name || "");
   const [relation, setRelation] = useState(initialValue?.relation || "");
   const [date, setDate] = useState(initialValue?.date || "");
   const [note, setNote] = useState(initialValue?.note || "");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [createAnnualReminder, setCreateAnnualReminder] =
+    useState(false);
 
   const handleSave = async () => {
     if (saving) return;
@@ -30,7 +43,7 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
 
     if (!name.trim() || !relation.trim() || !date) {
       setError(
-        "Bạn hãy điền tên, mối quan hệ và ngày muốn ghi nhớ."
+        "Bạn hãy điền tên, mối quan hệ và ngày mất theo dương lịch."
       );
       return;
     }
@@ -102,14 +115,22 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
 
     setSaving(true);
     try {
-      const saved = await onSave({
-        id: initialValue?.id,
-        name: name.trim(),
-        relation: relation.trim(),
-        date,
-        note: note.trim() || undefined,
-        avatarUrl: initialValue?.avatarUrl,
-      });
+      const saved = await onSave(
+        {
+          id: initialValue?.id,
+          name: name.trim(),
+          relation: relation.trim(),
+          date,
+          note: note.trim() || undefined,
+          avatarUrl: initialValue?.avatarUrl,
+        },
+        {
+          createAnnualReminder:
+            isLoggedIn &&
+            !initialValue?.id &&
+            createAnnualReminder,
+        }
+      );
       if (!saved) throw new Error("Chưa lưu được hồ sơ tưởng niệm.");
     } catch {
       setError(
@@ -203,7 +224,7 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
 
               <label className="block">
                 <span className="block text-sm font-semibold text-ink mb-2">
-                  Ngày muốn ghi nhớ — dương lịch <span className="text-rose-500">*</span>
+                  Ngày mất — dương lịch <span className="text-rose-500">*</span>
                 </span>
                 <div className="relative">
                   <CalendarDays className="absolute left-3.5 top-3.5 w-5 h-5 text-stone-500 pointer-events-none" />
@@ -220,10 +241,46 @@ export const MemorialFormScreen: React.FC<MemorialFormScreenProps> = ({ initialV
                     className="w-full min-h-12 rounded-xl border border-line bg-surface-soft/60 focus:bg-surface pl-11 pr-4 text-base text-ink outline-none transition-all focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                   />
                 </div>
-                <p className="mt-2 text-xs sm:text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
-                  Đây là mốc ngày dương lịch bạn muốn nhớ về. Bạn cũng có thể cài thêm lịch nhắc ngày giỗ âm lịch ở mục Quản lý nhắc lịch.
+                <p className="mt-2 text-xs sm:text-sm text-muted leading-relaxed">
+                  Nhập ngày dương lịch, không nhập trực tiếp ngày âm lịch.
+                  Ngày trên hồ sơ và lịch tưởng niệm được quản lý riêng.
                 </p>
               </label>
+
+              {isLoggedIn && !initialValue?.id && (
+                <label className="flex items-start gap-3 rounded-xl border border-line p-4">
+                  <input
+                    type="checkbox"
+                    checked={createAnnualReminder}
+                    disabled={saving}
+                    onChange={(event) =>
+                      setCreateAnnualReminder(event.target.checked)
+                    }
+                    className="mt-1 h-4 w-4 shrink-0 accent-accent"
+                  />
+
+                  <span>
+                    <span className="block text-sm font-semibold text-ink">
+                      Thêm lịch tưởng niệm dương lịch hằng năm
+                    </span>
+
+                    <span className="mt-1 block text-xs leading-relaxed text-muted">
+                      Dùng ngày và tháng vừa nhập. Việc tạo lịch không tự
+                      cấp quyền gửi thông báo cho trình duyệt.
+                      Bạn có thể chỉnh lịch tại phần Hồ sơ người thân.
+                      Nếu chọn ngày 29/2, ứng dụng dùng ngày 28/2 ở năm không nhuận.
+                    </span>
+                  </span>
+                </label>
+              )}
+
+              {initialValue?.id && (
+                <p className="text-sm leading-relaxed text-muted">
+                  Sửa ngày mất ở đây chỉ cập nhật thông tin hồ sơ.
+                  Nếu cần đổi lịch tưởng niệm, hãy trở về Góc tưởng niệm,
+                  mở sửa hồ sơ trong phần Hồ sơ người thân và điều chỉnh lịch.
+                </p>
+              )}
 
               <label className="block">
                 <span className="block text-sm font-semibold text-ink mb-2">

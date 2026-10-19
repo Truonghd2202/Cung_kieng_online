@@ -2,6 +2,9 @@
 const prisma = require("../config/prisma");
 const repository = require("../repositories/memorial.repository");
 const ApiError = require("../utils/api-error");
+const {
+  assertMemorialDates,
+} = require("../utils/memorial-dates");
 
 function toMemorialDto(item) {
   return {
@@ -46,6 +49,7 @@ async function list(userId) {
 }
 
 async function create(userId, input) {
+  assertMemorialDates(input);
   const data = { user_id: userId, ...toData(input) };
   if (input.anniversary) {
     data.memorial_anniversaries = { create: {
@@ -63,6 +67,7 @@ async function create(userId, input) {
 async function update(userId, id, input) {
   const existing = await repository.findByIdForUser(id, userId);
   if (!existing) throw new ApiError(404, "Memorial not found");
+  assertMemorialDates(input, existing);
   const updated = await prisma.$transaction(async (transaction) => {
     await repository.update(id, userId, toData(input), transaction);
     if (input.anniversary !== undefined) {

@@ -1,4 +1,5 @@
 import { ApiError, createSessionApiClient } from "./sessionApiClient";
+import { fetchApiWithTimeout } from "./fetchApiWithTimeout";
 
 const localDevelopmentApiUrl = import.meta.env.DEV ? "http://localhost:4000/api/v1" : "";
 const configuredApiUrl = (import.meta.env.VITE_API_URL || localDevelopmentApiUrl).replace(/\/$/, "");
@@ -11,7 +12,10 @@ const apiConfigurationError = !API_URL
 
 const client = createSessionApiClient({
   baseUrl: API_URL,
-  rememberMe: () => typeof window !== "undefined" && localStorage.getItem("tltl-remember-me") === "true",
+  fetcher: fetchApiWithTimeout,
+  rememberMe: () =>
+    typeof window !== "undefined" &&
+    localStorage.getItem("tltl-remember-me") === "true",
 });
 
 export { ApiError };

@@ -12,7 +12,13 @@ async function runReminders(now = new Date()) {
     const rows = await prisma.memorial_anniversaries.findMany({ take: 200, ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}), orderBy: { id: "asc" }, include: { memorials: { select: { users: { select: { id: true, user_settings: true, push_subscriptions: true } } } } } });
     for (const anniversary of rows) {
       const user = anniversary.memorials.users;
-      if (user.user_settings?.push_notifications === false || !user.push_subscriptions.length || !anniversaryMatches(anniversary, target)) continue;
+      if (
+        user.user_settings?.push_notifications !== true ||
+        !user.push_subscriptions.length ||
+        !anniversaryMatches(anniversary, target)
+      ) {
+        continue;
+      }
       const key = `${anniversary.id}:${target.toISOString().slice(0, 10)}`;
       const notice = await prisma.notifications.upsert({ where: { dedupe_key: key }, update: {}, create: { user_id: user.id, type: "MEMORIAL", title: "Nhắc ngày giỗ trước 3 ngày", message: "Bạn có ngày giỗ sắp tới trong sổ tưởng niệm. Mở ứng dụng để xem chi tiết.", dedupe_key: key } });
       const claim = await prisma.notifications.updateMany({ where: { id: notice.id, delivered_at: null, OR: [{ claimed_until: null }, { claimed_until: { lt: now } }] }, data: { claimed_until: new Date(now.getTime() + 5 * 60000) } });

@@ -13,10 +13,83 @@ export async function enableDevicePush() {
   await apiRequest("/push/subscriptions", { method: "POST", body: JSON.stringify(subscription.toJSON()) });
 }
 export async function disableDevicePush() {
-  if (!("serviceWorker" in navigator)) return;
-  const registration = await navigator.serviceWorker.getRegistration("/");
-  const subscription = await registration?.pushManager.getSubscription();
+  if (
+    !("serviceWorker" in navigator) ||
+    !("PushManager" in window)
+  ) {
+    return;
+  }
+
+  const registration =
+    await navigator.serviceWorker.getRegistration("/");
+
+  const subscription =
+    await registration?.pushManager.getSubscription();
+
   if (!subscription) return;
-  try { await apiRequest("/push/subscriptions", { method: "DELETE", body: JSON.stringify({ endpoint: subscription.endpoint }) }); }
-  finally { await subscription.unsubscribe(); }
+
+  // Chờ BE xác nhận xóa trước.
+  // Nếu mất mạng, báo lỗi để người dùng biết chưa hoàn tất.
+  await apiRequest("/push/subscriptions", {
+    method: "DELETE",
+    body: JSON.stringify({
+      endpoint: subscription.endpoint,
+    }),
+  });
+
+  const unsubscribed = await subscription.unsubscribe();
+
+  if (!unsubscribed) {
+    const remaining =
+      await registration!.pushManager.getSubscription();
+
+    if (remaining) {
+      throw new Error(
+        "Máy chủ đã ngừng đăng ký cho tài khoản này, nhưng trình duyệt chưa hủy đăng ký thiết bị. Bạn hãy thử lại."
+      );
+    }
+  }
+}
+
+export async function detachDevicePushForLogout():
+  Promise<boolean> {
+  if (!("serviceWorker" in navigator)) {
+    return true;
+  }
+
+  // Thử xóa đăng ký trên BE khi còn phiên đăng nhập.
+  try {
+    await disableDevicePush();
+  } catch {
+    // Dù BE chưa xác nhận, vẫn thử ngừng nhận trên thiết bị.
+  }
+
+  try {
+    const registration =
+      await navigator.serviceWorker.getRegistration("/");
+
+    if (!registration) return true;
+
+    // Dọn các thông báo đã hiển thị của ứng dụng.
+    const notifications =
+      await registration.getNotifications();
+
+    notifications.forEach((notification) => {
+      notification.close();
+    });
+
+    const subscription =
+      await registration.pushManager.getSubscription();
+
+    if (!subscription) return true;
+
+    await subscription.unsubscribe();
+
+    const remaining =
+      await registration.pushManager.getSubscription();
+
+    return remaining === null;
+  } catch {
+    return false;
+  }
 }

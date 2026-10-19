@@ -238,10 +238,22 @@ async function restoreSessionFor(session: number): Promise<RestoreSessionResult>
   }
 }
 
-export async function logoutAccount(): Promise<{ serverRevoked: boolean }> {
+export async function logoutAccount(): Promise<{
+  serverRevoked: boolean;
+  pushDetached: boolean;
+}> {
   const session = beginSessionTransition(false);
-  await import("./pushService").then((service) => service.disableDevicePush()).catch(() => {});
-  if (!isSessionCurrent(session)) return { serverRevoked: false };
+  const pushDetached = await import("./pushService")
+    .then((service) =>
+      service.detachDevicePushForLogout()
+    )
+    .catch(() => false);
+  if (!isSessionCurrent(session)) {
+    return {
+      serverRevoked: false,
+      pushDetached,
+    };
+  }
   let serverRevoked = false;
   try {
     await apiRequest<never>("/auth/logout", { method: "POST" });
@@ -254,7 +266,10 @@ export async function logoutAccount(): Promise<{ serverRevoked: boolean }> {
       clearStoredUser();
     }
   }
-  return { serverRevoked };
+  return {
+    serverRevoked,
+    pushDetached,
+  };
 }
 
 export interface PasswordResetRequestResult {

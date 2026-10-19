@@ -23,11 +23,19 @@ const envSchema = z
     SMTP_PASS: optionalString,
     SMTP_FROM_EMAIL: z.preprocess(emptyToUndefined, z.string().email().optional()),
     APP_BASE_URL: z.string().url().default("http://localhost:3000"),
-    GEMINI_MODEL: z.string().default("gemini-2.5-flash"),
+    GEMINI_MODEL: z.string().default("gemini-3.8-flash"),
     MEMBERSHIP_SALES_ENABLED: z
       .enum(["true", "false"])
       .default("false")
       .transform((value) => value === "true"),
+    DIGITAL_SALES_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    SEPAY_ENV: z.enum(["sandbox", "production"]).default("sandbox"),
+    SEPAY_MERCHANT_ID: optionalString,
+    SEPAY_SECRET_KEY: optionalString,
+    SEPAY_IPN_SECRET: optionalString,
     VNPAY_TMN_CODE: optionalString,
     VNPAY_HASH_SECRET: optionalString,
     VNPAY_PAYMENT_URL: z.preprocess(emptyToUndefined, z.string().url().default("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html")),

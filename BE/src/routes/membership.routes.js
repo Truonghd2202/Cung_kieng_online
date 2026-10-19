@@ -1,3 +1,4 @@
+const { z } = require("zod");
 const express = require("express");
 const controller = require("../controllers/membership.controller");
 const validate = require("../middleware/validation.middleware");
@@ -7,7 +8,15 @@ const authenticate = require("../middleware/auth.middleware");
 const router = express.Router();
 const payment = require("../controllers/payment.controller");
 router.get("/status", authenticate.optionalAuthenticate, payment.membership);
-router.post("/checkout", authenticate, payment.checkout);
+router.post(
+  "/checkout",
+  authenticate,
+  validate(z.object({
+    requestId: z.string().uuid(),
+    term: z.enum(["monthly", "yearly"]),
+  }).strict()),
+  payment.checkout
+);
 router.get("/orders/:id", authenticate, payment.order);
 router.get(
   "/interests",

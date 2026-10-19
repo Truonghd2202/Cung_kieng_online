@@ -1,9 +1,52 @@
 import { useEffect, useRef, useState } from "react";
-import { apiRequest } from "../lib/api";
+import { ApiError, apiRequest } from "../lib/api";
+import {
+  submitSePayCheckout,
+  type SePayCheckoutResponse,
+} from "../lib/sepayCheckout";
 
-interface Status {
+interface MembershipAttempt {
+  requestId: string;
+  term: "monthly" | "yearly";
+}
+
+function readMembershipAttempt(
+  key: string | null
+): MembershipAttempt | null {
+  if (!key) return null;
+
+  const raw = sessionStorage.getItem(key);
+  if (!raw) return null;
+
+  const value = JSON.parse(raw);
+
+  if (
+    typeof value?.requestId !== "string" ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      value.requestId
+    ) ||
+    !["monthly", "yearly"].includes(value.term)
+  ) {
+    throw new Error("Thông tin đơn đang lưu không hợp lệ.");
+  }
+
+  return value;
+}
+
+export interface Status {
   price: number;
+  plans: Array<{
+    term: "monthly" | "yearly";
+    name: string;
+    price: number;
+    months: number;
+  }>;
   currency: string;
+  paymentEnvironment: "sandbox" | "production";
+  aiLimits: {
+    successfulReadingsPer24Hours: number;
+    providerAttemptsPer24Hours: number;
+  };
   salesEnabled: boolean;
   checkoutAvailable: boolean;
   subscription: {
@@ -15,21 +58,40 @@ interface Status {
 interface MembershipCheckoutProps {
   email?: string;
   onLogin: () => void;
+  onStatusChange?: (status: Status | null) => void;
 }
 
 export function MembershipCheckout({
   email,
   onLogin,
+  onStatusChange,
 }: MembershipCheckoutProps) {
   const [status, setStatus] = useState<Status | null>(null);
+  const [term, setTerm] =
+    useState<"monthly" | "yearly">("monthly");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [pendingOrder, setPendingOrder] = useState(false);
+  const [paymentWindowExpired, setPaymentWindowExpired] =
+    useState(false);
+
+  const [acceptNewOrder, setAcceptNewOrder] =
+    useState(false);
+  const [displayOrderId, setDisplayOrderId] = useState("");
+  const [canResumeOrder, setCanResumeOrder] = useState(false);
+
+  const orderBlocksCheckout =
+    pendingOrder &&
+    !(paymentWindowExpired && acceptNewOrder);
 
   const requestVersion = useRef(0);
   const checkoutLock = useRef(false);
+
+  const attemptStorageKey = email
+    ? `tltl-membership-attempt:${email.trim().toLowerCase()}`
+    : null;
 
   const refresh = async () => {
     const version = ++requestVersion.current;
@@ -37,25 +99,92 @@ export function MembershipCheckout({
     setLoading(true);
     setError("");
     setMessage("");
+    setAcceptNewOrder(false);
+    setPaymentWindowExpired(false);
+    setCanResumeOrder(false);
 
     try {
       let nextStatus = await apiRequest<Status>(
         "/membership/status",
       );
 
-      const orderId = new URLSearchParams(
-        window.location.search,
-      ).get("vnp_TxnRef");
+      const params = new URLSearchParams(window.location.search);
+
+      const returnedOrderId =
+        params.get("orderId") ?? params.get("vnp_TxnRef");
+
+      const savedAttempt = readMembershipAttempt(attemptStorageKey);
+
+      if (
+        version === requestVersion.current &&
+        savedAttempt
+      ) {
+        setTerm(savedAttempt.term);
+      }
+
+      const savedOrderId = savedAttempt
+        ? savedAttempt.requestId.replace(/-/g, "").toLowerCase()
+        : null;
+
+      const validReturnedOrderId =
+        returnedOrderId && /^[a-f0-9]{32}$/i.test(returnedOrderId)
+          ? returnedOrderId
+          : null;
+
+      const orderId = savedOrderId ?? validReturnedOrderId;
+
+      if (version === requestVersion.current) {
+        setDisplayOrderId(email ? orderId ?? "" : "");
+      }
 
       let nextMessage = "";
       let waitingForOrder = false;
+      let windowExpired = false;
 
       if (email && orderId) {
-        const order = await apiRequest<{
+        let order: {
           status: string;
-        }>(
-          `/membership/orders/${encodeURIComponent(orderId)}`,
-        );
+          paymentWindowExpired: boolean;
+          reconciliation?:
+            | "NOT_FOUND_ON_PROVIDER"
+            | "PROVIDER_CANCELLED"
+            | "AWAITING_PAYMENT"
+            | "CONFIRMED";
+        };
+
+        try {
+          order = await apiRequest(
+            `/payments/sepay/orders/${encodeURIComponent(orderId)}/reconcile`,
+            {
+              method: "POST",
+            }
+          );
+        } catch (error) {
+          if (
+            error instanceof ApiError &&
+            error.status === 404 &&
+            savedOrderId !== null &&
+            savedOrderId === orderId
+          ) {
+            // BE chưa tạo được đơn: lần thử tiếp vẫn dùng cùng UUID.
+            order = {
+              status: "NOT_CREATED",
+              paymentWindowExpired: false,
+            };
+          } else {
+            throw error;
+          }
+        }
+
+        if (version !== requestVersion.current) return;
+
+        if (
+          attemptStorageKey &&
+          savedOrderId === orderId &&
+          ["PAID", "FAILED", "CANCELLED"].includes(order.status)
+        ) {
+          sessionStorage.removeItem(attemptStorageKey);
+        }
 
         if (order.status === "PAID") {
           nextMessage = "Thanh toán đã được xác nhận.";
@@ -63,26 +192,80 @@ export function MembershipCheckout({
           nextStatus = await apiRequest<Status>(
             "/membership/status",
           );
+        } else if (order.status === "CANCELLED") {
+          nextMessage =
+            "SePay đã xác nhận đơn bị hủy. Đơn này chưa cấp hội viên. " +
+            "Bạn có thể tạo đơn khác. Nếu đã bị trừ tiền, hãy giữ mã đơn để đối soát.";
         } else if (order.status === "FAILED") {
           nextMessage =
             "Thanh toán chưa thành công. Bạn chưa được cấp hội viên từ giao dịch này.";
+        } else if (order.status === "PENDING") {
+          waitingForOrder = true;
+          windowExpired = order.paymentWindowExpired;
+
+          if (order.reconciliation === "PROVIDER_CANCELLED") {
+            nextMessage =
+              "SePay báo đơn đã hủy. Đơn này chưa cấp hội viên. " +
+              "Nếu đã bị trừ tiền, hãy giữ mã đơn và liên hệ hỗ trợ.";
+
+            if (windowExpired) {
+              nextMessage +=
+                " Bạn có thể xác nhận kiểm tra đơn cũ bên dưới để tạo đơn khác.";
+            }
+          } else if (
+            order.reconciliation === "NOT_FOUND_ON_PROVIDER"
+          ) {
+            nextMessage =
+              "Đơn đã được tạo trên ứng dụng nhưng chưa tìm thấy trên SePay. " +
+              "Bạn chưa được cấp hội viên từ đơn này.";
+          } else if (
+            order.reconciliation === "AWAITING_PAYMENT"
+          ) {
+            nextMessage = windowExpired
+              ? "Đơn đã hết thời hạn mở thanh toán và chưa được xác nhận trả tiền. " +
+                "Hãy kiểm tra giao dịch cũ trước khi tạo đơn khác."
+              : "Đơn đang chờ thanh toán hoặc xác nhận cuối cùng từ SePay. " +
+                "Chưa cấp hội viên từ đơn này.";
+          } else {
+            nextMessage = windowExpired
+              ? "Đơn đã hết thời hạn mở thanh toán nhưng chưa có kết quả cuối cùng. " +
+                "Nếu đã bị trừ tiền, hãy tiếp tục kiểm tra trạng thái."
+              : "Đang chờ xác nhận thanh toán. Hãy kiểm tra lại trước khi tạo đơn khác.";
+          }
+        } else if (order.status === "NOT_CREATED") {
+          nextMessage =
+            "Đơn chưa được tạo. Bạn có thể thử lại bằng cùng mã yêu cầu.";
         } else {
           waitingForOrder = true;
 
           nextMessage =
-            "Giao dịch đang chờ xác nhận. Hãy kiểm tra lại trạng thái trước khi tạo giao dịch mới.";
+            "Trạng thái giao dịch chưa được ứng dụng hỗ trợ. Chưa thể tạo đơn mới từ màn hình này.";
         }
       }
 
       if (version !== requestVersion.current) return;
 
+      const attempt = readMembershipAttempt(attemptStorageKey);
+
+      setCanResumeOrder(
+        Boolean(
+          waitingForOrder &&
+          !windowExpired &&
+          attempt &&
+          attempt.requestId.replace(/-/g, "").toLowerCase() === orderId
+        )
+      );
+
       setStatus(nextStatus);
+      onStatusChange?.(nextStatus);
       setPendingOrder(waitingForOrder);
+      setPaymentWindowExpired(windowExpired);
       setMessage(nextMessage);
     } catch {
       if (version !== requestVersion.current) return;
 
       setStatus(null);
+      onStatusChange?.(null);
 
       setError(
         "Chưa kiểm tra được trạng thái hội viên. Bạn hãy kiểm tra kết nối rồi thử lại.",
@@ -110,7 +293,8 @@ export function MembershipCheckout({
       checkoutLock.current ||
       loading ||
       !status?.checkoutAvailable ||
-      pendingOrder
+      !status.plans.some((plan) => plan.term === term) ||
+      (orderBlocksCheckout && !canResumeOrder)
     ) {
       return;
     }
@@ -125,31 +309,84 @@ export function MembershipCheckout({
     setError("");
 
     try {
-      const order = await apiRequest<{
-        paymentUrl: string;
-      }>("/membership/checkout", {
-        method: "POST",
-      });
+      const version = requestVersion.current;
 
-      const paymentUrl = new URL(order.paymentUrl);
-
-      if (paymentUrl.protocol !== "https:") {
-        throw new Error("Invalid payment URL");
+      if (!attemptStorageKey) {
+        throw new Error("Cần đăng nhập để thanh toán.");
       }
 
-      window.location.assign(paymentUrl.href);
-    } catch {
+      let attempt = readMembershipAttempt(attemptStorageKey);
+
+      if (
+        !attempt ||
+        (pendingOrder && paymentWindowExpired && acceptNewOrder)
+      ) {
+        attempt = {
+          requestId: crypto.randomUUID(),
+          term,
+        };
+
+        // Lưu trước khi gửi để khôi phục được khi request timeout.
+        sessionStorage.setItem(
+          attemptStorageKey,
+          JSON.stringify(attempt)
+        );
+      }
+
+      if (attempt.term !== term) {
+        throw new Error(
+          "Bạn có yêu cầu tạo đơn cho gói khác. Hãy chọn lại gói cũ và kiểm tra trạng thái trước."
+        );
+      }
+
+      const order = await apiRequest<SePayCheckoutResponse>(
+        "/membership/checkout",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            term: attempt.term,
+            requestId: attempt.requestId,
+          }),
+        }
+      );
+
+      const expectedOrderId = attempt.requestId
+        .replace(/-/g, "")
+        .toLowerCase();
+
+      if (order.orderId !== expectedOrderId) {
+        throw new Error("Mã đơn trả về không khớp.");
+      }
+
+      if (version !== requestVersion.current) {
+        checkoutLock.current = false;
+        setBusy(false);
+        return;
+      }
+
+      submitSePayCheckout(order);
+    } catch (error) {
       checkoutLock.current = false;
       setBusy(false);
 
       setError(
-        "Chưa mở được thanh toán. Bạn chưa được xác nhận mua hội viên. Hãy kiểm tra trạng thái rồi thử lại.",
+        `${
+          error instanceof Error
+            ? error.message
+            : "Chưa mở được thanh toán."
+        } Hãy bấm “Kiểm tra lại trạng thái” trước khi tiếp tục.`
       );
     }
   };
 
-  const formattedPrice = status
-    ? new Intl.NumberFormat("vi-VN").format(status.price)
+  const selectedPlan = status?.plans.find(
+    (plan) => plan.term === term
+  );
+
+  const formattedPrice = selectedPlan
+    ? new Intl.NumberFormat("vi-VN").format(
+        selectedPlan.price
+      )
     : "";
 
   return (
@@ -172,6 +409,17 @@ export function MembershipCheckout({
 
       {!loading && status && (
         <>
+          {status.paymentEnvironment === "sandbox" && (
+            <p
+              role="status"
+              className="mt-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm"
+            >
+              Môi trường thử nghiệm: giao dịch giả lập, không chuyển
+              tiền thật. Hội viên và vật phẩm được cấp ở đây chỉ dùng
+              để kiểm tra chức năng.
+            </p>
+          )}
+
           {status.subscription && (
             <p className="mt-3 text-sm text-ink">
               Hội viên đang hoạt động đến{" "}
@@ -192,30 +440,107 @@ export function MembershipCheckout({
 
           {status.checkoutAvailable && (
             <>
+              <fieldset
+                disabled={busy || loading || orderBlocksCheckout}
+                className="mt-4 flex flex-wrap gap-3"
+              >
+                <legend className="mb-2 text-sm font-semibold text-ink">
+                  Chọn thời hạn
+                </legend>
+
+                {status.plans.map((plan) => (
+                  <label
+                    key={plan.term}
+                    className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-line px-4 py-3 text-sm"
+                  >
+                    <input
+                      type="radio"
+                      name="membership-term"
+                      checked={term === plan.term}
+                      onChange={() => setTerm(plan.term)}
+                    />
+
+                    {plan.name} ·{" "}
+                    {new Intl.NumberFormat("vi-VN").format(plan.price)}đ
+                  </label>
+                ))}
+              </fieldset>
+
               <p className="mt-3 text-sm text-ink">
-                {formattedPrice}đ/tháng. Gia hạn thủ công,
-                không tự động trừ tiền.
+                {formattedPrice}đ/
+                {term === "yearly" ? "12 tháng" : "tháng"}.
+                Gia hạn thủ công, không tự động trừ tiền.
+                Cả hai gói có quyền diễn giải AI theo năm và đọc các bài
+                đã phát hành trong thư viện hội viên. Gói năm được tặng
+                thêm một lượt đèn hoa đăng trang trí và quyền sở hữu bình
+                sen ngọc.
               </p>
+
+              <p className="mt-2 text-sm text-muted">
+                Giới hạn AI: tối đa{" "}
+                {status.aiLimits.successfulReadingsPer24Hours} bản
+                diễn giải trong 24 giờ; tối đa{" "}
+                {status.aiLimits.providerAttemptsPer24Hours} lượt gọi
+                dịch vụ trong 24 giờ, gồm cả lượt thất bại.
+                Diễn giải dùng để tự suy ngẫm, không tính lá số hoặc
+                dự báo chắc chắn tương lai.
+              </p>
+
+              {pendingOrder && paymentWindowExpired && (
+                <label className="mt-4 flex items-start gap-3 rounded-xl border border-line p-4">
+                  <input
+                    type="checkbox"
+                    checked={acceptNewOrder}
+                    disabled={busy || loading}
+                    onChange={(event) =>
+                      setAcceptNewOrder(event.target.checked)
+                    }
+                    className="mt-1 h-4 w-4 shrink-0 accent-accent"
+                  />
+
+                  <span className="text-sm leading-relaxed text-muted">
+                    Tôi đã kiểm tra giao dịch cũ và muốn tạo đơn khác.
+                    Tôi hiểu đơn cũ vẫn có thể được xác nhận muộn;
+                    nếu cả hai đơn thanh toán thành công, cả hai sẽ
+                    được tính vào thời hạn hội viên.
+                  </span>
+                </label>
+              )}
 
               <button
                 type="button"
-                disabled={busy || pendingOrder}
+                disabled={busy || (orderBlocksCheckout && !canResumeOrder)}
                 onClick={() => void checkout()}
                 className="mt-4 rounded-xl bg-accent px-5 py-3 text-white disabled:opacity-50"
               >
                 {busy
                   ? "Đang mở thanh toán…"
-                  : pendingOrder
-                    ? "Đang chờ xác nhận giao dịch"
-                    : !email
-                      ? "Đăng nhập để tiếp tục"
-                      : status.subscription
-                        ? "Gia hạn qua VNPay"
-                        : "Đăng ký qua VNPay"}
+                  : canResumeOrder
+                    ? "Mở lại thanh toán đơn hiện tại"
+                    : orderBlocksCheckout
+                      ? "Đang chờ xác nhận giao dịch"
+                      : !email
+                        ? "Đăng nhập để tiếp tục"
+                        : status.subscription
+                          ? "Gia hạn qua SePay"
+                          : "Đăng ký qua SePay"}
               </button>
             </>
           )}
         </>
+      )}
+
+      {email && displayOrderId && (
+        <div className="mt-3 rounded-xl border border-line p-3">
+          <p className="break-all text-xs text-muted">
+            Mã đơn: {displayOrderId}
+          </p>
+
+          <p className="mt-2 text-xs text-muted">
+            Khi cần hỗ trợ, hãy cung cấp mã đơn và thời điểm
+            giao dịch. Không cung cấp mật khẩu hoặc mã OTP ngân hàng.
+          </p>
+        </div>
       )}
 
       {message && (

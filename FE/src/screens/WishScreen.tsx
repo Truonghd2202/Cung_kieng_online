@@ -47,6 +47,7 @@ interface WishScreenProps {
     content: string | null,
     category: string
   ) => void;
+  currentUserEmail?: string;
 }
 
 const SAMPLE_WISHES: Record<WishTopic, string> = {
@@ -104,6 +105,7 @@ export const WishScreen: React.FC<WishScreenProps> = ({
   initialContent = "",
   initialCategory = "Bình an",
   onDraftChange,
+  currentUserEmail,
 }) => {
   // Screen views: 'form' | 'variantA' (Lưu riêng) | 'variantB' (Biểu tượng tan biến)
   const [viewState, setViewState] = useState<"form" | "variantA" | "variantB">("form");
@@ -901,7 +903,11 @@ export const WishScreen: React.FC<WishScreenProps> = ({
                       </div>
                     }
                   >
-                    <SouthernRiverScene initialWish={pendingLanternWish} />
+                    <SouthernRiverScene
+                      key={currentUserEmail || "guest"}
+                      initialWish={pendingLanternWish}
+                      currentUserEmail={currentUserEmail}
+                    />
                   </Suspense>
                 </LanternSceneBoundary>
               </div>

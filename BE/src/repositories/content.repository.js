@@ -1,8 +1,8 @@
 const prisma = require("../config/prisma");
 const { DAILY_PROVERB_SOURCE } = require("../constants/content");
 
-function listArticles({ region, category, limit, offset = 0 }, client = prisma) { return client.culture_articles.findMany({ where: { active: true, verified: true, ...(region ? { region } : {}), ...(category ? { category } : {}) }, orderBy: [{ created_at: "asc" }, { slug: "asc" }], skip: offset, take: limit }); }
-function findArticle(slug, client = prisma) { return client.culture_articles.findFirst({ where: { slug, active: true, verified: true } }); }
+function listArticles({ region, category, limit, offset = 0 }, client = prisma) { return client.culture_articles.findMany({ where: { active: true, verified: true, members_only: false, ...(region ? { region } : {}), ...(category ? { category } : {}) }, orderBy: [{ created_at: "asc" }, { slug: "asc" }], skip: offset, take: limit }); }
+function findArticle(slug, client = prisma) { return client.culture_articles.findFirst({ where: { slug, active: true, verified: true, members_only: false } }); }
 function listRituals(
   { region, category: occasion, limit, offset = 0, preview = false },
   client = prisma,

@@ -102,6 +102,13 @@ export function MemorialProfilesPanel({ selectedId, onSelect }: { selectedId?: s
             <label>Ngày<input type="number" className={inputClass} required min={1} max={form.calendar === "LUNAR" ? 30 : 31} value={form.day} onChange={(e) => setForm({ ...form, day: e.target.value })} /></label>
             <label>Tháng<input type="number" className={inputClass} required min={1} max={12} value={form.month} onChange={(e) => setForm({ ...form, month: e.target.value })} /></label>
           </div>}
+          {form.reminder && (
+            <p className="text-xs leading-relaxed text-muted">
+              {form.calendar === "LUNAR"
+                ? "Lịch âm dùng tháng thường, chưa hỗ trợ chọn tháng nhuận. Nếu lưu ngày 30 nhưng tháng chỉ có 29 ngày, ứng dụng nhắc vào ngày 29."
+                : "Với lịch lặp ngày 29/2, ứng dụng nhắc vào ngày 28/2 ở năm không nhuận."}
+            </p>
+          )}
         </fieldset>
         {error && <p role="alert" className="text-danger">{error}</p>}
         <div className="flex gap-3"><Button type="submit" disabled={busy}>{busy ? "Đang lưu…" : "Lưu hồ sơ"}</Button><Button type="button" variant="outline" disabled={busy} onClick={() => setEditor(null)}>Hủy</Button></div>

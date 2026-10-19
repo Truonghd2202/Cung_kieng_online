@@ -19,6 +19,10 @@ app.use(cookieParser());
 app.use("/api", securityHeaders);
 // VNPay authenticates callbacks with its signature; allow provider retries independently of browser quotas.
 app.get("/api/v1/payments/vnpay/ipn", require("./controllers/payment.controller").ipn);
+app.post(
+  "/api/v1/payments/sepay/ipn",
+  require("./controllers/sepay.controller").ipn
+);
 
 app.get("/api/health", async (_req, res) => {
   await prisma.$queryRaw`SELECT 1`;

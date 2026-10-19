@@ -114,6 +114,7 @@ model culture_articles {
   editorial_status content_editorial_status @default(DRAFT)
   verified   Boolean         @default(false)
   active     Boolean         @default(true)
+  members_only Boolean       @default(false)
   created_at DateTime        @default(now()) @db.Timestamptz(6)
   updated_at DateTime        @default(now()) @db.Timestamptz(6)
 
@@ -648,9 +649,71 @@ model users {
   wishes               wishes[]
   xin_keo_sessions     xin_keo_sessions[]
   xin_xam_draws        xin_xam_draws[]
+  digital_inventory    digital_inventory[]
+  digital_item_uses    digital_item_uses[]
+  partnership_requests partnership_requests[]
+  digital_orders       digital_orders[]
 
   @@index([email], map: "idx_users_email")
   @@index([role], map: "idx_users_role")
+}
+
+model digital_inventory {
+  user_id    String   @db.Uuid
+  item_code  String   @db.VarChar(80)
+  quantity   Int      @default(0)
+  equipped   Boolean  @default(false)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, item_code])
+}
+
+model digital_item_uses {
+  id         String   @id @db.Uuid
+  user_id    String   @db.Uuid
+  item_code  String   @db.VarChar(80)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, created_at])
+}
+
+model digital_orders {
+  id                  String    @id @db.VarChar(32)
+  user_id             String    @db.Uuid
+  item_code           String    @db.VarChar(80)
+  quantity            Int       @default(1)
+  amount              Int
+  status              String    @default("PENDING") @db.VarChar(16)
+  payment_provider    String    @default("VNPAY") @db.VarChar(16)
+  payment_environment String    @default("LEGACY") @db.VarChar(16)
+  transaction_no      String?   @unique @db.VarChar(128)
+  expires_at          DateTime  @db.Timestamptz(6)
+  paid_at             DateTime? @db.Timestamptz(6)
+  created_at          DateTime  @default(now()) @db.Timestamptz(6)
+  payment_review_status String  @default("NONE") @db.VarChar(16)
+  payment_review_note   String? @db.VarChar(2000)
+
+  users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, created_at])
+}
+
+model partnership_requests {
+  id           String   @id @db.Uuid
+  user_id      String   @db.Uuid
+  organization String   @db.VarChar(200)
+  message      String
+  status       String   @default("NEW") @db.VarChar(30)
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime @default(now()) @db.Timestamptz(6)
+
+  users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, created_at])
 }
 
 model push_subscriptions {
@@ -665,17 +728,19 @@ model push_subscriptions {
 }
 
 model payment_orders {
-  id             String    @id @db.VarChar(32)
-  user_id        String    @db.Uuid
-  plan_id        String    @db.Uuid
-  amount         Int
-  status         String    @default("PENDING") @db.VarChar(16)
-  transaction_no String?   @unique @db.VarChar(30)
-  response_code  String?   @db.VarChar(10)
-  expires_at     DateTime  @db.Timestamptz(6)
-  paid_at        DateTime? @db.Timestamptz(6)
-  created_at     DateTime  @default(now()) @db.Timestamptz(6)
-  users          users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                  String    @id @db.VarChar(32)
+  user_id             String    @db.Uuid
+  plan_id             String    @db.Uuid
+  amount              Int
+  status              String    @default("PENDING") @db.VarChar(16)
+  payment_provider    String    @default("VNPAY") @db.VarChar(16)
+  payment_environment String    @default("LEGACY") @db.VarChar(16)
+  transaction_no      String?   @unique @db.VarChar(128)
+  response_code       String?   @db.VarChar(10)
+  expires_at          DateTime  @db.Timestamptz(6)
+  paid_at             DateTime? @db.Timestamptz(6)
+  created_at          DateTime  @default(now()) @db.Timestamptz(6)
+  users               users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   membership_plans membership_plans @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([user_id, created_at])
@@ -926,3 +991,39 @@ enum xin_keo_result {
   NO
   UNCLEAR
 }
+
+model payment_runtime_config {
+  key   String @id @db.VarChar(80)
+  value String @db.VarChar(80)
+}
+
+model payment_alerts {
+  id              String    @id @db.VarChar(64)
+  order_id        String    @db.VarChar(32)
+  user_id         String    @db.Uuid
+  environment     String    @db.VarChar(16)
+  event_type      String    @db.VarChar(40)
+  transaction_id  String    @db.VarChar(80)
+  status          String    @default("OPEN") @db.VarChar(16)
+  resolution_note String?   @db.VarChar(2000)
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  resolved_at     DateTime? @db.Timestamptz(6)
+
+  @@index([status, created_at])
+}
+
+model partner_gifts {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String   @db.VarChar(200)
+  description   String   @db.VarChar(5000)
+  partner_name  String   @db.VarChar(200)
+  purchase_url  String   @db.VarChar(2000)
+  active        Boolean  @default(false)
+  version       Int      @default(1)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([active, created_at])
+}
+
+

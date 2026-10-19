@@ -1052,7 +1052,10 @@ export const RegionalExperienceScreen: React.FC<RegionalExperienceScreenProps> =
               <div className="rounded-xl overflow-hidden border border-line">
                 <SceneErrorBoundary onClose={() => {}}>
                   <Suspense fallback={<p className="text-xs text-stone-500 py-10 text-center">Đang tải cảnh sông nước 3D...</p>}>
-                    <SouthernRiverScene />
+                    <SouthernRiverScene
+                      key={currentUserEmail || "guest"}
+                      currentUserEmail={currentUserEmail}
+                    />
                   </Suspense>
                 </SceneErrorBoundary>
               </div>

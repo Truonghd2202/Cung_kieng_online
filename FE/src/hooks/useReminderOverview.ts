@@ -51,25 +51,96 @@ function readSnapshot(email?: string): string {
 export function useReminderOverview(email?: string) {
   const today = useLocalDay();
   const [memorialProfiles, setMemorialProfiles] = useState<MemorialProfile[]>([]);
+  const [reloadVersion, setReloadVersion] = useState(0);
+
+  const [loadState, setLoadState] = useState<{
+    email: string | null;
+    status: "loading" | "ready" | "error";
+  }>({
+    email: null,
+    status: "ready",
+  });
 
   useEffect(() => {
     let active = true;
+    let requestVersion = 0;
+
+    // Không giữ hồ sơ của tài khoản trước trong lúc tải.
+    setMemorialProfiles([]);
+
     const refreshMemorials = () => {
+      const version = ++requestVersion;
+
       if (!email) {
-        if (active) setMemorialProfiles([]);
+        setMemorialProfiles([]);
+        setLoadState({
+          email: null,
+          status: "ready",
+        });
         return;
       }
-      loadMemorialProfiles()
-        .then((profiles) => { if (active) setMemorialProfiles(profiles); })
-        .catch(() => { if (active) setMemorialProfiles([]); });
+
+      setLoadState({
+        email,
+        status: "loading",
+      });
+
+      void loadMemorialProfiles()
+        .then((profiles) => {
+          if (!active || version !== requestVersion) return;
+
+          setMemorialProfiles(profiles);
+          setLoadState({
+            email,
+            status: "ready",
+          });
+        })
+        .catch(() => {
+          if (!active || version !== requestVersion) return;
+
+          // Không hiển thị lại lịch cũ khi chưa xác nhận được
+          // hồ sơ hiện tại từ BE.
+          setMemorialProfiles([]);
+          setLoadState({
+            email,
+            status: "error",
+          });
+        });
     };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        refreshMemorials();
+      }
+    };
+
     refreshMemorials();
-    window.addEventListener(MEMORIAL_PROFILES_CHANGED_EVENT, refreshMemorials);
+
+    window.addEventListener(
+      MEMORIAL_PROFILES_CHANGED_EVENT,
+      refreshMemorials
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+
     return () => {
       active = false;
-      window.removeEventListener(MEMORIAL_PROFILES_CHANGED_EVENT, refreshMemorials);
+      requestVersion += 1;
+
+      window.removeEventListener(
+        MEMORIAL_PROFILES_CHANGED_EVENT,
+        refreshMemorials
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
     };
-  }, [email]);
+  }, [email, reloadVersion]);
 
   const snapshot = useSyncExternalStore(
     subscribe,
@@ -77,7 +148,7 @@ export function useReminderOverview(email?: string) {
     () => '["","[]"]'
   );
 
-  return useMemo(() => {
+  const upcoming = useMemo(() => {
     const [, notesRaw] = JSON.parse(snapshot) as [
       string,
       string,
@@ -114,4 +185,19 @@ export function useReminderOverview(email?: string) {
       ...memorialReminders,
     ];
   }, [email, memorialProfiles, snapshot, today]);
+
+  const matchesAccount =
+    loadState.email === (email ?? null);
+
+  return {
+    upcoming,
+    loading:
+      Boolean(email) &&
+      (!matchesAccount || loadState.status === "loading"),
+    loadError:
+      Boolean(email) &&
+      matchesAccount &&
+      loadState.status === "error",
+    retry: () => setReloadVersion((value) => value + 1),
+  };
 }

@@ -16,6 +16,8 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { SceneErrorBoundary } from "../components/SceneErrorBoundary";
+import { useJadeDecoration } from "../hooks/useJadeDecoration";
+import { JadeDecorationControl } from "../components/JadeDecorationControl";
 
 import type { MemorialRecord } from "./MemorialSpaceScreen";
 
@@ -49,6 +51,7 @@ export const VirtualSanctuaryScreen: React.FC<
   onRecordIncense,
 }) => {
   const [show3D, setShow3D] = useState(false);
+  const jadeDecoration = useJadeDecoration(currentUserEmail);
 
   return (
     <div className="screen-shell">
@@ -182,6 +185,10 @@ export const VirtualSanctuaryScreen: React.FC<
             </Button>
           </div>
 
+          {currentUserEmail && (
+            <JadeDecorationControl state={jadeDecoration} />
+          )}
+
           <div id="sanctuary-3d-panel">
             {show3D && (
               <SceneErrorBoundary
@@ -205,7 +212,7 @@ export const VirtualSanctuaryScreen: React.FC<
                     memorial={memorial}
                     onOpenMemorial={onGoToMemorial}
                     onRecordIncense={onRecordIncense}
-                    decoration={null}
+                    decoration={jadeDecoration.decoration}
                   />
                 </Suspense>
               </SceneErrorBoundary>

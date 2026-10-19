@@ -152,6 +152,7 @@ export function ContentEditor({
   const [imageSource, setImageSource] = useState("");
   const [imageRightsBasis, setImageRightsBasis] = useState("");
   const [imageLoadError, setImageLoadError] = useState(false);
+  const [membersOnly, setMembersOnly] = useState(false);
 
   // Dynamic sections (culture) and steps (rituals)
   const [sections, setSections] = useState([{ heading: "", body: "" }]);
@@ -226,6 +227,7 @@ export function ContentEditor({
         }
 
         setValues((current) => ({ ...current, ...next }));
+        setMembersOnly(record.members_only === true);
 
         const content = record.content as
           | {
@@ -370,6 +372,7 @@ export function ContentEditor({
       const generatedSlug = values.slug.trim() || slugifyVietnamese(values.title) || "bai-viet-moi";
       payload.slug = generatedSlug;
       payload.title = values.title.trim();
+      payload.members_only = membersOnly;
       payload.category = values.category.trim() || "Phong tục & Nghi lễ";
       payload.excerpt = values.excerpt.trim();
       payload.image_url = values.image_url.trim();
@@ -606,6 +609,26 @@ export function ContentEditor({
                     }
                   />
                 </div>
+
+                {kind === "culture" && (
+                  <label className="admin-editor-col-full flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={membersOnly}
+                      onChange={(event) =>
+                        setMembersOnly(event.target.checked)
+                      }
+                    />
+
+                    <span>
+                      <strong>Chỉ dành cho hội viên Tâm An</strong>
+                      <span className="block text-sm">
+                        Bài vẫn phải được duyệt và xuất bản.
+                        Bài hội viên không xuất hiện trong danh mục văn hóa miễn phí.
+                      </span>
+                    </span>
+                  </label>
+                )}
 
                 {/* Chủ đề văn hóa (Dropdown chuẩn hóa) */}
                 <div className="admin-editor-field">

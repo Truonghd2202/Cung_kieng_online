@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { UnverifiedImage } from "../components/UnverifiedImage";
 import {
   ArrowLeft,
@@ -22,8 +22,16 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { MembershipCheckout } from "../components/MembershipCheckout";
+import type {
+  Status as MembershipStatus,
+} from "../components/MembershipCheckout";
+import { MemberLibrary } from "../components/MemberLibrary";
+import { DigitalShop } from "../components/DigitalShop";
+import { DigitalInventory } from "../components/DigitalInventory";
+import { PaymentHistory } from "../components/PaymentHistory";
+import { PartnershipPanel } from "../components/PartnershipPanel";
+import { PartnerGifts } from "../components/PartnerGifts";
 import type { MembershipTerm } from "../data/membershipIntent";
-import { MembershipInterest } from "../components/MembershipInterest";
 
 interface MembershipScreenProps {
   onBackToHome: () => void;
@@ -38,6 +46,28 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
   currentUserEmail,
   onGoToLogin,
 }) => {
+  const [membershipStatus, setMembershipStatus] =
+    useState<MembershipStatus | null>(null);
+
+  const membershipAvailability = !membershipStatus
+    ? "Chưa xác định trạng thái thanh toán"
+    : !membershipStatus.salesEnabled
+      ? "Chưa mở đăng ký và gia hạn"
+      : !membershipStatus.checkoutAvailable
+        ? "Thanh toán đang tạm thời không khả dụng"
+        : membershipStatus.paymentEnvironment === "sandbox"
+          ? "Đang mở thanh toán thử nghiệm"
+          : "Đang mở đăng ký và gia hạn";
+
+  const membershipPriceLabel = membershipStatus
+    ? membershipStatus.plans
+        .map(
+          (plan) =>
+            `${plan.name}: ${plan.price.toLocaleString("vi-VN")}đ`
+        )
+        .join(" · ")
+    : "Giá và trạng thái được tải từ máy chủ";
+
   const featureMatrix = [
     {
       name: "Check-in tâm trạng & Lắng nghe cảm xúc",
@@ -139,7 +169,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
               <div className="flex items-center gap-4 text-xs font-semibold text-stone-600 dark:text-stone-400 flex-wrap pt-2">
                 <span className="flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  Gói hội viên chưa mở bán
+                  {membershipAvailability}
                 </span>
                 <span className="flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
                   <Sparkles className="w-4 h-4 text-amber-600" />
@@ -189,7 +219,10 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
               <p className="text-xs text-stone-500 mb-4">Dành cho mọi người dùng tìm kiếm sự an yên</p>
 
               <div className="p-3.5 rounded-2xl bg-surface-soft border border-line text-xs text-stone-700 dark:text-stone-300 leading-relaxed mb-5">
-                Các tính năng cơ bản hiện có được dùng miễn phí. Diễn giải AI theo năm là quyền lợi dự kiến; hiện chưa mở hội viên, và chỉ có thể chạy khi Gemini được cấu hình.
+                Các tính năng cơ bản hiện có được dùng miễn phí.
+                Hội viên Tâm An bổ sung diễn giải AI theo năm và quyền
+                đọc các bài đã phát hành trong thư viện hội viên.
+                Trạng thái đăng ký được hiển thị bên dưới.
               </div>
 
               <div className="space-y-3 text-xs text-stone-700 dark:text-stone-300 mb-6">
@@ -240,67 +273,48 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
           </Card>
 
           {/* Card 2: Planned membership offer; checkout is not active */}
-          <Card className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-surface via-surface to-amber-500/[0.06] border-2 border-amber-500/40 shadow-md flex flex-col justify-between relative overflow-hidden">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
-                  ĐỊNH HƯỚNG HỘI VIÊN
-                </span>
-                <Badge variant="outline" className="text-xs border-amber-500/40 text-amber-800 dark:text-amber-300 bg-amber-500/10 font-semibold">
-                  Dự kiến 29.000đ/tháng
-                </Badge>
-              </div>
+          <Card className="p-6 sm:p-8 rounded-3xl bg-surface border-2 border-amber-500/40 shadow-md">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+              HỘI VIÊN TÂM AN
+            </p>
 
-              <h2 className="font-display font-bold text-2xl text-ink mb-1">
-                Gói Hội Viên Tâm An · Chưa mở bán
-              </h2>
-              <p className="text-xs text-stone-500 mb-4">Mức giá đề xuất; thanh toán và kích hoạt quyền lợi chưa khả dụng.</p>
+            <h2 className="mt-2 font-display text-2xl font-bold text-ink">
+              Đồng hành cùng nếp sống văn hóa
+            </h2>
 
-              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-stone-700 dark:text-stone-300 leading-relaxed mb-5">
-                Đây là gói dự kiến, chưa thể mua hoặc kích hoạt. Diễn giải AI theo năm chỉ có thể thử khi Gemini được cấu hình; nội dung không phải lá số tử vi. Thư viện độc quyền và quyền lợi 3D chưa khả dụng.
-              </div>
+            <p className="mt-3 text-sm font-semibold text-ink">
+              {membershipPriceLabel}
+            </p>
 
-              <div className="space-y-3 text-xs text-stone-700 dark:text-stone-300 mb-6">
-                <div className="flex items-start gap-2.5">
-                  <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Lộ trình · Nội dung văn hóa chuyên sâu:</strong> Kế hoạch khảo cứu chi tiết về đình làng,
-                    phong tục ba miền biên soạn cùng các nhà nghiên cứu Hán Nôm.
-                  </span>
-                </div>
+            <p className="mt-2 text-sm text-muted">
+              {membershipAvailability}
+            </p>
 
-                <div className="flex items-start gap-2.5">
-                  <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Lộ trình · Kho tư liệu số hóa di sản:</strong> Tiếp cận tư liệu số hóa văn bia, bản dịch cổ truyền
-                    và diễn xướng âm nhạc tâm linh độc quyền.
-                  </span>
-                </div>
+            <ul className="mt-5 list-disc space-y-3 pl-5 text-sm text-ink">
+              <li>
+                Diễn giải AI theo năm để tự suy ngẫm về công việc,
+                quan hệ và chăm sóc bản thân.
+              </li>
+              <li>
+                Đọc các bài đã phát hành trong thư viện hội viên.
+                Danh sách bài hiện có được hiển thị bên dưới.
+              </li>
+              <li>
+                Gói năm tặng một lượt đèn hoa đăng trang trí và
+                bình sen ngọc dùng trong cảnh tưởng niệm.
+              </li>
+            </ul>
 
-                <div className="flex items-start gap-2.5">
-                  <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Lộ trình · Đồng bộ đa thiết bị:</strong> Lưu trữ lịch trình nhịp điệu tâm trạng và góc riêng tư
-                    an toàn trên hạ tầng bảo mật cao cấp.
-                  </span>
-                </div>
+            <p className="mt-5 text-sm text-muted">
+              Gia hạn thủ công, không tự động trừ tiền. Quyền lợi
+              chỉ được kích hoạt sau khi máy chủ xác nhận thanh toán.
+              Vật phẩm trang trí không làm lời nguyện có hiệu lực hơn.
+            </p>
 
-                <div className="flex items-start gap-2.5">
-                  <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Lộ trình · Tọa đàm văn hóa định kỳ:</strong> Tham gia các buổi đàm thoại chuyên đề văn hóa
-                    cùng các học giả và nghệ nhân dân gian.
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Email interest registration */}
-            <MembershipInterest
-              key={currentUserEmail || "guest"}
-              email={currentUserEmail}
-              onLogin={() => onGoToLogin("monthly")}
-            />
+            <p className="mt-3 text-sm text-muted">
+              Xem hạn hội viên, giới hạn AI và thao tác đăng ký
+              trong phần trạng thái hội viên bên dưới.
+            </p>
           </Card>
         </div>
 
@@ -383,14 +397,38 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
           key={currentUserEmail || "guest"}
           email={currentUserEmail}
           onLogin={() => onGoToLogin("monthly")}
+          onStatusChange={setMembershipStatus}
         />
 
-        <Card className="mt-8 border-line bg-surface p-5">
-          <h3 className="font-display text-lg font-bold text-ink mb-2">Hợp tác nội dung</h3>
-          <p className="text-sm leading-relaxed text-muted">
-            Tiếp nhận đề xuất hợp tác qua ứng dụng chưa được phát hành. Biểu mẫu chỉ xuất hiện khi có kênh gửi và lưu yêu cầu hoạt động thật.
+        <MemberLibrary
+          key={currentUserEmail || "guest"}
+          email={currentUserEmail}
+        />
+
+        <DigitalShop
+          key={currentUserEmail || "guest"}
+          email={currentUserEmail}
+        />
+
+        <DigitalInventory
+          key={currentUserEmail || "guest"}
+          email={currentUserEmail}
+        />
+
+        <PaymentHistory
+          key={currentUserEmail || "guest"}
+          email={currentUserEmail}
+        />
+
+        <PartnerGifts />
+
+        {currentUserEmail ? (
+          <PartnershipPanel key={currentUserEmail} />
+        ) : (
+          <p className="my-6 text-sm text-muted">
+            Đăng nhập để gửi và theo dõi đề xuất hợp tác.
           </p>
-        </Card>
+        )}
       </main>
     </div>
   );

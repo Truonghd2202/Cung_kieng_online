@@ -24,6 +24,25 @@ export type SessionRefreshResult =
 
 const SESSION_CHANGED = "Phiên đăng nhập đã thay đổi. Vui lòng tải lại dữ liệu của tài khoản hiện tại.";
 
+function toConnectionError(error: unknown): ApiError {
+  if (error instanceof ApiError) return error;
+
+  if (
+    error instanceof Error &&
+    error.name === "TimeoutError"
+  ) {
+    return new ApiError(
+      0,
+      "Máy chủ phản hồi quá thời gian chờ. Nếu vừa lưu hoặc thanh toán, hãy kiểm tra trạng thái trước khi gửi lại."
+    );
+  }
+
+  return new ApiError(
+    0,
+    "Không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối và thử lại."
+  );
+}
+
 export function createSessionApiClient(options: {
   baseUrl: string;
   fetcher?: typeof fetch;
@@ -91,8 +110,14 @@ export function createSessionApiClient(options: {
         if (accessToken === startingToken) accessToken = token;
         return { status: "authenticated", token: accessToken || token };
       } catch (error) {
-        if (!isSessionCurrent(expectedGeneration)) return { status: "invalid" };
-        return { status: "unavailable", error: error instanceof ApiError ? error : new ApiError(0, "Không thể kết nối tới máy chủ để xác minh phiên đăng nhập.") };
+        if (!isSessionCurrent(expectedGeneration)) {
+          return { status: "invalid" };
+        }
+
+        return {
+          status: "unavailable",
+          error: toConnectionError(error),
+        };
       } finally {
         if (refreshRequest?.generation === expectedGeneration) refreshRequest = null;
       }
@@ -111,9 +136,9 @@ export function createSessionApiClient(options: {
     let response: Response;
     try {
       response = await fetcher(resolveUrl(path), { ...init, headers, credentials: "include" });
-    } catch {
+    } catch (error) {
       assertSession(generation);
-      throw new ApiError(0, "Không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối và thử lại.");
+      throw toConnectionError(error);
     }
 
     // Check before handling 401: an old request must never refresh/retry with another account.
@@ -129,9 +154,9 @@ export function createSessionApiClient(options: {
         retryHeaders.set("authorization", `Bearer ${retryToken}`);
         try {
           response = await fetcher(resolveUrl(path), { ...init, headers: retryHeaders, credentials: "include" });
-        } catch {
+        } catch (error) {
           assertSession(generation);
-          throw new ApiError(0, "Không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối và thử lại.");
+          throw toConnectionError(error);
         }
         assertSession(generation);
       }

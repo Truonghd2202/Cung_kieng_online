@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Maximize2 } from "lucide-react";
 import { ImageLightboxModal, LightboxImageInfo } from "./ImageLightboxModal";
+import { findApprovedImage } from "../lib/approvedImage";
 
 export interface UnverifiedImageProps {
   src: string;
@@ -17,9 +18,8 @@ export interface UnverifiedImageProps {
 }
 
 /**
- * Hiển thị hình ảnh văn hóa & tâm linh đã được kiểm chứng nguồn gốc.
- * Nếu thiếu ảnh hoặc lỗi tải, hiển thị khung giữ chỗ trang nhã.
- * Hỗ trợ allowExpand để người dùng mở rộng xem trọn vẹn toàn bộ ảnh không bị cắt.
+ * Hiển thị ảnh có hồ sơ duyệt khớp chính xác đường dẫn.
+ * Ảnh thiếu hồ sơ hoặc tải lỗi dùng bố cục không ảnh.
  */
 export function UnverifiedImage({
   src,
@@ -37,7 +37,14 @@ export function UnverifiedImage({
   const [hasError, setHasError] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  if (!src || hasError) {
+  const approvedImage = findApprovedImage(src);
+
+  useEffect(() => {
+    setHasError(false);
+    setIsModalOpen(false);
+  }, [src]);
+
+  if (!src || hasError || !approvedImage) {
     return (
       <div
         className={`unverified-image ${className}`}

@@ -1,4 +1,11 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  type SetStateAction,
+} from "react";
 import { readPrivateJson, writePrivateJson } from "./lib/privateStorage";
 import { apiRequest, ApiError } from "./lib/api";
 import { clearPersonalStorage } from "./lib/clearPersonalStorage";
@@ -884,14 +891,32 @@ export default function App() {
   ]);
 
   // Tách biệt dữ liệu Góc của tôi (tín hiệu, thẻ xăm, điều ước) theo từng tài khoản
-  const [userCornerData, setUserCornerData] = useState<UserCornerData>({ signals: [], xam: [], wishes: [] });
+  const [userCornerData, setUserCornerDataState] =
+    useState<UserCornerData>({
+      signals: [],
+      xam: [],
+      wishes: [],
+    });
+
   const userCornerDataRef = useRef(userCornerData);
+  const cornerDataVersionRef = useRef(0);
+
+  const setUserCornerData = (
+    action: SetStateAction<UserCornerData>
+  ) => {
+    const next =
+      typeof action === "function"
+        ? action(userCornerDataRef.current)
+        : action;
+
+    // Đồng bộ ngay để các thao tác khác trong cùng lượt
+    // không đọc lại danh sách cũ.
+    userCornerDataRef.current = next;
+    cornerDataVersionRef.current += 1;
+    setUserCornerDataState(next);
+  };
   const favoriteLocksRef = useRef(new Set<string>());
   const favoriteCacheQueueRef = useRef(Promise.resolve());
-
-  useEffect(() => {
-    userCornerDataRef.current = userCornerData;
-  }, [userCornerData]);
 
   const [cornerReload, setCornerReload] = useState(0);
 
@@ -916,7 +941,6 @@ export default function App() {
         wishes: [],
       };
 
-      userCornerDataRef.current = empty;
       setUserCornerData(empty);
       setCornerLoadState({
         email: null,
@@ -936,6 +960,8 @@ export default function App() {
       status: "loading",
     });
 
+    const dataVersionAtStart = cornerDataVersionRef.current;
+
     void Promise.all([
       loadSavedSignals(),
       loadSavedXam(),
@@ -944,13 +970,21 @@ export default function App() {
       .then(([signals, xam, wishes]) => {
         if (!isCurrentRequest()) return;
 
+        if (
+          cornerDataVersionRef.current !== dataVersionAtStart
+        ) {
+          // Trong lúc tải, một thao tác khác đã đổi danh sách.
+          // Không dùng phản hồi này để thay dữ liệu mới.
+          setCornerReload((value) => value + 1);
+          return;
+        }
+
         const loaded: UserCornerData = {
           signals,
           xam,
           wishes,
         };
 
-        userCornerDataRef.current = loaded;
         setUserCornerData(loaded);
 
         setCornerLoadState({
@@ -960,6 +994,13 @@ export default function App() {
       })
       .catch(() => {
         if (!isCurrentRequest()) return;
+
+        if (
+          cornerDataVersionRef.current !== dataVersionAtStart
+        ) {
+          setCornerReload((value) => value + 1);
+          return;
+        }
 
         setCornerLoadState({
           email,
@@ -2084,6 +2125,11 @@ export default function App() {
     // Truyền null rõ ràng để không dùng hồ sơ của lần render cũ.
     if (logoutResult.serverRevoked) toast.info("Phiên trên máy chủ đã được thu hồi và dữ liệu nhạy cảm trên thiết bị đã được xóa.", "Đã đăng xuất");
     else toast.warning("Đã xóa phiên và dữ liệu nhạy cảm khỏi giao diện thiết bị này. Máy chủ chưa xác nhận thu hồi phiên vì kết nối bị gián đoạn.", "Đăng xuất chưa đồng bộ");
+    if (!logoutResult.pushDetached) {
+      toast.warning(
+        "Chưa xác nhận được việc ngừng thông báo trên trình duyệt này. Nếu dùng thiết bị chung, hãy chặn quyền thông báo của trang trong cài đặt trình duyệt."
+      );
+    }
     navigateTo("guest", undefined, null);
   };
 
@@ -2245,7 +2291,6 @@ export default function App() {
             ),
           };
 
-          userCornerDataRef.current = updated;
           setUserCornerData(updated);
 
           let cached = false;
@@ -2391,7 +2436,6 @@ export default function App() {
             ),
           };
 
-          userCornerDataRef.current = updated;
           setUserCornerData(updated);
 
           let cached = false;
@@ -2463,19 +2507,21 @@ export default function App() {
       return false;
     }
 
+    const scope = cornerAccountScopeRef.current;
+    const email = scope.email;
     const createdAt = Date.now();
 
-    const newWish: SavedWishItem = {
-      id: requestId,
-      category,
-      content: cleanContent,
-      createdAt,
-      date: new Date(createdAt).toLocaleDateString("vi-VN"),
-      sealed: true,
-      starred: false,
-    };
+    if (!email) {
+      const newWish: SavedWishItem = {
+        id: requestId,
+        category,
+        content: cleanContent,
+        createdAt,
+        date: new Date(createdAt).toLocaleDateString("vi-VN"),
+        sealed: true,
+        starred: false,
+      };
 
-    if (!currentUser) {
       setPendingSave({
         type: "wish",
         item: newWish,
@@ -2484,6 +2530,9 @@ export default function App() {
       navigateTo("login");
       return false;
     }
+
+    const isCurrentAccount = () =>
+      cornerAccountScopeRef.current === scope;
 
     let remoteWish: SavedWishItem;
 
@@ -2494,52 +2543,72 @@ export default function App() {
         requestId
       );
     } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Chưa lưu được lời gửi gắm.",
-      );
+      if (isCurrentAccount()) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Chưa xác nhận được việc lưu lời gửi gắm."
+        );
+      }
 
       return false;
     }
 
-    setUserCornerData((previous) => ({
-      ...previous,
-      wishes: [
-        remoteWish,
-        ...previous.wishes.filter(
-          (item) => item.id !== remoteWish.id,
-        ),
-      ],
-    }));
+    if (!isCurrentAccount()) return false;
 
-    // Server đã xác nhận: lỗi cache không biến thành lỗi lưu.
-    try {
-      const cached = await saveUserCornerData(
-        currentUser.email,
-        {
-          ...userCornerData,
+    // Dùng cùng hàng đợi với xóa và yêu thích.
+    const cacheWrite = favoriteCacheQueueRef.current.then(
+      async () => {
+        if (!isCurrentAccount()) return;
+
+        const current = userCornerDataRef.current;
+
+        const updated: UserCornerData = {
+          ...current,
           wishes: [
             remoteWish,
-            ...userCornerData.wishes.filter(
-              (item) => item.id !== remoteWish.id,
+            ...current.wishes.filter(
+              (item) => item.id !== remoteWish.id
             ),
           ],
-        },
-      );
+        };
 
-      if (!cached) {
-        toast.warning(
-          "Đã lưu trên máy chủ nhưng chưa lưu được bản sao trên thiết bị.",
-        );
+        setUserCornerData(updated);
+
+        let cached = false;
+
+        try {
+          cached = await saveUserCornerData(email, updated);
+        } catch {
+          cached = false;
+        }
+
+        if (!cached) {
+          try {
+            localStorage.removeItem(
+              getUserCornerStorageKey(email)
+            );
+          } catch {
+            // BE đã xác nhận lưu.
+          }
+
+          if (isCurrentAccount()) {
+            toast.info(
+              "Đã lưu trên máy chủ, nhưng chưa lưu được bộ nhớ đệm trên thiết bị."
+            );
+          }
+        }
       }
-    } catch {
-      toast.warning(
-        "Đã lưu trên máy chủ nhưng chưa lưu được bản sao trên thiết bị.",
-      );
-    }
+    );
 
-    return true;
+    favoriteCacheQueueRef.current = cacheWrite.then(
+      () => undefined,
+      () => undefined
+    );
+
+    await cacheWrite;
+
+    return isCurrentAccount();
   };
 
 
@@ -2671,7 +2740,7 @@ export default function App() {
             onGoToCulture={() => navigateTo("culture")}
             onGoToExperience={() => navigateTo("experience")}
             onGoToZen={() => navigateTo("zen")}
-            onGoToReminders={() => navigateTo("account")}
+            onGoToReminders={() => navigateTo("notifications")}
             onGoToXinXam={() => navigateTo("xinxam")}
             onGoToRituals={() => navigateTo("rituals")}
             onGoToGratitude={() => navigateTo("gratitude")}
@@ -2760,6 +2829,7 @@ export default function App() {
 
         {screen === "sanctuary" && (
           <VirtualSanctuaryScreen
+            key={currentUser?.email ?? "guest"}
             memorial={memorial}
             currentUserEmail={currentUser?.email}
             onBackToExperience={() => navigateTo("experience")}
@@ -2776,7 +2846,9 @@ export default function App() {
 
         {screen === "ancestor-altar" && (
           <AncestorAltarScreen
+            key={currentUser?.email ?? "guest"}
             memorial={memorial}
+            currentUserEmail={currentUser?.email}
             onBack={() => navigateTo("sanctuary")}
             onGoToMemorial={() => navigateTo("memorial")}
             isLoggedIn={Boolean(currentUser)}
@@ -2792,7 +2864,7 @@ export default function App() {
             onSaveTribute={(text) =>
               handleSavePrivateWish(text, "Tri ân gia tiên")
             }
-            onGoToReminders={() => navigateTo("account")}
+            onGoToReminders={() => navigateTo("notifications")}
           />
         )}
 
@@ -2812,7 +2884,7 @@ export default function App() {
               navigateTo("memorial-form");
             }}
             onGoToAltar={() => navigateTo("ancestor-altar")}
-            onGoToReminders={() => navigateTo("account")}
+            onGoToReminders={() => navigateTo("notifications")}
           />
         )}
 
@@ -2826,8 +2898,9 @@ export default function App() {
             initialValue={
               memorialFormMode === "edit" ? memorial : null
             }
+            isLoggedIn={Boolean(currentUser)}
             onBack={() => navigateTo("memorial")}
-            onSave={async (nextMemorial) => {
+            onSave={async (nextMemorial, options) => {
               const scope = cornerAccountScopeRef.current;
               const accountId =
                 currentUser?.email?.trim().toLowerCase() || "guest";
@@ -2848,12 +2921,14 @@ export default function App() {
                   const [, month, day] = nextMemorial.date.split("-").map(Number);
                   profile = await createMemorialProfile({
                     ...input,
-                    anniversary: {
-                      calendar: "SOLAR",
-                      day,
-                      month,
-                      repeatYearly: true,
-                    },
+                    anniversary: options.createAnnualReminder
+                      ? {
+                          calendar: "SOLAR",
+                          day,
+                          month,
+                          repeatYearly: true,
+                        }
+                      : null,
                   });
                 }
                 savedMemorial = memorialProfileToRecord(profile);
@@ -3069,6 +3144,7 @@ export default function App() {
               handleSavePrivateWish(text, topic, requestId)
             }
             isLoggedIn={!!currentUser}
+            currentUserEmail={currentUser?.email}
           />
         )}
 
@@ -3330,6 +3406,10 @@ export default function App() {
 
         {screen === "horoscope" && (
           <HoroscopeScreen
+            key={currentUser?.email ?? "guest"}
+            currentUserEmail={currentUser?.email}
+            onGoToLogin={() => navigateTo("login")}
+            onGoToMembership={() => navigateTo("membership")}
             onBackToExperience={() => navigateTo("experience")}
             onGoToCulture={() => navigateTo("culture")}
             onGoToHome={() => navigateTo("today")}

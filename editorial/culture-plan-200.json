@@ -1,0 +1,2002 @@
+[
+  {
+    "id": 1,
+    "slug": "tin-nguong-tho-cung-hung-vuong-phu-tho",
+    "title": "Tín ngưỡng thờ cúng Hùng Vương: Đạo lý nhớ nguồn và không gian núi Nghĩa Lĩnh",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "UNESCO — Worship of Hùng kings in Phú Thọ, hồ sơ 00735; Quyết định 7.COM 11.36",
+    "status": "COMPLETED",
+    "batchFile": "batch-001.json"
+  },
+  {
+    "id": 2,
+    "slug": "tho-mau-tam-phu-nguoi-viet",
+    "title": "Tín ngưỡng thờ Mẫu Tam phủ: Triết lý Mẹ thiên nhiên và sự gắn kết cộng đồng",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NATIONWIDE",
+    "intendedSource": "UNESCO — Practices related to the Viet beliefs in the Mother Goddesses of Three Realms, hồ sơ 01064",
+    "status": "COMPLETED",
+    "batchFile": "batch-001.json"
+  },
+  {
+    "id": 3,
+    "slug": "quan-ho-bac-ninh-tuc-ket-cha",
+    "title": "Dân ca Quan họ Bắc Ninh: Nét đẹp tục kết chạ và lề lối ứng xử người quan họ",
+    "category": "Nghệ thuật dân gian",
+    "region": "NORTH",
+    "intendedSource": "UNESCO — Quan Họ Bắc Ninh folk songs, hồ sơ 00183; Sở VHTTDL Bắc Ninh",
+    "status": "COMPLETED",
+    "batchFile": "batch-001.json"
+  },
+  {
+    "id": 4,
+    "slug": "don-ca-tai-tu-nam-bo-nghe-thuat-ngau-hung",
+    "title": "Đờn ca tài tử Nam Bộ: Nghệ thuật tri âm và phong cách tài tử sông nước",
+    "category": "Nghệ thuật dân gian",
+    "region": "SOUTH",
+    "intendedSource": "UNESCO — Art of Đờn ca tài tử music and song in southern Viet Nam, hồ sơ 00733",
+    "status": "COMPLETED",
+    "batchFile": "batch-001.json"
+  },
+  {
+    "id": 5,
+    "slug": "nghe-thuat-bai-choi-trung-bo",
+    "title": "Nghệ thuật Bài Chòi Trung Bộ: Trò chơi dân gian gắn với câu hò và diễn xướng",
+    "category": "Nghệ thuật dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "UNESCO — The art of Bài Chòi in Central Viet Nam, hồ sơ 01222",
+    "status": "COMPLETED",
+    "batchFile": "batch-001.json"
+  },
+  {
+    "id": 6,
+    "slug": "khong-gian-van-hoa-cong-chieng-tay-nguyen",
+    "title": "Không gian văn hóa Cồng chiêng Tây Nguyên: Tiếng nói thần linh giữa đại ngàn",
+    "category": "Nghệ thuật dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "UNESCO — Space of gong culture, hồ sơ 00120; Viện Văn hóa Nghệ thuật Quốc gia",
+    "status": "COMPLETED",
+    "batchFile": "batch-001.json"
+  },
+  {
+    "id": 7,
+    "slug": "nha-nhac-cung-dinh-hue",
+    "title": "Nhã nhạc cung đình Huế: Hệ thống bài bản và giá trị lễ nhạc cung đình",
+    "category": "Nghệ thuật dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "UNESCO — Nha Nhac, Vietnamese court music, hồ sơ 00074; Trung tâm Bảo tồn Di tích Cố đô Huế",
+    "status": "COMPLETED",
+    "batchFile": "batch-001.json"
+  },
+  {
+    "id": 8,
+    "slug": "hat-xoan-phu-tho-le-nghi-cua-dinh",
+    "title": "Hát Xoan Phú Thọ: Nguồn gốc hát thờ nơi cửa đình và lề lối canh xoan",
+    "category": "Nghệ thuật dân gian",
+    "region": "NORTH",
+    "intendedSource": "UNESCO — Xoan singing of Phú Thọ Province, hồ sơ 01260; Bảo tàng Hùng Vương",
+    "status": "COMPLETED",
+    "batchFile": "batch-001.json"
+  },
+  {
+    "id": 9,
+    "slug": "hat-ca-tru-thanh-am-co-truyen",
+    "title": "Hát Ca trù: Sự tinh tế của phách đách, tiếng đàn đáy và nghệ thuật thưởng thức",
+    "category": "Nghệ thuật dân gian",
+    "region": "NORTH",
+    "intendedSource": "UNESCO — Ca trù singing, hồ sơ 00309; Viện Âm nhạc Việt Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-001.json"
+  },
+  {
+    "id": 10,
+    "slug": "dan-ca-vi-giam-nghe-tinh",
+    "title": "Dân ca Ví, Giặm Nghệ Tĩnh: Lời ca lao động trên sông nước và đồng bãi xứ Nghệ",
+    "category": "Nghệ thuật dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "UNESCO — Ví and Giặm folk songs of Nghệ Tĩnh, hồ sơ 01008; Sở VHTT Nghệ An & Hà Tĩnh",
+    "status": "COMPLETED",
+    "batchFile": "batch-001.json"
+  },
+  {
+    "id": 11,
+    "slug": "hoi-giong-phu-dong-va-den-soc",
+    "title": "Hội Gióng đền Phù Đổng và đền Sóc: Kịch trường dân gian tái hiện hào khí dân tộc",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "UNESCO — Gióng festival of Phù Đổng and Sóc temples, hồ sơ 00443; Ban Quản lý Di tích Đền Sóc",
+    "status": "COMPLETED",
+    "batchFile": "batch-002.json"
+  },
+  {
+    "id": 12,
+    "slug": "le-hoi-keo-co-truyen-thong",
+    "title": "Nghi lễ và trò chơi kéo co: Biểu tượng cầu mùa và tinh thần gắn kết cộng đồng",
+    "category": "Lễ hội truyền thống",
+    "region": "NATIONWIDE",
+    "intendedSource": "UNESCO — Tugging rituals and games, hồ sơ 01080; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-002.json"
+  },
+  {
+    "id": 13,
+    "slug": "nghi-le-then-tay-nung-thai",
+    "title": "Thực hành Then của người Tày, Nùng, Thái: Cầu an và thế giới quan tâm linh vùng cao",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "UNESCO — Practices of Then by Tày, Nùng and Thái ethnic groups in Viet Nam, hồ sơ 01379",
+    "status": "COMPLETED",
+    "batchFile": "batch-002.json"
+  },
+  {
+    "id": 14,
+    "slug": "le-hoi-via-ba-chua-xu-nui-sam",
+    "title": "Lễ hội Vía Bà Chúa Xứ Núi Sam: Nghi thức tắm Bà và đức tin Nam Bộ",
+    "category": "Lễ hội truyền thống",
+    "region": "SOUTH",
+    "intendedSource": "UNESCO — Festival of Bà Chúa Xứ Goddess at Sam Mountain, hồ sơ 01999; Ban Quản lý Lăng Miếu Núi Sam",
+    "status": "COMPLETED",
+    "batchFile": "batch-002.json"
+  },
+  {
+    "id": 15,
+    "slug": "nghe-lam-gom-nguoi-cham",
+    "title": "Nghệ thuật làm gốm của người Chăm: Kỹ thuật nặn tay không bàn xoay tại Bàu Trúc",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "CENTRAL",
+    "intendedSource": "UNESCO — Art of pottery-making of Chăm people, hồ sơ 01574; Sở VHTTDL Ninh Thuận",
+    "status": "COMPLETED",
+    "batchFile": "batch-002.json"
+  },
+  {
+    "id": 16,
+    "slug": "le-hoi-cau-ngu-khanh-hoa",
+    "title": "Lễ hội Cầu Ngư và tục thờ Cá Ông: Tín ngưỡng che chở của ngư dân duyên hải",
+    "category": "Tín ngưỡng dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "Cục Di sản Văn hóa — Quyết định ghi danh DSVH phi vật thể quốc gia; Cổng TTĐT tỉnh Khánh Hòa",
+    "status": "COMPLETED",
+    "batchFile": "batch-002.json"
+  },
+  {
+    "id": 17,
+    "slug": "tuc-tho-thanh-hoang-dinh-lang-bac-bo",
+    "title": "Tục thờ Thành hoàng đình làng Bắc Bộ: Vị thần bảo hộ và biểu tượng cội nguồn làng xã",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Tạp chí Di sản Văn hóa — Cục Di sản Văn hóa; Luận án TS Trần Thị Hà Giang (Học viện CTQG HCM)",
+    "status": "COMPLETED",
+    "batchFile": "batch-002.json"
+  },
+  {
+    "id": 18,
+    "slug": "le-hoi-dien-hon-chen-hue",
+    "title": "Lễ hội Điện Hòn Chén: Không gian giao thoa giữa tín ngưỡng Mẫu và văn hóa Huế",
+    "category": "Lễ hội truyền thống",
+    "region": "CENTRAL",
+    "intendedSource": "Sở Văn hóa và Thể thao Thừa Thiên Huế — Hồ sơ di tích Điện Huệ Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-002.json"
+  },
+  {
+    "id": 19,
+    "slug": "le-via-ba-linh-son-thanh-mau-tay-ninh",
+    "title": "Lễ vía Bà Linh Sơn Thánh Mẫu Núi Bà Đen: Điểm tựa tâm linh trên đỉnh núi thiêng Tây Ninh",
+    "category": "Tín ngưỡng dân gian",
+    "region": "SOUTH",
+    "intendedSource": "Ban Quản lý Khu du lịch Quốc gia Núi Bà Đen; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-002.json"
+  },
+  {
+    "id": 20,
+    "slug": "le-hoi-ok-om-bok-tra-vinh-soc-trang",
+    "title": "Lễ hội Ok Om Bok của người Khmer: Nghi thức cúng trăng tạ ơn mùa màng bội thu",
+    "category": "Lễ hội truyền thống",
+    "region": "SOUTH",
+    "intendedSource": "Sở VHTTDL tỉnh Trà Vinh & Sóc Trăng; Hồ sơ Di sản văn hóa phi vật thể quốc gia",
+    "status": "COMPLETED",
+    "batchFile": "batch-002.json"
+  },
+  {
+    "id": 21,
+    "slug": "kien-truc-dinh-tay-dang-ha-noi",
+    "title": "Đình Tây Đằng: Đỉnh cao nghệ thuật điêu khắc gỗ dân gian thế kỷ XVI",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Cục Di sản Văn hóa — Di tích kiến trúc nghệ thuật đình Tây Đằng, Ba Vì, Hà Nội",
+    "status": "COMPLETED",
+    "batchFile": "batch-003.json"
+  },
+  {
+    "id": 22,
+    "slug": "den-tran-nam-dinh-hao-khi-dong-a",
+    "title": "Đền Trần Nam Định: Di tích lịch sử tưởng niệm các vua Trần và hào khí Đông A",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Cổng Thông tin điện tử tỉnh Nam Định — Hồ sơ Di tích Quốc gia đặc biệt Đền Trần",
+    "status": "COMPLETED",
+    "batchFile": "batch-003.json"
+  },
+  {
+    "id": 23,
+    "slug": "phu-tay-ho-ha-noi",
+    "title": "Phủ Tây Hồ: Nơi gửi gắm ước nguyện và huyền tích Mẫu Liễu Hạnh giữa lòng Hà Nội",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Ban Quản lý Di tích Phủ Tây Hồ; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-003.json"
+  },
+  {
+    "id": 24,
+    "slug": "chua-mot-cot-bieu-tuong-hoa-sen",
+    "title": "Chùa Một Cột: Tác phẩm kiến trúc độc nhất và biểu tượng đóa sen nghìn năm",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Khu Di tích Lịch sử Ba Đình; Bảo tàng Lịch sử Quốc gia",
+    "status": "COMPLETED",
+    "batchFile": "batch-003.json"
+  },
+  {
+    "id": 25,
+    "slug": "chua-dau-trung-tam-phat-giao-co",
+    "title": "Chùa Dâu Bắc Ninh: Khởi nguồn trung tâm Phật giáo cổ và hệ thống Tứ Pháp",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Sở VHTTDL Bắc Ninh — Hồ sơ Di tích Quốc gia đặc biệt Chùa Dâu",
+    "status": "COMPLETED",
+    "batchFile": "batch-003.json"
+  },
+  {
+    "id": 26,
+    "slug": "chua-thien-mu-hue-bieu-tuong-co-do",
+    "title": "Chùa Thiên Mụ: Tháp Phước Duyên soi bóng Hương Giang và huyền tích dựng chùa",
+    "category": "Tín ngưỡng dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "Trung tâm Bảo tồn Di tích Cố đô Huế; Hồ sơ Quần thể Di tích Cố đô Huế",
+    "status": "COMPLETED",
+    "batchFile": "batch-003.json"
+  },
+  {
+    "id": 27,
+    "slug": "chua-keo-thai-binh-kien-truc-go",
+    "title": "Chùa Keo Thái Bình: Nghệ thuật kết cấu gỗ và gác chuông độc đáo vùng đồng bằng",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Cục Di sản Văn hóa — Di tích Quốc gia đặc biệt Chùa Keo",
+    "status": "COMPLETED",
+    "batchFile": "batch-003.json"
+  },
+  {
+    "id": 28,
+    "slug": "nha-ruong-xu-hue-tri-thuc-dung-nha",
+    "title": "Nhà rường xứ Huế: Sự hòa quyện giữa không gian sống, phong thủy và nếp nhà",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "CENTRAL",
+    "intendedSource": "Bảo tàng Văn hóa Huế; Tạp chí Khoa học Đại học Huế",
+    "status": "COMPLETED",
+    "batchFile": "batch-003.json"
+  },
+  {
+    "id": 29,
+    "slug": "nha-san-truyen-thong-tay-bac",
+    "title": "Nhà sàn truyền thống của người Mường, Thái: Không gian sinh hoạt và triết lý trời tròn đất vuông",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NORTH",
+    "intendedSource": "Bảo tàng Dân tộc học Việt Nam; Viện Dân tộc học",
+    "status": "COMPLETED",
+    "batchFile": "batch-003.json"
+  },
+  {
+    "id": 30,
+    "slug": "chua-ong-hoi-an-giao-luu-van-hoa",
+    "title": "Chùa Ông Hội An: Dấu ấn giao lưu thương mại và tinh thần cộng cư phố cổ",
+    "category": "Tín ngưỡng dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "Trung tâm Quản lý Bảo tồn Di sản Văn hóa Hội An",
+    "status": "COMPLETED",
+    "batchFile": "batch-003.json"
+  },
+  {
+    "id": 31,
+    "slug": "le-cung-day-thang-thoi-noi",
+    "title": "Lễ cúng đầy tháng, thôi nôi: Lời chúc phúc bình an cho sinh linh bé nhỏ",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NATIONWIDE",
+    "intendedSource": "Viện Nghiên cứu Văn hóa; Tư liệu phong tục gia đình người Việt",
+    "status": "COMPLETED",
+    "batchFile": "batch-004.json"
+  },
+  {
+    "id": 32,
+    "slug": "le-cung-ong-tao-ngay-hai-ba-thang-chap",
+    "title": "Tục cúng ông Công ông Táo: Nếp nghĩ ấm áp về gian bếp và đạo làm người",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NATIONWIDE",
+    "intendedSource": "Cục Di sản Văn hóa; Bảo tàng Lịch sử Quốc gia",
+    "status": "COMPLETED",
+    "batchFile": "batch-004.json"
+  },
+  {
+    "id": 33,
+    "slug": "mam-ngu-qua-ngay-tet-ba-mien",
+    "title": "Mâm ngũ quả ngày Tết ba miền: Khát vọng sung túc và sắc thái văn hóa từng vùng",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NATIONWIDE",
+    "intendedSource": "Viện Văn hóa Nghệ thuật Quốc gia Việt Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-004.json"
+  },
+  {
+    "id": 34,
+    "slug": "tiet-thanh-minh-va-tuc-tao-mo",
+    "title": "Tiết Thanh minh và tục tảo mộ: Nét đẹp phụng dưỡng tiền nhân của người Việt",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NATIONWIDE",
+    "intendedSource": "Tạp chí Văn hóa Dân gian; Viện Hàn lâm Khoa học Xã hội Việt Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-004.json"
+  },
+  {
+    "id": 35,
+    "slug": "le-vu-lan-va-tuc-bao-hieu",
+    "title": "Đại lễ Vu Lan: Ý nghĩa mùa báo hiếu và văn hóa tri ân cha mẹ trong đời sống",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NATIONWIDE",
+    "intendedSource": "Tạp chí Nghiên cứu Tôn giáo; Giáo hội Phật giáo Việt Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-004.json"
+  },
+  {
+    "id": 36,
+    "slug": "tuc-xong-dat-dau-nam-moi",
+    "title": "Tục xông đất đầu năm: Niềm tin khởi đầu thuận buồm xuôi gió của gia đình Việt",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NATIONWIDE",
+    "intendedSource": "Bảo tàng Phụ nữ Việt Nam; Tư liệu phong tục Tết truyền thống",
+    "status": "COMPLETED",
+    "batchFile": "batch-004.json"
+  },
+  {
+    "id": 37,
+    "slug": "tuc-an-trau-va-mieng-trau-dau-cau-chuyen",
+    "title": "Tục ăn trầu thuốc: Từ biểu tượng tình nghĩa đến nghi lễ giao tiếp truyền thống",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NATIONWIDE",
+    "intendedSource": "Bảo tàng Dân tộc học Việt Nam; Chuyên khảo phong tục trầu cau",
+    "status": "COMPLETED",
+    "batchFile": "batch-004.json"
+  },
+  {
+    "id": 38,
+    "slug": "le-cung-gio-chap-trong-gia-dinh",
+    "title": "Nghi lễ ngày giỗ chạp: Sợi dây kết nối quá khứ và sự sum vầy của con cháu",
+    "category": "Ký ức gia đình",
+    "region": "NATIONWIDE",
+    "intendedSource": "Viện Xã hội học; Báo cáo nghiên cứu quan hệ thế hệ gia đình",
+    "status": "COMPLETED",
+    "batchFile": "batch-004.json"
+  },
+  {
+    "id": 39,
+    "slug": "tuc-mung-tho-nguoi-cao-tuoi",
+    "title": "Tục mừng thọ đầu xuân: Tôn vinh bậc cao niên và đạo hiếu trong cộng đồng",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NATIONWIDE",
+    "intendedSource": "Hội Người cao tuổi Việt Nam; Cục Văn hóa Cơ sở",
+    "status": "COMPLETED",
+    "batchFile": "batch-004.json"
+  },
+  {
+    "id": 40,
+    "slug": "tuc-buoc-chi-co-tay-nguoi-thai",
+    "title": "Tục buộc chỉ cổ tay của người Thái, Lào: Lời chúc lành và gìn giữ phần hồn",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NORTH",
+    "intendedSource": "Bảo tàng Văn hóa các Dân tộc Việt Nam (Thái Nguyên)",
+    "status": "COMPLETED",
+    "batchFile": "batch-004.json"
+  },
+  {
+    "id": 41,
+    "slug": "le-cap-sac-nguoi-dao-do",
+    "title": "Nghi lễ Cấp sắc của người Dao đỏ: Bước ngoặt trưởng thành và bổn phận đạo đức",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NORTH",
+    "intendedSource": "Hồ sơ Di sản văn hóa phi vật thể quốc gia; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-005.json"
+  },
+  {
+    "id": 42,
+    "slug": "le-hoi-nhay-lua-nguoi-pa-then",
+    "title": "Lễ hội Nhảy lửa của người Pà Thẻn: Khát vọng xua tan u ám và rước may mắn",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Sở VHTTDL tỉnh Hà Giang; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-005.json"
+  },
+  {
+    "id": 43,
+    "slug": "le-cung-than-rung-nguoi-pu-peo",
+    "title": "Lễ cúng thần rừng của người Pu Péo: Đạo lý giữ màu xanh nơi vách đá cao nguyên",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Bảo tàng tỉnh Hà Giang; Quyết định công nhận DSVH quốc gia",
+    "status": "COMPLETED",
+    "batchFile": "batch-005.json"
+  },
+  {
+    "id": 44,
+    "slug": "le-hoi-gau-tao-nguoi-hmong",
+    "title": "Lễ hội Gầu tào của người H'Mông: Lễ hội cầu con, cầu mùa bên sườn non",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Sở VHTTDL tỉnh Lào Cai; Quyết định công nhận DSVH quốc gia",
+    "status": "COMPLETED",
+    "batchFile": "batch-005.json"
+  },
+  {
+    "id": 45,
+    "slug": "le-hoi-long-tong-nguoi-tay",
+    "title": "Lễ hội Lồng tông của người Tày: Tiếng chiêng xuống đồng đầu xuân đón vụ mùa mới",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Sở VHTTDL tỉnh Tuyên Quang; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-005.json"
+  },
+  {
+    "id": 46,
+    "slug": "le-cung-to-tien-nguoi-lo-lo",
+    "title": "Lễ cúng tổ tiên của người Lô Lô: Nghệ thuật hóa trang bằng cỏ cây và bài học cội rễ",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Sở VHTTDL tỉnh Hà Giang; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-005.json"
+  },
+  {
+    "id": 47,
+    "slug": "le-hoi-cho-tinh-khau-vai",
+    "title": "Chợ phong lưu Khâu Vai: Nơi hò hẹn đầy nhân văn của những mối tình dang dở",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "UBND huyện Mèo Vạc; Cổng TTĐT tỉnh Hà Giang",
+    "status": "COMPLETED",
+    "batchFile": "batch-005.json"
+  },
+  {
+    "id": 48,
+    "slug": "nghi-le-kin-pang-then-nguoi-thai",
+    "title": "Lễ hội Kin Pang Then của người Thái trắng: Tri ân thầy then và sự hòa hợp xóm bản",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Sở VHTTDL tỉnh Lai Châu; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-005.json"
+  },
+  {
+    "id": 49,
+    "slug": "le-hoi-tro-tram-phu-ninh",
+    "title": "Lễ hội Trò Trám Tứ Xã: Trò diễn cổ xua tà và khát vọng phồn thực nguyên sơ",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Bảo tàng Hùng Vương; Cổng TTĐT tỉnh Phú Thọ",
+    "status": "COMPLETED",
+    "batchFile": "batch-005.json"
+  },
+  {
+    "id": 50,
+    "slug": "le-hoi-ruoc-phao-dong-ky",
+    "title": "Lễ hội rước pháo Đồng Kỵ: Tinh thần thượng võ và hào khí ngày hội xứ Kinh Bắc",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Sở VHTTDL tỉnh Bắc Ninh; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-005.json"
+  },
+  {
+    "id": 51,
+    "slug": "nghe-thuat-mua-roi-nuoc",
+    "title": "Múa rối nước truyền thống: Sân khấu mặt nước lung linh của người nông dân Bắc Bộ",
+    "category": "Nghệ thuật dân gian",
+    "region": "NORTH",
+    "intendedSource": "Nhà hát Múa rối Quốc gia; Viện Âm nhạc Việt Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-006.json"
+  },
+  {
+    "id": 52,
+    "slug": "nghe-thuat-cheo-co-truyen",
+    "title": "Nghệ thuật Chèo cổ: Hồn cốt kịch hát dân gian thấu cảm số phận người phụ nữ",
+    "category": "Nghệ thuật dân gian",
+    "region": "NORTH",
+    "intendedSource": "Viện Âm nhạc Việt Nam; Nhà hát Chèo Việt Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-006.json"
+  },
+  {
+    "id": 53,
+    "slug": "hat-van-trong-nghi-le-hau-dong",
+    "title": "Hát Văn trong diễn xướng chầu văn: Lời ca tôn vinh thần thánh và nhịp phách tâm linh",
+    "category": "Nghệ thuật dân gian",
+    "region": "NORTH",
+    "intendedSource": "Hồ sơ đệ trình UNESCO Thờ Mẫu; Viện Âm nhạc",
+    "status": "COMPLETED",
+    "batchFile": "batch-006.json"
+  },
+  {
+    "id": 54,
+    "slug": "tranh-dan-gian-dong-ho",
+    "title": "Tranh dân gian Đông Hồ: Gam màu tự nhiên từ vỏ sò, lá chàm in trên giấy điệp",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NORTH",
+    "intendedSource": "Hồ sơ đệ trình UNESCO Tranh Đông Hồ; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-006.json"
+  },
+  {
+    "id": 55,
+    "slug": "tranh-dan-gian-hang-trong",
+    "title": "Tranh Hàng Trống: Nét vẽ vờn màu thanh nhã của chốn kinh kỳ thăng hoa",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NORTH",
+    "intendedSource": "Bảo tàng Mỹ thuật Việt Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-006.json"
+  },
+  {
+    "id": 56,
+    "slug": "nghe-gom-bat-trang-nghin-nam",
+    "title": "Nghề gốm Bát Tràng: Men ngọc tro trấu và tinh hoa đất nung ven sông Hồng",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NORTH",
+    "intendedSource": "Hiệp hội Gốm sứ Bát Tràng; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-006.json"
+  },
+  {
+    "id": 57,
+    "slug": "nghe-det-lua-van-phuc",
+    "title": "Nghề dệt lụa Vạn Phúc: Tấm the mỏng nhẹ và tay nghề thoi dệt lụa Hà Đông",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NORTH",
+    "intendedSource": "Sở Du lịch Hà Nội; Hiệp hội Làng nghề Việt Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-006.json"
+  },
+  {
+    "id": 58,
+    "slug": "nghe-duc-dong-ngu-xa",
+    "title": "Nghề đúc đồng Ngũ Xã: Kỹ thuật rót đồng nguyên khối tạo tác chuông đồng, tượng phật",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NORTH",
+    "intendedSource": "Bảo tàng Lịch sử Quốc gia; UBND quận Ba Đình",
+    "status": "COMPLETED",
+    "batchFile": "batch-006.json"
+  },
+  {
+    "id": 59,
+    "slug": "nghe-lam-non-la-chuong",
+    "title": "Nghề làm nón làng Chuông: Từng đường kim mũi chỉ tạo nên nét duyên nón lá Việt",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NORTH",
+    "intendedSource": "Cổng TTĐT huyện Thanh Oai; Tạp chí Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-006.json"
+  },
+  {
+    "id": 60,
+    "slug": "tri-thuc-lam-tuong-ban",
+    "title": "Tri thức làm tương Bần Hưng Yên: Nghệ thuật lên men từ xôi nếp cái và đậu tương",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NORTH",
+    "intendedSource": "Sở Nông nghiệp và PTNT tỉnh Hưng Yên; Cục Sở hữu Trí tuệ",
+    "status": "COMPLETED",
+    "batchFile": "batch-006.json"
+  },
+  {
+    "id": 61,
+    "slug": "le-hoi-thap-ba-ponagar-nha-trang",
+    "title": "Lễ hội Tháp Bà Ponagar: Điểm hẹn văn hóa của đồng bào Chăm và Việt tại Nha Trang",
+    "category": "Lễ hội truyền thống",
+    "region": "CENTRAL",
+    "intendedSource": "Ban Quản lý Di tích Tháp Bà Ponagar; Sở VHTTDL Khánh Hòa",
+    "status": "COMPLETED",
+    "batchFile": "batch-007.json"
+  },
+  {
+    "id": 62,
+    "slug": "le-hoi-kate-nguoi-cham-ninh-thuan",
+    "title": "Lễ hội Katê của người Chăm Bàlamôn: Tiếng kèn Saranai và vũ điệu dâng tháp",
+    "category": "Lễ hội truyền thống",
+    "region": "CENTRAL",
+    "intendedSource": "Sở VHTTDL tỉnh Ninh Thuận; Quyết định công nhận DSVH quốc gia",
+    "status": "COMPLETED",
+    "batchFile": "batch-007.json"
+  },
+  {
+    "id": 63,
+    "slug": "le-khao-le-the-linh-hoang-sa",
+    "title": "Lễ Khao lề thế lính Hoàng Sa: Nghi lễ tri ân những người mở cõi bảo vệ biển đảo",
+    "category": "Lễ hội truyền thống",
+    "region": "CENTRAL",
+    "intendedSource": "UBND huyện Lý Sơn; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-007.json"
+  },
+  {
+    "id": 64,
+    "slug": "le-hoi-chua-ba-binh-dinh",
+    "title": "Lễ hội Chùa Bà Nước Mặn: Dấu ấn thương cảng cổ và sự hòa hợp tín ngưỡng",
+    "category": "Lễ hội truyền thống",
+    "region": "CENTRAL",
+    "intendedSource": "Bảo tàng tỉnh Bình Định; Sở VHTTDL Bình Định",
+    "status": "COMPLETED",
+    "batchFile": "batch-007.json"
+  },
+  {
+    "id": 65,
+    "slug": "le-hoi-dinh-lang-tuy-loan",
+    "title": "Lễ hội đình làng Túy Loan: Nét đẹp rước sắc phong và phong vị bánh tráng quê hương",
+    "category": "Lễ hội truyền thống",
+    "region": "CENTRAL",
+    "intendedSource": "Sở VHTTDL TP Đà Nẵng; Hồ sơ Di tích Quốc gia Đình Túy Loan",
+    "status": "COMPLETED",
+    "batchFile": "batch-007.json"
+  },
+  {
+    "id": 66,
+    "slug": "vo-co-truyen-binh-dinh",
+    "title": "Võ cổ truyền Bình Định: Tinh thần thượng võ, đường roi thế quyền hào hùng đất võ",
+    "category": "Nghệ thuật dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "Trung tâm Võ thuật Cổ truyền Bình Định; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-007.json"
+  },
+  {
+    "id": 67,
+    "slug": "nghe-thuat-tuong-xu-quang",
+    "title": "Hát Bội xứ Quảng: Sắc màu mặt nạ và tiếng trống chầu rộn rã sân đình",
+    "category": "Nghệ thuật dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "Nhà hát Tuồng Nguyễn Hiển Dĩnh Đà Nẵng; Viện Sân khấu",
+    "status": "COMPLETED",
+    "batchFile": "batch-007.json"
+  },
+  {
+    "id": 68,
+    "slug": "ca-hue-tren-song-huong",
+    "title": "Ca Huế trên sông Hương: Không gian tao nhã thính phòng giữa làn nước Hương Giang",
+    "category": "Nghệ thuật dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "Sở VHTT Thừa Thiên Huế; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-007.json"
+  },
+  {
+    "id": 69,
+    "slug": "nghe-cham-khac-da-non-nuoc",
+    "title": "Nghề điêu khắc đá mỹ nghệ Non Nước: Bàn tay tài hoa đục đẽo linh hồn vào đá hoa cương",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "CENTRAL",
+    "intendedSource": "UBND quận Ngũ Hành Sơn; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-007.json"
+  },
+  {
+    "id": 70,
+    "slug": "nghe-lam-nuoc-mam-nam-o",
+    "title": "Nghề làm nước mắm Nam Ô: Vị mặn mòi hạt muối biển ngâm ủ cá cơm than",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "CENTRAL",
+    "intendedSource": "Sở Công thương TP Đà Nẵng; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-007.json"
+  },
+  {
+    "id": 71,
+    "slug": "su-thi-dam-san-tay-nguyen",
+    "title": "Sử thi Đăm Săn của người Êđê: Khúc tráng ca ngợi ca ý chí chinh phục thiên nhiên",
+    "category": "Nghệ thuật dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "Viện Văn học; Bộ sách Sử thi Tây Nguyên",
+    "status": "COMPLETED",
+    "batchFile": "batch-008.json"
+  },
+  {
+    "id": 72,
+    "slug": "le-hoi-dam-trau-tay-nguyen",
+    "title": "Lễ đâm trâu tạ ơn thần linh trong truyền thống: Góc nhìn nhân học và sự biến đổi hôm nay",
+    "category": "Lễ hội truyền thống",
+    "region": "CENTRAL",
+    "intendedSource": "Bảo tàng Đắk Lắk; Tạp chí Dân tộc học",
+    "status": "COMPLETED",
+    "batchFile": "batch-008.json"
+  },
+  {
+    "id": 73,
+    "slug": "nha-rong-tay-nguyen-trai-tim-buon-lang",
+    "title": "Nhà rông Ba Na, Gia Rai: Trái tim của buôn làng và ngọn lửa gắn kết cộng đồng",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "CENTRAL",
+    "intendedSource": "Bảo tàng Dân tộc học Việt Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-008.json"
+  },
+  {
+    "id": 74,
+    "slug": "nghe-det-tho-cam-nguoi-ede",
+    "title": "Nghề dệt thổ cẩm Êđê: Kỹ thuật luồn sợi dệt hoa văn hình học giàu biểu tượng",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "CENTRAL",
+    "intendedSource": "Bảo tàng Đắk Lắk; Sở VHTTDL Đắk Lắk",
+    "status": "COMPLETED",
+    "batchFile": "batch-008.json"
+  },
+  {
+    "id": 75,
+    "slug": "le-bo-ma-nguoi-gia-rai",
+    "title": "Lễ bỏ mả Pơthi của người Gia Rai: Lễ hội tống tiễn người đã khuất về miền vĩnh hằng",
+    "category": "Tín ngưỡng dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "Bảo tàng tỉnh Gia Lai; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-008.json"
+  },
+  {
+    "id": 76,
+    "slug": "le-cung-ben-nuoc-tay-nguyen",
+    "title": "Lễ cúng bến nước buôn làng: Tấm lòng tri ân mẹ nguồn nước trong veo mát lành",
+    "category": "Tín ngưỡng dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "Sở VHTTDL tỉnh Kon Tum; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-008.json"
+  },
+  {
+    "id": 77,
+    "slug": "le-hoi-dua-voi-buon-don",
+    "title": "Lễ hội đua voi Buôn Đôn: Nét đẹp thuần dưỡng voi rừng và tình yêu thiên nhiên đại ngàn",
+    "category": "Lễ hội truyền thống",
+    "region": "CENTRAL",
+    "intendedSource": "Trung tâm Bảo tồn Du lịch Bản Đôn; Sở VHTTDL Đắk Lắk",
+    "status": "COMPLETED",
+    "batchFile": "batch-008.json"
+  },
+  {
+    "id": 78,
+    "slug": "nghe-lam-chieu-nga-son",
+    "title": "Nghề dệt chiếu cói Nga Sơn: Tấm chiếu hoa bền đẹp dệt nên từ ngọn cói ven đầm",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "CENTRAL",
+    "intendedSource": "UBND huyện Nga Sơn; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-008.json"
+  },
+  {
+    "id": 79,
+    "slug": "tuc-tho-ba-thuy-long-phu-quoc",
+    "title": "Tín ngưỡng thờ Thủy Long Thánh Mẫu Phú Quốc: Nữ thần sông nước che chở đảo ngọc",
+    "category": "Tín ngưỡng dân gian",
+    "region": "SOUTH",
+    "intendedSource": "Ban Quản lý Dinh Cậu Phú Quốc; Sở VHTTDL Kiên Giang",
+    "status": "COMPLETED",
+    "batchFile": "batch-008.json"
+  },
+  {
+    "id": 80,
+    "slug": "le-hoi-chua-ong-dia-sai-gon",
+    "title": "Lễ hội miếu Ông Địa quận Gò Vấp: Nét sinh hoạt văn hóa dân dã của người Sài Gòn xưa",
+    "category": "Tín ngưỡng dân gian",
+    "region": "SOUTH",
+    "intendedSource": "UBND quận Gò Vấp; Sở VHTT TP Hồ Chí Minh",
+    "status": "COMPLETED",
+    "batchFile": "batch-008.json"
+  },
+  {
+    "id": 81,
+    "slug": "tin-nguong-tho-ong-dia-than-tai-nam-bo",
+    "title": "Tục thờ Thần Tài - Thổ Địa ở Nam Bộ: Tinh thần dung dị và khát vọng an cư lập nghiệp",
+    "category": "Tín ngưỡng dân gian",
+    "region": "SOUTH",
+    "intendedSource": "Viện Khoa học Xã hội Vùng Nam Bộ; Tạp chí Phát triển KH&CN",
+    "status": "COMPLETED",
+    "batchFile": "batch-009.json"
+  },
+  {
+    "id": 82,
+    "slug": "chua-ba-thien-hau-cho-lon",
+    "title": "Chùa Bà Thiên Hậu Chợ Lớn: Nơi gửi gắm niềm tin vượt biển của cộng đồng Hoa - Việt",
+    "category": "Tín ngưỡng dân gian",
+    "region": "SOUTH",
+    "intendedSource": "Ban Quản trị Hội quán Tuệ Thành; Sở VHTT TP.HCM",
+    "status": "COMPLETED",
+    "batchFile": "batch-009.json"
+  },
+  {
+    "id": 83,
+    "slug": "le-hoi-ky-yen-dinh-than-nam-bo",
+    "title": "Lễ hội Kỳ Yên đình thần Nam Bộ: Lễ cúng cầu an xóm làng sau mùa thu hoạch lúa",
+    "category": "Lễ hội truyền thống",
+    "region": "SOUTH",
+    "intendedSource": "Bảo tàng Lịch sử TP Hồ Chí Minh; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-009.json"
+  },
+  {
+    "id": 84,
+    "slug": "le-hoi-nghinh-ong-can-gio",
+    "title": "Lễ hội Nghinh Ông Cần Giờ: Đoàn tàu rước cá voi rộn rã cửa biển phương Nam",
+    "category": "Lễ hội truyền thống",
+    "region": "SOUTH",
+    "intendedSource": "UBND huyện Cần Giờ; Sở VHTT TP Hồ Chí Minh",
+    "status": "COMPLETED",
+    "batchFile": "batch-009.json"
+  },
+  {
+    "id": 85,
+    "slug": "van-hoa-cho-noi-cai-rang",
+    "title": "Văn hóa chợ nổi Cái Răng: Cây bẹo dựng đầu ghe và nhịp thở giao thương sông nước",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "SOUTH",
+    "intendedSource": "Sở VHTTDL TP Cần Thơ; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-009.json"
+  },
+  {
+    "id": 86,
+    "slug": "nghe-chieu-dinh-yen-dong-thap",
+    "title": "Nghề dệt chiếu Định Yên: Nét độc đáo của chợ chiếu ma huyền thoại bên sông Hậu",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "SOUTH",
+    "intendedSource": "UBND huyện Lấp Vò; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-009.json"
+  },
+  {
+    "id": 87,
+    "slug": "nghe-lam-banh-trang-my-long",
+    "title": "Nghề làm bánh tráng Mỹ Lồng Bến Tre: Vị béo thơm nước cốt dừa trên vỉ bánh nướng",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "SOUTH",
+    "intendedSource": "Sở Công thương tỉnh Bến Tre; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-009.json"
+  },
+  {
+    "id": 88,
+    "slug": "nghe-son-mai-tuong-binh-hiep",
+    "title": "Nghề sơn mài Tương Bình Hiệp Bình Dương: Lớp vỏ trứng sơn ta óng ánh qua hàng thế kỷ",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "SOUTH",
+    "intendedSource": "Bảo tàng tỉnh Bình Dương; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-009.json"
+  },
+  {
+    "id": 89,
+    "slug": "nghe-lam-gom-lai-thieu",
+    "title": "Gốm Lái Thiêu Bình Dương: Bình dị men xanh bông mai gắn bó đời sống cư dân Nam Bộ",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "SOUTH",
+    "intendedSource": "Chi hội Gốm sứ Bình Dương; Sở VHTTDL Bình Dương",
+    "status": "COMPLETED",
+    "batchFile": "batch-009.json"
+  },
+  {
+    "id": 90,
+    "slug": "le-cung-trang-chol-chnam-thmay",
+    "title": "Tết Chol Chnam Thmay của người Khmer: Lễ đắp núi cát và mừng năm mới rộn ràng",
+    "category": "Lễ hội truyền thống",
+    "region": "SOUTH",
+    "intendedSource": "Bảo tàng Văn hóa Khmer Trà Vinh; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-009.json"
+  },
+  {
+    "id": 91,
+    "slug": "tuc-tho-cung-to-tien-trong-nha",
+    "title": "Bàn thờ gia tiên trong ngôi nhà Việt: Trục tâm linh hướng thiện và bài học tri ân",
+    "category": "Ký ức gia đình",
+    "region": "NATIONWIDE",
+    "intendedSource": "Viện Nghiên cứu Gia đình và Giới; Tạp chí Văn hóa Nghệ thuật",
+    "status": "COMPLETED",
+    "batchFile": "batch-010.json"
+  },
+  {
+    "id": 92,
+    "slug": "gia-pha-va-viec-ghi-chep-dong-ho",
+    "title": "Ý nghĩa của việc lập gia phả dòng họ: Giữ gìn nguồn cội và lời răn dạy cháu con",
+    "category": "Ký ức gia đình",
+    "region": "NATIONWIDE",
+    "intendedSource": "Hội Khoa học Lịch sử Việt Nam; Trung tâm Nghiên cứu Gia phả",
+    "status": "COMPLETED",
+    "batchFile": "batch-010.json"
+  },
+  {
+    "id": 93,
+    "slug": "tuc-goi-banh-chung-ngay-tet",
+    "title": "Tục gói bánh chưng, bánh tét ngày Tết: Triết lý vuông tròn gói trọn tình thân sum vầy",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NATIONWIDE",
+    "intendedSource": "Bảo tàng Lịch sử Quốc gia",
+    "status": "COMPLETED",
+    "batchFile": "batch-010.json"
+  },
+  {
+    "id": 94,
+    "slug": "tuc-xin-chu-dau-nam-van-mieu",
+    "title": "Tục xin chữ đầu xuân nơi Văn Miếu: Trọng chữ, hiếu học và khát vọng trí tuệ",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NORTH",
+    "intendedSource": "Trung tâm Hoạt động VHKH Văn Miếu - Quốc Tử Giám",
+    "status": "COMPLETED",
+    "batchFile": "batch-010.json"
+  },
+  {
+    "id": 95,
+    "slug": "tuc-le-xem-tuoi-xay-nha",
+    "title": "Tục xem hướng và chọn tuổi cất nhà: Tâm lý cầu an và tri thức kinh nghiệm dân gian",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NATIONWIDE",
+    "intendedSource": "Viện Kiến trúc Quốc gia; Tạp chí Kiến trúc",
+    "status": "COMPLETED",
+    "batchFile": "batch-010.json"
+  },
+  {
+    "id": 96,
+    "slug": "tuc-le-cuoi-hoi-truyen-thong",
+    "title": "Nghi lễ cưới hỏi truyền thống: Từ dạm ngõ đến rước dâu và ý nghĩa trầu cau kết tóc",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NATIONWIDE",
+    "intendedSource": "Bảo tàng Phụ nữ Nam Bộ; Tư liệu nếp cưới xưa",
+    "status": "COMPLETED",
+    "batchFile": "batch-010.json"
+  },
+  {
+    "id": 97,
+    "slug": "tuc-le-mung-sinh-nhat-nguoi-xua",
+    "title": "Lễ chúc thọ và quan niệm về tuổi tác của tiền nhân: Kính lão đắc thọ",
+    "category": "Ký ức gia đình",
+    "region": "NATIONWIDE",
+    "intendedSource": "Viện Triết học; Tạp chí Nghiên cứu Con người",
+    "status": "COMPLETED",
+    "batchFile": "batch-010.json"
+  },
+  {
+    "id": 98,
+    "slug": "le-cung-cau-ngu-o-mien-tay",
+    "title": "Tín ngưỡng thờ Cá Ông tại Kiên Giang và Cà Mau: Niềm tin chở che bão tố phương Nam",
+    "category": "Tín ngưỡng dân gian",
+    "region": "SOUTH",
+    "intendedSource": "Bảo tàng tỉnh Kiên Giang; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-010.json"
+  },
+  {
+    "id": 99,
+    "slug": "tuc-tho-ba-chua-ngoc-nam-bo",
+    "title": "Tín ngưỡng thờ Bà Chúa Ngọc (Thiên Y A Na) ở Nam Bộ: Dấu ấn giao thoa Việt - Chăm",
+    "category": "Tín ngưỡng dân gian",
+    "region": "SOUTH",
+    "intendedSource": "Viện KHXH Vùng Nam Bộ; Tạp chí Dân tộc học",
+    "status": "COMPLETED",
+    "batchFile": "batch-010.json"
+  },
+  {
+    "id": 100,
+    "slug": "nghe-lam-luoi-danh-ca-bien",
+    "title": "Nghề đan lưới vá chài của ngư dân ven biển: Bàn tay kiên nhẫn trước sóng gió đại dương",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NATIONWIDE",
+    "intendedSource": "Bảo tàng Hải dương học Nha Trang; Hội Nghề cá Việt Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-010.json"
+  },
+  {
+    "id": 101,
+    "slug": "le-hoi-den-hai-ba-trung-me-linh",
+    "title": "Lễ hội Đền Hai Bà Trưng Mê Linh: Khí phách nữ tướng anh hùng mở đầu trang sử độc lập",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Ban Quản lý Di tích Đền Hai Bà Trưng; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-011.json"
+  },
+  {
+    "id": 102,
+    "slug": "le-hoi-den-kiep-bac-hai-duong",
+    "title": "Lễ hội Kiếp Bạc: Tưởng niệm Quốc công Tiết chế Hưng Đạo Đại Vương Trần Quốc Tuấn",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Ban Quản lý Di tích Côn Sơn - Kiếp Bạc; Sở VHTTDL Hải Dương",
+    "status": "COMPLETED",
+    "batchFile": "batch-011.json"
+  },
+  {
+    "id": 103,
+    "slug": "le-hoi-den-ba-trieu-thanh-hoa",
+    "title": "Lễ hội Đền Bà Triệu: Khí phách 'cưỡi cơn gió mạnh đạp luồng sóng dữ' đất Cửu Chân",
+    "category": "Lễ hội truyền thống",
+    "region": "CENTRAL",
+    "intendedSource": "Sở VHTTDL tỉnh Thanh Hóa; Di tích Quốc gia đặc biệt",
+    "status": "COMPLETED",
+    "batchFile": "batch-011.json"
+  },
+  {
+    "id": 104,
+    "slug": "le-hoi-dong-da-ha-noi",
+    "title": "Lễ hội gò Đống Đa: Khúc ca khải hoàn đại phá quân Thanh của Hoàng đế Quang Trung",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Trung tâm Văn hóa Thông tin quận Đống Đa; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-011.json"
+  },
+  {
+    "id": 105,
+    "slug": "le-hoi-den-do-bac-ninh",
+    "title": "Lễ hội Đền Đô: Nơi hội tụ anh linh bát vị Hoàng đế triều Lý rực rỡ văn minh",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Ban Quản lý Di tích Đền Đô; Sở VHTTDL Bắc Ninh",
+    "status": "COMPLETED",
+    "batchFile": "batch-011.json"
+  },
+  {
+    "id": 106,
+    "slug": "le-hoi-tich-dien-doi-son",
+    "title": "Lễ hội Tịch điền Đọi Sơn: Đường cày đầu xuân khuyến nông của bậc minh quân",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Sở VHTTDL tỉnh Hà Nam; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-011.json"
+  },
+  {
+    "id": 107,
+    "slug": "le-hoi-yen-the-bac-giang",
+    "title": "Lễ hội Yên Thế: Tinh thần bất khuất của nghĩa quân Hoàng Hoa Thám giữa rừng thiêng",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Bảo tàng tỉnh Bắc Giang; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-011.json"
+  },
+  {
+    "id": 108,
+    "slug": "le-hoi-co-loa-ha-noi",
+    "title": "Lễ hội Cổ Loa: Huyền tích nỏ thần thành ốc và bài học giữ nước của vua An Dương Vương",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Trung tâm Bảo tồn Di sản Thăng Long - Hà Nội",
+    "status": "COMPLETED",
+    "batchFile": "batch-011.json"
+  },
+  {
+    "id": 109,
+    "slug": "le-hoi-den-con-nghe-an",
+    "title": "Lễ hội Đền Cờn Nghệ An: Tứ vị Thánh Nương bảo hộ sông biển và câu tục ngữ 'Nhất Cờn'",
+    "category": "Lễ hội truyền thống",
+    "region": "CENTRAL",
+    "intendedSource": "UBND thị xã Hoàng Mai; Sở VHTT Nghệ An",
+    "status": "COMPLETED",
+    "batchFile": "batch-011.json"
+  },
+  {
+    "id": 110,
+    "slug": "le-hoi-den-qua-son-nghe-an",
+    "title": "Lễ hội Đền Quả Sơn: Tưởng nhớ công đức Uy Minh Vương Lý Nhật Quang khai phá xứ Nghệ",
+    "category": "Lễ hội truyền thống",
+    "region": "CENTRAL",
+    "intendedSource": "UBND huyện Đô Lương; Sở VHTT Nghệ An",
+    "status": "COMPLETED",
+    "batchFile": "batch-011.json"
+  },
+  {
+    "id": 111,
+    "slug": "le-hoi-chua-thay-ha-noi",
+    "title": "Lễ hội Chùa Thầy: Dấu ấn Thiền sư Từ Đạo Hạnh và cái nôi nghệ thuật múa rối nước",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Ban Quản lý Di tích Chùa Thầy; UBND huyện Quốc Oai",
+    "status": "COMPLETED",
+    "batchFile": "batch-012.json"
+  },
+  {
+    "id": 112,
+    "slug": "le-hoi-chua-tay-phuong",
+    "title": "Lễ hội Chùa Tây Phương: Tuyệt tác pho tượng La Hán và triết lý Phật giáo thâm trầm",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Ban Quản lý Di tích Chùa Tây Phương; Huyện Thạch Thất",
+    "status": "COMPLETED",
+    "batchFile": "batch-012.json"
+  },
+  {
+    "id": 113,
+    "slug": "le-hoi-chua-huong-ha-noi",
+    "title": "Lễ hội Chùa Hương: Hành trình trẩy hội suối Yến tìm về miền đất Phật thanh tịnh",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Ban Tổ chức Lễ hội Chùa Hương; Huyện Mỹ Đức",
+    "status": "COMPLETED",
+    "batchFile": "batch-012.json"
+  },
+  {
+    "id": 114,
+    "slug": "le-hoi-phao-dat-hai-duong",
+    "title": "Trò chơi pháo đất Hải Dương: Sức mạnh đôi tay của người nông dân đắp bồi bờ cõi",
+    "category": "Nghệ thuật dân gian",
+    "region": "NORTH",
+    "intendedSource": "Sở VHTTDL tỉnh Hải Dương; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-012.json"
+  },
+  {
+    "id": 115,
+    "slug": "le-hoi-vat-lang-mai-dong",
+    "title": "Hội vật Mai Động: Đòn miếng thượng võ của các đô vật đất Thăng Long",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "UBND quận Hoàng Mai; Trung tâm Thể thao Hà Nội",
+    "status": "COMPLETED",
+    "batchFile": "batch-012.json"
+  },
+  {
+    "id": 116,
+    "slug": "le-hoi-dua-thuyen-tren-song-han",
+    "title": "Lễ hội đua thuyền truyền thống Đà Nẵng: Nhịp chèo dũng mãnh của ngư dân miền Trung",
+    "category": "Lễ hội truyền thống",
+    "region": "CENTRAL",
+    "intendedSource": "Sở VHTTDL TP Đà Nẵng; Hội Văn nghệ Dân gian Đà Nẵng",
+    "status": "COMPLETED",
+    "batchFile": "batch-012.json"
+  },
+  {
+    "id": 117,
+    "slug": "le-hoi-ruoc-muc-dong-da-nang",
+    "title": "Lễ hội Rước Mục Đồng Phong Lệ: Ngày hội độc đáo tôn vinh trẻ chăn trâu xứ Quảng",
+    "category": "Lễ hội truyền thống",
+    "region": "CENTRAL",
+    "intendedSource": "Bảo tàng Đà Nẵng; Hội đồng Làng Phong Lệ",
+    "status": "COMPLETED",
+    "batchFile": "batch-012.json"
+  },
+  {
+    "id": 118,
+    "slug": "le-hoi-bap-non-hoi-an",
+    "title": "Lễ hội Cầu bông Trà Quế: Tạ ơn trời đất ban tặng hương rau thơm nức tiếng Hội An",
+    "category": "Lễ hội truyền thống",
+    "region": "CENTRAL",
+    "intendedSource": "UBND TP Hội An; Hợp tác xã Nông nghiệp Trà Quế",
+    "status": "COMPLETED",
+    "batchFile": "batch-012.json"
+  },
+  {
+    "id": 119,
+    "slug": "le-hoi-katun-nguoi-raglai",
+    "title": "Nghi lễ tạ ơn Yang của người Raglai: Tiếng mã la ngân vang nơi sườn núi Khánh Hòa",
+    "category": "Tín ngưỡng dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "Sở VHTTDL tỉnh Khánh Hòa; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-012.json"
+  },
+  {
+    "id": 120,
+    "slug": "le-hoi-dinh-co-long-hai",
+    "title": "Lễ hội Dinh Cô Long Hải: Đức tin của ngư dân miền Đông Nam Bộ bên sóng biển Bà Rịa",
+    "category": "Tín ngưỡng dân gian",
+    "region": "SOUTH",
+    "intendedSource": "Ban Quản lý Di tích Dinh Cô; Sở VHTTDL Bà Rịa - Vũng Tàu",
+    "status": "COMPLETED",
+    "batchFile": "batch-012.json"
+  },
+  {
+    "id": 121,
+    "slug": "van-hoa-uong-tra-nguoi-viet",
+    "title": "Nghệ thuật thưởng trà Việt: Từ chén trà ướp sen Tây Hồ đến triết lý hòa ái nhân sinh",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NATIONWIDE",
+    "intendedSource": "Hiệp hội Chè Việt Nam; Tạp chí Nghiên cứu Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-013.json"
+  },
+  {
+    "id": 122,
+    "slug": "tri-thuc-nau-pho-ha-noi-nam-dinh",
+    "title": "Nghệ thuật nấu Phở: Tinh hoa nước dùng hầm xương và hương vị quốc hồn quốc túy",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NORTH",
+    "intendedSource": "Hồ sơ đề cử Di sản văn hóa phi vật thể; Hiệp hội Văn hóa Ẩm thực VN",
+    "status": "COMPLETED",
+    "batchFile": "batch-013.json"
+  },
+  {
+    "id": 123,
+    "slug": "tri-thuc-lam-mam-tom-hau-loc",
+    "title": "Tri thức ủ mắm tôm Hậu Lộc Thanh Hóa: Hương vị nồng nàn chắt chiu từ moi biển tươi",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "CENTRAL",
+    "intendedSource": "Sở Nông nghiệp & PTNT Thanh Hóa; Cục Sở hữu Trí tuệ",
+    "status": "COMPLETED",
+    "batchFile": "batch-013.json"
+  },
+  {
+    "id": 124,
+    "slug": "nghe-lam-com-lang-vong",
+    "title": "Nghề làm cốm làng Vòng: Hạt ngọc xanh mùa thu gói trọn hương thơm lá sen",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NORTH",
+    "intendedSource": "UBND quận Cầu Giấy; Sở Du lịch Hà Nội",
+    "status": "COMPLETED",
+    "batchFile": "batch-013.json"
+  },
+  {
+    "id": 125,
+    "slug": "tri-thuc-lam-banh-dau-xanh-hai-duong",
+    "title": "Bánh đậu xanh Hải Dương: Món quà thanh ngọt tao nhã bên chén trà mạn ấm nóng",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NORTH",
+    "intendedSource": "Hiệp hội Bánh đậu xanh Hải Dương; Sở Công thương",
+    "status": "COMPLETED",
+    "batchFile": "batch-013.json"
+  },
+  {
+    "id": 126,
+    "slug": "tri-thuc-lam-me-xung-hue",
+    "title": "Mè xửng xứ Huế: Miếng kẹo dẻo thơm hạt mè gắn bó hoài niệm đất Cố đô",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "CENTRAL",
+    "intendedSource": "Sở Công thương Thừa Thiên Huế; Hội Nghề truyền thống Huế",
+    "status": "COMPLETED",
+    "batchFile": "batch-013.json"
+  },
+  {
+    "id": 127,
+    "slug": "van-hoa-mam-ca-chau-doc",
+    "title": "Văn hóa làm mắm cá Châu Đốc: 'Thủ phủ mắm' miệt vườn đất An Giang",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "SOUTH",
+    "intendedSource": "Sở Công thương tỉnh An Giang; Bảo tàng tỉnh An Giang",
+    "status": "COMPLETED",
+    "batchFile": "batch-013.json"
+  },
+  {
+    "id": 128,
+    "slug": "nghe-lam-duong-thot-not-an-giang",
+    "title": "Nghề nấu đường thốt nốt Bảy Núi: Vị ngọt lành từ ngọn cây của người Khmer",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "SOUTH",
+    "intendedSource": "UBND thị xã Tịnh Biên; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-013.json"
+  },
+  {
+    "id": 129,
+    "slug": "tri-thuc-thuoc-nam-tue-tinh",
+    "title": "Tri thức y học cổ truyền Nam dược: Triết lý 'Nam dược trị Nam nhân' của Tuệ Tĩnh",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NATIONWIDE",
+    "intendedSource": "Viện Y Dược học Dân tộc; Hội Nam y Việt Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-013.json"
+  },
+  {
+    "id": 130,
+    "slug": "kinh-nghiem-xem-thoi-tiet-dan-gian",
+    "title": "Kinh nghiệm trông trời nhìn mây của nhà nông: Tri thức quan sát đúc kết nghìn năm",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NATIONWIDE",
+    "intendedSource": "Viện Hàn lâm Khoa học Xã hội; Viện Văn học Dân gian",
+    "status": "COMPLETED",
+    "batchFile": "batch-013.json"
+  },
+  {
+    "id": 131,
+    "slug": "dan-bau-thanh-am-hon-viet",
+    "title": "Đàn bầu: Cung thanh cung trầm từ một dây đàn rung động tâm hồn người Việt",
+    "category": "Nghệ thuật dân gian",
+    "region": "NATIONWIDE",
+    "intendedSource": "Học viện Âm nhạc Quốc gia Việt Nam; Viện Âm nhạc",
+    "status": "COMPLETED",
+    "batchFile": "batch-014.json"
+  },
+  {
+    "id": 132,
+    "slug": "dan-tranh-tieng-to-dong-viet-nam",
+    "title": "Đàn tranh 16 dây: Tiếng tơ thanh thoát trong dàn nhạc cổ truyền và ca tài tử",
+    "category": "Nghệ thuật dân gian",
+    "region": "NATIONWIDE",
+    "intendedSource": "Viện Âm nhạc Việt Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-014.json"
+  },
+  {
+    "id": 133,
+    "slug": "dan-nguyet-cay-dan-kim-san-khau",
+    "title": "Đàn nguyệt: Cây đàn kim định hình giai điệu chầu văn, ca trù và đờn ca",
+    "category": "Nghệ thuật dân gian",
+    "region": "NATIONWIDE",
+    "intendedSource": "Khoa Âm nhạc Truyền thống - Nhạc viện TP.HCM",
+    "status": "COMPLETED",
+    "batchFile": "batch-014.json"
+  },
+  {
+    "id": 134,
+    "slug": "dan-da-tay-nguyen-thanh-am-thoi-tien-su",
+    "title": "Đàn đá Tây Nguyên: Thanh âm vang vọng nghìn năm từ lòng đất bazan",
+    "category": "Nghệ thuật dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "Bảo tàng Lịch sử Quốc gia; Bảo tàng Lâm Đồng",
+    "status": "COMPLETED",
+    "batchFile": "batch-014.json"
+  },
+  {
+    "id": 135,
+    "slug": "ken-saranai-hon-nhac-nguoi-cham",
+    "title": "Kèn Saranai: Tiếng kèn réo rắt linh thiêng trong ngày hội của người Chăm",
+    "category": "Nghệ thuật dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "Trung tâm Nghiên cứu Văn hóa Chăm Ninh Thuận",
+    "status": "COMPLETED",
+    "batchFile": "batch-014.json"
+  },
+  {
+    "id": 136,
+    "slug": "khen-hmong-tieng-long-chang-trai-mong",
+    "title": "Khèn Mông: Nhạc cụ cất lên tiếng lòng, lời tỏ tình và bước nhảy vách núi",
+    "category": "Nghệ thuật dân gian",
+    "region": "NORTH",
+    "intendedSource": "Bảo tàng Dân tộc học Việt Nam; Sở VHTTDL Hà Giang",
+    "status": "COMPLETED",
+    "batchFile": "batch-014.json"
+  },
+  {
+    "id": 137,
+    "slug": "dan-tinh-tieng-hat-then-tay-nung",
+    "title": "Đàn tính: Chiếc bầu tròn rung lên cung đàn kết nối con người với cõi then",
+    "category": "Nghệ thuật dân gian",
+    "region": "NORTH",
+    "intendedSource": "Hồ sơ Di sản UNESCO Thực hành Then; Sở VHTT Cao Bằng",
+    "status": "COMPLETED",
+    "batchFile": "batch-014.json"
+  },
+  {
+    "id": 138,
+    "slug": "trong-com-nhip-dieu-dan-da",
+    "title": "Trống cơm: Âm sắc ấm áp vui tươi trong khúc ca giao duyên Bắc Bộ",
+    "category": "Nghệ thuật dân gian",
+    "region": "NORTH",
+    "intendedSource": "Viện Âm nhạc; Nhà hát Ca Múa Nhạc Dân gian",
+    "status": "COMPLETED",
+    "batchFile": "batch-014.json"
+  },
+  {
+    "id": 139,
+    "slug": "dan-klong-put-tieng-vo-tay-nong-nghiep",
+    "title": "Đàn Klông-pút của phụ nữ Tây Nguyên: Tiếng vỗ tay gọi lúa trổ bông trĩu hạt",
+    "category": "Nghệ thuật dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "Bảo tàng tỉnh Kon Tum; Sở VHTTDL Gia Lai",
+    "status": "COMPLETED",
+    "batchFile": "batch-014.json"
+  },
+  {
+    "id": 140,
+    "slug": "chieng-muong-thanh-am-xu-muong",
+    "title": "Cồng chiêng người Mường: Hệ thống 12 chiếc chiêng tượng trưng 12 tháng bốn mùa",
+    "category": "Nghệ thuật dân gian",
+    "region": "NORTH",
+    "intendedSource": "Sở VHTTDL tỉnh Hòa Bình; Bảo tàng Không gian Văn hóa Mường",
+    "status": "COMPLETED",
+    "batchFile": "batch-014.json"
+  },
+  {
+    "id": 141,
+    "slug": "truyen-thuyet-son-tinh-thuy-tinh",
+    "title": "Truyền thuyết Sơn Tinh - Thủy Tinh: Bài ca ngự thủy hào hùng của cư dân lúa nước",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Viện Văn học; Tạp chí Văn hóa Dân gian",
+    "status": "COMPLETED",
+    "batchFile": "batch-015.json"
+  },
+  {
+    "id": 142,
+    "slug": "truyen-thuyet-chu-dong-tu-tien-dung",
+    "title": "Truyền thuyết Chử Đồng Tử - Tiên Dung: Bản tình ca vượt giai cấp và đạo hiếu vẹn tròn",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Cổng thông tin Sở VHTTDL Hưng Yên; Lễ hội Đền Đa Hòa",
+    "status": "COMPLETED",
+    "batchFile": "batch-015.json"
+  },
+  {
+    "id": 143,
+    "slug": "truyen-thuyet-thanh-giong",
+    "title": "Huyền thoại Thánh Gióng: Biểu tượng sức mạnh quật cường bảo vệ giang sơn bờ cõi",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Viện Nghiên cứu Hán Nôm; Hội đồng Di sản Văn hóa Quốc gia",
+    "status": "COMPLETED",
+    "batchFile": "batch-015.json"
+  },
+  {
+    "id": 144,
+    "slug": "huyen-tich-ba-chua-kho-bac-ninh",
+    "title": "Huyền tích Bà Chúa Kho Bắc Ninh: Thực hư chuyện 'vay vốn' và bài học giữ gìn kho lương",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Ban Quản lý Di tích Đền Bà Chúa Kho; Báo Bắc Ninh",
+    "status": "COMPLETED",
+    "batchFile": "batch-015.json"
+  },
+  {
+    "id": 145,
+    "slug": "huyen-tich-an-duong-vuong-my-chau",
+    "title": "Truyện An Dương Vương và Mỵ Châu: Nỗi niềm cảnh giác trước họa xâm lăng",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Bảo tàng Lịch sử Quốc gia; Viện Khảo cổ học",
+    "status": "COMPLETED",
+    "batchFile": "batch-015.json"
+  },
+  {
+    "id": 146,
+    "slug": "huyen-tich-da-trach-da-hoa",
+    "title": "Đầm Dạ Trạch và đền Dạ Hòa: Khúc ca bi tráng thời khởi nghĩa Triệu Quang Phục",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "UBND huyện Khoái Châu; Bảo tàng tỉnh Hưng Yên",
+    "status": "COMPLETED",
+    "batchFile": "batch-015.json"
+  },
+  {
+    "id": 147,
+    "slug": "huyen-tich-ong-hoang-muoi-nghe-an",
+    "title": "Huyền tích Ông Hoàng Mười: Vị quan văn võ toàn tài chở che nhân dân xứ Nghệ",
+    "category": "Tín ngưỡng dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "Ban Quản lý Di tích Đền Ông Hoàng Mười; Huyện Hưng Nguyên",
+    "status": "COMPLETED",
+    "batchFile": "batch-015.json"
+  },
+  {
+    "id": 148,
+    "slug": "huyen-tich-ong-hoang-bay-bao-ha",
+    "title": "Huyền tích Ông Hoàng Bảy Bảo Hà: Vị tướng trấn ải biên cương bảo vệ bờ cõi",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Ban Quản lý Di tích Đền Bảo Hà; Tỉnh Lào Cai",
+    "status": "COMPLETED",
+    "batchFile": "batch-015.json"
+  },
+  {
+    "id": 149,
+    "slug": "huyen-tich-thien-y-a-na-khanh-hoa",
+    "title": "Huyền tích Mẹ Xứ Sở Po Ino Nagar: Người khai sơn lập địa dạy dân trồng cấy dệt vải",
+    "category": "Tín ngưỡng dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "Bảo tàng Khánh Hòa; Sở VHTTDL tỉnh Khánh Hòa",
+    "status": "COMPLETED",
+    "batchFile": "batch-015.json"
+  },
+  {
+    "id": 150,
+    "slug": "huyen-tich-tho-than-nui-tan-vien",
+    "title": "Huyền tích Tản Viên Sơn Thánh: Đệ nhất phúc thần trong Tứ bất tử của người Việt",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Khu Di tích Đền Thượng Ba Vì; Viện Văn hóa Nghệ thuật",
+    "status": "COMPLETED",
+    "batchFile": "batch-015.json"
+  },
+  {
+    "id": 151,
+    "slug": "lang-co-duong-lam-da-ong",
+    "title": "Làng cổ Đường Lâm: Vẻ đẹp trầm mặc đá ong và nếp nhà rêu phong xứ Đoài",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NORTH",
+    "intendedSource": "Ban Quản lý Di tích Làng cổ Đường Lâm; Thị xã Sơn Tây",
+    "status": "COMPLETED",
+    "batchFile": "batch-016.json"
+  },
+  {
+    "id": 152,
+    "slug": "pho-co-dong-van-ha-giang",
+    "title": "Phố cổ Đồng Văn: Dấu ấn kiến trúc tường trình trình đất giữa lòng cao nguyên đá",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NORTH",
+    "intendedSource": "Ban Quản lý Công viên Địa chất Toàn cầu Cao nguyên đá Đồng Văn",
+    "status": "COMPLETED",
+    "batchFile": "batch-016.json"
+  },
+  {
+    "id": 153,
+    "slug": "kien-truc-thap-cham-my-son",
+    "title": "Thánh địa Mỹ Sơn: Nghệ thuật xếp gạch không dùng vữa kỳ diệu của người Chăm",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "CENTRAL",
+    "intendedSource": "Ban Quản lý Di sản Văn hóa Mỹ Sơn; UNESCO World Heritage",
+    "status": "COMPLETED",
+    "batchFile": "batch-016.json"
+  },
+  {
+    "id": 154,
+    "slug": "chua-tam-chuc-ha-nam",
+    "title": "Chùa Tam Chúc: Sự kết hợp giữa cảnh quan non nước và không gian tâm linh hiện đại",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Ban Quản lý Khu du lịch Quốc gia Tam Chúc; Tỉnh Hà Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-016.json"
+  },
+  {
+    "id": 155,
+    "slug": "chua-bai-dinh-ninh-binh",
+    "title": "Chùa Bái Đính cổ và mới: Hành trình tìm về không gian Phật giáo giữa lòng Cố đô Hoa Lư",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Sở Du lịch tỉnh Ninh Bình; Giáo hội Phật giáo VN tỉnh Ninh Bình",
+    "status": "COMPLETED",
+    "batchFile": "batch-016.json"
+  },
+  {
+    "id": 156,
+    "slug": "thien-vien-truc-lam-yen-tu",
+    "title": "Thiền phái Trúc Lâm Yên Tử: Triết lý Phật giáo nhập thế của Phật hoàng Trần Nhân Tông",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Ban Quản lý Di tích Yên Tử; Tỉnh Quảng Ninh",
+    "status": "COMPLETED",
+    "batchFile": "batch-016.json"
+  },
+  {
+    "id": 157,
+    "slug": "kien-truc-chua-khmer-nam-bo",
+    "title": "Kiến trúc chùa Khmer Nam Bộ: Tháp nhọn Prang vươn cao và bích họa đời đức Phật",
+    "category": "Tín ngưỡng dân gian",
+    "region": "SOUTH",
+    "intendedSource": "Bảo tàng Văn hóa Dân tộc Khmer Sóc Trăng; Viện Dân tộc học",
+    "status": "COMPLETED",
+    "batchFile": "batch-016.json"
+  },
+  {
+    "id": 158,
+    "slug": "chua-doi-soc-trang",
+    "title": "Chùa Dơi Sóc Trăng: Ngôi chùa cổ Mahatup và sự bao dung che chở đàn dơi tự nhiên",
+    "category": "Tín ngưỡng dân gian",
+    "region": "SOUTH",
+    "intendedSource": "Ban Quản trị Chùa Mahatup; Sở VHTTDL tỉnh Sóc Trăng",
+    "status": "COMPLETED",
+    "batchFile": "batch-016.json"
+  },
+  {
+    "id": 159,
+    "slug": "chua-hang-tra-vinh",
+    "title": "Chùa Hang Trà Vinh: Không gian chim muông trú ngụ và nghệ thuật điêu khắc rễ cây",
+    "category": "Tín ngưỡng dân gian",
+    "region": "SOUTH",
+    "intendedSource": "Ban Quản trị Chùa Kompong Chray; Tỉnh Trà Vinh",
+    "status": "COMPLETED",
+    "batchFile": "batch-016.json"
+  },
+  {
+    "id": 160,
+    "slug": "toa-thanh-tay-ninh-dao-cao-dai",
+    "title": "Tòa thánh Tây Ninh: Kiến trúc độc đáo và triết lý dung hợp của đạo Cao Đài",
+    "category": "Tín ngưỡng dân gian",
+    "region": "SOUTH",
+    "intendedSource": "Hội thánh Cao Đài Tòa thánh Tây Ninh; Bảo tàng Tây Ninh",
+    "status": "COMPLETED",
+    "batchFile": "batch-016.json"
+  },
+  {
+    "id": 161,
+    "slug": "le-hoi-ruoc-nuoc-song-hong",
+    "title": "Nghi thức rước nước sông Hồng: Khát vọng mưa thuận gió hòa của cư dân lúa nước",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Bảo tàng Hưng Yên; Lễ hội Đền Chử Đồng Tử",
+    "status": "COMPLETED",
+    "batchFile": "batch-017.json"
+  },
+  {
+    "id": 162,
+    "slug": "le-cung-com-moi-nguoi-muong",
+    "title": "Lễ mừng cơm mới của người Mường: Bát cơm dẻo đầu mùa dâng cúng tổ tiên",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Sở VHTTDL tỉnh Hòa Bình; Viện Văn hóa Dân gian",
+    "status": "COMPLETED",
+    "batchFile": "batch-017.json"
+  },
+  {
+    "id": 163,
+    "slug": "tuc-ruoc-cay-bong-nguoi-thai",
+    "title": "Tục rước cây bông trong lễ hội xên bản của người Thái: Ước vọng hoa thơm trái ngọt",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Bảo tàng tỉnh Sơn La; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-017.json"
+  },
+  {
+    "id": 164,
+    "slug": "le-hoi-chua-ba-chua-xu-vinh-te",
+    "title": "Lễ hội miếu Bà Chúa Xứ Vĩnh Tế: Tưởng nhớ công đức Thoại Ngọc Hầu đào kênh",
+    "category": "Lễ hội truyền thống",
+    "region": "SOUTH",
+    "intendedSource": "Ban Quản lý Di tích Thoại Ngọc Hầu; TP Châu Đốc",
+    "status": "COMPLETED",
+    "batchFile": "batch-017.json"
+  },
+  {
+    "id": 165,
+    "slug": "le-cung-bien-my-long-tra-vinh",
+    "title": "Lễ hội cúng Biển Mỹ Long: Ba ngày hội nghinh ông cầu sóng yên biển lặng đất Trà Vinh",
+    "category": "Lễ hội truyền thống",
+    "region": "SOUTH",
+    "intendedSource": "UBND huyện Cầu Ngang; Sở VHTTDL Trà Vinh",
+    "status": "COMPLETED",
+    "batchFile": "batch-017.json"
+  },
+  {
+    "id": 166,
+    "slug": "tuc-tha-hoa-dang-ngay-ram-thang-bay",
+    "title": "Tục thả hoa đăng rằm tháng Bảy: Ngọn nến lung linh cầu siêu độ và bình an cho muôn loài",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NATIONWIDE",
+    "intendedSource": "Ban Trị sự Phật giáo; Tạp chí Văn hóa Phật giáo",
+    "status": "COMPLETED",
+    "batchFile": "batch-017.json"
+  },
+  {
+    "id": 167,
+    "slug": "le-hoi-trang-an-ninh-binh",
+    "title": "Lễ hội Tràng An: Rước nước tế thánh trên dòng sông Sào Khê di sản",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Ban Quản lý Quần thể Danh thắng Tràng An; UNESCO",
+    "status": "COMPLETED",
+    "batchFile": "batch-017.json"
+  },
+  {
+    "id": 168,
+    "slug": "le-hoi-dinh-bang-bac-ninh",
+    "title": "Lễ hội đình Đình Bảng: Ngôi đình gỗ bề thế và ngày hội rước thánh của người xứ Kinh Bắc",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "Ban Quản lý Di tích Đình Đình Bảng; Thị xã Từ Sơn",
+    "status": "COMPLETED",
+    "batchFile": "batch-017.json"
+  },
+  {
+    "id": 169,
+    "slug": "le-hoi-cho-go-binh-dinh",
+    "title": "Chợ Gò Bình Định: Phiên chợ mùng Một Tết mua may bán rủi rộn rã nụ cười",
+    "category": "Lễ hội truyền thống",
+    "region": "CENTRAL",
+    "intendedSource": "UBND huyện Tuy Phước; Báo Bình Định",
+    "status": "COMPLETED",
+    "batchFile": "batch-017.json"
+  },
+  {
+    "id": 170,
+    "slug": "le-hoi-vat-cau-bun-bac-giang",
+    "title": "Lễ hội vật cầu bùn làng Vân: Trò chơi dân gian độc nhất vô nhị tạ ơn thần linh",
+    "category": "Lễ hội truyền thống",
+    "region": "NORTH",
+    "intendedSource": "UBND huyện Việt Yên; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-017.json"
+  },
+  {
+    "id": 171,
+    "slug": "ao-dai-truyen-thong-viet-nam",
+    "title": "Áo dài truyền thống: Dáng hình thanh tao và hành trình lịch sử qua các thời kỳ",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NATIONWIDE",
+    "intendedSource": "Bảo tàng Áo dài TP.HCM; Viện Nghiên cứu Trang phục Việt",
+    "status": "COMPLETED",
+    "batchFile": "batch-018.json"
+  },
+  {
+    "id": 172,
+    "slug": "ao-ba-ba-nam-bo",
+    "title": "Chiếc áo bà ba và khăn rằn Nam Bộ: Nét mộc mạc thủy chung của người dân sông nước",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "SOUTH",
+    "intendedSource": "Bảo tàng Phụ nữ Nam Bộ",
+    "status": "COMPLETED",
+    "batchFile": "batch-018.json"
+  },
+  {
+    "id": 173,
+    "slug": "trang-phuc-phu-nu-cham",
+    "title": "Trang phục truyền thống phụ nữ Chăm: Tấm khăn Matra duyên dáng và dải thắt lưng hoa văn",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "CENTRAL",
+    "intendedSource": "Trung tâm Trưng bày Văn hóa Chăm Bình Thuận",
+    "status": "COMPLETED",
+    "batchFile": "batch-018.json"
+  },
+  {
+    "id": 174,
+    "slug": "trang-phuc-tho-cam-nguoi-hmong",
+    "title": "Váy hoa thổ cẩm người H'Mông hoa: Kỹ thuật vẽ sáp ong và thêu tay rực rỡ vùng cao",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NORTH",
+    "intendedSource": "Bảo tàng Dân tộc học Việt Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-018.json"
+  },
+  {
+    "id": 175,
+    "slug": "nghe-thuat-hat-boi-binh-dinh",
+    "title": "Hát Bội Bình Định: Kỹ xảo múa võ, liếc mắt và khí phách trung quân ái quốc",
+    "category": "Nghệ thuật dân gian",
+    "region": "CENTRAL",
+    "intendedSource": "Nhà hát Nghệ thuật Truyền thống Bình Định",
+    "status": "COMPLETED",
+    "batchFile": "batch-018.json"
+  },
+  {
+    "id": 176,
+    "slug": "nghe-thuat-hat-sam-ha-thanh",
+    "title": "Hát Xẩm Hà Thành: Tiếng đàn nhị và lời ca tự tình của người hát rong đất kinh kỳ",
+    "category": "Nghệ thuật dân gian",
+    "region": "NORTH",
+    "intendedSource": "Viện Âm nhạc; Trung tâm Phát triển Nghệ thuật Âm nhạc VN",
+    "status": "COMPLETED",
+    "batchFile": "batch-018.json"
+  },
+  {
+    "id": 177,
+    "slug": "nghe-thuat-cai-luong-nam-bo",
+    "title": "Nghệ thuật Cải lương Nam Bộ: Sân khấu đổi mới dung hòa âm nhạc tài tử và kịch nghệ",
+    "category": "Nghệ thuật dân gian",
+    "region": "SOUTH",
+    "intendedSource": "Hội Nghệ sĩ Sân khấu Việt Nam; Nhà hát Cải lương Trần Hữu Trang",
+    "status": "COMPLETED",
+    "batchFile": "batch-018.json"
+  },
+  {
+    "id": 178,
+    "slug": "dieu-mua-xoe-thai-tay-bac",
+    "title": "Nghệ thuật Xòe Thái Tây Bắc: Vòng xòe hoa gắn kết muôn người bên bếp lửa bản làng",
+    "category": "Nghệ thuật dân gian",
+    "region": "NORTH",
+    "intendedSource": "UNESCO — Art of Xòe dance of the Tày people, hồ sơ 01575",
+    "status": "COMPLETED",
+    "batchFile": "batch-018.json"
+  },
+  {
+    "id": 179,
+    "slug": "mua-bong-roi-nam-bo",
+    "title": "Múa bóng rỗi Nam Bộ: Nghệ thuật diễn xướng dân gian dâng lễ các Bà ở đình miếu",
+    "category": "Nghệ thuật dân gian",
+    "region": "SOUTH",
+    "intendedSource": "Bảo tàng Lịch sử TP.HCM; Tạp chí Văn hóa Dân gian",
+    "status": "COMPLETED",
+    "batchFile": "batch-018.json"
+  },
+  {
+    "id": 180,
+    "slug": "nghe-thuat-hat-dum-hai-phong",
+    "title": "Hát Đúm Thủy Nguyên: Câu hát giao duyên tháo khăn bịt mặt đầu xuân xứ biển",
+    "category": "Nghệ thuật dân gian",
+    "region": "NORTH",
+    "intendedSource": "Sở VHTT TP Hải Phòng; Cục Di sản Văn hóa",
+    "status": "COMPLETED",
+    "batchFile": "batch-018.json"
+  },
+  {
+    "id": 181,
+    "slug": "dao-nghia-thay-tro-ngay-xua",
+    "title": "Đạo nghĩa thầy trò xưa: Truyền thống tôn sư trọng đạo và tinh thần hiếu học của người Việt",
+    "category": "Ký ức gia đình",
+    "region": "NATIONWIDE",
+    "intendedSource": "Viện Nghiên cứu Hán Nôm; Hội Khuyến học Việt Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-019.json"
+  },
+  {
+    "id": 182,
+    "slug": "thay-giao-chu-van-an-tam-guong-khi-tiet",
+    "title": "Người thầy muôn đời Chu Văn An: Tấm gương tiết tháo và ngôi đền thờ bên núi Phượng Hoàng",
+    "category": "Ký ức gia đình",
+    "region": "NORTH",
+    "intendedSource": "Khu Di tích Đền thờ Chu Văn An Chí Linh; Sở VHTTDL Hải Dương",
+    "status": "COMPLETED",
+    "batchFile": "batch-019.json"
+  },
+  {
+    "id": 183,
+    "slug": "dai-thi-hao-nguyen-du-va-truyen-kieu",
+    "title": "Đại thi hào Nguyễn Du và Truyện Kiều: Tiếng kêu thương đứt ruột và di sản văn học nhân loại",
+    "category": "Ký ức gia đình",
+    "region": "CENTRAL",
+    "intendedSource": "Khu Di tích Quốc gia đặc biệt Đại thi hào Nguyễn Du; UNESCO",
+    "status": "COMPLETED",
+    "batchFile": "batch-019.json"
+  },
+  {
+    "id": 184,
+    "slug": "danh-nhan-nguyen-trai-uc-trai-thi-tap",
+    "title": "Danh nhân văn hóa Nguyễn Trãi: Tấm lòng ưu ái vì dân vì nước bên dòng suối Côn Sơn",
+    "category": "Ký ức gia đình",
+    "region": "NORTH",
+    "intendedSource": "Ban Quản lý Di tích Côn Sơn - Kiếp Bạc; UNESCO",
+    "status": "COMPLETED",
+    "batchFile": "batch-019.json"
+  },
+  {
+    "id": 185,
+    "slug": "phat-hoang-tran-nhan-tong-tu-tuong-hoa-quang",
+    "title": "Phật hoàng Trần Nhân Tông: Từ bậc vua anh minh đến vị tổ thiền phái Trúc Lâm thanh thoát",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NORTH",
+    "intendedSource": "Học viện Phật giáo Việt Nam; Ban Quản lý Di tích Yên Tử",
+    "status": "COMPLETED",
+    "batchFile": "batch-019.json"
+  },
+  {
+    "id": 186,
+    "slug": "danh-y-hai-thuong-lan-ong",
+    "title": "Đại danh y Hải Thượng Lãn Ông Lê Hữu Trác: Y đức sáng ngời và bộ sách Y tông tâm lĩnh",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "CENTRAL",
+    "intendedSource": "Khu Di tích Hải Thượng Lãn Ông Hà Tĩnh; UNESCO ghi danh 2024",
+    "status": "COMPLETED",
+    "batchFile": "batch-019.json"
+  },
+  {
+    "id": 187,
+    "slug": "trang-trinh-nguyen-binh-khiem",
+    "title": "Trạng Trình Nguyễn Bỉnh Khiêm: Bậc hiền triết dự báo thời cuộc và triết lý an nhàn",
+    "category": "Ký ức gia đình",
+    "region": "NORTH",
+    "intendedSource": "Khu Di tích Đền thờ Trạng Trình Vĩnh Bảo; Hải Phòng",
+    "status": "COMPLETED",
+    "batchFile": "batch-019.json"
+  },
+  {
+    "id": 188,
+    "slug": "nha-bac-hoc-le-quy-don",
+    "title": "Nhà bác học Lê Quý Đôn: Tấm gương đọc sách uyên bác và bộ tác phẩm bách khoa toàn thư",
+    "category": "Ký ức gia đình",
+    "region": "NORTH",
+    "intendedSource": "Bảo tàng tỉnh Thái Bình; Viện Sử học",
+    "status": "COMPLETED",
+    "batchFile": "batch-019.json"
+  },
+  {
+    "id": 189,
+    "slug": "nha-tho-nguyen-dinh-chieu-luc-van-tien",
+    "title": "Nhà thơ yêu nước Nguyễn Đình Chiểu: Ngòi bút đâm gian chở đạo và tấm lòng son sắt đất Ba Tri",
+    "category": "Ký ức gia đình",
+    "region": "SOUTH",
+    "intendedSource": "Khu Di tích Mộ và Khu lưu niệm Nguyễn Đình Chiểu Bến Tre; UNESCO",
+    "status": "COMPLETED",
+    "batchFile": "batch-019.json"
+  },
+  {
+    "id": 190,
+    "slug": "nu-si-ho-xuan-huong-tieng-tho-doc-dao",
+    "title": "Nữ sĩ Hồ Xuân Hương: Tiếng thơ độc đáo bênh vực nữ quyền và bản sắc thơ Nôm",
+    "category": "Ký ức gia đình",
+    "region": "NORTH",
+    "intendedSource": "Khu lưu niệm Nữ sĩ Hồ Xuân Hương Nghệ An; UNESCO",
+    "status": "COMPLETED",
+    "batchFile": "batch-019.json"
+  },
+  {
+    "id": 191,
+    "slug": "luu-giu-ky-uc-gia-dinh-tu-mot-cau-chuyen",
+    "title": "Lưu giữ ký ức gia đình từ một câu chuyện: Khởi đầu giản dị để kết nối thế hệ",
+    "category": "Ký ức gia đình",
+    "region": "NATIONWIDE",
+    "intendedSource": "Tủ sách Gia đình & Giáo dục nhân cách; Nhóm biên tập TLTL",
+    "status": "COMPLETED",
+    "batchFile": "batch-020.json"
+  },
+  {
+    "id": 192,
+    "slug": "thong-nhat-viec-tuong-nho-nguoi-than-trong-gia-dinh",
+    "title": "Cùng gia đình thống nhất việc tưởng nhớ người thân: Không biến nghi lễ thành gánh nặng",
+    "category": "Ký ức gia đình",
+    "region": "NATIONWIDE",
+    "intendedSource": "Tủ sách Gia đình & Giáo dục nhân cách; Nhóm biên tập TLTL",
+    "status": "COMPLETED",
+    "batchFile": "batch-020.json"
+  },
+  {
+    "id": 193,
+    "slug": "nhip-song-tre-va-khoang-lang-tam-linh",
+    "title": "Người trẻ tìm khoảng lặng: Nhìn nhận tín ngưỡng như điểm tựa tinh thần tích cực",
+    "category": "Ký ức gia đình",
+    "region": "NATIONWIDE",
+    "intendedSource": "Tạp chí Thanh niên; Đề án Văn hóa Tinh thần Khởi nghiệp FPTU",
+    "status": "COMPLETED",
+    "batchFile": "batch-020.json"
+  },
+  {
+    "id": 194,
+    "slug": "ung-xu-khi-di-le-chua-den-mieu",
+    "title": "Văn hóa ứng xử nơi đền chùa: Tôn trọng chốn tôn nghiêm và tránh lãng phí lễ vật",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NATIONWIDE",
+    "intendedSource": "Ban Tôn giáo Chính phủ; Cục Văn hóa Cơ sở",
+    "status": "COMPLETED",
+    "batchFile": "batch-020.json"
+  },
+  {
+    "id": 195,
+    "slug": "phan-biet-tin-nguong-va-me-tin-di-doan",
+    "title": "Phân biệt tín ngưỡng thuần hậu và tệ nạn mê tín dị đoan: Giữ tâm sáng trước nỗi sợ hãi",
+    "category": "Tín ngưỡng dân gian",
+    "region": "NATIONWIDE",
+    "intendedSource": "Viện Nghiên cứu Tôn giáo; Tạp chí Tuyên giáo",
+    "status": "COMPLETED",
+    "batchFile": "batch-020.json"
+  },
+  {
+    "id": 196,
+    "slug": "van-hoa-thap-nhang-an-toan-tai-gia",
+    "title": "Văn hóa thắp nhang an toàn: Nén hương lòng thanh tịnh và phòng ngừa hỏa hoạn",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NATIONWIDE",
+    "intendedSource": "Cục Cảnh sát PCCC; Thông điệp Ban Trị sự Phật giáo",
+    "status": "COMPLETED",
+    "batchFile": "batch-020.json"
+  },
+  {
+    "id": 197,
+    "slug": "ung-dung-cong-nghe-so-bao-ton-di-san",
+    "title": "Số hóa di sản văn hóa: Cầu nối đưa giá trị truyền thống đến gần hơn với thế hệ trẻ",
+    "category": "Tri thức dân gian & Nghề thủ công",
+    "region": "NATIONWIDE",
+    "intendedSource": "Cục Di sản Văn hóa; Đề tài Chuyển đổi số Di sản Quốc gia",
+    "status": "COMPLETED",
+    "batchFile": "batch-020.json"
+  },
+  {
+    "id": 198,
+    "slug": "giu-gin-tieng-viet-qua-ca-dao-tuc-ngu",
+    "title": "Gìn giữ tiếng Việt qua ca dao, tục ngữ: Vốn quý ngôn từ và bài học làm người của cha ông",
+    "category": "Nghệ thuật dân gian",
+    "region": "NATIONWIDE",
+    "intendedSource": "Viện Ngôn ngữ học; Tạp chí Ngôn ngữ & Đời sống",
+    "status": "COMPLETED",
+    "batchFile": "batch-020.json"
+  },
+  {
+    "id": 199,
+    "slug": "nghe-thuat-song-cham-va-chanh-niem-dan-gian",
+    "title": "Nghệ thuật sống chậm trong nếp nhà xưa: Học cách buông bỏ muộn phiền từ lời răn tiền nhân",
+    "category": "Ký ức gia đình",
+    "region": "NATIONWIDE",
+    "intendedSource": "Tạp chí Tâm lý học Việt Nam; Đề án Mental Wellness TLTL",
+    "status": "COMPLETED",
+    "batchFile": "batch-020.json"
+  },
+  {
+    "id": 200,
+    "slug": "trai-nghiem-van-hoa-dia-phuong-khi-di-xa",
+    "title": "Tìm hiểu văn hóa bản địa khi du lịch: Lắng nghe người địa phương bằng sự tôn trọng và chân thành",
+    "category": "Phong tục & Nghi lễ",
+    "region": "NATIONWIDE",
+    "intendedSource": "Viện Nghiên cứu Phát triển Du lịch; Hiệp hội Du lịch Việt Nam",
+    "status": "COMPLETED",
+    "batchFile": "batch-020.json"
+  }
+]

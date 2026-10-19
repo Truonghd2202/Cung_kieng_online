@@ -15,13 +15,36 @@ function verifyCallback(params, secret) {
 function vietnamTimestamp(date) {
   return new Date(date.getTime() + 7 * 3600000).toISOString().replace(/[-:T]/g, "").slice(0, 14);
 }
-function addMembershipMonth(start) {
+function addMembershipMonths(start, months) {
+  if (!Number.isInteger(months) || months < 1) {
+    throw new Error("Invalid membership duration");
+  }
+
   const result = new Date(start);
   const day = result.getUTCDate();
+
   result.setUTCDate(1);
-  result.setUTCMonth(result.getUTCMonth() + 1);
-  const lastDay = new Date(Date.UTC(result.getUTCFullYear(), result.getUTCMonth() + 1, 0)).getUTCDate();
-  result.setUTCDate(Math.min(day, lastDay));
+  result.setUTCMonth(result.getUTCMonth() + months);
+
+  const monthEnd = new Date(result);
+  monthEnd.setUTCMonth(monthEnd.getUTCMonth() + 1, 0);
+
+  result.setUTCDate(
+    Math.min(day, monthEnd.getUTCDate())
+  );
+
   return result;
 }
-module.exports = { encodedParams, signature, verifyCallback, vietnamTimestamp, addMembershipMonth };
+
+function addMembershipMonth(start) {
+  return addMembershipMonths(start, 1);
+}
+
+module.exports = {
+  encodedParams,
+  signature,
+  verifyCallback,
+  vietnamTimestamp,
+  addMembershipMonth,
+  addMembershipMonths,
+};

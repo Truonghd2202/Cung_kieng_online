@@ -1,112 +1,330 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const { randomUUID } = require("node:crypto");
+
+require("./test-env");
+
 const app = require("../src/app");
 const prisma = require("../src/config/prisma");
-const { castPieces } = require("../src/services/xin-keo.service");
+const {
+  castPieces,
+} = require("../src/services/xin-keo.service");
 
-test("xin keo maps the two physical sides to the three cultural outcomes", () => {
+test("xin keo maps physical sides to three outcomes", () => {
   const cast = (values) => castPieces(() => values.shift());
+
   assert.equal(cast([0.1, 0.9]).result, "YES");
   assert.equal(cast([0.1, 0.2]).result, "NO");
   assert.equal(cast([0.8, 0.9]).result, "UNCLEAR");
 });
 
-test("xin xam and wishes are authenticated and account-scoped", { timeout: 30_000 }, async () => {
-  const server = app.listen(0);
-  await new Promise((resolve) => server.once("listening", resolve));
-  const baseUrl = `http://127.0.0.1:${server.address().port}`;
-  const suffix = Date.now();
+test(
+  "saved reflections enforce ownership and request idempotency",
+  { timeout: 60_000 },
+  async () => {
+    const server = app.listen(0);
 
-  async function request(path, { method = "GET", body, token } = {}) {
-    const headers = {};
-    if (body) headers["content-type"] = "application/json";
-    if (token) headers.authorization = `Bearer ${token}`;
-    const response = await fetch(`${baseUrl}${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
-    return { response, payload: await response.json() };
-  }
+    await new Promise((resolve) =>
+      server.once("listening", resolve)
+    );
 
-  async function register(email) {
-    const result = await request("/api/auth/register", { method: "POST", body: { fullName: "Reflection Test", email, password: "StrongPassword123" } });
-    assert.equal(result.response.status, 201);
-    return result.payload.data.accessToken;
-  }
+    const base = `http://127.0.0.1:${server.address().port}/api/v1`;
+    const createdUserIds = [];
 
-  try {
-    const token = await register(`reflection-${suffix}@example.com`);
-    const otherToken = await register(`reflection-other-${suffix}@example.com`);
-    assert.equal((await request("/api/reflections/wishes")).response.status, 401);
+    async function request(
+      path,
+      { method = "GET", body, token } = {}
+    ) {
+      const headers = {};
 
-    const drawnXam = await request("/api/reflections/xin-xam/draw", {
-      method: "POST", token,
-      body: { region: "Bắc Bộ", topic: "Bình an", question: "Nên nhìn việc này thế nào?" },
-    });
-    assert.equal(drawnXam.response.status, 201);
-    assert.equal(drawnXam.payload.data.region, "Bắc Bộ");
-    assert.match(drawnXam.payload.data.disclaimer, /chiêm nghiệm/i);
-    assert.equal(drawnXam.payload.data.classification, "Đại Cát");
-    assert.equal(drawnXam.payload.data.rank, "Thượng Xăm");
-    assert.equal(drawnXam.payload.data.classificationGroup, "CAT");
-    assert.ok(drawnXam.payload.data.interpretation.recommendation);
-    assert.ok(drawnXam.payload.data.proverb.content);
-    assert.ok(drawnXam.payload.data.proverb.meaning);
-    assert.equal(drawnXam.payload.data.proverb.verified, true);
-    assert.match(drawnXam.payload.data.proverb.source.url, /ReML-AI\/VIVID/);
-    const savedXam = await request("/api/reflections/xin-xam", { token });
-    const reopenedXam = savedXam.payload.data.items.find((item) => item.id === drawnXam.payload.data.id);
-    assert.equal(reopenedXam.proverb.id, drawnXam.payload.data.proverb.id);
+      if (body !== undefined) {
+        headers["content-type"] = "application/json";
+      }
 
-    const cautionXam = await request("/api/reflections/xin-xam/draw", {
-      method: "POST", token,
-      body: { region: "Trung Bộ", topic: "Công việc" },
-    });
-    assert.equal(cautionXam.response.status, 201);
-    assert.equal(cautionXam.payload.data.classification, "Đại Hung");
-    assert.equal(cautionXam.payload.data.rank, "Hạ Xăm");
-    assert.equal(cautionXam.payload.data.classificationGroup, "CAUTION");
-    assert.match(cautionXam.payload.data.interpretation.warning, /không phải dự báo tai họa/i);
-    assert.match(cautionXam.payload.data.disclaimer, /không cổ súy mê tín/i);
+      if (token) {
+        headers.authorization = `Bearer ${token}`;
+      }
 
-    const keoSession = await request("/api/reflections/xin-keo/sessions", { method: "POST", token, body: { question: "Có nên tiến hành kế hoạch?" } });
-    assert.equal(keoSession.response.status, 201);
-    const keoProverbIds = [];
-    for (let index = 0; index < 3; index += 1) {
-      const cast = await request(`/api/reflections/xin-keo/sessions/${keoSession.payload.data.id}/throws`, { method: "POST", token, body: {} });
-      assert.equal(cast.response.status, 201);
-      assert.ok(["YES", "NO", "UNCLEAR"].includes(cast.payload.data.result));
-      assert.ok(cast.payload.data.proverb.content);
-      assert.ok(cast.payload.data.proverb.meaning);
-      assert.equal(cast.payload.data.proverb.verified, true);
-      keoProverbIds.push(cast.payload.data.proverb.id);
+      const response = await fetch(`${base}${path}`, {
+        method,
+        headers,
+        body:
+          body === undefined
+            ? undefined
+            : JSON.stringify(body),
+        signal: AbortSignal.timeout(10_000),
+      });
+
+      return {
+        status: response.status,
+        ok: response.ok,
+        payload: await response.json(),
+      };
     }
-    assert.equal(new Set(keoProverbIds).size, 3);
-    const savedKeoSessions = await request("/api/reflections/xin-keo/sessions", { token });
-    const reopenedKeo = savedKeoSessions.payload.data.items.find((item) => item.id === keoSession.payload.data.id);
-    assert.deepEqual(reopenedKeo.throws.map((item) => item.proverb.id), keoProverbIds);
-    const fourthCast = await request(`/api/reflections/xin-keo/sessions/${keoSession.payload.data.id}/throws`, { method: "POST", token, body: {} });
-    assert.equal(fourthCast.response.status, 409);
 
-    const xam = await request("/api/reflections/xin-xam", {
-      method: "POST", token,
-      body: { stickNumber: "07", xamType: "Bình an", region: "Bắc Bộ", category: "Bình an", fortuneType: "Thượng Cát", quote: "Nước lặng thì lòng gương sáng." },
-    });
-    assert.equal(xam.response.status, 201);
-    assert.equal(xam.payload.data.stickNumber, "07");
+    async function register() {
+      const result = await request("/auth/register", {
+        method: "POST",
+        body: {
+          fullName: "Reflection Integration Test",
+          email: `reflection-${randomUUID()}@example.com`,
+          password: "StrongPassword123",
+        },
+      });
 
-    const wish = await request("/api/reflections/wishes", { method: "POST", token, body: { category: "Gia đình", content: "Mong gia đình luôn bình an." } });
-    assert.equal(wish.response.status, 201);
-    assert.equal(wish.payload.data.sealed, true);
+      assert.equal(result.status, 201);
 
-    const starred = await request(`/api/reflections/wishes/${wish.payload.data.id}`, { method: "PATCH", token, body: { starred: true } });
-    assert.equal(starred.response.status, 200);
-    assert.equal(starred.payload.data.starred, true);
+      const { user, accessToken } = result.payload.data;
+      createdUserIds.push(user.id);
 
-    const otherWishes = await request("/api/reflections/wishes", { token: otherToken });
-    assert.equal(otherWishes.payload.data.items.length, 0);
+      return accessToken;
+    }
 
-    const deleted = await request(`/api/reflections/xin-xam/${xam.payload.data.id}`, { method: "DELETE", token });
-    assert.equal(deleted.response.status, 200);
-  } finally {
-    server.close();
-    await prisma.$disconnect();
+    try {
+      const tokenA = await register();
+      const tokenB = await register();
+
+      assert.equal(
+        (await request("/wishes")).status,
+        401
+      );
+
+      // Lưu cùng request hai lần đồng thời.
+      const wishInput = {
+        requestId: randomUUID(),
+        category: "Bình an",
+        content: "Mong có thời gian nghỉ ngơi phù hợp.",
+      };
+
+      const [first, replay] = await Promise.all([
+        request("/wishes", {
+          method: "POST",
+          token: tokenA,
+          body: wishInput,
+        }),
+        request("/wishes", {
+          method: "POST",
+          token: tokenA,
+          body: wishInput,
+        }),
+      ]);
+
+      assert.equal(first.ok, true);
+      assert.equal(replay.ok, true);
+      assert.equal(
+        first.payload.data.id,
+        replay.payload.data.id
+      );
+
+      const wishId = first.payload.data.id;
+
+      const ownList = await request("/wishes", {
+        token: tokenA,
+      });
+
+      assert.equal(
+        ownList.payload.data.items.filter(
+          (item) => item.id === wishId
+        ).length,
+        1
+      );
+
+      const otherList = await request("/wishes", {
+        token: tokenB,
+      });
+
+      assert.equal(
+        otherList.payload.data.items.some(
+          (item) => item.id === wishId
+        ),
+        false
+      );
+
+      // Không dùng lại mã lưu cho nội dung khác.
+      const conflict = await request("/wishes", {
+        method: "POST",
+        token: tokenA,
+        body: {
+          ...wishInput,
+          content: "Nội dung khác.",
+        },
+      });
+
+      assert.equal(conflict.status, 409);
+
+      // Tài khoản B không sửa/xóa được lời của A.
+      assert.equal(
+        (
+          await request(`/wishes/${wishId}`, {
+            method: "PATCH",
+            token: tokenB,
+            body: { starred: true },
+          })
+        ).status,
+        404
+      );
+
+      assert.equal(
+        (
+          await request(`/wishes/${wishId}`, {
+            method: "DELETE",
+            token: tokenB,
+          })
+        ).status,
+        404
+      );
+
+      // Không cho lưu xăm chỉ bằng dữ liệu client.
+      const forgedXam = await request(
+        "/reflections/xin-xam",
+        {
+          method: "POST",
+          token: tokenA,
+          body: {
+            stickNumber: 7,
+            xamType: "Bình an",
+            region: "Bắc Bộ",
+          },
+        }
+      );
+
+      assert.equal(forgedXam.status, 422);
+
+      const sessionResult = await request(
+        "/reflections/xin-keo/sessions",
+        {
+          method: "POST",
+          token: tokenA,
+          body: { question: "Chủ đề: Bình an" },
+        }
+      );
+
+      assert.equal(sessionResult.ok, true);
+
+      const sessionId = sessionResult.payload.data.id;
+      const sessionPath =
+        `/reflections/xin-keo/sessions/${sessionId}`;
+
+      assert.equal(
+        (
+          await request(sessionPath, {
+            token: tokenB,
+          })
+        ).status,
+        404
+      );
+
+      const castInput = { requestId: randomUUID() };
+
+      const casts = await Promise.all([
+        request(`${sessionPath}/throws`, {
+          method: "POST",
+          token: tokenA,
+          body: castInput,
+        }),
+        request(`${sessionPath}/throws`, {
+          method: "POST",
+          token: tokenA,
+          body: castInput,
+        }),
+      ]);
+
+      assert.equal(casts[0].ok, true);
+      assert.equal(casts[1].ok, true);
+      assert.equal(
+        casts[0].payload.data.id,
+        casts[1].payload.data.id
+      );
+
+      const restored = await request(sessionPath, {
+        token: tokenA,
+      });
+
+      assert.equal(
+        restored.payload.data.throws.length,
+        1
+      );
+
+      // Gieo thêm hai lượt khác.
+      for (let index = 0; index < 2; index += 1) {
+        const result = await request(
+          `${sessionPath}/throws`,
+          {
+            method: "POST",
+            token: tokenA,
+            body: { requestId: randomUUID() },
+          }
+        );
+
+        assert.equal(result.ok, true);
+        assert.equal(
+          result.payload.data.throwNumber,
+          index + 2
+        );
+      }
+
+      // Đủ ba lượt vẫn được đọc lại request cũ.
+      const oldReplay = await request(
+        `${sessionPath}/throws`,
+        {
+          method: "POST",
+          token: tokenA,
+          body: castInput,
+        }
+      );
+
+      assert.equal(oldReplay.ok, true);
+      assert.equal(
+        oldReplay.payload.data.id,
+        casts[0].payload.data.id
+      );
+
+      const fourth = await request(
+        `${sessionPath}/throws`,
+        {
+          method: "POST",
+          token: tokenA,
+          body: { requestId: randomUUID() },
+        }
+      );
+
+      assert.equal(fourth.status, 409);
+
+      const deleted = await request(`/wishes/${wishId}`, {
+        method: "DELETE",
+        token: tokenA,
+      });
+
+      assert.equal(deleted.ok, true);
+
+      const afterDelete = await request("/wishes", {
+        token: tokenA,
+      });
+
+      assert.equal(
+        afterDelete.payload.data.items.some(
+          (item) => item.id === wishId
+        ),
+        false
+      );
+    } finally {
+      try {
+        if (createdUserIds.length) {
+          await prisma.users.deleteMany({
+            where: {
+              id: { in: createdUserIds },
+            },
+          });
+        }
+      } finally {
+        await new Promise((resolve, reject) => {
+          server.close((error) =>
+            error ? reject(error) : resolve()
+          );
+        });
+
+        await prisma.$disconnect();
+      }
+    }
   }
-});
+);

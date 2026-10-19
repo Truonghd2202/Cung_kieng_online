@@ -54,6 +54,10 @@ import {
 } from "../data/adminService";
 import { ContentEditor } from "./ContentEditor";
 import { SignalAdminPanel } from "./SignalAdminPanel";
+import { PartnershipPanel } from "../components/PartnershipPanel";
+import { AdminPaymentsPanel } from "./AdminPaymentsPanel";
+import { AdminPaymentAlertsPanel } from "./AdminPaymentAlertsPanel";
+import { AdminPartnerGiftsPanel } from "./AdminPartnerGiftsPanel";
 import {
   SparklineChart,
   InteractiveTrendChart,
@@ -703,6 +707,28 @@ export default function AdminApp() {
 
       {/* Main Administrative Container */}
       <main className="admin-main">
+        <details className="mb-6">
+          <summary className="cursor-pointer p-3 font-semibold">
+            Quản lý đơn thanh toán
+          </summary>
+
+          <AdminPaymentsPanel />
+        </details>
+        <details>
+          <summary>Cảnh báo giao dịch thanh toán</summary>
+          <AdminPaymentAlertsPanel />
+        </details>
+        <details className="mb-6">
+          <summary className="cursor-pointer p-3 font-semibold">
+            Quản lý đề xuất hợp tác
+          </summary>
+
+          <PartnershipPanel admin />
+        </details>
+        <details>
+          <summary>Hộp quà văn hóa từ đối tác</summary>
+          <AdminPartnerGiftsPanel />
+        </details>
         <header className="admin-topbar">
           <div className="admin-topbar-left">
             <button

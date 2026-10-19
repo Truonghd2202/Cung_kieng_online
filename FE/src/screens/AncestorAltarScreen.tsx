@@ -21,6 +21,8 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { Textarea } from "@/src/components/ui/textarea";
+import { useJadeDecoration } from "../hooks/useJadeDecoration";
+import { JadeDecorationControl } from "../components/JadeDecorationControl";
 import type { MemorialRecord } from "./MemorialSpaceScreen";
 
 const SanctuaryScene = lazy(() =>
@@ -31,6 +33,7 @@ const SanctuaryScene = lazy(() =>
 
 interface AncestorAltarScreenProps {
   memorial: MemorialRecord | null;
+  currentUserEmail?: string;
   onBack: () => void;
   onGoToMemorial: () => void;
   onGoToReminders: () => void;
@@ -45,6 +48,7 @@ export const AncestorAltarScreen: React.FC<
   AncestorAltarScreenProps
 > = ({
   memorial,
+  currentUserEmail,
   onBack,
   onGoToMemorial,
   onGoToReminders,
@@ -59,6 +63,8 @@ export const AncestorAltarScreen: React.FC<
   const [submitted, setSubmitted] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [incenseStatus, setIncenseStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+
+  const jadeDecoration = useJadeDecoration(currentUserEmail);
 
   const recordIncense = async () => {
     if (incenseStatus === "saving") return;
@@ -175,6 +181,10 @@ export const AncestorAltarScreen: React.FC<
             </Button>
           </div>
 
+          {currentUserEmail && (
+            <JadeDecorationControl state={jadeDecoration} />
+          )}
+
           <div id="ancestor-scene-panel">
             {show3D ? (
               <Suspense
@@ -193,6 +203,7 @@ export const AncestorAltarScreen: React.FC<
                 <SanctuaryScene
                   memorial={memorial}
                   onOpenMemorial={onGoToMemorial}
+                  decoration={jadeDecoration.decoration}
                 />
               </Suspense>
             ) : (

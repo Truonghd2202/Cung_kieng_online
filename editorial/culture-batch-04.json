@@ -1,0 +1,64 @@
+[
+  {
+    "slug": "quan-ho-bac-ninh-loi-ca-va-moi-quan-he-cong-dong",
+    "title": "Quan họ Bắc Ninh: lời ca và mối quan hệ cộng đồng",
+    "excerpt": "Tìm hiểu Quan họ qua lời ca và quan hệ giữa các làng được giới thiệu trong hồ sơ UNESCO.",
+    "category": "Nghệ thuật dân gian",
+    "region": "NORTH",
+    "members_only": false,
+    "sections": [
+      {
+        "heading": "Quan họ trong không gian làng",
+        "body": "Hồ sơ UNESCO mô tả các làng thuộc Bắc Ninh và Bắc Giang theo địa danh tại thời điểm lập hồ sơ, với quan hệ kết nghĩa được củng cố qua những tập quán xã hội như hát Quan họ. Cách giới thiệu này đặt lời ca trong quan hệ giữa con người và cộng đồng, thay vì chỉ nhìn Quan họ như một tiết mục sân khấu."
+      },
+      {
+        "heading": "Những cảm xúc trong lời ca",
+        "body": "Theo UNESCO, lời ca Quan họ thể hiện nỗi nhớ, sự lưu luyến khi chia xa và niềm vui gặp gỡ. Khi nghe, bạn có thể chú ý cách lời ca chuyển tải cảm xúc và cách người hát thể hiện câu hát. Không cần hiểu hết ngay lần đầu; ghi lại tên bài và hỏi người giới thiệu là một cách tìm hiểu tiếp."
+      },
+      {
+        "heading": "Đọc tư liệu cùng bối cảnh",
+        "body": "Bài viết là phần giới thiệu ngắn dựa trên hồ sơ di sản, không phải danh sách địa điểm biểu diễn hoặc hướng dẫn thực hành đầy đủ. Khi tìm hiểu một làng Quan họ hay một buổi hát cụ thể, nên bổ sung thông tin từ người thực hành và đơn vị tổ chức tại nơi đó."
+      }
+    ],
+    "provenance": {
+      "contentType": "FACT",
+      "sourceTitle": "UNESCO — Quan Họ Bắc Ninh folk songs",
+      "sourceAuthor": "UNESCO",
+      "sourceUrl": "https://ich.unesco.org/en/RL/quan-h-bc-ninh-folk-songs-00183",
+      "bibliography": "UNESCO, hồ sơ 00183, Quan Họ Bắc Ninh folk songs. Đối chiếu ngày 17/10/2026.",
+      "sourceLocator": "Phần giới thiệu về quan hệ kết nghĩa giữa các làng và cảm xúc được thể hiện trong lời ca.",
+      "localCommunity": "Các cộng đồng thực hành Quan họ được mô tả trong hồ sơ UNESCO 00183"
+    }
+  },
+  {
+    "slug": "don-ca-tai-tu-nam-bo-nghe-va-hoc-tu-nguoi-thuc-hanh",
+    "title": "Đờn ca tài tử Nam Bộ: nghe và học từ người thực hành",
+    "excerpt": "Một điểm bắt đầu để tìm hiểu Đờn ca tài tử qua đời sống văn hóa và cách truyền dạy được UNESCO giới thiệu.",
+    "category": "Nghệ thuật dân gian",
+    "region": "SOUTH",
+    "members_only": false,
+    "sections": [
+      {
+        "heading": "Một nghệ thuật có nhiều nền tảng",
+        "body": "UNESCO giới thiệu Đờn ca tài tử là nghệ thuật âm nhạc có cả nền tảng bác học và dân gian, gắn với đời sống tinh thần cùng di sản văn hóa của người dân Nam Bộ. Mô tả này gợi mở cách tiếp cận rộng hơn việc chỉ nghe một bản nhạc: tìm hiểu cả người chơi, người ca và hoàn cảnh thực hành."
+      },
+      {
+        "heading": "Việc truyền dạy giữa người với người",
+        "body": "Theo giới thiệu của UNESCO, nghệ thuật được truyền dạy bằng hình thức truyền khẩu, dựa trên sự làm mẫu và học theo. Vì vậy, một bản ghi âm có thể giúp người mới làm quen, nhưng không thay thế hoàn toàn việc được người có kinh nghiệm hướng dẫn và góp ý khi học thực hành."
+      },
+      {
+        "heading": "Bắt đầu bằng một buổi nghe",
+        "body": "Nếu có dịp dự một buổi Đờn ca tài tử, bạn có thể hỏi tên bài, người trình diễn và nơi tìm tư liệu liên quan. Khi muốn ghi âm, ghi hình hoặc sử dụng lại bản biểu diễn, hãy trao đổi trước với người phụ trách. Bài giới thiệu này không kèm bản nhạc, bản thu hoặc quyền sử dụng các tác phẩm được biểu diễn."
+      }
+    ],
+    "provenance": {
+      "contentType": "FACT",
+      "sourceTitle": "UNESCO — Art of Đờn ca tài tử music and song in southern Viet Nam",
+      "sourceAuthor": "UNESCO",
+      "sourceUrl": "https://ich.unesco.org/en/RL/art-of-n-ca-tai-t-music-and-song-in-southern-viet-nam-00733",
+      "bibliography": "UNESCO, hồ sơ 00733; UNESCO Silk Roads Programme: https://en.unesco.org/silkroad/silk-road-themes/intangible-cultural-heritage/art-don-ca-tai-tu-music-and-song-southern-viet-nam . Đối chiếu ngày 17/10/2026.",
+      "sourceLocator": "Hồ sơ 00733: đoạn giới thiệu nền tảng âm nhạc; UNESCO Silk Roads Programme: phần mô tả truyền khẩu và học theo.",
+      "localCommunity": "Các cộng đồng thực hành Đờn ca tài tử ở Nam Bộ"
+    }
+  }
+]

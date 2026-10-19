@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { X, ZoomIn, ZoomOut, Maximize2, ExternalLink, MapPin, Award, BookOpen } from "lucide-react";
-import registryData from "../data/verifiedImageRegistry.json";
+import { findApprovedImage } from "../lib/approvedImage";
 
 export interface LightboxImageInfo {
   src: string;
@@ -18,45 +18,20 @@ interface ImageLightboxModalProps {
   onClose: () => void;
 }
 
-interface RegistryEntry {
-  targetKey?: string;
-  fileName?: string;
-  filePath?: string;
-  publicPath?: string;
-  context?: string;
-  location?: string;
-  artist?: string;
-  license?: string;
-  sourceUrl?: string;
-  description?: string;
-}
+export function lookupImageMeta(
+  src: string
+): Partial<LightboxImageInfo> {
+  const record = findApprovedImage(src);
 
-/**
- * Tra cứu thông tin kiểm chứng của hình ảnh từ verifiedImageRegistry.json
- */
-export function lookupImageMeta(src: string): Partial<LightboxImageInfo> {
-  if (!src) return {};
-  const cleanSrc = src.split("?")[0].replace(/^\//, "");
-  const baseName = cleanSrc.substring(cleanSrc.lastIndexOf("/") + 1);
-
-  const list = registryData as RegistryEntry[];
-  const match = list.find((item) => {
-    if (item.targetKey && item.targetKey.toLowerCase() === baseName.toLowerCase()) return true;
-    if (item.fileName && item.fileName.toLowerCase() === baseName.toLowerCase()) return true;
-    if (item.publicPath && item.publicPath.replace(/^\//, "").toLowerCase() === cleanSrc.toLowerCase()) return true;
-    if (item.filePath && item.filePath.replace(/^\//, "").toLowerCase() === cleanSrc.toLowerCase()) return true;
-    return false;
-  });
-
-  if (!match) return {};
+  if (!record) return {};
 
   return {
-    title: match.context || match.description,
-    description: match.description || match.context,
-    location: match.location,
-    artist: match.artist,
-    license: match.license,
-    sourceUrl: match.sourceUrl,
+    title: record.context || record.description,
+    description: record.description || record.context,
+    location: record.location,
+    artist: record.artist,
+    license: record.license,
+    sourceUrl: record.sourceUrl,
   };
 }
 
@@ -75,10 +50,10 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
       alt: image.alt || meta.title || "Hình ảnh văn hóa",
       title: image.title || meta.title || image.alt || "Di sản văn hóa Việt Nam",
       description: image.description || meta.description,
-      location: image.location || meta.location,
-      artist: image.artist || meta.artist,
-      license: image.license || meta.license,
-      sourceUrl: image.sourceUrl || meta.sourceUrl,
+      location: meta.location,
+      artist: meta.artist,
+      license: meta.license,
+      sourceUrl: meta.sourceUrl,
     };
   }, [image]);
 

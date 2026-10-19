@@ -64,7 +64,12 @@ export function NotificationScreen({
   const migrationLock = useRef(false);
   const [deletingAnniversaryId, setDeletingAnniversaryId] = useState<string | null>(null);
 
-  const upcoming = useReminderOverview(currentUserEmail);
+  const {
+    upcoming,
+    loading: remindersLoading,
+    loadError: remindersLoadError,
+    retry: retryReminders,
+  } = useReminderOverview(currentUserEmail);
 
   useEffect(() => {
     let active = true;
@@ -607,7 +612,26 @@ export function NotificationScreen({
               </Button>
             </div>
 
-            {upcoming.length === 0 ? (
+            {remindersLoading ? (
+              <p role="status" className="text-sm text-muted">
+                Đang tải lịch tưởng niệm…
+              </p>
+            ) : remindersLoadError ? (
+              <div role="alert" className="space-y-3">
+                <p className="text-sm text-muted">
+                  Chưa tải được lịch tưởng niệm từ tài khoản.
+                  Không thể xác nhận danh sách lời nhắc đã đầy đủ.
+                </p>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={retryReminders}
+                >
+                  Thử tải lại
+                </Button>
+              </div>
+            ) : upcoming.length === 0 ? (
               <p className="text-xs text-stone-500 py-3">
                 Chưa có lời nhắc nào trong 60 ngày tới. Bạn có thể bật nhắc ngày Sóc Vọng hoặc thêm ngày giỗ tiên tổ ở trên.
               </p>
