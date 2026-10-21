@@ -41,10 +41,15 @@ const verifyResetCodeSchema = z.object({
   code: z.string().regex(/^\d{6}$/, "Verification code must contain 6 digits"),
 });
 
+const emailVerificationSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Email is invalid").max(255),
+  code: z.string().regex(/^\d{6}$/, "Verification code must contain 6 digits"),
+});
+
 const resetPasswordSchema = z.object({
   email: z.string().trim().toLowerCase().email("Email is invalid").max(255),
   code: z.string().regex(/^\d{6}$/, "Verification code must contain 6 digits"),
   newPassword: password,
 });
 
-module.exports = { registerSchema, loginSchema, googleLoginSchema, changePasswordSchema, forgotPasswordSchema, verifyResetCodeSchema, resetPasswordSchema, password };
+module.exports = { registerSchema, loginSchema, googleLoginSchema, changePasswordSchema, forgotPasswordSchema, verifyResetCodeSchema, emailVerificationSchema, resetPasswordSchema, password };

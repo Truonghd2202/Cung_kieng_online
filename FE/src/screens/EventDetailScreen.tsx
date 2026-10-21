@@ -190,7 +190,7 @@ const EventDetailContent: React.FC<EventDetailScreenProps> = ({
 
     const title = encodeURIComponent(`[Lịch Văn Hóa] ${event.title}`);
     const details = encodeURIComponent(
-      `${event.shortDesc}\n\nÂm lịch: ${event.lunarDate}\nÝ nghĩa: ${event.coreMeaning || "Tri ân cội nguồn"}\nNguồn: Thích Cúng Kiếng`
+      `${event.shortDesc}\n\nÂm lịch: ${event.lunarDate}\nÝ nghĩa: ${event.coreMeaning || "Tri ân cội nguồn"}\nNguồn: Tin Lắm Tâm Linh`
     );
     const location = encodeURIComponent(event.scope || event.region || "Việt Nam");
 

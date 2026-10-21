@@ -1801,6 +1801,7 @@ html:not(.dark) .admin-use-app-button:hover {
 
 .card-footer-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   padding-top: 14px;
@@ -1808,11 +1809,17 @@ html:not(.dark) .admin-use-app-button:hover {
 }
 
 .card-action-btn {
-  height: 34px;
-  padding: 0 12px;
+  min-width: max-content;
+  min-height: 40px;
+  height: auto;
+  flex: 1 1 auto;
+  justify-content: center;
+  padding: 8px 10px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  line-height: 1.2;
+  white-space: nowrap;
   font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 600;
@@ -4261,6 +4268,17 @@ html:not(.dark) .admin-editor-notice {
   overflow-x: auto;
 }
 
+.admin-editor-current-status {
+  margin-top: 5px;
+  color: var(--admin-muted);
+  font-size: 11.5px;
+}
+
+.admin-editor-current-status strong {
+  color: var(--admin-ink);
+  font-weight: 700;
+}
+
 html:not(.dark) .admin-editor-workflow {
   background: #fbf7f0 !important;
   border-color: rgba(28, 20, 16, 0.1) !important;
@@ -6113,3 +6131,90 @@ html:not(.dark) .admin-preview-references {
   border-top-color: rgba(28, 20, 16, 0.16) !important;
   color: #564438 !important;
 }
+
+/* ==========================================================================
+   ENHANCED COMMERCE & PARTNERSHIP PANELS (PAYMENTS, ALERTS, PARTNERSHIPS, GIFTS)
+   ========================================================================== */
+.admin-panel-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.admin-panel-container section {
+  background: var(--admin-surface-card);
+  border: 1px solid var(--admin-line);
+  border-radius: 18px;
+  padding: 24px;
+  color: var(--admin-ink);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.admin-panel-container section:hover {
+  border-color: var(--admin-line-gold);
+}
+
+.admin-panel-container h2 {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--admin-heading);
+  margin: 0;
+}
+
+.admin-panel-container input,
+.admin-panel-container select,
+.admin-panel-container textarea {
+  background: var(--admin-surface-elevated) !important;
+  border: 1px solid var(--admin-line) !important;
+  color: var(--admin-ink) !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  font-size: 13.5px !important;
+  font-family: var(--font-sans) !important;
+  transition: all 0.2s ease !important;
+  outline: none !important;
+}
+
+.admin-panel-container input:focus,
+.admin-panel-container select:focus,
+.admin-panel-container textarea:focus {
+  border-color: var(--admin-gold) !important;
+  box-shadow: 0 0 0 3px var(--admin-gold-soft) !important;
+}
+
+.admin-panel-container button {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.admin-panel-container article {
+  background: var(--admin-surface-elevated);
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  padding: 18px;
+  transition: all 0.2s ease;
+}
+
+.admin-panel-container article:hover {
+  border-color: var(--admin-line-gold);
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-filter-tabs {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.admin-filter-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-filter-tab {
+  flex-shrink: 0;
+}
+

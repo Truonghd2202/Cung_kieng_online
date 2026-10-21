@@ -12,13 +12,16 @@ import {
   CircleHelp,
   Clock3,
   Copy,
+  CreditCard,
   Edit3,
   ExternalLink,
   Eye,
   EyeOff,
   FileCheck2,
   Filter,
+  Gift,
   Globe,
+  Handshake,
   LayoutDashboard,
   LayoutGrid,
   LibraryBig,
@@ -31,6 +34,7 @@ import {
   Plus,
   RefreshCw,
   Search,
+  ShieldAlert,
   ShieldCheck,
   Sparkles,
   Sun,
@@ -78,6 +82,10 @@ type Section =
   | "rituals"
   | "prayers"
   | "signals"
+  | "payments"
+  | "payment-alerts"
+  | "partnerships"
+  | "partner-gifts"
   | "membership-interests"
   | "audit-logs";
 type ReviewField = "verified" | "active";
@@ -113,6 +121,30 @@ const NAV: Array<{
   { id: "prayers", label: "Văn khấn", icon: FileCheck2, group: "NỘI DUNG" },
   { id: "signals", label: "Lời chiêm nghiệm", icon: Sparkles, group: "NỘI DUNG" },
   {
+    id: "payments",
+    label: "Đơn thanh toán",
+    icon: CreditCard,
+    group: "THƯƠNG MẠI & ĐỐI TÁC",
+  },
+  {
+    id: "payment-alerts",
+    label: "Cảnh báo thanh toán",
+    icon: ShieldAlert,
+    group: "THƯƠNG MẠI & ĐỐI TÁC",
+  },
+  {
+    id: "partnerships",
+    label: "Đề xuất hợp tác",
+    icon: Handshake,
+    group: "THƯƠNG MẠI & ĐỐI TÁC",
+  },
+  {
+    id: "partner-gifts",
+    label: "Hộp quà văn hóa",
+    icon: Gift,
+    group: "THƯƠNG MẠI & ĐỐI TÁC",
+  },
+  {
     id: "membership-interests",
     label: "Quan tâm hội viên",
     icon: UsersRound,
@@ -139,7 +171,7 @@ const TITLES: Record<
   culture: {
     title: "Kho văn hóa",
     description:
-      "Rà soát nguồn và quản lý trạng thái các bài tư liệu văn hóa Việt.",
+      "Kiểm tra nguồn tham khảo và quản lý trạng thái xuất bản của tư liệu văn hóa Việt.",
     tag: "TƯ LIỆU VĂN HÓA",
   },
   calendar: {
@@ -170,6 +202,26 @@ const TITLES: Record<
     title: "Lời chiêm nghiệm",
     description: "Biên tập và duyệt nội dung check-in theo cảm xúc, ngữ cảnh và hồ sơ nguồn thực tế.",
     tag: "CHECK-IN · TƯ LIỆU BIÊN TẬP",
+  },
+  payments: {
+    title: "Quản lý đơn thanh toán",
+    description: "Theo dõi đơn hội viên, gói vật phẩm và đối soát giao dịch thời gian thực từ cổng thanh toán.",
+    tag: "GIAO DỊCH & DOANH THU",
+  },
+  "payment-alerts": {
+    title: "Cảnh báo giao dịch thanh toán",
+    description: "Giám sát các giao dịch chênh lệch, nghi vấn hoặc sự cố IPN cần rà soát kiểm tra tài chính.",
+    tag: "AN TOÀN TÀI CHÍNH",
+  },
+  partnerships: {
+    title: "Quản lý đề xuất hợp tác",
+    description: "Tiếp nhận và phản hồi hồ sơ liên hệ, đề xuất hợp tác từ các ban quản lý di tích và đối tác.",
+    tag: "HỢP TÁC CHIẾN LƯỢC",
+  },
+  "partner-gifts": {
+    title: "Hộp quà văn hóa từ đối tác",
+    description: "Quản lý quà tặng văn hóa đối tác, liên kết trải nghiệm và trạng thái phân phối tới người dùng.",
+    tag: "QUÀ TẶNG VĂN HÓA",
   },
   "membership-interests": {
     title: "Quan tâm hội viên",
@@ -217,9 +269,9 @@ function editorialStatusLabel(row: AdminRecord) {
   const labels: Record<string, string> = {
     DRAFT: "Bản nháp",
     IN_REVIEW: "Chờ duyệt",
-    APPROVED: "Đã duyệt · đang ẩn",
-    PUBLISHED: "Đang phát hành",
-    HIDDEN: "Đã duyệt · đang ẩn",
+    APPROVED: "Đã duyệt · chưa công khai",
+    PUBLISHED: "Đang công khai",
+    HIDDEN: "Đã duyệt · đã ẩn",
     REVOKED: "Đã thu hồi",
   };
   return labels[String(row.editorial_status)] || (row.verified ? "Đã duyệt" : "Chưa duyệt");
@@ -351,6 +403,16 @@ export default function AdminApp() {
           const data = await loadAdminOverview();
           if (requestId !== latestRequest.current) return;
           setOverview(data);
+          setPageData(null);
+          setRows([]);
+        } else if (
+          target === "signals" ||
+          target === "payments" ||
+          target === "payment-alerts" ||
+          target === "partnerships" ||
+          target === "partner-gifts"
+        ) {
+          if (requestId !== latestRequest.current) return;
           setPageData(null);
           setRows([]);
         } else {
@@ -614,7 +676,16 @@ export default function AdminApp() {
   }
 
   const current = TITLES[section];
-  const hasSearch = section !== "overview" && section !== "audit-logs" && section !== "signals";
+  const isCommerceSection =
+    section === "payments" ||
+    section === "payment-alerts" ||
+    section === "partnerships" ||
+    section === "partner-gifts";
+  const hasSearch =
+    section !== "overview" &&
+    section !== "audit-logs" &&
+    section !== "signals" &&
+    !isCommerceSection;
   const canCreate =
     section === "culture" ||
     section === "calendar" ||
@@ -648,14 +719,14 @@ export default function AdminApp() {
           <a
             href="/admin"
             className="admin-brand"
-            aria-label="Tin Lắm Tâm Linh Admin Portal"
+              aria-label="Cổng quản trị Tin Lắm Tâm Linh"
           >
             <span className="admin-brand-mark">
               <ShieldCheck size={20} aria-hidden="true" />
             </span>
             <div className="admin-brand-text">
               <strong>Tin Lắm Tâm Linh</strong>
-              <small>BACK OFFICE PORTAL</small>
+              <small>QUẢN TRỊ NỘI BỘ</small>
             </div>
           </a>
           <div className="admin-portal-badge">ADMIN</div>
@@ -708,28 +779,6 @@ export default function AdminApp() {
 
       {/* Main Administrative Container */}
       <main className="admin-main">
-        <details className="mb-6">
-          <summary className="cursor-pointer p-3 font-semibold">
-            Quản lý đơn thanh toán
-          </summary>
-
-          <AdminPaymentsPanel />
-        </details>
-        <details>
-          <summary>Cảnh báo giao dịch thanh toán</summary>
-          <AdminPaymentAlertsPanel />
-        </details>
-        <details className="mb-6">
-          <summary className="cursor-pointer p-3 font-semibold">
-            Quản lý đề xuất hợp tác
-          </summary>
-
-          <PartnershipPanel admin />
-        </details>
-        <details>
-          <summary>Hộp quà văn hóa từ đối tác</summary>
-          <AdminPartnerGiftsPanel />
-        </details>
         <header className="admin-topbar">
           <div className="admin-topbar-left">
             <button
@@ -751,10 +800,10 @@ export default function AdminApp() {
             <a
               href="/"
               className="admin-use-app-button"
-              title="Mở ứng dụng Tin Lắm Tâm Linh để trải nghiệm như khách hàng"
+              title="Mở trang Tin Lắm Tâm Linh dành cho người dùng"
             >
               <Globe size={15} />
-              <span>Sử dụng ứng dụng</span>
+              <span>Xem trang người dùng</span>
             </a>
             <button
               type="button"
@@ -790,7 +839,6 @@ export default function AdminApp() {
               />
               <span>Làm mới</span>
             </button>
-            <div className="admin-status-pill"><span>Cổng quản trị</span></div>
             <button
               type="button"
               className="admin-topbar-logout-btn"
@@ -824,8 +872,8 @@ export default function AdminApp() {
                 >
                   <Search size={16} className="admin-search-icon" />
                   <input
-                    aria-label="Tìm kiếm nội dung"
-                    placeholder="Tìm theo tiêu đề, danh mục, từ khóa…"
+                    aria-label="Tìm theo tiêu đề, danh mục hoặc từ khóa"
+                    placeholder="Tìm nội dung…"
                     value={searchDraft}
                     onChange={(event) => setSearchDraft(event.target.value)}
                   />
@@ -894,7 +942,34 @@ export default function AdminApp() {
           {/* Section View: Content & Data List */}
           {section === "signals" && <SignalAdminPanel />}
 
-          {section !== "overview" && section !== "signals" && (
+          {/* Section View: Commerce & Partnership Management Panels */}
+          {section === "payments" && (
+            <div className="admin-panel-container">
+              <AdminPaymentsPanel />
+            </div>
+          )}
+
+          {section === "payment-alerts" && (
+            <div className="admin-panel-container">
+              <AdminPaymentAlertsPanel />
+            </div>
+          )}
+
+          {section === "partnerships" && (
+            <div className="admin-panel-container">
+              <PartnershipPanel admin />
+            </div>
+          )}
+
+          {section === "partner-gifts" && (
+            <div className="admin-panel-container">
+              <AdminPartnerGiftsPanel />
+            </div>
+          )}
+
+          {section !== "overview" &&
+            section !== "signals" &&
+            !isCommerceSection && (
             <section
               aria-label={current.title}
               aria-busy={loading}
@@ -941,23 +1016,23 @@ export default function AdminApp() {
                       className={`admin-filter-tab ${activeFilter === "APPROVED" ? "is-active" : ""}`}
                       onClick={() => { setActiveFilter("APPROVED"); setPage(1); void fetchSection(section, 1, search, "APPROVED"); }}
                     >
-                      Đã duyệt ({contentStats.statuses.APPROVED})
+                      Đã duyệt · chưa công khai ({contentStats.statuses.APPROVED})
                     </button>
                     <button
                       type="button"
                       className={`admin-filter-tab ${activeFilter === "PUBLISHED" ? "is-active" : ""}`}
                       onClick={() => { setActiveFilter("PUBLISHED"); setPage(1); void fetchSection(section, 1, search, "PUBLISHED"); }}
                     >
-                      Đang phát hành ({contentStats.statuses.PUBLISHED})
+                      Đang công khai ({contentStats.statuses.PUBLISHED})
                     </button>
                     <button type="button" className={`admin-filter-tab ${activeFilter === "HIDDEN" ? "is-active" : ""}`} onClick={() => { setActiveFilter("HIDDEN"); setPage(1); void fetchSection(section, 1, search, "HIDDEN"); }}>
-                      Đang ẩn ({contentStats.statuses.HIDDEN})
+                      Đã duyệt · đã ẩn ({contentStats.statuses.HIDDEN})
                     </button>
                     <button type="button" className={`admin-filter-tab ${activeFilter === "REVOKED" ? "is-active" : ""}`} onClick={() => { setActiveFilter("REVOKED"); setPage(1); void fetchSection(section, 1, search, "REVOKED"); }}>
-                      Thu hồi ({contentStats.statuses.REVOKED})
+                      Đã thu hồi ({contentStats.statuses.REVOKED})
                     </button>
                     <button type="button" className={`admin-filter-tab ${activeFilter === "needs_source" ? "is-active" : ""}`} onClick={() => { setActiveFilter("needs_source"); setPage(1); void fetchSection(section, 1, search, "needs_source"); }}>
-                      Thiếu URL nguồn ({contentStats.missingSource})
+                      Chưa có URL nguồn ({contentStats.missingSource})
                     </button>
                   </div>
 
@@ -1052,12 +1127,11 @@ export default function AdminApp() {
                       <div>
                         <h3>
                           {reviewField === "verified"
-                            ? "Cập nhật trạng thái xác minh"
+                            ? "Cập nhật trạng thái duyệt"
                             : "Cập nhật trạng thái hiển thị"}
                         </h3>
                         <p className="admin-muted">
-                          Thao tác sẽ được ghi nhận vào nhật ký kiểm duyệt hệ
-                          thống. Vui lòng đối chiếu kỹ nguồn và bản quyền.
+                          Bạn cần tự kiểm tra nội dung, nguồn và quyền sử dụng trước khi duyệt. Thao tác này sẽ được ghi vào nhật ký quản trị.
                         </p>
                       </div>
                       <button
@@ -1072,7 +1146,7 @@ export default function AdminApp() {
 
                     {section === "culture" && (
                       <div className="admin-review-form-fields" aria-label="Hồ sơ nguồn và quyền nội dung">
-                        <strong>Hồ sơ nguồn và tài sản</strong>
+                        <strong>Hồ sơ nguồn và quyền sử dụng</strong>
                         {(() => {
                           const provenance = getArticleProvenance(reviewRecord);
                           const contentTypes: Record<string, string> = { GROUP_AUTHORED: "Do nhóm biên soạn", FACT: "Thông tin / sự kiện", LEGEND: "Truyền thuyết / tín ngưỡng", QUOTATION: "Có câu trích dẫn" };
@@ -1081,8 +1155,8 @@ export default function AdminApp() {
                             <div><dt>Nguồn / tài liệu</dt><dd>{displayValue(provenance.sourceTitle)}</dd></div>
                             <div><dt>Tác giả / tổ chức</dt><dd>{displayValue(provenance.sourceAuthor)}</dd></div>
                             <div><dt>URL nguồn</dt><dd>{displayValue(reviewRecord.source)}</dd></div>
-                            <div><dt>Thư mục xuất bản</dt><dd>{displayValue(provenance.bibliography)}</dd></div>
-                            <div><dt>Vị trí nguồn</dt><dd>{displayValue(provenance.sourceLocator)}</dd></div>
+                            <div><dt>Thông tin xuất bản</dt><dd>{displayValue(provenance.bibliography)}</dd></div>
+                            <div><dt>Vị trí trong tài liệu</dt><dd>{displayValue(provenance.sourceLocator)}</dd></div>
                             <div><dt>Địa phương / cộng đồng</dt><dd>{displayValue(provenance.localCommunity)}</dd></div>
                             <div><dt>Chú thích ảnh</dt><dd>{displayValue(provenance.imageCaption)}</dd></div>
                             <div><dt>Nguồn ảnh</dt><dd>{displayValue(provenance.imageSource)}</dd></div>
@@ -1311,7 +1385,7 @@ export default function AdminApp() {
           <footer className="admin-footer">
             <div className="admin-footer-left">
               <span>
-                Hệ thống quản trị <strong>Tin Lắm Tâm Linh</strong> · Ứng dụng: Thích Cúng Kiếng.
+                Hệ thống quản trị <strong>Tin Lắm Tâm Linh</strong>.
               </span>
             </div>
             <div className="admin-footer-right">
@@ -1961,10 +2035,10 @@ function RecordList({
                         target="_blank"
                         rel="noreferrer"
                       >
-                        <ExternalLink size={12} /> HTTPS Gốc
+                        <ExternalLink size={12} /> Mở URL nguồn
                       </a>
                     ) : (
-                      <span className="table-source-missing">Chưa có</span>
+                      <span className="table-source-missing">Chưa có URL</span>
                     )}
                   </td>
                   <td>
@@ -1980,7 +2054,7 @@ function RecordList({
                   <td>
                     {row.active !== undefined ? (
                       <StatusBadge
-                        label={row.active ? "Công khai" : "Đã ẩn"}
+                        label={row.active ? "Đang công khai" : "Đang ẩn"}
                         variant={row.active ? "published" : "hidden"}
                       />
                     ) : (
@@ -2009,13 +2083,13 @@ function RecordList({
                           onClick={() => onReview(row, "verified")}
                           title={
                             !row.verified && requiresExistingSource && !source
-                              ? "Cần URL nguồn HTTPS hợp lệ"
+                              ? "Cần có URL nguồn HTTPS hợp lệ trước khi duyệt"
                               : row.verified
-                                ? "Bỏ xác minh"
-                                : "Xác minh nội dung"
+                                ? "Thu hồi duyệt và gỡ nội dung khỏi công khai"
+                                : "Duyệt nội dung sau khi kiểm tra hồ sơ"
                           }
                         >
-                          <Check size={13} /> {row.verified ? "Bỏ" : "Duyệt"}
+                          <Check size={13} /> {row.verified ? "Thu hồi" : "Duyệt"}
                         </button>
                       )}
                       {canReview && row.active !== undefined && (
@@ -2211,7 +2285,7 @@ function RecordList({
                 )}
                 {row.active !== undefined && (
                   <StatusBadge
-                    label={row.active ? "Hiển thị" : "Đã ẩn"}
+                    label={row.active ? "Đang công khai" : "Đang ẩn"}
                     variant={row.active ? "published" : "hidden"}
                   />
                 )}
@@ -2248,7 +2322,7 @@ function RecordList({
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <ExternalLink size={12} /> Nguồn HTTPS tham chiếu
+                    <ExternalLink size={12} /> Mở nguồn tham khảo
                   </a>
                 ) : (
                   requiresExistingSource && (
@@ -2280,14 +2354,14 @@ function RecordList({
                   onClick={() => onReview(row, "verified")}
                   title={
                     !row.verified && requiresExistingSource && !source
-                      ? "Cần có URL nguồn HTTPS hợp lệ trước khi xác minh"
+                      ? "Cần có URL nguồn HTTPS hợp lệ trước khi duyệt"
                       : row.verified
-                        ? "Bỏ trạng thái xác minh"
-                        : "Xác minh nội dung đạt chuẩn"
+                        ? "Thu hồi duyệt và gỡ nội dung khỏi công khai"
+                        : "Duyệt nội dung sau khi kiểm tra hồ sơ"
                   }
                 >
                   <Check size={13} />
-                  {row.verified ? "Bỏ duyệt" : "Xác minh"}
+                  {row.verified ? "Thu hồi duyệt" : "Duyệt nội dung"}
                 </button>
               )}
 

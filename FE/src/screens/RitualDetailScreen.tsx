@@ -961,7 +961,7 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
         {/* Footer */}
         <div className="text-center pt-6 border-t border-line/50">
           <div className="text-xs uppercase tracking-widest text-muted font-medium">
-            © {new Date().getFullYear()} Thích Cúng Kiếng • Di sản nếp nhà & Chiêm nghiệm đương đại
+            © {new Date().getFullYear()} Tin Lắm Tâm Linh • Chiêm nghiệm dân gian đương đại
           </div>
         </div>
       </main>

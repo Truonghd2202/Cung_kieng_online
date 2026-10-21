@@ -257,7 +257,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
                 </span>
                 <Flower2 className="w-4 h-4 text-accent" aria-hidden="true" />
-                <span>Văn hóa Việt · Trạm dừng tĩnh tại cho tâm hồn</span>
+                <span>Văn hóa Việt · Tư liệu, nghi lễ và chiêm nghiệm</span>
               </div>
 
               {/* Nút Thỉnh chuông thiền ngay đầu trang */}
@@ -267,15 +267,15 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                 className={`guest-zen-bell-btn ${
                   bellRinging ? "guest-zen-bell-btn--ringing" : ""
                 }`}
-                title="Thỉnh một tiếng chuông tĩnh tâm"
-                aria-label="Thỉnh chuông tĩnh tâm"
+                title="Nghe tiếng chuông tĩnh tâm"
+                aria-label="Nghe tiếng chuông tĩnh tâm"
               >
                 <Bell
                   className={`w-3.5 h-3.5 text-amber-700 ${
                     bellRinging ? "animate-bounce" : ""
                   }`}
                 />
-                <span>Thỉnh chuông an yên</span>
+                <span>Nghe tiếng chuông tĩnh tâm</span>
               </button>
             </div>
 
@@ -288,9 +288,9 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
               <span className="guest-seal-title" title="Dấu ấn An">
                 安
               </span>
-              <span>Chạm một chút văn hóa.</span>
+              <span>Khám phá văn hóa Việt.</span>
               <span className="block mt-2 bg-gradient-to-r from-accent via-coral-warm to-gold bg-clip-text text-transparent pb-1">
-                Dành một chút cho mình.
+                Dành một khoảng lặng cho mình.
               </span>
             </h1>
 
@@ -304,7 +304,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
             </div>
 
             <p className="text-base sm:text-lg text-muted leading-relaxed max-w-xl mb-7">
-              Tìm bài viết văn hóa, xem hướng dẫn nghi lễ hoặc ghi lại tâm trạng.
+              Đọc bài viết về văn hóa, xem hướng dẫn nghi lễ hoặc ghi lại cảm xúc.
               Bạn có thể bỏ qua mục nào không phù hợp với mình.
             </p>
 
@@ -317,7 +317,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
               >
                 <span className="guest-primary-sheen" />
                 <ButtonOrnament className="w-6 h-4 text-amber-200/80 shrink-0" />
-                <span>Ghi lại tâm trạng</span>
+                <span>Ghi lại cảm xúc</span>
                 <ArrowRight
                   className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
                   aria-hidden="true"
@@ -341,7 +341,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
             <div className="mt-7 pt-5 border-t border-line/60 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs sm:text-sm text-muted">
               <span className="inline-flex items-center gap-1.5 font-medium text-ink">
                 <Sparkles className="w-3.5 h-3.5 text-gold" aria-hidden="true" />
-                Không cần đăng nhập
+                Có thể trải nghiệm mà không cần đăng nhập
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <SunMedium className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
@@ -393,7 +393,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
             <div>
               <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent mb-2">
                 <Compass className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Không gian trải nghiệm</span>
+                <span>Ba điều bạn có thể làm</span>
               </div>
               <h2
                 id="guest-pillars-title"
@@ -403,7 +403,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
               </h2>
             </div>
             <p className="text-sm sm:text-base text-muted max-w-md">
-              Chọn một trong ba mục. Bạn có thể dừng hoặc bỏ qua bất cứ lúc nào.
+              Chọn một nội dung để bắt đầu. Bạn có thể đổi ý bất cứ lúc nào.
             </p>
           </div>
 
@@ -431,33 +431,33 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                     <Heart className="w-6 h-6" aria-hidden="true" />
                   </div>
                   <span className="text-xs font-medium text-accent bg-accent/8 px-2.5 py-1 rounded-full border border-accent/15">
-                    Đồng hành cảm xúc
+                    Cảm xúc hôm nay
                   </span>
                 </div>
 
                 <h3 className="font-display text-xl sm:text-2xl font-semibold text-ink mb-2.5 group-hover:text-accent transition-colors duration-200">
-                  Lắng nghe mình
+                  Ghi lại cảm xúc
                 </h3>
 
                 <p className="text-sm sm:text-base text-muted leading-relaxed mb-4">
-                  Chọn cảm xúc và bối cảnh để xem gợi ý. Bạn có thể bỏ qua phần chia sẻ.
+                  Chọn cảm xúc và bối cảnh để nhận một lời gợi mở. Bạn có thể bỏ qua phần ghi chú.
                 </p>
 
                 <div className="flex flex-wrap gap-1.5 mb-4">
                   <span className="text-[11px] font-medium text-subtle bg-surface-soft px-2 py-0.5 rounded-md">
-                    Ghi lại tâm trạng
+                    Chọn bối cảnh
                   </span>
                   <span className="text-[11px] font-medium text-subtle bg-surface-soft px-2 py-0.5 rounded-md">
-                    Lời gợi mở minh họa
+                    Gợi ý để suy ngẫm
                   </span>
                   <span className="text-[11px] font-medium text-subtle bg-surface-soft px-2 py-0.5 rounded-md">
-                    Gợi ý tùy chọn
+                    Không bắt buộc ghi chú
                   </span>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-line/60 flex items-center justify-between text-sm font-semibold text-accent group-hover:text-accent-strong">
-                <span>Chọn tâm trạng</span>
+                <span>Chọn cảm xúc</span>
                 <ArrowRight
                   className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1.5"
                   aria-hidden="true"
@@ -497,7 +497,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                 </h3>
 
                 <p className="text-sm sm:text-base text-muted leading-relaxed mb-4">
-                  Đọc bài viết về phong tục, tín ngưỡng, lễ hội và đời sống văn hóa ở nhiều vùng miền.
+                  Đọc về phong tục, tín ngưỡng, lễ hội và đời sống văn hóa ở các vùng miền.
                 </p>
 
                 <div className="flex flex-wrap gap-1.5 mb-4">
@@ -554,7 +554,7 @@ export const GuestScreen: React.FC<GuestScreenProps> = ({
                 </h3>
 
                 <p className="text-sm sm:text-base text-muted leading-relaxed mb-4">
-                  Xem các bước chuẩn bị và thông tin thực hành. Tập tục có thể khác nhau theo nơi và hoàn cảnh.
+                  Xem các bước chuẩn bị và lưu ý thực hành. Tập tục có thể khác nhau tùy địa phương và hoàn cảnh.
                 </p>
 
                 <div className="flex flex-wrap gap-1.5 mb-4">

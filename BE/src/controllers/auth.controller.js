@@ -30,11 +30,10 @@ function clearRefreshCookie(res) {
 
 async function register(req, res) {
   const result = await authService.register(req.body);
-  setRefreshCookie(res, result.refreshToken, true);
   return sendSuccess(res, {
     statusCode: 201,
-    message: "Registered successfully",
-    data: { user: result.user, accessToken: result.accessToken },
+    message: "Verification code sent",
+    data: result,
   });
 }
 
@@ -99,6 +98,19 @@ async function forgotPassword(req, res) {
   });
 }
 
+async function requestEmailVerification(req, res) {
+  await authService.requestEmailVerification(req.body.email);
+  return sendSuccess(res, {
+    message: "If this address belongs to an unverified account, a verification code will be sent.",
+    data: { requestReceived: true },
+  });
+}
+
+async function verifyEmail(req, res) {
+  const result = await authService.verifyEmail(req.body.email, req.body.code);
+  return sendSuccess(res, { message: "Email verified successfully", data: result });
+}
+
 async function verifyResetCode(req, res) {
   await authService.verifyResetCode(req.body.email, req.body.code);
   return sendSuccess(res, { message: "Mã xác minh hợp lệ." });
@@ -109,4 +121,4 @@ async function resetPassword(req, res) {
   return sendSuccess(res, { message: "Password reset successfully. Please log in again." });
 }
 
-module.exports = { register, login, googleLogin, refresh, logout, logoutAll, me, changePassword, forgotPassword, verifyResetCode, resetPassword, refreshCookieOptions };
+module.exports = { register, login, googleLogin, refresh, logout, logoutAll, me, changePassword, forgotPassword, verifyResetCode, resetPassword, requestEmailVerification, verifyEmail, refreshCookieOptions };

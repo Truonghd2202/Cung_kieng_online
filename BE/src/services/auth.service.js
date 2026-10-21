@@ -8,9 +8,17 @@ const { signAccessToken } = require("../utils/jwt");
 const { generateRefreshToken, hashToken, durationToMilliseconds } = require("../utils/token");
 const { randomBytes, randomInt, createHmac, timingSafeEqual } = require("node:crypto");
 const emailService = require("./email.service");
+const { createEmailVerificationService } = require("./email-verification.service");
 const logger = require("../utils/logger");
 const ApiError = require("../utils/api-error");
 const { ROLE, ACCOUNT_STATUS } = require("../constants/role.constant");
+
+const emailVerificationService = createEmailVerificationService({
+  prisma,
+  userRepository,
+  emailService,
+  secret: env.JWT_ACCESS_SECRET,
+});
 
 const googleOAuthClient = new OAuth2Client();
 
@@ -45,31 +53,21 @@ function assertActive(user) {
 }
 
 async function register({ fullName, email, password }) {
+  emailVerificationService.ensureDeliveryConfigured();
   if (await userRepository.findByEmail(email)) throw new ApiError(409, "Email already exists");
 
   const passwordHash = await hashPassword(password);
-  const refresh = createRefreshCredentials();
 
   try {
-    const user = await prisma.$transaction(async (transaction) => {
-      const createdUser = await userRepository.create(
-        {
-          full_name: fullName,
-          email,
-          password_hash: passwordHash,
-          role: ROLE.USER,
-          status: ACCOUNT_STATUS.ACTIVE,
-        },
-        transaction,
-      );
-      await refreshTokenRepository.create(
-        { userId: createdUser.id, tokenHash: refresh.tokenHash, expiresAt: refresh.expiresAt },
-        transaction,
-      );
-      return createdUser;
+    const user = await userRepository.create({
+      full_name: fullName,
+      email,
+      password_hash: passwordHash,
+      role: ROLE.USER,
+      status: ACCOUNT_STATUS.PENDING_EMAIL_VERIFICATION,
     });
-
-    return { user: toPublicUser(user), accessToken: signAccessToken(user), refreshToken: refresh.token };
+    await emailVerificationService.issue(user);
+    return { verificationRequired: true, email: user.email };
   } catch (error) {
     if (error.code === "P2002") throw new ApiError(409, "Email already exists");
     throw error;
@@ -81,6 +79,9 @@ async function login({ email, password }) {
   const passwordMatches = user ? await comparePassword(password, user.password_hash) : false;
 
   if (!user || !passwordMatches) throw new ApiError(401, "Invalid email or password");
+  if (user.status === ACCOUNT_STATUS.PENDING_EMAIL_VERIFICATION) {
+    throw new ApiError(403, "Email verification is required before signing in", [{ code: "EMAIL_NOT_VERIFIED" }]);
+  }
   assertActive(user);
 
   const refresh = createRefreshCredentials();
@@ -136,6 +137,7 @@ async function loginWithGoogle(credential) {
         ...(typeof payload.picture === "string" ? { avatar_url: payload.picture } : {}),
         role: ROLE.USER,
         status: ACCOUNT_STATUS.ACTIVE,
+        email_verified_at: new Date(),
       });
     } catch (error) {
       // Handle two first-time Google sign-ins racing to create the same email.
@@ -143,6 +145,16 @@ async function loginWithGoogle(credential) {
       user = await userRepository.findByEmail(email);
       if (!user) throw error;
     }
+  }
+
+  if (user.status === ACCOUNT_STATUS.PENDING_EMAIL_VERIFICATION || !user.email_verified_at) {
+    user = await prisma.users.update({
+      where: { id: user.id },
+      data: {
+        email_verified_at: user.email_verified_at || new Date(),
+        ...(user.status === ACCOUNT_STATUS.PENDING_EMAIL_VERIFICATION ? { status: ACCOUNT_STATUS.ACTIVE } : {}),
+      },
+    });
   }
 
   assertActive(user);
@@ -243,7 +255,7 @@ async function requestPasswordReset(email) {
   if (!deliveryConfigured) return { deliveryConfigured: false, deliveryStatus: "request_received" };
 
   const user = await userRepository.findByEmail(email);
-  if (!user) return { deliveryConfigured: true, deliveryStatus: "request_received" };
+  if (!user || user.status !== ACCOUNT_STATUS.ACTIVE) return { deliveryConfigured: true, deliveryStatus: "request_received" };
 
   const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
   const now = new Date();
@@ -272,6 +284,15 @@ async function requestPasswordReset(email) {
     }).catch(() => {});
   }
   return { deliveryConfigured: true, deliveryStatus: "request_received" };
+}
+
+async function requestEmailVerification(email) {
+  return emailVerificationService.request(email);
+}
+
+async function verifyEmail(email, code) {
+  const user = await emailVerificationService.verify(email, code);
+  return { email: user.email, verified: true };
 }
 
 async function verifyResetCode(email, code) {
@@ -322,4 +343,4 @@ async function resetPassword(email, code, newPassword) {
   });
 }
 
-module.exports = { register, login, loginWithGoogle, refresh, logout, logoutAll, getCurrentUser, changePassword, requestPasswordReset, verifyResetCode, resetPassword };
+module.exports = { register, login, loginWithGoogle, refresh, logout, logoutAll, getCurrentUser, changePassword, requestPasswordReset, verifyResetCode, resetPassword, requestEmailVerification, verifyEmail };

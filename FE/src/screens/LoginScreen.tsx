@@ -12,7 +12,7 @@ import {
   ArrowLeft,
   ArrowRight,
 } from "lucide-react";
-import { loginAccount, loginWithGoogle, UserProfile } from "../data/authService";
+import { loginAccount, loginWithGoogle, requestEmailVerification, verifyRegistrationEmail, UserProfile } from "../data/authService";
 import "../styles/LoginScreen.css";
 import { toast } from "../components/ui/Toast";
 
@@ -56,11 +56,11 @@ function loadGoogleIdentityScript(): Promise<void> {
 
   return new Promise((resolve, reject) => {
     let script = document.querySelector<HTMLScriptElement>(
-      'script[src="https://accounts.google.com/gsi/client"]',
+      'script[src="https://accounts.google.com/gsi/client?hl=vi"]',
     );
     if (!script) {
       script = document.createElement("script");
-      script.src = "https://accounts.google.com/gsi/client";
+      script.src = "https://accounts.google.com/gsi/client?hl=vi";
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);
@@ -127,6 +127,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [rememberEmail, setRememberEmail] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [emailVerificationPending, setEmailVerificationPending] = useState(false);
+  const [emailVerificationCode, setEmailVerificationCode] = useState("");
   const [authState, setAuthState] = useState<AuthState>("idle");
   const [authenticatedUser, setAuthenticatedUser] = useState<UserProfile | null>(null);
   const [googleButtonState, setGoogleButtonState] = useState<GoogleButtonState>("loading");
@@ -1069,6 +1071,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       const result = await loginAccount(identifier, password, rememberEmail);
       if (!result.success) {
         setAuthState("error");
+        if (result.errorCode === "EMAIL_NOT_VERIFIED") {
+          setEmailVerificationPending(true);
+          setErrorMessage("Xác minh địa chỉ email trước khi đăng nhập. Nhập mã đã nhận hoặc yêu cầu gửi mã mới.");
+          onImmersiveChange?.(false);
+          return;
+        }
         const failMsg = result.error || "Tài khoản hoặc mật khẩu không chính xác.";
         setErrorMessage(failMsg);
         onImmersiveChange?.(false);
@@ -1090,6 +1098,35 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     }, 280);
 
     timeoutRefs.current.push(timer);
+  };
+
+  const handleRequestEmailVerification = async () => {
+    setErrorMessage("");
+    try {
+      await requestEmailVerification(identifier);
+      setErrorMessage("Nếu email thuộc tài khoản chưa xác minh, mã mới sẽ được gửi. Mã cũ không còn hiệu lực.");
+    } catch {
+      setErrorMessage("Chưa gửi được mã xác minh lúc này. Vui lòng thử lại sau.");
+    }
+  };
+
+  const handleVerifyEmail = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setErrorMessage("");
+    if (!/^\d{6}$/.test(emailVerificationCode.trim())) {
+      setErrorMessage("Vui lòng nhập mã xác minh gồm 6 chữ số.");
+      return;
+    }
+    setAuthState("submitting");
+    const result = await verifyRegistrationEmail(identifier, emailVerificationCode, password);
+    if (!result.success) {
+      setAuthState("error");
+      setErrorMessage(result.error || "Mã xác minh không đúng hoặc đã hết hạn.");
+      return;
+    }
+    setEmailVerificationPending(false);
+    await onSuccess(result.user.name, result.user.email, result.user.role);
+    setAuthState("idle");
   };
 
   return (
@@ -1265,12 +1302,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               </div>
               <div>
                 <h1 className="font-serif text-[1.65rem] sm:text-[1.85rem] font-bold text-ink tracking-tight leading-tight">
-                  Góc An Yên
+                  Đăng nhập
                 </h1>
               </div>
             </div>
             <p className="text-xs sm:text-[13px] text-muted mt-1 leading-relaxed">
-              Đăng nhập để lưu lại quẻ thẻ và tiếp tục hành trình tĩnh tâm.
+              Đăng nhập để truy cập nội dung và dữ liệu bạn đã lưu trong tài khoản.
             </p>
             {/* Đường chỉ hoa văn ánh kim */}
             <div className="flex items-center gap-2 mt-2.5">
@@ -1300,6 +1337,29 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               <span className="font-bold leading-none mt-0.5">✕</span>
               <span className="leading-relaxed flex-1">{errorMessage}</span>
             </div>
+          )}
+
+          {emailVerificationPending && (
+            <form onSubmit={handleVerifyEmail} className="mb-4 space-y-2.5 rounded-xl border border-amber-900/15 bg-amber-50/60 p-3 dark:border-amber-300/20 dark:bg-stone-900/60">
+              <label htmlFor="login-email-verification-code" className="block text-xs font-semibold text-ink">Mã xác minh email</label>
+              <input
+                id="login-email-verification-code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                disabled={isSubmitting}
+                value={emailVerificationCode}
+                onChange={(event) => setEmailVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="Nhập mã 6 chữ số"
+                className="w-full h-10 px-3 rounded-lg border border-stone-300 bg-white text-center tracking-[0.35em] text-ink focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+              />
+              <button type="submit" disabled={isSubmitting} className="w-full rounded-lg bg-[#8f202b] py-2 text-sm font-semibold text-white disabled:opacity-60">
+                {isSubmitting ? "Đang xác minh..." : "Xác minh email và đăng nhập"}
+              </button>
+              <button type="button" onClick={() => void handleRequestEmailVerification()} disabled={isSubmitting} className="w-full text-xs font-semibold text-[#8f202b] hover:underline disabled:opacity-60">
+                Gửi lại mã xác minh
+              </button>
+            </form>
           )}
 
 
@@ -1390,13 +1450,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   htmlFor="remember-email"
                   className="text-xs text-muted cursor-pointer select-none font-medium"
                 >
-                  Ghi nhớ đăng nhập trên thiết bị này
+                  Ghi nhớ email và duy trì đăng nhập trên thiết bị này
                 </label>
               </div>
               <p className="text-[11px] text-stone-500 dark:text-stone-400 pl-6 leading-relaxed">
-                {rememberEmail
-                  ? "Duy trì phiên đăng nhập ngay cả khi tắt máy."
-                  : "Mặc định: Tự động đăng xuất khi tắt máy hoặc đóng trình duyệt để bảo mật."}
+                Chỉ bật tính năng này trên thiết bị cá nhân.
               </p>
             </div>
 
@@ -1412,7 +1470,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-amber-200" />
-                  <span>Đang kết nối...</span>
+                  <span>Đang đăng nhập...</span>
                 </>
               ) : (
                 <>
@@ -1464,7 +1522,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                     />
                   </svg>
-                  <span>Sign in with Google</span>
+                  <span>Tiếp tục với Google</span>
                 </button>
               )}
             </div>
@@ -1479,7 +1537,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               disabled={isSubmitting}
               className="text-[#8f202b] dark:text-[#f18a83] font-semibold hover:underline cursor-pointer ml-1"
             >
-              Tạo hồ sơ mới →
+              Tạo tài khoản →
             </button>
           </div>
         </div>

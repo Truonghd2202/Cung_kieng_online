@@ -2,14 +2,14 @@ export interface ApiEnvelope<T> {
   success: boolean;
   message: string;
   data?: T;
-  errors?: Array<{ field?: string; message: string }>;
+  errors?: Array<{ field?: string; message: string; code?: string }>;
 }
 
 export class ApiError extends Error {
   status: number;
-  errors: Array<{ field?: string; message: string }>;
+  errors: Array<{ field?: string; message: string; code?: string }>;
 
-  constructor(status: number, message: string, errors: Array<{ field?: string; message: string }> = []) {
+  constructor(status: number, message: string, errors: Array<{ field?: string; message: string; code?: string }> = []) {
     super(message);
     this.name = "ApiError";
     this.status = status;

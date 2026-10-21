@@ -772,7 +772,7 @@ export default function App() {
           const preferences = await loadUserPreferences();
           if (!active) return;
           setUserSettings(preferences.settings);
-          setThemePreference(preferences.settings.theme);
+          setThemePreference((currentTheme) => currentTheme === "system" ? preferences.settings.theme : currentTheme);
           setSelectedTopics(sanitizeCulturalTopics(preferences.topics));
         } catch {
           // Giữ cache cục bộ nếu máy chủ tạm thời không phản hồi.
@@ -1824,6 +1824,8 @@ export default function App() {
     email?: string,
     role?: string
   ) => {
+    const themeBeforeAuthentication =
+      themePreference === "system" ? (dark ? "dark" : "light") : themePreference;
     const authenticatedEmail = email?.trim().toLowerCase();
     if (!authenticatedEmail) {
       toast.error("Không nhận được tài khoản đã xác thực từ máy chủ. Vui lòng đăng nhập lại.");
@@ -1932,7 +1934,7 @@ export default function App() {
     void loadUserPreferences()
       .then((preferences) => {
         setUserSettings(preferences.settings);
-        setThemePreference(preferences.settings.theme);
+        setThemePreference((currentTheme) => currentTheme === "system" ? themeBeforeAuthentication : currentTheme);
         setSelectedTopics(sanitizeCulturalTopics(preferences.topics));
       })
       .catch(() => {
@@ -3267,7 +3269,6 @@ export default function App() {
         {screen === "register" && (
           <RegisterScreen
             onBack={() => navigateTo("login")}
-            onSuccess={handleAuthenticated}
             onGoToLogin={() => navigateTo("login")}
             pendingSignalMood={
               pendingSave?.type === "signal"
@@ -3467,7 +3468,9 @@ export default function App() {
       </div>
 
       {/* Universal Footer - Ẩn trên các màn Auth (login, register, forgot) */}
-      {!["login", "register", "forgot"].includes(screen) && <AppFooter onNavigate={navigateTo} />}
+      {!["login", "register", "forgot"].includes(screen) && (
+        <AppFooter onNavigate={navigateTo} showMembershipBanner={screen !== "account"} />
+      )}
 
       <SavedSignalDialog
         entry={openedSavedSignal}

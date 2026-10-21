@@ -130,7 +130,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             closeMenu();
           }}
         >
-          Đăng nhập / Đăng ký
+          Đăng nhập
         </Button>
       )}
       {mobile && user?.role?.toUpperCase() === "ADMIN" && (

@@ -226,6 +226,14 @@
   box-sizing: border-box;
 }
 
+@media (min-width: 1025px) {
+  /* A tall validation message must not center the card above the scroll area's top edge. */
+  .register-auth-viewport .split-login-right.register-form-has-error {
+    justify-content: flex-start;
+    scroll-padding-block: 24px;
+  }
+}
+
 :is(.dark, .dark *) .split-login-right {
   background:
     radial-gradient(ellipse at 80% 12%, rgba(212, 175, 55, 0.14) 0%, transparent 50%),
@@ -824,6 +832,33 @@
 
   .split-login-viewport .login-cinematic-left {
     justify-content: flex-end;
+  }
+}
+
+/* Keep every auth screen split when DevTools reduces the viewport. */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .split-login-viewport:not(.login-success-screen) {
+    flex-direction: row;
+    height: calc(100dvh - 73px);
+    min-height: calc(100dvh - 73px);
+    overflow: hidden;
+  }
+
+  .split-login-viewport:not(.login-success-screen) .split-login-left {
+    width: 50%;
+    height: 100%;
+    flex: 0 0 50%;
+  }
+
+  .split-login-viewport:not(.login-success-screen) .split-login-right {
+    width: 50%;
+    height: 100%;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    margin-top: 0;
+    padding: 20px 16px;
+    border-radius: 0;
   }
 }
 

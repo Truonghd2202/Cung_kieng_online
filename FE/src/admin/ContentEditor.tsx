@@ -35,6 +35,16 @@ export type Kind = "culture" | "calendar" | "xam" | "rituals" | "prayers";
 type Step = { title: string; description: string };
 type ChecklistDraft = { id: string; label: string };
 type RitualChoice = AdminRecord & { title: string };
+type EditorialStatus = NonNullable<AdminRecord["editorial_status"]>;
+
+const EDITORIAL_STATUS_LABELS: Record<EditorialStatus, string> = {
+  DRAFT: "Bản nháp",
+  IN_REVIEW: "Chờ duyệt",
+  APPROVED: "Đã duyệt · chưa công khai",
+  PUBLISHED: "Đang công khai",
+  HIDDEN: "Đã duyệt · đang ẩn",
+  REVOKED: "Đã thu hồi",
+};
 
 export function slugifyVietnamese(text: string): string {
   if (!text) return "";
@@ -70,8 +80,8 @@ const KIND_META: Record<
   { title: string; tag: string; icon: typeof BookOpenText }
 > = {
   culture: {
-    title: "Tư liệu văn hóa Việt",
-    tag: "KHO VĂN HÓA DI SẢN",
+    title: "bài viết văn hóa",
+    tag: "KHO VĂN HÓA",
     icon: BookOpenText,
   },
   calendar: {
@@ -111,6 +121,7 @@ export function ContentEditor({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [slugUnlocked, setSlugUnlocked] = useState(!id);
   const [expectedUpdatedAt, setExpectedUpdatedAt] = useState<string>();
+  const [editorialStatus, setEditorialStatus] = useState<EditorialStatus | null>(id ? null : "DRAFT");
 
   const [values, setValues] = useState<Record<string, string>>({
     title: "",
@@ -166,6 +177,16 @@ export function ContentEditor({
   const [savingMode, setSavingMode] = useState<"draft" | "submit" | null>(null);
 
   const meta = KIND_META[kind];
+  const activeWorkflowStage: Partial<Record<EditorialStatus, number>> = {
+    DRAFT: 0,
+    IN_REVIEW: 1,
+    APPROVED: 2,
+    HIDDEN: 2,
+    PUBLISHED: 3,
+  };
+  const currentWorkflowStage = editorialStatus
+    ? activeWorkflowStage[editorialStatus]
+    : undefined;
 
   // Load rituals if kind is prayers
   useEffect(() => {
@@ -210,6 +231,17 @@ export function ContentEditor({
       .then((record) => {
         setExpectedUpdatedAt(typeof record.updated_at === "string" ? record.updated_at : undefined);
         if (!active) return;
+        const loadedStatus = record.editorial_status;
+        setEditorialStatus(
+          loadedStatus === "DRAFT" ||
+            loadedStatus === "IN_REVIEW" ||
+            loadedStatus === "APPROVED" ||
+            loadedStatus === "PUBLISHED" ||
+            loadedStatus === "HIDDEN" ||
+            loadedStatus === "REVOKED"
+            ? loadedStatus
+            : null,
+        );
         const next: Record<string, string> = {};
         for (const [key, value] of Object.entries(record)) {
           if (typeof value === "string" || typeof value === "number") {
@@ -477,20 +509,27 @@ export function ContentEditor({
               <Sparkles size={13} /> {meta.tag}
             </span>
             <h2 id="content-editor-title" className="admin-editor-title">
-              {id ? `Biên tập ${meta.title}` : `Khởi tạo bản thảo ${meta.title}`}
+              {id ? `Biên tập ${meta.title}` : `Tạo bản nháp ${meta.title}`}
             </h2>
             <div className="admin-editor-workflow" style={{ marginTop: "4px" }}>
-              <span className={`admin-editor-step ${!id ? "is-active" : ""}`}>
-                <FileText size={12} /> 1. Nháp (Lưu để soạn tiếp)
+              <span className={`admin-editor-step ${currentWorkflowStage === 0 ? "is-active" : ""}`}>
+                <FileText size={12} /> 1. Bản nháp
               </span>
               <span className="admin-editor-step-arrow">➔</span>
-              <span className={`admin-editor-step ${id ? "is-active" : ""}`}>
-                <ClockIcon size={12} /> 2. Chờ duyệt (Sau khi gửi duyệt)
+              <span className={`admin-editor-step ${currentWorkflowStage === 1 ? "is-active" : ""}`}>
+                <ClockIcon size={12} /> 2. Chờ duyệt
               </span>
               <span className="admin-editor-step-arrow">➔</span>
-              <span className="admin-editor-step">
-                <CheckCircle2 size={12} /> 3. Đã duyệt (Người phụ trách duyệt)
+              <span className={`admin-editor-step ${currentWorkflowStage === 2 ? "is-active" : ""}`}>
+                <CheckCircle2 size={12} /> 3. Đã duyệt
               </span>
+              <span className="admin-editor-step-arrow">➔</span>
+              <span className={`admin-editor-step ${currentWorkflowStage === 3 ? "is-active" : ""}`}>
+                <Globe size={12} /> 4. Đang công khai
+              </span>
+            </div>
+            <div className="admin-editor-current-status">
+              Trạng thái hiện tại: <strong>{editorialStatus ? EDITORIAL_STATUS_LABELS[editorialStatus] : "Chưa xác định"}</strong>
             </div>
           </div>
           <button
@@ -505,21 +544,26 @@ export function ContentEditor({
           </button>
         </div>
 
-        {/* Clear notice banner distinguishing Lưu bản nháp vs Gửi duyệt */}
+        {/* Explain the distinct save and review actions. */}
         <div style={{ padding: "0 28px", paddingTop: "14px" }}>
           <div className="admin-editor-notice">
             <AlertCircle size={16} style={{ color: "var(--admin-gold)", flexShrink: 0, marginTop: "2px" }} />
             <div>
               <div style={{ fontWeight: 650, marginBottom: "4px" }}>
-                Phân định quy trình xử lý bản thảo:
+                Quy trình duyệt bài
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "12px", lineHeight: "1.5" }}>
                 <div>
-                  • <strong>Lưu bản nháp:</strong> Giữ bản thảo ở trạng thái nháp nội bộ để tiếp tục biên tập, chưa chuyển sang hàng đợi kiểm duyệt.
+                  • <strong>Lưu bản nháp:</strong> Lưu nội dung ở trạng thái Nháp để tiếp tục chỉnh sửa. Nội dung chưa hiển thị với người dùng.
                 </div>
                 <div>
-                  • <strong>Gửi duyệt:</strong> Chuyển bài sang trạng thái <strong>Chờ duyệt</strong> để <strong>Người phụ trách duyệt nội dung</strong> thẩm định trước khi xuất bản. <em>(Nếu bài viết trước đó đang xuất bản, thao tác gửi duyệt sẽ tạm ẩn bài khỏi giao diện bạn đọc để đảm bảo tính chuẩn xác)</em>.
+                  • <strong>Gửi duyệt:</strong> Chuyển nội dung sang Chờ duyệt. Quản trị viên kiểm tra nội dung và hồ sơ nguồn, quyền sử dụng (nếu có). Nội dung chỉ hiển thị sau khi được duyệt và công khai.
                 </div>
+                {editorialStatus === "PUBLISHED" && (
+                  <div>
+                    • Nội dung này đang công khai. Sau khi lưu thay đổi, nội dung sẽ tạm ẩn và cần được duyệt, công khai lại.
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -633,11 +677,11 @@ export function ContentEditor({
                   </label>
                 )}
 
-                {/* Chủ đề văn hóa (Dropdown chuẩn hóa) */}
+                {/* Chủ đề văn hóa */}
                 <div className="admin-editor-field">
                   <label htmlFor="field-category" className="admin-editor-label">
                     <span>Chủ đề chuyên mục <span style={{ color: "var(--admin-crimson)" }}>*</span></span>
-                    <span className="admin-editor-label-hint">Dropdown chuẩn hóa</span>
+                    <span className="admin-editor-label-hint">Chọn một danh mục</span>
                   </label>
                   {kind === "culture" ? (
                     <select
@@ -1170,13 +1214,13 @@ export function ContentEditor({
                 <div className="admin-editor-col-full" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", borderBottom: "1px solid var(--admin-line)", paddingBottom: "8px" }}>
                     <Globe size={16} style={{ color: "var(--admin-gold)" }} />
-                    <strong style={{ fontSize: "14px", color: "var(--admin-heading)" }}>Nguồn tham khảo đối chiếu</strong>
+                    <strong style={{ fontSize: "14px", color: "var(--admin-heading)" }}>Nguồn tham khảo</strong>
                   </div>
 
                   {/* URL nguồn tham khảo HTTPS */}
                   <div className="admin-editor-field">
                     <label htmlFor="field-source-url" className="admin-editor-label">
-                      <span>URL nguồn tham khảo HTTPS</span>
+                      <span>Liên kết nguồn (HTTPS)</span>
                       <span className="admin-editor-label-hint">Để trống nếu dùng tư liệu lưu trữ nội bộ</span>
                     </label>
                     <input
@@ -1214,7 +1258,7 @@ export function ContentEditor({
                     {/* Vị trí trích dẫn */}
                     <div className="admin-editor-field">
                       <label htmlFor="field-source-locator" className="admin-editor-label">
-                        <span>Trang / Mục trích dẫn</span>
+                        <span>Trang hoặc mục tham khảo</span>
                       </label>
                       <input
                         id="field-source-locator"
@@ -1331,7 +1375,7 @@ export function ContentEditor({
                   </div>
                   <div className="admin-editor-field">
                     <label htmlFor="field-image-rights" className="admin-editor-label">Căn cứ quyền sử dụng ảnh</label>
-                    <input id="field-image-rights" className="admin-editor-input" type="text" placeholder="Giấy phép hoặc xác nhận quyền có thể đối chiếu" value={imageRightsBasis} onChange={(event) => setImageRightsBasis(event.target.value)} />
+                    <input id="field-image-rights" className="admin-editor-input" type="text" placeholder="Ví dụ: giấy phép, liên kết cấp phép hoặc xác nhận của chủ sở hữu" value={imageRightsBasis} onChange={(event) => setImageRightsBasis(event.target.value)} />
                   </div>
                 </div>
               </div>
@@ -1540,7 +1584,7 @@ export function ContentEditor({
         <div className="admin-editor-footer">
           <div className="admin-editor-footer-hint">
             <ShieldCheck size={16} style={{ color: "var(--admin-gold)" }} />
-            <span>Lưu bản sửa sẽ chuyển nội dung về Nháp và tắt hiển thị cho khách. Gửi duyệt lại khi bạn đã sửa xong.</span>
+            <span>Thay đổi chỉ được lưu khi chọn “Lưu bản nháp” hoặc “Gửi duyệt nội dung”.</span>
           </div>
           <div className="admin-editor-footer-actions">
             <button

@@ -452,7 +452,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
           <div className="flex items-center gap-1.5 uppercase font-semibold text-xs text-muted">
             <Lock className="w-3.5 h-3.5 text-accent" />
-            <span>NỘI DUNG RIÊNG TƯ CỦA TÀI KHOẢN</span>
+            <span>NỘI DUNG ĐÃ LƯU</span>
           </div>
         </div>
 
@@ -460,7 +460,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
         <div className="relative py-8 mb-8 border-y border-line flex flex-col lg:flex-row lg:items-center justify-between gap-8">
           <div className="max-w-2xl">
             <div className="text-xs uppercase font-bold tracking-wider text-accent mb-2 flex items-center gap-1.5">
-              <span>— GÓC TĨNH TÂM CÁ NHÂN</span>
+              <span>— TÀI KHOẢN CỦA BẠN</span>
             </div>
 
             <h1 className="page-title mb-2">
@@ -468,12 +468,11 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
             </h1>
 
             <p className="font-display italic text-sm sm:text-base text-accent font-medium mb-3">
-              “Chào bạn, hôm nay tâm trí bạn đã thảnh thơi hơn chưa?”
+              “Hôm nay bạn muốn xem lại điều gì?”
             </p>
 
             <p className="text-sm text-ink leading-relaxed">
-              Nơi xem lại lời chiêm nghiệm, thẻ xăm và lời gửi gắm
-              bạn đã chọn lưu vào tài khoản. Các mục này không được chia sẻ công khai.
+              Nơi xem lại lời chiêm nghiệm, thẻ xin xăm và điều ước bạn đã lưu trong tài khoản.
             </p>
           </div>
 
@@ -491,22 +490,15 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                   <span className="font-display font-bold text-base text-ink">
                     {currentUser?.name || "Tài khoản"}
                   </span>
-                  <span className="w-4 h-4 rounded-full bg-action text-white flex items-center justify-center text-xs">
-                    ✓
-                  </span>
                 </div>
                 <div className="text-xs text-muted mb-1.5 flex flex-col gap-0.5">
                   <span className="break-all text-xs text-muted">
                     {currentUser?.email || "Chưa có thông tin"}
                   </span>
-                  <span className="text-xs font-medium inline-flex items-center gap-1 text-accent">
-                    <span className="w-1.5 h-1.5 rounded-full bg-accent-soft" />
-                    Tài khoản đã xác thực
-                  </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-accent font-semibold">
                   <BookOpen className="w-3.5 h-3.5" />
-                  <span>{totalCount} dấu ấn đã lưu lại</span>
+                  <span>{totalCount} mục đã lưu</span>
                 </div>
               </div>
             </div>
@@ -526,10 +518,10 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
         <Card className="mb-8 border-line bg-surface p-5">
           <h2 className="font-display text-lg font-semibold text-ink">Hội viên và lượt AI</h2>
-          {membershipLoadFailed ? <p role="alert" className="mt-2 text-sm text-danger">Chưa tải được trạng thái tài khoản từ máy chủ.</p> : !membershipStatus ? <p role="status" className="mt-2 text-sm text-muted">Đang tải trạng thái từ máy chủ…</p> : <>
-            <p className="mt-2 text-sm text-ink">{membershipStatus.subscription ? `Tâm An đang hoạt động · hết hạn ${new Date(membershipStatus.subscription.expires_at).toLocaleString("vi-VN")}` : "Gói Free · chưa có hội viên đang hoạt động"}</p>
-            <p className="mt-1 text-sm text-muted">AI theo năm (chỉ dùng được khi có hội viên hiệu lực): {membershipStatus.aiUsage.successfulUsed} bản thành công, {membershipStatus.aiUsage.inProgress} lượt đang xử lý; còn {membershipStatus.aiUsage.successfulRemaining}/{membershipStatus.aiUsage.successfulLimit} suất và {membershipStatus.aiUsage.attemptsUsed}/{membershipStatus.aiUsage.providerAttemptLimit} lần gọi đã dùng trong 24 giờ.</p>
-            {membershipStatus.aiUsage.nextUsableAt && <p className="mt-1 text-sm text-muted">Dự kiến dùng tiếp từ {new Date(membershipStatus.aiUsage.nextUsableAt).toLocaleString("vi-VN")}.</p>}
+          {membershipLoadFailed ? <p role="alert" className="mt-2 text-sm text-danger">Chưa thể tải thông tin hội viên và lượt AI.</p> : !membershipStatus ? <p role="status" className="mt-2 text-sm text-muted">Đang tải thông tin hội viên và lượt AI…</p> : <>
+            <p className="mt-2 text-sm text-ink">{membershipStatus.subscription ? `Gói Tâm An · có hiệu lực đến ${new Date(membershipStatus.subscription.expires_at).toLocaleString("vi-VN")}` : "Gói hiện tại: Miễn phí · Chưa có gói hội viên đang hoạt động"}</p>
+            <p className="mt-1 text-sm text-muted">Lượt AI theo năm (chỉ dùng khi gói hội viên còn hiệu lực): đã hoàn tất {membershipStatus.aiUsage.successfulUsed} lượt, {membershipStatus.aiUsage.inProgress} lượt đang xử lý; còn {membershipStatus.aiUsage.successfulRemaining}/{membershipStatus.aiUsage.successfulLimit} lượt. Trong 24 giờ, đã dùng {membershipStatus.aiUsage.attemptsUsed}/{membershipStatus.aiUsage.providerAttemptLimit} lần gọi.</p>
+            {membershipStatus.aiUsage.nextUsableAt && <p className="mt-1 text-sm text-muted">Có thể dùng tiếp từ {new Date(membershipStatus.aiUsage.nextUsableAt).toLocaleString("vi-VN")}.</p>}
           </>}
         </Card>
 
@@ -545,10 +537,10 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                 </div>
                 <div>
                   <h2 className="font-display font-bold text-lg group-hover:text-accent">
-                    Nhìn lại lời chiêm nghiệm
+                    Lịch sử cảm xúc
                   </h2>
                   <p className="text-xs text-muted mt-0.5">
-                    Xem lại những lời chiêm nghiệm và ghi chép bạn đã lưu.
+                    Xem lại các lần check-in và lời chiêm nghiệm bạn đã lưu.
                   </p>
                 </div>
               </div>
@@ -568,7 +560,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
         {/* 3 Primary Navigation Tabs */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-6">
-          {/* Tab 1: Tín hiệu đã lưu */}
+            {/* Tab 1: Lời chiêm nghiệm đã lưu */}
           <button
             onClick={() => setActiveTab("signals")}
             className={`px-4 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
@@ -578,7 +570,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
             }`}
           >
             <Flower2 className="w-3.5 h-3.5" />
-            <span>Tín hiệu đã lưu</span>
+            <span>Lời chiêm nghiệm đã lưu</span>
             <span
               className={`px-1.5 py-0.5 rounded-full text-xs font-sans tabular-nums ${
                 activeTab === "signals" ? "bg-white/20 text-white" : "bg-surface text-muted"
@@ -588,7 +580,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
             </span>
           </button>
 
-          {/* Tab 2: Thẻ xin xăm đã lưu */}
+            {/* Tab 2: Thẻ xin xăm đã lưu */}
           <button
             onClick={() => setActiveTab("xinxam")}
             className={`px-4 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
@@ -636,10 +628,10 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
             <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
             <input
               type="search"
-              aria-label="Tìm trong nội dung đã lưu của tab đang chọn"
+              aria-label="Tìm trong nội dung đang xem"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm trong tab đang chọn…"
+              placeholder="Tìm trong nội dung đang xem…"
               className="w-full min-h-11 pl-9 pr-3 py-2 rounded-control bg-surface border border-line text-base text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
@@ -811,8 +803,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                 </h3>
 
                 <p className="text-sm text-muted leading-relaxed max-w-xl mx-auto mb-6">
-                  Khi lòng cần một khoảng lặng hay một lời chiêm nghiệm dân gian từ các đền
-                  miếu ba miền, hãy thử rút một thẻ xăm để soi tỏ tâm tư.
+                  Bạn có thể xem nội dung xin xăm để tham khảo, rồi chọn lưu lại thẻ muốn xem sau.
                 </p>
 
                 <Button
@@ -827,8 +818,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                 </Button>
 
                 <div className="text-xs text-muted italic">
-                  ⓘ Các tab khác của bạn như Tín hiệu đã lưu ({savedSignals.length}) vẫn đang sẵn
-                  sàng để xem lại.
+                  Các mục khác đã lưu vẫn có thể xem trong những danh sách bên dưới.
                 </div>
               </div>
             )}
@@ -845,12 +835,11 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
               <ShieldCheck className="w-5 h-5 text-accent shrink-0 mt-0.5" />
               <div>
                 <div className="text-xs font-bold uppercase tracking-wider text-accent mb-1">
-                  Không gian lưu riêng trên trình duyệt
+                  Điều ước lưu riêng trong tài khoản
                 </div>
                 <p className="text-sm text-ink leading-relaxed">
-                  Chỉ hiển thị những điều ước bạn chọn{" "}
-                  <strong>“Lưu riêng vào nhật ký”</strong>. Những điều ước gửi dưới dạng thả trôi
-                  biểu tượng đã được hướng tới sự an nhiên và hoàn toàn không lưu giữ.
+                  Chỉ những điều ước bạn chọn <strong>“Lưu riêng vào nhật ký”</strong> mới xuất hiện tại đây.
+                  Điều ước gửi theo hình thức thả trôi không được lưu vào tài khoản.
                 </p>
               </div>
             </Card>
@@ -879,7 +868,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                           </Badge>
                           <span className="text-xs px-2 py-0.5 rounded-full bg-surface text-muted font-medium flex items-center gap-1">
                             <Lock className="w-3 h-3 text-accent" />
-                            <span>Đã lưu trên trình duyệt này</span>
+                            <span>Đã lưu trong tài khoản</span>
                           </span>
                         </div>
                       </div>
@@ -891,7 +880,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
                       <div className="text-xs text-muted italic flex items-center gap-1 mb-4">
                         <CheckCircle2 className="w-3.5 h-3.5 text-success" />
-                        <span>Đã cất giữ cẩn thận</span>
+                        <span>Đã lưu riêng</span>
                       </div>
                     </div>
 
@@ -934,8 +923,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                   Bạn chưa lưu điều ước nào
                 </h3>
                 <p className="text-sm text-muted leading-relaxed max-w-xl mx-auto mb-6">
-                  Khi có những nỗi niềm cần giải tỏa hay gửi gắm khoảng lặng, bạn có thể viết và
-                  lưu riêng tư tại màn Gửi gắm điều ước.
+                  Bạn có thể viết điều ước hoặc lời tri ân rồi lưu trong tài khoản để xem lại sau.
                 </p>
                 <Button
                   variant="default"
@@ -961,11 +949,11 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
               <div className="flex items-center gap-2">
                 <Flower2 className="w-5 h-5 text-accent" />
                 <h2 className="section-title text-xl">
-                  Tín hiệu đã lưu
+                  Lời chiêm nghiệm đã lưu
                 </h2>
               </div>
               <span className="text-xs text-muted">
-                {filteredSignals.length} bản ghi lưu trữ
+                {filteredSignals.length} nội dung
               </span>
             </div>
 
@@ -1047,8 +1035,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
                   Bạn chưa lưu tín hiệu nào
                 </h3>
                 <p className="text-sm text-muted leading-relaxed max-w-xl mx-auto mb-6">
-                  Mỗi ngày, hãy dành 1 phút check-in cảm xúc để đón nhận lời gợi mở và hành động
-                  an lành cho tâm trí.
+                  Ghi lại cảm xúc hôm nay để nhận lời gợi mở và lưu lại nếu bạn muốn xem sau.
                 </p>
                 <Button
                   variant="default"
@@ -1065,12 +1052,6 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
           </div>
         )}
 
-        {/* Classical Bottom Quote */}
-        <div className="text-center pt-8 border-t border-line">
-          <div className="text-xs uppercase tracking-widest text-muted font-medium">
-            © {new Date().getFullYear()} Tin Lắm Tâm Linh. Bản quyền thuộc về những tâm hồn yêu nếp xưa đương đại.
-          </div>
-        </div>
       </main>
 
       {/* =========================================================================
@@ -1189,7 +1170,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
           </div>
 
           <div className="text-xs text-muted italic mb-6">
-            ⓘ Lời tâm sự này chỉ lưu trữ trên thiết bị của bạn và không gửi tới bất kỳ ai.
+            Lời gửi gắm này được lưu trong tài khoản của bạn để xem lại sau.
           </div>
 
           <Button

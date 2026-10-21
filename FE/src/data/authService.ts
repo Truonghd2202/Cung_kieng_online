@@ -1,5 +1,6 @@
 import { ApiError, apiRequest, beginSessionTransition, getSessionGeneration, isSessionCurrent, refreshAccessTokenState, setAccessToken } from "../lib/api";
 import { trackProductEvent } from "./productAnalytics";
+import { safeAuthErrorMessage } from "./authErrorCopy";
 
 export interface UserProfile {
   name: string;
@@ -23,6 +24,20 @@ export interface AuthResult {
   success: boolean;
   user: UserProfile;
   error?: string;
+  errorCode?: string;
+}
+
+export interface RegistrationResult {
+  success: boolean;
+  email: string;
+  error?: string;
+}
+
+export interface EmailVerificationResult {
+  success: boolean;
+  email: string;
+  error?: string;
+  errorCode?: string;
 }
 
 const CURRENT_USER_STORAGE_KEY = "tltl-current-user";
@@ -116,8 +131,12 @@ export function clearStoredUser() {
 }
 
 function authError(error: unknown): string {
-  if (error instanceof ApiError) return error.errors[0]?.message || error.message;
+  if (error instanceof ApiError) return safeAuthErrorMessage(error.status, error.errors[0]?.message || error.message);
   return "Không thể kết nối tới máy chủ. Vui lòng thử lại.";
+}
+
+function authErrorCode(error: unknown): string | undefined {
+  return error instanceof ApiError ? error.errors[0]?.code : undefined;
 }
 
 export async function loginAccount(email?: string, password?: string, rememberMe = false): Promise<AuthResult> {
@@ -135,7 +154,7 @@ export async function loginAccount(email?: string, password?: string, rememberMe
     saveStoredProfile(user, rememberMe);
     return { success: true, user };
   } catch (error) {
-    return { success: false, user: fallback, error: authError(error) };
+    return { success: false, user: fallback, error: authError(error), errorCode: authErrorCode(error) };
   }
 }
 
@@ -162,24 +181,52 @@ export async function registerAccount(
   name?: string,
   email?: string,
   password?: string,
-): Promise<AuthResult> {
-  const fallback = { name: name?.trim() || "", email: email?.trim().toLowerCase() || "" };
-  const session = beginSessionTransition();
+): Promise<RegistrationResult> {
+  const normalizedEmail = email?.trim().toLowerCase() || "";
 
   try {
-    const data = await apiRequest<AuthPayload>("/auth/register", {
+    const data = await apiRequest<{ email: string; verificationRequired: boolean }>("/auth/register", {
       method: "POST",
-      body: JSON.stringify({ fullName: fallback.name, email: fallback.email, password: password || "" }),
+      body: JSON.stringify({ fullName: name?.trim() || "", email: normalizedEmail, password: password || "" }),
     });
-    if (!isSessionCurrent(session)) return { success: false, user: fallback, error: "Phiên đăng nhập đã thay đổi. Vui lòng thử lại." };
-    setAccessToken(data.accessToken);
-    const user = toProfile(data.user);
-    saveStoredProfile(user, true);
-    trackProductEvent("signup_completed");
-    return { success: true, user };
+    return { success: true, email: data.email || normalizedEmail };
   } catch (error) {
-    return { success: false, user: fallback, error: authError(error) };
+    return { success: false, email: normalizedEmail, error: authError(error) };
   }
+}
+
+export async function requestEmailVerification(email: string): Promise<void> {
+  await apiRequest("/auth/request-email-verification", {
+    method: "POST",
+    body: JSON.stringify({ email: email.trim().toLowerCase() }),
+  });
+}
+
+export async function verifyEmailCode(email: string, code: string): Promise<EmailVerificationResult> {
+  const normalizedEmail = email.trim().toLowerCase();
+  try {
+    await apiRequest("/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify({ email: normalizedEmail, code: code.trim() }),
+    });
+    trackProductEvent("signup_completed");
+    return { success: true, email: normalizedEmail };
+  } catch (error) {
+    return { success: false, email: normalizedEmail, error: authError(error), errorCode: authErrorCode(error) };
+  }
+}
+
+export async function verifyRegistrationEmail(email: string, code: string, password: string): Promise<AuthResult> {
+  const verification = await verifyEmailCode(email, code);
+  if (!verification.success) {
+    return {
+      success: false,
+      user: { name: "", email: verification.email },
+      error: verification.error,
+      errorCode: verification.errorCode,
+    };
+  }
+  return loginAccount(verification.email, password, true);
 }
 
 export type RestoreSessionResult =

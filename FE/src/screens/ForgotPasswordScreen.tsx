@@ -148,11 +148,11 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
     try {
       const result = await requestPasswordReset(cleanEmail);
       if (!result.deliveryConfigured) {
-        setErrorMessage("Chưa cấu hình gửi email. Hãy kiểm tra SMTP_USER và SMTP_PASS trong BE/.env.");
+        setErrorMessage("Hiện chưa thể gửi email khôi phục. Vui lòng thử lại sau hoặc liên hệ bộ phận hỗ trợ.");
         return;
       }
       setEmail(cleanEmail);
-      setSubmitted(true); toast.info("Yêu cầu đã được tiếp nhận. Nếu email gắn với tài khoản và dịch vụ gửi thư xác nhận, mã sẽ được chuyển tới hộp thư.", "Kiểm tra hòm thư");
+      setSubmitted(true); toast.success("Yêu cầu đã được tiếp nhận. Nếu email gắn với tài khoản và dịch vụ gửi thư xác nhận, mã sẽ được chuyển tới hộp thư.", "Kiểm tra hòm thư");
       setIsCodeVerified(false);
       setCode("");
     } catch {
@@ -220,7 +220,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
     try {
       const result = await requestPasswordReset(email);
       if (!result.deliveryConfigured) {
-        setErrorMessage("Chưa cấu hình gửi email. Hãy kiểm tra SMTP_USER và SMTP_PASS trong BE/.env.");
+        setErrorMessage("Hiện chưa thể gửi email khôi phục. Vui lòng thử lại sau hoặc liên hệ bộ phận hỗ trợ.");
       } else {
         setCode("");
         setIsCodeVerified(false);

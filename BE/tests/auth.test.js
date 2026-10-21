@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const app = require("../src/app");
 const prisma = require("../src/config/prisma");
+const emailService = require("../src/services/email.service");
 
 test("complete authentication lifecycle", { timeout: 30_000 }, async () => {
   const server = app.listen(0);
@@ -11,6 +12,11 @@ test("complete authentication lifecycle", { timeout: 30_000 }, async () => {
   const email = `auth-test-${Date.now()}@example.com`;
   const originalPassword = "StrongPassword123";
   const newPassword = "NewPassword456";
+  const originalIsConfigured = emailService.isConfigured;
+  const originalSendVerification = emailService.sendEmailVerificationCodeEmail;
+  const verificationCodes = [];
+  emailService.isConfigured = () => true;
+  emailService.sendEmailVerificationCodeEmail = async (_email, code) => verificationCodes.push(code);
 
   async function request(path, { method = "GET", body, token, cookie } = {}) {
     const headers = {};
@@ -35,15 +41,33 @@ test("complete authentication lifecycle", { timeout: 30_000 }, async () => {
       body: { fullName: "  Auth Test  ", email: email.toUpperCase(), password: originalPassword },
     });
     assert.equal(registered.response.status, 201);
-    assert.equal(registered.payload.data.user.fullName, "Auth Test");
-    assert.equal(registered.payload.data.user.email, email);
-    assert.ok(registered.payload.data.accessToken);
-    assert.ok(registered.cookie?.startsWith("refreshToken="));
-    assert.match(registered.response.headers.get("set-cookie"), /HttpOnly/i);
-    assert.match(registered.response.headers.get("set-cookie"), /SameSite=Lax/i);
-    assert.match(registered.response.headers.get("set-cookie"), /Path=\/api\/v1\/auth/i);
-    assert.match(registered.response.headers.get("set-cookie"), /Path=\/api\/auth/i);
+    assert.equal(registered.payload.data.verificationRequired, true);
+    assert.equal(registered.payload.data.email, email);
+    assert.equal(registered.cookie, null);
     assert.equal(JSON.stringify(registered.payload).includes("password_hash"), false);
+
+    const pendingLogin = await request("/api/v1/auth/login", {
+      method: "POST", body: { email, password: originalPassword },
+    });
+    assert.equal(pendingLogin.response.status, 403);
+    assert.equal(pendingLogin.payload.errors[0].code, "EMAIL_NOT_VERIFIED");
+
+    const verified = await request("/api/v1/auth/verify-email", {
+      method: "POST", body: { email, code: verificationCodes[0] },
+    });
+    assert.equal(verified.response.status, 200);
+    assert.equal(verified.payload.data.verified, true);
+
+    const firstAuthenticatedSession = await request("/api/v1/auth/login", {
+      method: "POST", body: { email, password: originalPassword },
+    });
+    assert.equal(firstAuthenticatedSession.response.status, 200);
+    assert.ok(firstAuthenticatedSession.payload.data.accessToken);
+    assert.ok(firstAuthenticatedSession.cookie?.startsWith("refreshToken="));
+    assert.match(firstAuthenticatedSession.response.headers.get("set-cookie"), /HttpOnly/i);
+    assert.match(firstAuthenticatedSession.response.headers.get("set-cookie"), /SameSite=Lax/i);
+    assert.match(firstAuthenticatedSession.response.headers.get("set-cookie"), /Path=\/api\/v1\/auth/i);
+    assert.match(firstAuthenticatedSession.response.headers.get("set-cookie"), /Path=\/api\/auth/i);
 
     const weakPassword = await request("/api/v1/auth/register", {
       method: "POST",
@@ -69,7 +93,7 @@ test("complete authentication lifecycle", { timeout: 30_000 }, async () => {
     assert.equal(anonymousMe.response.status, 401);
 
     const authenticatedMe = await request("/api/v1/auth/me", {
-      token: registered.payload.data.accessToken,
+      token: firstAuthenticatedSession.payload.data.accessToken,
     });
     assert.equal(authenticatedMe.response.status, 200);
     assert.equal(authenticatedMe.payload.data.email, email);
@@ -82,7 +106,7 @@ test("complete authentication lifecycle", { timeout: 30_000 }, async () => {
     assert.equal(bannedLogin.response.status, 403);
     assert.equal(bannedLogin.payload.message, "Account has been banned");
     const bannedProtectedRequest = await request("/api/v1/auth/me", {
-      token: registered.payload.data.accessToken,
+      token: firstAuthenticatedSession.payload.data.accessToken,
     });
     assert.equal(bannedProtectedRequest.response.status, 403);
     await prisma.users.update({ where: { email }, data: { status: "INACTIVE" } });
@@ -94,7 +118,7 @@ test("complete authentication lifecycle", { timeout: 30_000 }, async () => {
     assert.equal(inactiveLogin.payload.message, "Account is inactive");
     await prisma.users.update({ where: { email }, data: { status: "ACTIVE" } });
 
-    const oldCookie = registered.cookie;
+    const oldCookie = firstAuthenticatedSession.cookie;
     const refreshed = await request("/api/v1/auth/refresh", { method: "POST", cookie: oldCookie });
     assert.equal(refreshed.response.status, 200);
     assert.ok(refreshed.payload.data.accessToken);
@@ -167,6 +191,8 @@ test("complete authentication lifecycle", { timeout: 30_000 }, async () => {
     }
   } finally {
     await prisma.users.deleteMany({ where: { email } });
+    emailService.isConfigured = originalIsConfigured;
+    emailService.sendEmailVerificationCodeEmail = originalSendVerification;
     await new Promise((resolve) => server.close(resolve));
     await prisma.$disconnect();
   }

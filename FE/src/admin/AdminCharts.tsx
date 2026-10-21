@@ -396,17 +396,30 @@ export function ContentSectionAnalyticsDeck({
   activeCount: number;
   regionCounts?: { north: number; central: number; south: number; nation: number };
 }) {
-  const verifiedRate = total > 0 ? Math.round((verifiedCount / total) * 100) : 0;
-  const sourceRate = total > 0 ? Math.round((hasSourceCount / total) * 100) : 0;
-  const activeRate = total > 0 ? Math.round((activeCount / total) * 100) : 0;
+  const formatRate = (count: number, tot: number) => {
+    if (tot <= 0 || count <= 0) return "0%";
+    const pct = (count / tot) * 100;
+    if (pct < 1) return "< 1%";
+    return `${Math.round(pct)}%`;
+  };
+
+  const calcBarWidth = (count: number, tot: number) => {
+    if (tot <= 0 || count <= 0) return 0;
+    const pct = (count / tot) * 100;
+    return Math.max(2.5, Math.min(100, pct));
+  };
+
+  const verifiedPercentLabel = formatRate(verifiedCount, total);
+  const sourcePercentLabel = formatRate(hasSourceCount, total);
+  const activePercentLabel = formatRate(activeCount, total);
 
   return (
     <div className="admin-content-deck">
       <div className="admin-deck-stat-card">
-        <span className="deck-eyebrow">TỔNG TƯ LIỆU</span>
+        <span className="deck-eyebrow">TƯ LIỆU TRONG KHO</span>
         <div className="deck-main-num">
           <strong>{total.toLocaleString("vi-VN")}</strong>
-          <small>bản ghi</small>
+          <small>mục</small>
         </div>
         <div className="deck-progress">
           <div className="deck-progress-bar" style={{ width: "100%", background: "#c89655" }} />
@@ -415,37 +428,37 @@ export function ContentSectionAnalyticsDeck({
       </div>
 
       <div className="admin-deck-stat-card">
-        <span className="deck-eyebrow">XÁC MINH NGUỒN</span>
+        <span className="deck-eyebrow">ĐÃ DUYỆT NỘI DUNG</span>
         <div className="deck-main-num">
-          <strong>{verifiedRate}%</strong>
+          <strong>{verifiedPercentLabel}</strong>
           <small>{verifiedCount}/{total}</small>
         </div>
         <div className="deck-progress">
-          <div className="deck-progress-bar" style={{ width: `${verifiedRate}%`, background: "#2d7a52" }} />
+          <div className="deck-progress-bar" style={{ width: `${calcBarWidth(verifiedCount, total)}%`, background: "#2d7a52" }} />
         </div>
-        <span className="deck-sub">{verifiedCount} mục đã đối chiếu nguồn</span>
+        <span className="deck-sub">{verifiedCount} mục đã qua bước duyệt</span>
       </div>
 
       <div className="admin-deck-stat-card">
-        <span className="deck-eyebrow">LIÊN KẾT HTTPS</span>
+        <span className="deck-eyebrow">CÓ URL NGUỒN</span>
         <div className="deck-main-num">
-          <strong>{sourceRate}%</strong>
+          <strong>{sourcePercentLabel}</strong>
           <small>{hasSourceCount}/{total}</small>
         </div>
         <div className="deck-progress">
-          <div className="deck-progress-bar" style={{ width: `${sourceRate}%`, background: "#2c6ca8" }} />
+          <div className="deck-progress-bar" style={{ width: `${calcBarWidth(hasSourceCount, total)}%`, background: "#2c6ca8" }} />
         </div>
-        <span className="deck-sub">{total - hasSourceCount} mục cần bổ sung URL</span>
+        <span className="deck-sub">{total - hasSourceCount} mục chưa có URL nguồn</span>
       </div>
 
       <div className="admin-deck-stat-card">
-        <span className="deck-eyebrow">TRẠNG THÁI HIỂN THỊ</span>
+        <span className="deck-eyebrow">ĐANG CÔNG KHAI</span>
         <div className="deck-main-num">
-          <strong>{activeRate}%</strong>
+          <strong>{activePercentLabel}</strong>
           <small>{activeCount}/{total}</small>
         </div>
         <div className="deck-progress">
-          <div className="deck-progress-bar" style={{ width: `${activeRate}%`, background: "#8b252e" }} />
+          <div className="deck-progress-bar" style={{ width: `${calcBarWidth(activeCount, total)}%`, background: "#8b252e" }} />
         </div>
         <span className="deck-sub">{activeCount} mục đang công khai</span>
       </div>

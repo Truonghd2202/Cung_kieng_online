@@ -9,23 +9,43 @@ import {
   Loader2,
   Sparkles,
   CheckCircle2,
+  Circle,
   Bell,
 } from "lucide-react";
-import { registerAccount } from "../data/authService";
+import { registerAccount, requestEmailVerification, verifyEmailCode } from "../data/authService";
 import { CelestialAuthLeft } from "../components/CelestialAuthLeft";
 import "../styles/LoginScreen.css";
 import { toast } from "../components/ui/Toast";
 
 interface RegisterScreenProps {
   onBack?: () => void;
-  onSuccess: (name?: string, email?: string) => void;
   onGoToLogin: () => void;
   pendingSignalMood?: string;
 }
 
+const registrationErrorCopy: Record<string, string> = {
+  "Email already exists": "Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.",
+  "Email is invalid": "Địa chỉ email chưa hợp lệ.",
+  "Full name is required": "Vui lòng nhập tên hiển thị.",
+  "Password must contain at least 8 characters": "Mật khẩu cần có ít nhất 8 ký tự.",
+  "Password must contain at least one uppercase letter": "Mật khẩu cần có ít nhất một chữ hoa.",
+  "Password must contain at least one lowercase letter": "Mật khẩu cần có ít nhất một chữ thường.",
+  "Password must contain at least one number": "Mật khẩu cần có ít nhất một chữ số.",
+  "Resource already exists": "Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.",
+  "Internal server error": "Chưa thể tạo tài khoản lúc này. Vui lòng thử lại sau.",
+};
+
+function getRegistrationErrorMessage(message?: string): string {
+  const cleanMessage = message?.trim();
+  if (!cleanMessage) return "Chưa thể tạo tài khoản lúc này. Vui lòng thử lại sau.";
+  if (registrationErrorCopy[cleanMessage]) return registrationErrorCopy[cleanMessage];
+  return /^[\x00-\x7F]*$/.test(cleanMessage)
+    ? "Chưa thể tạo tài khoản lúc này. Vui lòng thử lại sau."
+    : cleanMessage;
+}
+
 export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   onBack,
-  onSuccess,
   onGoToLogin,
   pendingSignalMood,
 }) => {
@@ -35,10 +55,28 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [agreed, setAgreed] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [verificationPending, setVerificationPending] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const registerPanelRef = useRef<HTMLElement | null>(null);
+
+  const passwordRequirements = [
+    { label: "Ít nhất 8 ký tự", met: password.length >= 8 },
+    { label: "Có chữ hoa", met: /[A-Z]/.test(password) },
+    { label: "Có chữ thường", met: /[a-z]/.test(password) },
+    { label: "Có chữ số", met: /[0-9]/.test(password) },
+  ];
+  const passwordRequirementCount = passwordRequirements.filter((item) => item.met).length;
+  const passwordStrengthLabel =
+    password.length === 0
+      ? "Nhập mật khẩu"
+      : passwordRequirementCount === 4
+        ? "Đạt yêu cầu"
+        : `${passwordRequirementCount}/4 tiêu chí`;
+  const confirmPasswordHasInput = confirmPassword.length > 0;
+  const confirmPasswordMatches = confirmPassword === password;
 
   const handleRingBell = () => {
     const bell = new Audio("/audio/meditation-bowl.mp3");
@@ -67,6 +105,10 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (errorMessage) registerPanelRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [errorMessage]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +141,6 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
       const msgEmail = "Vui lòng nhập địa chỉ email hợp lệ.";
     setErrorMessage(msgEmail);
-    toast.warning(msgEmail);
       return;
     }
 
@@ -111,21 +152,12 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
     ) {
       const msgPass = "Mật khẩu cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường và chữ số.";
     setErrorMessage(msgPass);
-    toast.warning(msgPass);
       return;
     }
 
     if (submittedPassword !== confirmPassword) {
       const msgConfirm = "Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại.";
     setErrorMessage(msgConfirm);
-    toast.warning(msgConfirm);
-      return;
-    }
-
-    if (!agreed) {
-      const msgAgreed = "Vui lòng đồng ý với quy ước gìn giữ không gian an trú.";
-    setErrorMessage(msgAgreed);
-    toast.warning(msgAgreed);
       return;
     }
 
@@ -143,30 +175,57 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
 
         if (!result.success) {
           setIsSubmitting(false);
-          const regErr = result.error || "Không thể tạo tài khoản. Vui lòng thử lại.";
+          const regErr = getRegistrationErrorMessage(result.error);
           setErrorMessage(regErr);
-          toast.error(regErr, "Khởi tạo thất bại");
           return;
         }
 
-        try {
-          localStorage.setItem("tltl_remembered_email", cleanEmail);
-        } catch {
-          // Việc ghi nhớ email không quyết định kết quả đăng ký.
-        }
-
-        setSuccessMessage("Tạo tài khoản thành công! Đang mở không gian của bạn...");
-        toast.success("Khởi tạo hồ sơ thành công! Chúc bạn vạn sự cát lành.", "Hoan hỷ đón chào");
-
-        redirectTimerRef.current = setTimeout(() => {
-          redirectTimerRef.current = null;
-          onSuccess(result.user.name, result.user.email);
-        }, 1000);
+        setEmail(result.email);
+        setVerificationPending(true);
+        setIsSubmitting(false);
+        setSuccessMessage("Mã xác minh đã được gửi nếu dịch vụ email nhận yêu cầu. Hãy kiểm tra hộp thư và thư rác.");
+        toast.success("Hãy xác minh email để kích hoạt tài khoản.", "Mã xác minh đã được gửi");
       } catch {
         setIsSubmitting(false);
-        setErrorMessage("Không thể tạo tài khoản. Vui lòng thử lại.");
+        const message = "Chưa thể tạo tài khoản lúc này. Vui lòng thử lại sau.";
+        setErrorMessage(message);
       }
     }, 400);
+  };
+
+  const handleVerifyEmail = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setErrorMessage("");
+    if (!/^\d{6}$/.test(verificationCode.trim())) {
+      setErrorMessage("Vui lòng nhập mã xác minh gồm 6 chữ số.");
+      return;
+    }
+    setIsSubmitting(true);
+    const result = await verifyEmailCode(email, verificationCode);
+    setIsSubmitting(false);
+    if (!result.success) {
+      const message = result.error || "Mã xác minh không đúng hoặc đã hết hạn. Vui lòng thử lại.";
+      setErrorMessage(message);
+      return;
+    }
+    try { localStorage.setItem("tltl_remembered_email", email); } catch {}
+    setSuccessMessage("Email đã được xác minh. Hãy đăng nhập bằng email và mật khẩu vừa tạo.");
+    toast.success("Email đã được xác minh. Hãy đăng nhập để tiếp tục.", "Xác minh thành công");
+    onGoToLogin();
+  };
+
+  const handleResendVerification = async () => {
+    setIsSubmitting(true);
+    setErrorMessage("");
+    try {
+      await requestEmailVerification(email);
+      setVerificationCode("");
+      setSuccessMessage("Nếu email thuộc tài khoản chưa xác minh, mã mới sẽ được gửi. Mã cũ không còn hiệu lực.");
+    } catch {
+      setErrorMessage("Chưa gửi lại được mã xác minh. Vui lòng thử lại sau.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -176,8 +235,9 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
       {/* CỘT PHẢI: FORM KHỞI TẠO HỒ SƠ — CHỈN CHU, SANG TRỌNG, VỪA KHÍT KHUNG HÌNH */}
       {/* CỘT PHẢI: FORM ĐĂNG KÝ KHỞI TẠO HỒ SƠ — CARD SƠN MÀI SANG TRỌNG */}
       <section
+        ref={registerPanelRef}
         aria-label="Biểu mẫu đăng ký tài khoản"
-        className="split-login-right relative w-full lg:w-[40%] shrink-0 flex flex-col justify-center items-center lg:h-full px-4 sm:px-6 py-4"
+        className={`split-login-right relative w-full lg:w-[40%] shrink-0 flex flex-col justify-center items-center lg:h-full px-4 sm:px-6 py-4 ${errorMessage ? "register-form-has-error" : ""}`}
       >
         {/* Topbar: Thỉnh chuông tĩnh tâm */}
         <div className="w-full max-w-[430px] flex justify-end mb-2.5 sm:mb-3 relative z-20">
@@ -214,12 +274,12 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
               </div>
               <div>
                 <h1 className="font-serif text-[1.6rem] sm:text-[1.8rem] font-bold text-ink tracking-tight leading-tight">
-                  Khởi Tạo Hồ Sơ
+                  Tạo tài khoản
                 </h1>
               </div>
             </div>
             <p className="text-xs sm:text-[13px] text-muted mt-1 leading-relaxed">
-              Ghi danh tâm thức để lưu giữ quẻ xăm và hành trình tĩnh tại.
+              Tạo tài khoản để lưu và xem lại nội dung bạn đã chọn trong Tin Lắm Tâm Linh.
             </p>
             {/* Đường chỉ hoa văn ánh kim */}
             <div className="flex items-center gap-2 mt-2">
@@ -243,7 +303,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
           {errorMessage && (
             <div
               role="alert"
-              className="mb-2.5 p-2.5 rounded-xl bg-danger-soft border border-danger/30 text-xs text-danger flex items-start gap-2 shadow-xs"
+              className="mb-2.5 max-h-24 overflow-y-auto break-words p-2.5 rounded-xl bg-danger-soft border border-danger/30 text-xs text-danger flex items-start gap-2 shadow-xs"
             >
               <span className="font-bold leading-none mt-0.5">✕</span>
               <span className="leading-relaxed flex-1">{errorMessage}</span>
@@ -262,6 +322,32 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
           )}
 
           {/* FORM NHẬP LIỆU */}
+          {verificationPending ? (
+            <form onSubmit={handleVerifyEmail} className="space-y-4">
+              <div className="rounded-xl border border-amber-900/15 bg-amber-50/60 p-4 text-sm text-stone-700 dark:border-amber-300/20 dark:bg-stone-900/60 dark:text-stone-200">
+                Nhập mã 6 chữ số đã gửi tới <strong>{email}</strong>. Mã có hiệu lực trong 10 phút. Tài khoản chỉ đăng nhập được sau khi xác minh.
+              </div>
+              <label htmlFor="register-verification-code" className="block text-xs font-semibold text-ink mb-1">Mã xác minh email</label>
+              <input
+                id="register-verification-code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                required
+                disabled={isSubmitting}
+                value={verificationCode}
+                onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="Nhập mã 6 chữ số"
+                className="w-full h-11 px-3.5 rounded-xl border border-stone-300/80 bg-stone-50/60 text-center text-lg tracking-[0.35em] text-ink placeholder:text-sm placeholder:tracking-normal focus:outline-none focus:ring-3 focus:ring-amber-500/20 focus:border-amber-600 disabled:opacity-60"
+              />
+              <button type="submit" disabled={isSubmitting} className="w-full h-11 rounded-xl bg-[#8f202b] text-white font-semibold disabled:opacity-60">
+                {isSubmitting ? "Đang xác minh..." : "Xác minh email"}
+              </button>
+              <button type="button" onClick={() => void handleResendVerification()} disabled={isSubmitting} className="w-full text-sm font-semibold text-[#8f202b] hover:underline disabled:opacity-60">
+                Gửi lại mã xác minh
+              </button>
+            </form>
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-2.5 sm:space-y-3">
             {/* Tên hiển thị */}
             <div>
@@ -269,7 +355,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                 htmlFor="register-name"
                 className="block text-xs font-semibold text-ink mb-1 tracking-wide"
               >
-                Danh xưng / Pháp danh
+                Tên hiển thị
               </label>
               <div className="relative group">
                 <User className="w-4 h-4 text-stone-400 group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -282,7 +368,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                   disabled={isSubmitting}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Ví dụ: Tuệ An, Minh Tâm..."
+                  placeholder="Ví dụ: An, Minh..."
                   className="w-full h-10.5 pl-10 pr-3.5 rounded-xl border border-stone-300/80 dark:border-stone-700/80 bg-stone-50/60 dark:bg-stone-900/60 text-sm text-ink placeholder:text-stone-400 focus:outline-none focus:ring-3 focus:ring-amber-500/20 focus:border-amber-600 dark:focus:border-amber-400 focus:bg-white dark:focus:bg-stone-900 transition-all shadow-xs disabled:opacity-60"
                 />
               </div>
@@ -294,7 +380,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                 htmlFor="register-email"
                 className="block text-xs font-semibold text-ink mb-1 tracking-wide"
               >
-                Địa chỉ Email
+                Email
               </label>
               <div className="relative group">
                 <Mail className="w-4 h-4 text-stone-400 group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -306,7 +392,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                   disabled={isSubmitting}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="email.cua.ban@domain.com"
+                  placeholder="tenban@example.com"
                   className="w-full h-10.5 pl-10 pr-3.5 rounded-xl border border-stone-300/80 dark:border-stone-700/80 bg-stone-50/60 dark:bg-stone-900/60 text-sm text-ink placeholder:text-stone-400 focus:outline-none focus:ring-3 focus:ring-amber-500/20 focus:border-amber-600 dark:focus:border-amber-400 focus:bg-white dark:focus:bg-stone-900 transition-all shadow-xs disabled:opacity-60"
                 />
               </div>
@@ -327,10 +413,11 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
                   required
+                  aria-describedby="register-password-help"
                   disabled={isSubmitting}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="•••••••• (Từ 6 ký tự trở lên)"
+                  placeholder="Tối thiểu 8 ký tự"
                   className="w-full h-10.5 pl-10 pr-11 rounded-xl border border-stone-300/80 dark:border-stone-700/80 bg-stone-50/60 dark:bg-stone-900/60 text-sm text-ink placeholder:text-stone-400 focus:outline-none focus:ring-3 focus:ring-amber-500/20 focus:border-amber-600 dark:focus:border-amber-400 focus:bg-white dark:focus:bg-stone-900 transition-all shadow-xs disabled:opacity-60"
                 />
                 <button
@@ -342,6 +429,38 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
+              </div>
+              <div id="register-password-help" className="mt-2.5 rounded-xl border border-amber-900/10 dark:border-amber-400/15 bg-amber-50/50 dark:bg-stone-900/35 px-3 py-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] font-medium text-stone-600 dark:text-stone-300">Mức độ đáp ứng</span>
+                  <span className={`text-[11px] font-semibold ${passwordRequirementCount === 4 ? "text-emerald-700 dark:text-emerald-400" : password.length > 0 ? "text-amber-700 dark:text-amber-300" : "text-stone-500 dark:text-stone-400"}`}>
+                    {passwordStrengthLabel}
+                  </span>
+                </div>
+                <div
+                  className="mt-1.5 grid grid-cols-4 gap-1.5"
+                  role="progressbar"
+                  aria-label="Mức độ đáp ứng yêu cầu mật khẩu"
+                  aria-valuemin={0}
+                  aria-valuemax={4}
+                  aria-valuenow={passwordRequirementCount}
+                  aria-valuetext={`${passwordRequirementCount} trên 4 yêu cầu; ${passwordStrengthLabel}`}
+                >
+                  {passwordRequirements.map((item, index) => (
+                    <span
+                      key={item.label}
+                      className={`h-1.5 rounded-full transition-colors duration-200 ${index < passwordRequirementCount ? (passwordRequirementCount === 4 ? "bg-emerald-500" : passwordRequirementCount <= 1 ? "bg-rose-500" : "bg-amber-500") : "bg-stone-200 dark:bg-stone-700"}`}
+                    />
+                  ))}
+                </div>
+                <ul className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1" aria-live="polite">
+                  {passwordRequirements.map((item) => (
+                    <li key={item.label} className={`flex items-center gap-1.5 text-[10px] leading-4 ${item.met ? "text-emerald-700 dark:text-emerald-400" : "text-stone-500 dark:text-stone-400"}`}>
+                      {item.met ? <CheckCircle2 className="h-3 w-3 shrink-0" aria-hidden="true" /> : <Circle className="h-3 w-3 shrink-0" aria-hidden="true" />}
+                      <span>{item.label}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
 
@@ -360,10 +479,12 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                   type={showConfirmPassword ? "text" : "password"}
                   autoComplete="new-password"
                   required
+                  aria-describedby="register-confirm-password-help"
+                  aria-invalid={confirmPasswordHasInput && !confirmPasswordMatches}
                   disabled={isSubmitting}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="•••••••• (Nhập lại mật khẩu trên)"
+                  placeholder="Nhập lại mật khẩu"
                   className="w-full h-10.5 pl-10 pr-11 rounded-xl border border-stone-300/80 dark:border-stone-700/80 bg-stone-50/60 dark:bg-stone-900/60 text-sm text-ink placeholder:text-stone-400 focus:outline-none focus:ring-3 focus:ring-amber-500/20 focus:border-amber-600 dark:focus:border-amber-400 focus:bg-white dark:focus:bg-stone-900 transition-all shadow-xs disabled:opacity-60"
                 />
                 <button
@@ -376,30 +497,23 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                   {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-            </div>
-
-            {/* Đồng ý quy ước an trú */}
-            <div className="flex items-start gap-2 pt-0.5 pb-0.5">
-              <input
-                type="checkbox"
-                id="agreed"
-                checked={agreed}
-                disabled={isSubmitting}
-                onChange={(e) => setAgreed(e.target.checked)}
-                className="w-4 h-4 mt-0.5 rounded border-stone-300 text-accent accent-[#8f202b] focus:ring-amber-500/30 cursor-pointer"
-              />
-              <label
-                htmlFor="agreed"
-                className="text-xs text-muted cursor-pointer select-none font-medium leading-relaxed"
+              <p
+                id="register-confirm-password-help"
+                className={`mt-1 min-h-4 text-[11px] leading-4 ${confirmPasswordHasInput ? (confirmPasswordMatches ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400") : "text-stone-500 dark:text-stone-400"}`}
+                aria-live="polite"
               >
-                Đồng ý quy ước gìn giữ không gian an trú thanh tịnh
-              </label>
+                {confirmPasswordHasInput
+                  ? confirmPasswordMatches
+                    ? "Mật khẩu khớp."
+                    : "Mật khẩu chưa khớp."
+                  : "Nhập lại mật khẩu để xác nhận."}
+              </p>
             </div>
 
             {/* Nút Đăng ký đỏ trầm son ánh kim */}
             <button
               type="submit"
-              disabled={isSubmitting || !agreed}
+              disabled={isSubmitting}
               className="group relative w-full h-11 rounded-xl bg-gradient-to-r from-[#8f202b] via-[#a62432] to-[#781721] hover:from-[#7e1923] hover:via-[#95202c] hover:to-[#68131b] border border-amber-300/50 text-[#fffaf0] font-serif text-[15px] font-semibold tracking-wide flex items-center justify-center gap-2 transition-all shadow-[0_4px_18px_rgba(143,32,43,0.32),0_0_10px_rgba(212,175,55,0.18)] hover:shadow-[0_6px_26px_rgba(143,32,43,0.46),0_0_16px_rgba(212,175,55,0.32)] overflow-hidden cursor-pointer disabled:opacity-60 active:scale-[0.99]"
             >
               <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
@@ -407,16 +521,17 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-amber-200" />
-                  <span>Đang khởi tạo...</span>
+                  <span>Đang tạo tài khoản...</span>
                 </>
               ) : (
                 <>
-                  <span>Tạo hồ sơ an trú</span>
+                  <span>Tạo tài khoản</span>
                   <ArrowRight className="w-4 h-4 text-amber-200" />
                 </>
               )}
             </button>
           </form>
+          )}
 
           {/* Quay về Đăng nhập */}
           <div className="text-center text-xs text-muted mt-3 pt-2.5 border-t border-amber-900/10 dark:border-amber-400/15">
