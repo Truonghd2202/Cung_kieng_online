@@ -30,12 +30,14 @@ router.get("/signals/:id/audit-logs", requireAdmin, validate(idParamsSchema, "pa
 router.get("/signals/:id", requireContentTeam, validate(idParamsSchema, "params"), controller.signal);
 router.put("/signals/:id", requireEditor, validate(idParamsSchema, "params"), validate(signalAdminValidator.signalDraftSchema), controller.updateSignal);
 router.post("/signals/:id/withdraw", requireEditor, validate(idParamsSchema, "params"), validate(z.object({ expectedUpdatedAt: z.iso.datetime(), reviewNote: z.string().trim().min(8).max(500) }).strict()), controller.withdrawSignal);
+router.post("/signals/:id/revoke-approval", requireAdmin, validate(idParamsSchema, "params"), validate(z.object({ expectedUpdatedAt: z.iso.datetime(), reviewNote: z.string().trim().min(8).max(500) }).strict()), controller.revokeSignalApproval);
 router.patch("/signals/:id/review", requireAdmin, validate(idParamsSchema, "params"), validate(signalAdminValidator.reviewSchema), controller.reviewSignal);
 router.get("/team-members", requireAdmin, controller.teamMembers);
 router.post("/team-members", requireAdmin, validate(z.object({ email: z.email().trim().max(255) }).strict()), controller.addTeamEditor);
 router.patch("/team-members/:id", requireAdmin, validate(idParamsSchema, "params"), validate(z.object({ role: z.enum(["USER", "EDITOR"]) }).strict()), controller.updateTeamMember);
 
 const editor = require("../repositories/content-editor.repository");
+const adminRepository = require("../repositories/admin.repository");
 const { schemas } = require("../validators/content-editor.validator");
 const ApiError = require("../utils/api-error");
 const { sendSuccess } = require("../utils/response");
@@ -43,7 +45,8 @@ for (const kind of ["culture", "calendar", "xam", "rituals", "prayers"]) {
   router.get(`/${kind}/:id`, requireContentTeam, validate(idParamsSchema, "params"), async (req, res) => {
     const record = await editor.find(kind, req.params.id, req.user.role === "EDITOR" ? req.user.id : null);
     if (!record) throw new ApiError(404, "Không tìm thấy nội dung.");
-    return sendSuccess(res, { data: record });
+    const editorialContext = await adminRepository.getEditorialContext({ culture: "culture_articles", calendar: "calendar_events", xam: "xin_xam", rituals: "rituals", prayers: "prayers" }[kind], req.params.id);
+    return sendSuccess(res, { data: { ...record, ...editorialContext } });
   });
   router.post(`/${kind}`, requireEditor, validate(schemas[kind]), async (req, res) => {
     return sendSuccess(res, { statusCode: 201, data: await editor.save(kind, null, req.user.id, req.body) });
@@ -62,10 +65,18 @@ for (const kind of ["culture", "calendar", "xam", "rituals", "prayers"]) {
     if (record.workflowConflict) throw new ApiError(409, "Nội dung đã ở trạng thái Bản nháp.");
     return sendSuccess(res, { data: record });
   });
+  router.post(`/${kind}/:id/revoke-approval`, requireAdmin, validate(idParamsSchema, "params"), validate(z.object({ expectedUpdatedAt: z.iso.datetime(), reviewNote: z.string().trim().min(8).max(500) }).strict()), async (req, res) => {
+    const record = await editor.revokeApprovalToDraft(kind, req.params.id, req.user.id, req.body.expectedUpdatedAt, req.body.reviewNote);
+    if (!record) throw new ApiError(404, "Không tìm thấy nội dung.");
+    if (record.versionConflict) throw new ApiError(409, "Nội dung đã thay đổi. Tải lại rồi thử lại.");
+    if (record.workflowConflict) throw new ApiError(409, "Chỉ nội dung đã duyệt hoặc đang công khai mới có thể thu hồi duyệt để sửa.");
+    return sendSuccess(res, { data: record });
+  });
   router.post(`/${kind}/:id/request-changes`, requireAdmin, validate(idParamsSchema, "params"), validate(z.object({ expectedUpdatedAt: z.iso.datetime(), reviewNote: z.string().trim().min(8).max(500) }).strict()), async (req, res) => {
     const record = await editor.transitionToDraft(kind, req.params.id, req.user.id, req.body.expectedUpdatedAt, req.body.reviewNote);
     if (!record) throw new ApiError(404, "Không tìm thấy nội dung.");
     if (record.versionConflict) throw new ApiError(409, "Nội dung đã thay đổi. Tải lại rồi thử lại.");
+    if (record.workflowConflict) throw new ApiError(409, "Chỉ nội dung đang chờ duyệt hoặc trạng thái thu hồi cũ mới có thể yêu cầu chỉnh sửa.");
     return sendSuccess(res, { data: record });
   });
 }

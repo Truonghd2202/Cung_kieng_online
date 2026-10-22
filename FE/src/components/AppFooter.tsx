@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { NavScreen } from "./AppHeader";
 import { DailyProverb, loadDailyProverb } from "../data/contentService";
 import { apiRequest } from "../lib/api";
+import { isDemoMode } from "../data/demoMode";
 import {
   Sparkles,
   ArrowRight,
@@ -30,6 +31,10 @@ export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate, showMembership
   const [membershipStatus, setMembershipStatus] = useState<FooterMembershipStatus | null>(null);
 
   useEffect(() => {
+    if (isDemoMode()) {
+      setMembershipStatus({ salesEnabled: false, checkoutAvailable: false, paymentEnvironment: "sandbox", subscription: null, aiUsage: { successfulUsed: 0, inProgress: 0, successfulRemaining: 0, successfulLimit: 0, attemptsUsed: 0, attemptsRemaining: 0, providerAttemptLimit: 0, nextUsableAt: null } });
+      return;
+    }
     let active = true;
     loadDailyProverb()
       .then((result) => {

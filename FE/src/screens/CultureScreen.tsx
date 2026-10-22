@@ -272,6 +272,7 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
                   <div className="relative overflow-hidden rounded-xl bg-surface-soft aspect-16/9 mb-3.5">
                     <UnverifiedImage
                       src={featuredArticle.image}
+                      approvedByContent={canShowArticleImage(featuredArticle)}
                       alt={featuredArticle.caption || featuredArticle.title}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
@@ -537,6 +538,7 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
                       {canShowArticleImage(article) ? (
                         <UnverifiedImage
                           src={article.image}
+                          approvedByContent={canShowArticleImage(article)}
                           alt={article.caption || article.title}
                           className="h-full w-full object-cover object-[center_25%] transition-transform duration-500 group-hover:scale-105"
                         />
@@ -553,6 +555,11 @@ export const CultureScreen: React.FC<CultureScreenProps> = ({
                         {article.region}
                       </Badge>
                     </div>
+                    {canShowArticleImage(article) && article.metadata?.imageCredit && (
+                      <p className="-mt-2 mb-3 truncate text-[11px] text-muted">
+                        Ảnh: {article.metadata.imageCredit}
+                      </p>
+                    )}
 
                     <div className="flex items-center gap-1.5 text-xs text-stone-500 dark:text-stone-400 mb-2">
                       <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />

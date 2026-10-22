@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../lib/api";
+import { readDemoValue, writeDemoValue } from "../data/demoStorage";
 
 type Reading = { id: string; year: number; sections: Array<{ title: string; body: string }>; disclaimer: string };
 
 export function YearlyReading({
   canGenerate,
   usage,
+  demoMode = false,
 }: {
   canGenerate: boolean;
+  demoMode?: boolean;
   usage: { successfulUsed: number; inProgress: number; successfulRemaining: number; successfulLimit: number; attemptsUsed: number; attemptsRemaining: number; providerAttemptLimit: number; nextUsableAt: string | null };
 }) {
   const [birthDate, setBirthDate] = useState("");
@@ -37,6 +40,10 @@ export function YearlyReading({
     setMessage("");
 
     try {
+      if (demoMode) {
+        setReadings(readDemoValue<Reading[]>("yearly-readings", []));
+        return;
+      }
       const result = await apiRequest<{ items: Reading[] }>(
         "/horoscope/yearly"
       );
@@ -66,6 +73,23 @@ export function YearlyReading({
     setMessage("");
 
     try {
+      if (demoMode) {
+        const reading: Reading = {
+          id: `demo-${year}-${Date.now()}`,
+          year,
+          sections: [
+            { title: "Điều nên nuôi dưỡng", body: "Dành thời gian cho một việc quan trọng, chia nhỏ thành bước vừa sức và giữ nhịp nghỉ ngơi đều đặn." },
+            { title: "Điều cần lưu tâm", body: "Khi có nhiều lựa chọn, hãy ghi lại điều mình biết chắc, điều còn cần hỏi và người có thể hỗ trợ." },
+            { title: "Gợi ý thực hành", body: "Cuối tuần, dành 10 phút nhìn lại điều đã làm được và chọn một ưu tiên thực tế cho tuần tới." },
+          ],
+          disclaimer: "Bản demo do sản phẩm biên soạn để tự chiêm nghiệm; không phải lá số, tư vấn chuyên môn hay dự báo tương lai.",
+        };
+        const next = [reading, ...readDemoValue<Reading[]>("yearly-readings", [])];
+        writeDemoValue("yearly-readings", next);
+        setReadings(next);
+        setMessage("Đã tạo bản chiêm nghiệm mẫu trên thiết bị này; không gửi ngày sinh lên máy chủ.");
+        return;
+      }
       const result = await apiRequest<Reading>("/horoscope/yearly", {
         method: "POST",
         body: JSON.stringify({ birthDate, year, consent }),
@@ -85,20 +109,21 @@ export function YearlyReading({
 
   return (
     <section className="my-8 rounded-3xl border border-line bg-surface p-6" aria-labelledby="yearly-reading-title">
-      <h2 id="yearly-reading-title" className="text-xl font-semibold">Diễn giải AI theo năm · Hội viên Tâm An</h2>
+      <h2 id="yearly-reading-title" className="text-xl font-semibold">{demoMode ? "Gợi ý chiêm nghiệm theo năm · Bản demo" : "Diễn giải AI theo năm · Hội viên Tâm An"}</h2>
+      {demoMode && <p className="mb-3 rounded-xl bg-surface-soft p-3 text-sm">Mẫu minh họa lưu trên thiết bị. Không có AI hay dự báo vận mệnh trong chế độ demo.</p>}
       <p className="my-3 text-sm">Gợi ý để tự suy ngẫm và lập kế hoạch. Đây không phải lá số tử vi được tính toán hay dự báo tương lai.</p>
-      <p className="mb-4 text-sm leading-relaxed text-muted">
+      {!demoMode && <p className="mb-4 text-sm leading-relaxed text-muted">
         Trong 24 giờ gần nhất, mỗi tài khoản được nhận tối đa
         3 bản diễn giải thành công và thực hiện tối đa 5 lượt gọi AI.
         Lượt gọi thất bại vẫn tính vào giới hạn 5 lượt.
         Lượt đang xử lý sẽ tạm giữ một suất diễn giải.
-      </p>
-      <p className="mb-4 text-xs leading-relaxed text-muted">
+      </p>}
+      {!demoMode && <p className="mb-4 text-xs leading-relaxed text-muted">
         Nếu quá trình bị gián đoạn, lượt chờ quá 10 phút sẽ được
         đóng khi bạn yêu cầu tạo diễn giải tiếp theo.
         Lượt này vẫn tính vào giới hạn số lần gọi trong 24 giờ.
-      </p>
-      <p className="mb-4 rounded-xl bg-surface-soft p-3 text-sm text-ink">Trong 24 giờ qua: {currentUsage.successfulUsed} bản thành công, {currentUsage.inProgress} lượt đang xử lý; còn {currentUsage.successfulRemaining}/{currentUsage.successfulLimit} suất. Đã gọi {currentUsage.attemptsUsed}/{currentUsage.providerAttemptLimit} lần; lượt lỗi vẫn tính vào giới hạn gọi.{currentUsage.nextUsableAt ? ` Dự kiến dùng tiếp từ ${new Date(currentUsage.nextUsableAt).toLocaleString("vi-VN")}.` : ""}</p>
+      </p>}
+      {!demoMode && <p className="mb-4 rounded-xl bg-surface-soft p-3 text-sm text-ink">Trong 24 giờ qua: {currentUsage.successfulUsed} bản thành công, {currentUsage.inProgress} lượt đang xử lý; còn {currentUsage.successfulRemaining}/{currentUsage.successfulLimit} suất. Đã gọi {currentUsage.attemptsUsed}/{currentUsage.providerAttemptLimit} lần; lượt lỗi vẫn tính vào giới hạn gọi.{currentUsage.nextUsableAt ? ` Dự kiến dùng tiếp từ ${new Date(currentUsage.nextUsableAt).toLocaleString("vi-VN")}.` : ""}</p>}
       <details className="mb-4 rounded-xl border border-line p-3">
         <summary className="cursor-pointer text-sm font-semibold">AI gửi và lưu dữ liệu nào?</summary>
         <div className="mt-2 space-y-2 text-sm leading-relaxed text-muted">
@@ -110,18 +135,18 @@ export function YearlyReading({
       <form onSubmit={(event) => void generate(event)} className="space-y-4">
         <label className="block">Ngày sinh<input className="ml-3 rounded-lg border border-line bg-surface p-2" type="date" required value={birthDate} onChange={(e) => setBirthDate(e.target.value)} /></label>
         <label className="block">Năm muốn chiêm nghiệm<input className="ml-3 rounded-lg border border-line bg-surface p-2" type="number" min={2000} max={2100} required value={year} onChange={(e) => setYear(Number(e.target.value))} /></label>
-        <label className="flex gap-2 text-sm"><input type="checkbox" required checked={consent} onChange={(e) => setConsent(e.target.checked)} />Tôi đồng ý gửi ngày sinh và năm lựa chọn tới dịch vụ Gemini để tạo diễn giải, và lưu kết quả vào tài khoản.</label>
+        {!demoMode && <label className="flex gap-2 text-sm"><input type="checkbox" required checked={consent} onChange={(e) => setConsent(e.target.checked)} />Tôi đồng ý gửi ngày sinh và năm lựa chọn tới dịch vụ Gemini để tạo diễn giải, và lưu kết quả vào tài khoản.</label>}
         <div className="flex gap-3">
           <button
             disabled={
               busy ||
               loadingHistory ||
-              !consent ||
+              (!demoMode && !consent) ||
               !canGenerate
             }
             className="rounded-xl bg-accent px-4 py-3 text-white disabled:opacity-50"
           >
-            {busy ? "Đang tạo diễn giải…" : "Tạo diễn giải"}
+            {busy ? "Đang tạo diễn giải…" : demoMode ? "Tạo gợi ý mẫu" : "Tạo diễn giải"}
           </button>
           <button
             type="button"

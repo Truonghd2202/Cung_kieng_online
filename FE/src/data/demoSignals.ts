@@ -1213,7 +1213,8 @@ export function getNextSignalForMood(
   const current = getSignalById(currentSignalId);
 
   const list = getSignalsByMood(mood).filter(
-    (signal) => signal.contextKey === current?.contextKey
+    (signal) =>
+      (signal.contextKey ?? "general") === (current?.contextKey ?? "general")
   );
   if (list.length <= 1) return list[0] || ALL_SIGNALS[0];
   const currentIndex = list.findIndex((s) => s.id === currentSignalId);

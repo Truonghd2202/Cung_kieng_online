@@ -37,7 +37,7 @@ test("review returns a conflict when the record changes after it was read", asyn
         return { count: 0 };
       },
     },
-    admin_audit_logs: { create: async () => { auditWrites += 1; } },
+    admin_audit_logs: { findFirst: async () => null, create: async () => { auditWrites += 1; } },
   });
   context.after(() => { prisma.$transaction = originalTransaction; });
 
@@ -67,7 +67,7 @@ test("review workflow failures return 422 before any Prisma write", async (conte
       updateMany: async () => { writes += 1; return { count: 1 }; },
       update: async () => { writes += 1; },
     },
-    admin_audit_logs: { create: async () => { writes += 1; } },
+    admin_audit_logs: { findFirst: async () => null, create: async () => { writes += 1; } },
   });
   context.after(() => { prisma.$transaction = originalTransaction; });
 
@@ -92,7 +92,7 @@ test("review and publish in one request returns 422 before any Prisma write", as
       updateMany: async () => { writes += 1; return { count: 1 }; },
       update: async () => { writes += 1; },
     },
-    admin_audit_logs: { create: async () => { writes += 1; } },
+    admin_audit_logs: { findFirst: async () => null, create: async () => { writes += 1; } },
   });
   context.after(() => { prisma.$transaction = originalTransaction; });
 
@@ -119,4 +119,20 @@ test("calendar admin listing selects the schema-backed version column", async (c
 
   await repository.listCalendarEvents({ page: 1 });
   assert.equal(listArgs.select.updated_at, true);
+});
+
+test("ritual admin listing includes category so its card does not reuse the occasion", async (context) => {
+  const prisma = require("../src/config/prisma");
+  const repository = require("../src/repositories/admin.repository");
+  const original = prisma.rituals;
+  let listArgs;
+  prisma.rituals = {
+    findMany: async (args) => { listArgs = args; return []; },
+    count: async () => 0,
+    groupBy: async () => [],
+  };
+  context.after(() => { prisma.rituals = original; });
+
+  await repository.listRituals({ page: 1 });
+  assert.equal(listArgs.select.category, true);
 });

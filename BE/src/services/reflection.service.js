@@ -39,6 +39,9 @@ function proverbCategoriesForFortune(level) {
 
 function toXamMetadata(xam) {
   const source = typeof xam.source === "string" ? xam.source.trim() : "";
+  const editorialMetadata = xam.editorial_metadata && typeof xam.editorial_metadata === "object"
+    ? xam.editorial_metadata
+    : {};
   const approved = xam.verified === true;
   const stickNumber = String(xam.stick_number).padStart(2, "0");
   return {
@@ -47,9 +50,19 @@ function toXamMetadata(xam) {
     sources: source
       ? [{
         id: `xin-xam-${xam.id}-source`,
-        title: `Trang tham chiếu được khai báo cho thẻ số ${stickNumber}`,
+        title: typeof editorialMetadata.sourceTitle === "string" && editorialMetadata.sourceTitle.trim()
+          ? editorialMetadata.sourceTitle.trim()
+          : `Trang tham chiếu được khai báo cho thẻ số ${stickNumber}`,
+        ...(typeof editorialMetadata.sourceAuthor === "string" && editorialMetadata.sourceAuthor.trim()
+          ? { authorOrOrganization: editorialMetadata.sourceAuthor.trim(), authorLabel: "Tác giả nguyên tác" }
+          : {}),
         url: source,
-        locator: `Bản ghi thẻ số ${stickNumber}`,
+        locator: typeof editorialMetadata.sourceLocator === "string" && editorialMetadata.sourceLocator.trim()
+          ? editorialMetadata.sourceLocator.trim()
+          : `Bản ghi thẻ số ${stickNumber}`,
+        ...(typeof editorialMetadata.bibliography === "string" && editorialMetadata.bibliography.trim()
+          ? { bibliographicReference: editorialMetadata.bibliography.trim() }
+          : {}),
       }]
       : [],
     quotationVerified: approved && Boolean(xam.poem),

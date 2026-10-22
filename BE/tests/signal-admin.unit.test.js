@@ -46,7 +46,10 @@ function fakeClient(initial) {
         return { count: 1 };
       },
     },
-    admin_audit_logs: { create: async ({ data }) => { logs.push(data); return data; } },
+    admin_audit_logs: {
+      findFirst: async () => null,
+      create: async ({ data }) => { logs.push(data); return data; },
+    },
   };
   return {
     $transaction: async (callback) => callback(tx),
@@ -73,8 +76,14 @@ test("signal workflow holds one approval across hide/show and delivers only afte
   await signalAdminService.review("signal-id", "admin-id", { expectedUpdatedAt: client.row.updated_at.toISOString(), active: true, reviewNote: "Hiện lại bản đã duyệt" }, client);
   assert.equal(client.row.approved_content_hash, approvalHash);
   assert.equal(isPublishable(client.row), true);
-  await signalAdminService.review("signal-id", "admin-id", { expectedUpdatedAt: client.row.updated_at.toISOString(), verified: false, reviewNote: "Thu hồi do phát hiện sai sót" }, client);
-  assert.equal(client.row.editorial_status, "REVOKED");
+  await assert.rejects(
+    signalAdminService.review("signal-id", "admin-id", { expectedUpdatedAt: client.row.updated_at.toISOString(), verified: false, reviewNote: "Thu hồi do phát hiện sai sót" }, client),
+    (error) => error.statusCode === 422,
+  );
+  await signalAdminService.revokeApprovalToDraft("signal-id", "admin-id", {
+    expectedUpdatedAt: client.row.updated_at.toISOString(), reviewNote: "Thu hồi do phát hiện sai sót",
+  }, client);
+  assert.equal(client.row.editorial_status, "DRAFT");
   assert.equal(client.row.active, false);
   assert.equal(client.row.approved_content_hash, null);
   await assert.rejects(
@@ -229,6 +238,7 @@ test("USER is denied before every signal admin API route", () => {
   requireAdmin({ user: { role: "USER" } }, {}, (error) => { denied = error; });
   assert.equal(denied.statusCode, 403);
   assert.equal(router.stack[0].handle.name, "authenticate");
-  assert.equal(router.stack[1].handle, requireAdmin);
+  const revokeRoute = router.stack.find((layer) => layer.route?.path === "/signals/:id/revoke-approval");
+  assert.equal(revokeRoute.route.stack[0].handle, requireAdmin);
   assert.ok(router.stack.slice(2).filter((layer) => layer.route?.path?.startsWith("/signals")).length >= 5);
 });

@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { adaptRemoteRitual } from "../src/data/ritualData.ts";
+import { getContentCardCategory, getContentCardStatus } from "../src/admin/contentCardPresentation.ts";
 
 test("a matching local slug cannot replace BE steps, checklist, or removed prayers", () => {
   const ritual = adaptRemoteRitual({
@@ -69,4 +70,49 @@ test("a published original ritual adapts its real approval without requiring a f
   assert.equal(ritual.metadata?.reviewedBy, "Reviewer thật");
   assert.equal(ritual.metadata?.reviewedOn, "2026-10-14");
   assert.deepEqual(ritual.metadata?.sources, []);
+});
+
+test("remote ritual image is shown only with content approval metadata and keeps its full credit profile", () => {
+  const hidden = adaptRemoteRitual({
+    slug: "ritual-with-image",
+    title: "Ritual with image",
+    imageUrl: "https://cdn.example.org/ritual.jpg",
+    image: "https://cdn.example.org/ritual.jpg",
+    contentProvenance: { imageCaption: "Caption that has not been approved" },
+    checklists: [{ id: "check", label: "Check" }],
+    steps: [], offerings: [], prayers: [],
+  });
+  assert.equal(hidden.image, "");
+  assert.equal(hidden.detail?.heroImage, "");
+
+  const visible = adaptRemoteRitual({
+    slug: "ritual-with-image",
+    title: "Ritual with image",
+    imageUrl: "https://cdn.example.org/ritual.jpg",
+    imageMetadata: {
+      approved: true,
+      imageCaption: "Caption",
+      imageCredit: "Photographer",
+      imageSource: "https://example.org/source",
+      imageRightsBasis: "Permission granted",
+    },
+    checklists: [{ id: "check", label: "Check" }],
+    steps: [], offerings: [], prayers: [],
+  });
+  assert.equal(visible.image, "https://cdn.example.org/ritual.jpg");
+  assert.equal(visible.detail?.heroArtCredit, "Photographer");
+  assert.equal(visible.detail?.heroSourceUrl, "https://example.org/source");
+});
+
+test("ritual admin card keeps occasion and category distinct and does not call a pending draft hidden", () => {
+  assert.equal(getContentCardCategory("rituals", { occasion: "Before construction ceremony" }), "");
+  assert.equal(getContentCardCategory("rituals", { occasion: "Before construction ceremony", category: "Buddhist ritual" }), "Buddhist ritual");
+  assert.deepEqual(getContentCardStatus({ editorial_status: "IN_REVIEW", verified: false, active: false }), {
+    label: "Chờ duyệt",
+    variant: "pending",
+  });
+  assert.deepEqual(getContentCardStatus({ editorial_status: "HIDDEN", verified: true, active: false }), {
+    label: "Đã ẩn",
+    variant: "hidden",
+  });
 });

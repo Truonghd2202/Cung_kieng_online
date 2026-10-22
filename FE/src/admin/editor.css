@@ -738,6 +738,15 @@
   white-space: nowrap;
 }
 
+.editor-record-feedback {
+  margin-top: 4px;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: normal;
+  line-height: 1.5;
+}
+
 .editor-record-actions {
   display: flex;
   align-items: center;
@@ -1039,4 +1048,244 @@
     width: 100%;
     justify-content: space-between;
   }
+}
+
+/* ==========================================================================
+   10. ULTRA-PREMIUM EDITOR BOOT / LOADING EXPERIENCE
+   ========================================================================== */
+.editor-boot-backdrop {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 40%, rgba(157, 111, 44, 0.08) 0%, rgba(245, 240, 232, 0.95) 70%, #f5f0e8 100%);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.dark .editor-boot-backdrop {
+  background: radial-gradient(circle at 50% 40%, rgba(200, 150, 85, 0.12) 0%, rgba(18, 14, 13, 0.96) 70%, #120e0d 100%);
+}
+
+.editor-boot-card {
+  width: min(440px, 92vw);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(140, 99, 40, 0.28);
+  border-radius: 24px;
+  padding: 36px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 20px 48px -12px rgba(28, 20, 16, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+  animation: editorBootFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark .editor-boot-card {
+  background: rgba(26, 20, 18, 0.88);
+  border-color: rgba(200, 150, 85, 0.32);
+  box-shadow: 0 24px 56px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
+.editor-boot-aura {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 20px;
+}
+
+.editor-boot-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px dashed rgba(157, 111, 44, 0.4);
+  animation: editorBootSpinSlow 12s linear infinite;
+}
+
+.dark .editor-boot-ring {
+  border-color: rgba(200, 150, 85, 0.45);
+}
+
+.editor-boot-ring-inner {
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: #9d6f2c;
+  border-right-color: #9d6f2c;
+  animation: editorBootSpinFast 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.dark .editor-boot-ring-inner {
+  border-top-color: #c89655;
+  border-right-color: #c89655;
+}
+
+.editor-boot-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(157, 111, 44, 0.18), rgba(157, 111, 44, 0.06));
+  display: grid;
+  place-items: center;
+  color: #9d6f2c;
+  box-shadow: 0 0 20px rgba(157, 111, 44, 0.25);
+}
+
+.dark .editor-boot-logo {
+  background: linear-gradient(135deg, rgba(200, 150, 85, 0.25), rgba(200, 150, 85, 0.08));
+  color: #c89655;
+  box-shadow: 0 0 24px rgba(200, 150, 85, 0.3);
+}
+
+.editor-boot-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.editor-boot-title {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--editor-heading, #140d0a);
+}
+
+.dark .editor-boot-title {
+  color: #fff7ee;
+}
+
+.editor-boot-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(157, 111, 44, 0.12);
+  color: #9d6f2c;
+  border: 1px solid rgba(157, 111, 44, 0.28);
+}
+
+.dark .editor-boot-badge {
+  background: rgba(200, 150, 85, 0.15);
+  color: #c89655;
+  border-color: rgba(200, 150, 85, 0.3);
+}
+
+.editor-boot-badge.is-error {
+  background: rgba(143, 32, 43, 0.12);
+  color: #8f202b;
+  border-color: rgba(143, 32, 43, 0.3);
+}
+
+.editor-boot-status {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--editor-ink, #2c2018);
+  margin: 0 0 16px;
+  line-height: 1.45;
+}
+
+.dark .editor-boot-status {
+  color: #e5d7cc;
+}
+
+.editor-boot-progress-track {
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(157, 111, 44, 0.12);
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.dark .editor-boot-progress-track {
+  background: rgba(200, 150, 85, 0.15);
+}
+
+.editor-boot-progress-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 45%;
+  background: linear-gradient(90deg, #9d6f2c, #d4af37, #9d6f2c);
+  border-radius: 999px;
+  animation: editorBootIndeterminate 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.dark .editor-boot-progress-bar {
+  background: linear-gradient(90deg, #c89655, #f3d498, #c89655);
+}
+
+.editor-boot-hint {
+  font-size: 12px;
+  color: var(--editor-subtle, #766051);
+  line-height: 1.45;
+}
+
+.dark .editor-boot-hint {
+  color: #8f7d71;
+}
+
+@keyframes editorBootIndeterminate {
+  0% { left: -45%; }
+  100% { left: 100%; }
+}
+
+@keyframes editorBootSpinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes editorBootSpinFast {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes editorBootFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.admin-editor-feedback-callout {
+  margin: 14px 20px 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(200, 150, 85, 0.38);
+  border-radius: 12px;
+  background: rgba(200, 150, 85, 0.09);
+  color: var(--admin-text, inherit);
+}
+
+.admin-editor-feedback-callout strong,
+.admin-editor-feedback-callout span {
+  display: block;
+}
+
+.admin-editor-feedback-callout strong {
+  color: var(--admin-gold, #c89655);
+}
+
+.admin-editor-feedback-callout span {
+  margin-top: 3px;
+  color: var(--admin-muted, #8c8c8c);
+  font-size: 12px;
+}
+
+.admin-editor-feedback-callout p {
+  margin: 9px 0 0;
+  white-space: pre-wrap;
 }

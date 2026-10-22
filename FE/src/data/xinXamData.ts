@@ -6,6 +6,14 @@ import {
 export type RegionType = "Bắc Bộ" | "Trung Bộ" | "Nam Bộ";
 export type TopicType = "Học tập" | "Công việc" | "Gia đình" | "Bình an";
 
+export const XIN_XAM_REGIONS: RegionType[] = ["Bắc Bộ", "Trung Bộ", "Nam Bộ"];
+export const XIN_XAM_TOPICS: TopicType[] = [
+  "Học tập",
+  "Công việc",
+  "Gia đình",
+  "Bình an",
+];
+
 export interface XinXamResult {
   resultToken?: string;
   metadata: ContentMetadata;

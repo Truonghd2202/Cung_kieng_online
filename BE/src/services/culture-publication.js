@@ -48,6 +48,12 @@ function legacyCultureContentHash({ content, imageUrl }) {
 
 function isCultureArticlePublished(row, { membersOnly = false } = {}) {
   const review = row?.content?.review;
+  const provenance = row?.content?.provenance || {};
+  const groupAuthored = provenance.contentType === "GROUP_AUTHORED";
+  const contentRightsValid = groupAuthored
+    ? review?.usageRights === "group-authored" && typeof provenance.contentRightsBasis === "string" && provenance.contentRightsBasis.trim().length > 1
+    : ["confirmed", "public-domain"].includes(review?.usageRights);
+  const imageRightsValid = !row?.image_url || review?.imageRightsConfirmed === true;
   return Boolean(
     row
       && row.active === true
@@ -60,7 +66,8 @@ function isCultureArticlePublished(row, { membersOnly = false } = {}) {
       && typeof review.reviewedOn === "string" && !Number.isNaN(Date.parse(review.reviewedOn))
       && typeof review.note === "string" && review.note.trim().length >= 8
       && review.rightsConfirmed === true
-      && ["confirmed", "public-domain"].includes(review.usageRights)
+      && contentRightsValid
+      && imageRightsValid
       && [
         cultureContentHash({ content: row.content, imageUrl: row.image_url }),
         legacyCultureContentHash({ content: row.content, imageUrl: row.image_url }),

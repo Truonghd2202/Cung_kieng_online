@@ -44,6 +44,8 @@ async function save(kind, id, actorId, input, enforceOwnership = false) {
     data.ritual_steps = data.steps;
     if (provenance !== undefined) data.content_provenance = provenance;
     delete data.steps;
+  } else if (kind !== "culture") {
+    data.editorial_metadata = provenance || {};
   }
   if (kind === "prayers" && !data.ritual_id) data.ritual_id = null;
   // Any editorial change must be reviewed and published again.
@@ -85,10 +87,12 @@ async function transitionToDraft(kind, id, actorId, expectedUpdatedAt, reviewNot
     const before = await tx[models[kind]].findUnique({ where: { id } });
     if (!before) return null;
     if (!expectedUpdatedAt || new Date(expectedUpdatedAt).getTime() !== before.updated_at.getTime()) return { versionConflict: true };
-    if (editorInitiated && before.editorial_status === "DRAFT") return { workflowConflict: true };
+    if (editorInitiated && before.editorial_status !== "IN_REVIEW") return { workflowConflict: true };
+    if (!editorInitiated && !["IN_REVIEW", "REVOKED"].includes(before.editorial_status)) return { workflowConflict: true };
+    const versionStart = new Date(expectedUpdatedAt);
     const updatedAt = new Date(Math.max(Date.now(), before.updated_at.getTime() + 1));
     const result = await tx[models[kind]].updateMany({
-      where: { id, updated_at: before.updated_at },
+      where: { id, updated_at: { gte: versionStart, lt: new Date(versionStart.getTime() + 1) } },
       data: { editorial_status: "DRAFT", verified: false, active: false, updated_at: updatedAt },
     });
     if (result.count !== 1) return { versionConflict: true };
@@ -107,4 +111,34 @@ async function transitionToDraft(kind, id, actorId, expectedUpdatedAt, reviewNot
     return updated;
   });
 }
-module.exports = { find, save, ownsRecord, transitionToDraft };
+
+async function revokeApprovalToDraft(kind, id, actorId, expectedUpdatedAt, reviewNote) {
+  return prisma.$transaction(async (tx) => {
+    const before = await tx[models[kind]].findUnique({ where: { id } });
+    if (!before) return null;
+    if (!expectedUpdatedAt || new Date(expectedUpdatedAt).getTime() !== before.updated_at.getTime()) return { versionConflict: true };
+    if (!before.verified || !["APPROVED", "PUBLISHED", "HIDDEN"].includes(before.editorial_status)) return { workflowConflict: true };
+    const versionStart = new Date(expectedUpdatedAt);
+    const updatedAt = new Date(Math.max(Date.now(), before.updated_at.getTime() + 1));
+    const result = await tx[models[kind]].updateMany({
+      where: { id, updated_at: { gte: versionStart, lt: new Date(versionStart.getTime() + 1) } },
+      data: { editorial_status: "DRAFT", verified: false, active: false, updated_at: updatedAt },
+    });
+    if (result.count !== 1) return { versionConflict: true };
+    const updated = await tx[models[kind]].findUnique({ where: { id } });
+    await tx.admin_audit_logs.create({ data: {
+      actor_id: actorId,
+      action: "CONTENT_APPROVAL_REVOKED",
+      target_type: models[kind],
+      target_id: id,
+      details: {
+        before: { editorial_status: before.editorial_status, verified: before.verified, active: before.active, updated_at: before.updated_at.toISOString() },
+        after: { editorial_status: updated.editorial_status, verified: updated.verified, active: updated.active, updated_at: updated.updated_at.toISOString() },
+        reviewNote,
+      },
+    } });
+    return updated;
+  });
+}
+
+module.exports = { find, save, ownsRecord, transitionToDraft, revokeApprovalToDraft };

@@ -10,6 +10,7 @@ export interface ContentSource {
   id: string;
   title: string;
   authorOrOrganization?: string;
+  authorLabel?: string;
   url?: string;
   bibliographicReference?: string;
   locator?: string;
@@ -27,6 +28,7 @@ export interface ContentMetadata {
 
   sources: ContentSource[];
   imageSource?: string;
+  imageCredit?: string;
   imageRightsBasis?: string;
 
   // Tách việc kiểm chứng câu trích dẫn

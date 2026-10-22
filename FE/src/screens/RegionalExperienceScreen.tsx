@@ -551,6 +551,9 @@ export const RegionalExperienceScreen: React.FC<RegionalExperienceScreenProps> =
 
             {/* Trình Diễn & Thưởng Thức Văn Ca Cổ Truyền */}
             <section className="p-6 sm:p-8 rounded-2xl border border-line bg-surface/95 shadow-xs">
+              <p className="mb-5 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950">
+                Phần thơ và diễn giải bên dưới là nội dung minh họa do sản phẩm biên soạn, không phải bản văn Chầu văn cổ đã xác minh. Tư liệu này chỉ mô phỏng trải nghiệm đọc và nghe nhịp.
+              </p>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-line">
                 <div>
                   <span className="text-xs font-bold uppercase tracking-widest text-amber-800 dark:text-amber-400 block mb-1">

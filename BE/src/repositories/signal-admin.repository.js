@@ -57,18 +57,27 @@ async function list({ q, page, status, mood, contextKey }, client = prisma, acto
   const statusCounts = Object.fromEntries(STATUS_VALUES.map((value) => [value, 0]));
   for (const row of statuses) statusCounts[row.editorial_status] = row._count._all;
   const edits = items.length ? await client.admin_audit_logs.findMany({
-    where: { target_type: TARGET, target_id: { in: items.map((item) => item.id) }, action: { in: ["CONTENT_CREATED", "CONTENT_EDITED", "CONTENT_CHANGES_REQUESTED"] } },
+    where: { target_type: TARGET, target_id: { in: items.map((item) => item.id) }, action: { in: ["CONTENT_CREATED", "CONTENT_EDITED", "CONTENT_CHANGES_REQUESTED", "CONTENT_APPROVAL_REVOKED"] } },
     orderBy: { created_at: "desc" },
-    select: { target_id: true, action: true, details: true, users: { select: { full_name: true } } },
+    select: { target_id: true, action: true, details: true, created_at: true, users: { select: { full_name: true } } },
   }) : [];
   const editors = new Map();
   const feedback = new Map();
   for (const edit of edits) {
     if (["CONTENT_CREATED", "CONTENT_EDITED"].includes(edit.action) && !editors.has(edit.target_id)) editors.set(edit.target_id, edit.users?.full_name || "Thành viên nhóm");
-    if (edit.action === "CONTENT_CHANGES_REQUESTED" && !feedback.has(edit.target_id)) feedback.set(edit.target_id, edit.details?.reviewNote || "");
+    if (["CONTENT_CHANGES_REQUESTED", "CONTENT_APPROVAL_REVOKED"].includes(edit.action) && !feedback.has(edit.target_id)) feedback.set(edit.target_id, {
+      note: edit.details?.reviewNote || "",
+      reviewerName: edit.users?.full_name || "Quản trị viên",
+      createdAt: edit.created_at,
+      feedbackKind: edit.action === "CONTENT_APPROVAL_REVOKED" ? "approval-revoked" : "changes-requested",
+      isPreviousRound: edits.some((later) => later.target_id === edit.target_id && ["CONTENT_CREATED", "CONTENT_EDITED"].includes(later.action) && later.created_at > edit.created_at),
+    });
   }
   return {
-    items: items.map((item) => ({ ...item, submitted_by: editors.get(item.id) || null, editor_feedback: feedback.get(item.id) || null })),
+    items: items.map((item) => {
+      const editorialFeedback = feedback.get(item.id) || null;
+      return { ...item, submitted_by: editors.get(item.id) || null, editor_feedback: editorialFeedback?.note || null, editor_feedback_meta: editorialFeedback };
+    }),
     pagination: { page, pageSize: 25, total, pageCount: Math.ceil(total / 25) },
     stats: { total: allSignals.length, statuses: statusCounts, coverage: buildCoverage(allSignals) },
   };

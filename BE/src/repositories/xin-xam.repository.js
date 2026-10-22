@@ -55,7 +55,7 @@ async function findCatalog(xamType, stickNumber, client = prisma) {
 
 async function listCatalog(xamType, region, client = prisma) {
   const cards = await client.xin_xam.findMany({
-    where: { xam_type: xamType, region, active: true, verified: true },
+    where: { xam_type: xamType, region, active: true, verified: true, editorial_status: "PUBLISHED" },
     orderBy: { stick_number: "asc" },
   });
   const reviewed = await attachReviewMetadata(cards.map((card) => ({ xin_xam: card })), client);
@@ -82,7 +82,7 @@ function createDraw(data, client = prisma) {
 
 async function listDraws(userId, limit = 100, client = prisma) {
   const draws = await client.xin_xam_draws.findMany({
-    where: { user_id: userId, saved_at: { not: null }, xin_xam: { is: { active: true, verified: true } } },
+    where: { user_id: userId, saved_at: { not: null }, xin_xam: { is: { active: true, verified: true, editorial_status: "PUBLISHED" } } },
     orderBy: { created_at: "desc" },
     take: limit,
     include: { xin_xam: true, proverbs: true },
@@ -92,7 +92,7 @@ async function listDraws(userId, limit = 100, client = prisma) {
 }
 
 async function findDraw(id, userId, client = prisma) {
-  const draw = await client.xin_xam_draws.findFirst({ where: { id, user_id: userId, xin_xam: { is: { active: true, verified: true } } }, include: { xin_xam: true, proverbs: true } });
+  const draw = await client.xin_xam_draws.findFirst({ where: { id, user_id: userId, xin_xam: { is: { active: true, verified: true, editorial_status: "PUBLISHED" } } }, include: { xin_xam: true, proverbs: true } });
   if (!draw) return null;
   await attachReviewMetadata(draw, client);
   if (!isPublishedDraw(draw)) return null;

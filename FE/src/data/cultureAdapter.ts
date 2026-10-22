@@ -57,13 +57,20 @@ export function toCultureArticle(item: RemoteContentItem): CultureArticle {
           : undefined,
       sources,
       imageSource: typeof provenance.imageSource === "string" ? provenance.imageSource : undefined,
+      imageCredit: typeof provenance.imageCredit === "string" ? provenance.imageCredit : undefined,
       imageRightsBasis: typeof provenance.imageRightsBasis === "string" ? provenance.imageRightsBasis : undefined,
-      usageRights: review?.usageRights === "confirmed" || review?.usageRights === "public-domain" ? { status: review.usageRights, note: typeof provenance.imageRightsBasis === "string" ? provenance.imageRightsBasis : "" } : undefined,
+      usageRights: review?.rightsConfirmed === true && (review?.usageRights === "confirmed" || review?.usageRights === "public-domain") ? { status: review.usageRights, note: typeof provenance.imageRightsBasis === "string" ? provenance.imageRightsBasis : "" } : undefined,
       editorialNote: groupAuthored ? "Nội dung do nhóm biên soạn." : "Trạng thái nguồn không thay thế thẩm định nội dung.",
     },
   };
 }
 
 export function canShowArticleImage(article: Pick<CultureArticle, "image" | "metadata">): boolean {
-  return Boolean(article.image && article.image.trim().length > 0);
+  return Boolean(
+    article.image?.trim() &&
+    article.metadata?.editorialStatus === "approved" &&
+    article.metadata.imageSource?.trim() &&
+    article.metadata.imageRightsBasis?.trim() &&
+    article.metadata.usageRights?.status,
+  );
 }

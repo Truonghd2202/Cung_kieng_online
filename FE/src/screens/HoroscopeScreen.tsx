@@ -4,6 +4,7 @@ import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
 import { YearlyReading } from "../components/YearlyReading";
 import { apiRequest } from "../lib/api";
+import { isDemoMode } from "../data/demoMode";
 
 interface HoroscopeScreenProps {
   onBackToExperience: () => void;
@@ -28,6 +29,7 @@ export const HoroscopeScreen = ({
   onGoToLogin,
   onGoToMembership,
 }: HoroscopeScreenProps) => {
+  const demoMode = isDemoMode();
   const [status, setStatus] =
     useState<MembershipStatus | null>(null);
 
@@ -43,6 +45,12 @@ export const HoroscopeScreen = ({
 
     setStatus(null);
     setError("");
+
+    if (demoMode) {
+      setStatus({ subscription: { id: "demo", expires_at: "2099-12-31T00:00:00.000Z" }, aiUsage: { successfulUsed: 0, inProgress: 0, successfulRemaining: 3, successfulLimit: 3, attemptsUsed: 0, attemptsRemaining: 5, providerAttemptLimit: 5, nextUsableAt: null } });
+      setLoading(false);
+      return;
+    }
 
     if (!currentUserEmail) {
       setLoading(false);
@@ -69,7 +77,7 @@ export const HoroscopeScreen = ({
     return () => {
       active = false;
     };
-  }, [currentUserEmail, reload]);
+  }, [currentUserEmail, reload, demoMode]);
 
   const canGenerate = Boolean(status?.subscription);
 
@@ -96,7 +104,7 @@ export const HoroscopeScreen = ({
             Tính năng này không tính lá số hoặc dự báo tương lai.
           </p>
 
-          {!currentUserEmail && (
+          {!currentUserEmail && !demoMode && (
             <div className="mt-5">
               <p className="text-sm text-muted">
                 Đăng nhập để kiểm tra hội viên và đọc lại
@@ -113,13 +121,13 @@ export const HoroscopeScreen = ({
             </div>
           )}
 
-          {currentUserEmail && loading && (
+          {(currentUserEmail || demoMode) && loading && (
             <p role="status" className="mt-5 text-sm text-muted">
               Đang kiểm tra quyền hội viên…
             </p>
           )}
 
-          {currentUserEmail && !loading && error && (
+          {(currentUserEmail || demoMode) && !loading && error && (
             <div role="alert" className="mt-5">
               <p className="text-sm text-danger">{error}</p>
 
@@ -134,7 +142,7 @@ export const HoroscopeScreen = ({
             </div>
           )}
 
-          {currentUserEmail && !loading && !error && status && (
+          {(currentUserEmail || demoMode) && !loading && !error && status && (
             <>
               {!canGenerate && (
                 <div className="mt-5">
@@ -155,9 +163,10 @@ export const HoroscopeScreen = ({
               )}
 
               <YearlyReading
-                key={currentUserEmail}
+                key={currentUserEmail || "demo"}
                 canGenerate={canGenerate}
                 usage={status.aiUsage}
+                demoMode={demoMode}
               />
             </>
           )}

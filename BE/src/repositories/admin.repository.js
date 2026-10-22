@@ -5,6 +5,7 @@ const { reviewAuditAction } = require("../services/content-review-metadata");
 const { stateAfterReview } = require("../services/editorial-workflow");
 const { hasPublishableCultureContent, cultureContentHash } = require("../services/culture-publication");
 const { ensureDifferentReviewer } = require("../services/content-review-guard");
+const { editorialContentHash } = require("../services/editorial-content-hash");
 const PAGE_SIZE = 25;
 
 function pageResult(items, total, page, stats) {
@@ -59,17 +60,47 @@ async function listContent(model, { q, page, status }, orderBy, select, actorId 
   ]);
   if (!items.length) return pageResult(items, total, page, stats);
   const edits = await prisma.admin_audit_logs.findMany({
-    where: { target_type: model, target_id: { in: items.map((item) => item.id) }, action: { in: ["CONTENT_CREATED", "CONTENT_EDITED", "CONTENT_CHANGES_REQUESTED"] } },
+    where: { target_type: model, target_id: { in: items.map((item) => item.id) }, action: { in: ["CONTENT_CREATED", "CONTENT_EDITED", "CONTENT_CHANGES_REQUESTED", "CONTENT_APPROVAL_REVOKED"] } },
     orderBy: { created_at: "desc" },
-    select: { target_id: true, action: true, details: true, users: { select: { full_name: true } } },
+    select: { target_id: true, action: true, details: true, created_at: true, users: { select: { full_name: true } } },
   });
   const editors = new Map();
   const feedback = new Map();
   for (const edit of edits) {
-    if (!editors.has(edit.target_id)) editors.set(edit.target_id, edit.users?.full_name || "Thành viên nhóm");
-    if (edit.action === "CONTENT_CHANGES_REQUESTED" && !feedback.has(edit.target_id)) feedback.set(edit.target_id, edit.details?.reviewNote || "");
+    if (["CONTENT_CREATED", "CONTENT_EDITED"].includes(edit.action) && !editors.has(edit.target_id)) editors.set(edit.target_id, edit.users?.full_name || "Thành viên nhóm");
+    if (["CONTENT_CHANGES_REQUESTED", "CONTENT_APPROVAL_REVOKED"].includes(edit.action) && !feedback.has(edit.target_id)) feedback.set(edit.target_id, {
+      note: edit.details?.reviewNote || "",
+      reviewerName: edit.users?.full_name || "Quản trị viên",
+      createdAt: edit.created_at,
+      feedbackKind: edit.action === "CONTENT_APPROVAL_REVOKED" ? "approval-revoked" : "changes-requested",
+      isPreviousRound: edits.some((later) => later.target_id === edit.target_id && ["CONTENT_CREATED", "CONTENT_EDITED"].includes(later.action) && later.created_at > edit.created_at),
+    });
   }
-  return pageResult(items.map((item) => ({ ...item, submitted_by: editors.get(item.id) || null, editor_feedback: feedback.get(item.id) || null })), total, page, stats);
+  return pageResult(items.map((item) => {
+    const editorialFeedback = feedback.get(item.id) || null;
+    return { ...item, submitted_by: editors.get(item.id) || null, editor_feedback: editorialFeedback?.note || null, editor_feedback_meta: editorialFeedback };
+  }), total, page, stats);
+}
+
+async function getEditorialContext(model, id) {
+  const logs = await prisma.admin_audit_logs.findMany({
+    where: { target_type: model, target_id: id, action: { in: ["CONTENT_CREATED", "CONTENT_EDITED", "CONTENT_CHANGES_REQUESTED", "CONTENT_APPROVAL_REVOKED"] } },
+    orderBy: { created_at: "desc" },
+    select: { action: true, details: true, created_at: true, users: { select: { full_name: true } } },
+  });
+  const submission = logs.find((log) => ["CONTENT_CREATED", "CONTENT_EDITED"].includes(log.action));
+  const request = logs.find((log) => ["CONTENT_CHANGES_REQUESTED", "CONTENT_APPROVAL_REVOKED"].includes(log.action));
+  return {
+    submitted_by: submission?.users?.full_name || null,
+    editor_feedback: request?.details?.reviewNote || null,
+    editor_feedback_meta: request ? {
+      note: request.details?.reviewNote || "",
+      reviewerName: request.users?.full_name || "Quản trị viên",
+      createdAt: request.created_at,
+      feedbackKind: request.action === "CONTENT_APPROVAL_REVOKED" ? "approval-revoked" : "changes-requested",
+      isPreviousRound: Boolean(submission && submission.created_at > request.created_at),
+    } : null,
+  };
 }
 
 async function getOverview() {
@@ -94,9 +125,9 @@ function listArticles(params, actorId) { return listContent("culture_articles", 
 
 function listCalendarEvents(params, actorId) { return listContent("calendar_events", params, [{ editorial_status: "asc" }, { month: "asc" }, { day: "asc" }], { id: true, title: true, description: true, calendar: true, day: true, month: true, region: true, category: true, source: true, verified: true, active: true, editorial_status: true, updated_at: true }, actorId); }
 
-function listXamLots(params, actorId) { return listContent("xin_xam", params, [{ editorial_status: "asc" }, { xam_type: "asc" }, { stick_number: "asc" }], { id: true, stick_number: true, name: true, xam_type: true, region: true, category: true, fortune_level: true, source: true, verified: true, active: true, editorial_status: true, updated_at: true }, actorId); }
+function listXamLots(params, actorId) { return listContent("xin_xam", params, [{ editorial_status: "asc" }, { xam_type: "asc" }, { stick_number: "asc" }], { id: true, stick_number: true, name: true, xam_type: true, region: true, category: true, fortune_level: true, source: true, editorial_metadata: true, verified: true, active: true, editorial_status: true, updated_at: true }, actorId); }
 
-function listRituals(params, actorId) { return listContent("rituals", params, [{ editorial_status: "asc" }, { updated_at: "desc" }], { id: true, slug: true, title: true, occasion: true, region: true, source: true, content_provenance: true, checklists: true, verified: true, active: true, editorial_status: true, updated_at: true }, actorId); }
+function listRituals(params, actorId) { return listContent("rituals", params, [{ editorial_status: "asc" }, { updated_at: "desc" }], { id: true, slug: true, title: true, category: true, occasion: true, region: true, image_url: true, source: true, content_provenance: true, checklists: true, verified: true, active: true, editorial_status: true, updated_at: true }, actorId); }
 
 function listPrayers(params, actorId) { return listContent("prayers", params, [{ editorial_status: "asc" }, { updated_at: "desc" }], { id: true, title: true, ritual_id: true, region: true, source: true, language_style: true, verified: true, active: true, editorial_status: true, updated_at: true }, actorId); }
 
@@ -117,7 +148,7 @@ async function listAuditLogs({ page }) {
   return pageResult(items, total, page);
 }
 
-async function updateReview({ model, id, actorId, patch, expectedUpdatedAt, reviewNote, rightsConfirmed, source, sourceLocator, usageRights }) {
+async function updateReview({ model, id, actorId, patch, expectedUpdatedAt, reviewNote, rightsConfirmed, imageRightsConfirmed, source, sourceLocator, usageRights }) {
   return prisma.$transaction(async (tx) => {
     const before = await tx[model].findUnique({ where: { id } });
     if (!before) return null;
@@ -129,15 +160,37 @@ async function updateReview({ model, id, actorId, patch, expectedUpdatedAt, revi
     if (nextWorkflow.reviewRequired) return { reviewRequired: true };
     if (nextWorkflow.reviewAndPublishInOneStep) return { reviewAndPublishInOneStep: true };
     if (nextWorkflow.approvalRequired) return { approvalRequired: true };
+    if (nextWorkflow.invalidTransition) return { invalidTransition: true };
+    if (nextWorkflow.revokeApprovalRequired) return { revokeApprovalRequired: true };
+    if (patch.active === true) {
+      const approvalLogs = await tx.admin_audit_logs.findMany({
+        where: { target_type: model, target_id: id, action: "CONTENT_REVIEW_UPDATED" },
+        orderBy: [{ created_at: "desc" }, { id: "desc" }],
+        select: { details: true },
+      });
+      const currentApproval = approvalLogs.find((log) => log.details?.after?.verified === true);
+      if (!currentApproval?.details?.approvedContentHash
+        || currentApproval.details.approvedContentHash !== editorialContentHash(before)) {
+        return { approvalVersionMismatch: true };
+      }
+    }
     const groupAuthoredRitual = model === "rituals" && isGroupAuthoredRitual(before.content_provenance);
     if (patch.verified === true && model !== "culture_articles" && !groupAuthoredRitual && !/^https:\/\//i.test(effectiveSource || "")) return { sourceRequired: true };
     if (model === "xin_xam" && patch.verified === true && rightsConfirmed !== true) return { rightsConfirmationRequired: true };
     if (["prayers", "rituals"].includes(model) && patch.verified === true && rightsConfirmed !== true) return { rightsConfirmationRequired: true };
     if (model === "rituals" && patch.verified === true) {
-      const issue = ritualApprovalIssue(before, { source: effectiveSource, sourceLocator, usageRights });
+      const issue = ritualApprovalIssue(before, { source: effectiveSource, sourceLocator, usageRights, imageRightsConfirmed });
       if (issue) return { [issue]: true };
     }
     if (model === "prayers" && patch.verified === true && (!inputSourceLocator(sourceLocator) || !["confirmed", "public-domain"].includes(usageRights))) return { provenanceRequired: true };
+    if (model === "prayers" && (patch.verified === true || patch.active === true)) {
+      if (!before.ritual_id) return { ritualRequired: true };
+      const linkedRitual = await tx.rituals.findFirst({
+        where: { id: before.ritual_id, active: true, verified: true, editorial_status: "PUBLISHED" },
+        select: { id: true },
+      });
+      if (!linkedRitual) return { publishedRitualRequired: true };
+    }
     const willPublishRitual = model === "rituals"
       && (patch.verified === true || (patch.active === true && patch.verified !== false));
     if (willPublishRitual && !hasUsableChecklist(before.checklists)) return { checklistRequired: true };
@@ -153,8 +206,18 @@ async function updateReview({ model, id, actorId, patch, expectedUpdatedAt, revi
     Object.assign(data, nextWorkflow);
     if (model === "culture_articles") {
       if (patch.verified === true) {
-        if (rightsConfirmed !== true || !["confirmed", "public-domain"].includes(usageRights)) return { rightsConfirmationRequired: true };
         const provenance = before.content?.provenance || {};
+        const groupAuthored = provenance.contentType === "GROUP_AUTHORED";
+        const contentRightsValid = groupAuthored
+          ? usageRights === "group-authored" && typeof provenance.contentRightsBasis === "string" && provenance.contentRightsBasis.trim().length > 1
+          : ["confirmed", "public-domain"].includes(usageRights);
+        const imageRightsValid = !before.image_url || (
+          imageRightsConfirmed === true
+          && Boolean(String(provenance.imageCaption || "").trim())
+          && Boolean(String(provenance.imageSource || "").trim())
+          && Boolean(String(provenance.imageRightsBasis || "").trim())
+        );
+        if (rightsConfirmed !== true || !contentRightsValid || !imageRightsValid) return { rightsConfirmationRequired: true };
         const content = { ...before.content, provenance: { ...provenance, sourceUrl: effectiveSource } };
         if (!hasPublishableCultureContent({ content, imageUrl: before.image_url })) return { contentRequired: true };
       }
@@ -169,6 +232,7 @@ async function updateReview({ model, id, actorId, patch, expectedUpdatedAt, revi
             reviewedOn: new Date().toISOString().slice(0, 10),
             note: reviewNote,
             rightsConfirmed: rightsConfirmed === true,
+            imageRightsConfirmed: imageRightsConfirmed === true,
             quotationVerified: before.content?.provenance?.contentType === "QUOTATION",
             usageRights,
             versionHash: cultureContentHash({ content, imageUrl: before.image_url }),
@@ -192,11 +256,13 @@ async function updateReview({ model, id, actorId, patch, expectedUpdatedAt, revi
       target_type: model,
       target_id: id,
       details: {
-        before: { active: before.active, verified: before.verified, editorial_status: before.editorial_status, source: before.source },
+        before: { active: before.active, verified: before.verified, editorial_status: before.editorial_status, source: before.source, updated_at: before.updated_at.toISOString() },
         after: updated,
         reviewNote,
         ...(model === "xin_xam" && patch.verified === true ? { rightsConfirmed: true } : {}),
-        ...(["prayers", "rituals"].includes(model) && patch.verified === true ? { rightsConfirmed: true, sourceLocator, usageRights } : {}),
+        ...(model === "culture_articles" && patch.verified === true ? { rightsConfirmed: true, imageRightsConfirmed: imageRightsConfirmed === true, usageRights } : {}),
+        ...(["prayers", "rituals"].includes(model) && patch.verified === true ? { rightsConfirmed: true, sourceLocator, usageRights, ...(model === "rituals" ? { imageRightsConfirmed: imageRightsConfirmed === true } : {}) } : {}),
+        ...(patch.verified === true ? { approvedContentHash: editorialContentHash({ ...before, ...data }) } : {}),
       },
     } });
     return { updated };
@@ -204,4 +270,4 @@ async function updateReview({ model, id, actorId, patch, expectedUpdatedAt, revi
 }
 
 function inputSourceLocator(value) { return typeof value === "string" && value.trim().length >= 2; }
-module.exports = { getOverview, listArticles, listCalendarEvents, listXamLots, listRituals, listPrayers, listMembershipInterests, listAuditLogs, updateReview };
+module.exports = { getOverview, listArticles, listCalendarEvents, listXamLots, listRituals, listPrayers, listMembershipInterests, listAuditLogs, getEditorialContext, updateReview };

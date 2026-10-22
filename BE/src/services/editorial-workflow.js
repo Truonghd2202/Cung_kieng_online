@@ -1,34 +1,37 @@
+const { canTransitionEditorialStatus, nextEditorialStatus } = require("../../../shared/editorial-workflow.mjs");
+
 function stateAfterReview(before, patch) {
-  if (patch.active === true && patch.verified !== true && before.verified !== true) {
-    return { approvalRequired: true };
+  const status = before.editorial_status;
+  if (patch.verified === false) return { revokeApprovalRequired: true };
+
+  if (patch.verified === true) {
+    if (patch.active === true) return { reviewAndPublishInOneStep: true };
+    if (!canTransitionEditorialStatus(status, "approve")) return { reviewRequired: true };
+    return { verified: true, active: false, editorial_status: nextEditorialStatus(status, "approve") };
   }
-  if (patch.verified === true && patch.active === true) {
-    return { reviewAndPublishInOneStep: true };
-  }
-  const state = { verified: before.verified, active: before.active, editorial_status: before.editorial_status };
-  if (patch.verified === false) {
-    state.verified = false;
-    state.active = false;
-    state.editorial_status = "REVOKED";
-  } else if (patch.verified === true) {
-    if (!["IN_REVIEW", "REVOKED"].includes(before.editorial_status)) return { reviewRequired: true };
-    state.verified = true;
-    state.active = false;
-    state.editorial_status = "APPROVED";
-  } else if (patch.active !== undefined) {
-    if (patch.active === true && !["APPROVED", "PUBLISHED", "HIDDEN"].includes(before.editorial_status)) {
+
+  if (patch.active === true) {
+    if (!before.verified || !canTransitionEditorialStatus(status, "publish", true)) {
       return { approvalRequired: true };
     }
-    state.active = patch.active;
-    if (patch.active) state.editorial_status = "PUBLISHED";
-    else if (before.active || ["PUBLISHED", "HIDDEN"].includes(before.editorial_status)) state.editorial_status = "HIDDEN";
-    else if (before.verified) state.editorial_status = "APPROVED";
+    return { verified: true, active: true, editorial_status: nextEditorialStatus(status, "publish") };
   }
-  return state;
+
+  if (patch.active === false) {
+    if (!canTransitionEditorialStatus(status, "hide")) return { invalidTransition: true };
+    return { verified: before.verified, active: false, editorial_status: nextEditorialStatus(status, "hide") };
+  }
+
+  return { invalidTransition: true };
 }
 
 function stateAfterEdit(submitted) {
-  return { editorial_status: submitted ? "IN_REVIEW" : "DRAFT", verified: false, active: false };
+  const action = submitted ? "submit_review" : "edit_draft";
+  return {
+    editorial_status: nextEditorialStatus("DRAFT", action),
+    verified: false,
+    active: false,
+  };
 }
 
 module.exports = { stateAfterReview, stateAfterEdit };

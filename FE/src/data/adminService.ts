@@ -62,7 +62,7 @@ export function loadAdminList<T extends AdminRecord>(section: string, page: numb
   return apiRequest<AdminPage<T>>(`/admin/${section}?${params.toString()}`);
 }
 
-export function reviewAdminRecord(section: "culture" | "calendar" | "xam" | "rituals" | "prayers", id: string, input: { expectedUpdatedAt: string; verified?: boolean; active?: boolean; reviewNote: string; rightsConfirmed?: boolean; source?: string; sourceLocator?: string; usageRights?: "confirmed" | "public-domain" | "permission-required" | "unknown" }) {
+export function reviewAdminRecord(section: "culture" | "calendar" | "xam" | "rituals" | "prayers", id: string, input: { expectedUpdatedAt: string; verified?: boolean; active?: boolean; reviewNote: string; rightsConfirmed?: boolean; imageRightsConfirmed?: boolean; source?: string; sourceLocator?: string; usageRights?: "confirmed" | "public-domain" | "permission-required" | "unknown" | "group-authored" }) {
   return apiRequest<AdminRecord>(`/admin/${section}/${encodeURIComponent(id)}/review`, {
     method: "PATCH",
     body: JSON.stringify(input),

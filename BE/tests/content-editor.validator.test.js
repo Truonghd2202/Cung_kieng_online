@@ -39,6 +39,46 @@ test("a newly slugged ritual can be saved with BE-owned checklist IDs", () => {
   assert.equal(result.success, true);
 });
 
+test("ritual image profile may be incomplete in drafts but is required for review submission", () => {
+  const draft = {
+    slug: "ritual-image-draft",
+    title: "Ritual with optional image",
+    description: "A draft guide",
+    occasion: "Family occasion",
+    region: "NATIONWIDE",
+    source: "",
+    image_url: "https://cdn.example.org/ritual.jpg",
+    editorialStatus: "DRAFT",
+    reviewNote: "Save incomplete image profile",
+    steps: [{ title: "Begin", description: "Start here" }],
+    checklists: [{ id: "stable-item", label: "Prepare materials" }],
+    provenance: {
+      contentType: "GROUP_AUTHORED",
+      authorOrOrganization: "Editorial team",
+      scope: "Family guidance",
+      sourceTitle: "",
+      sourceAuthor: "",
+      bibliography: "",
+      sourceLocator: "",
+      localCommunity: "",
+      contentRightsBasis: "Original writing",
+    },
+  };
+  assert.equal(schemas.rituals.safeParse(draft).success, true);
+  const submitted = schemas.rituals.safeParse({
+    ...draft,
+    editorialStatus: "IN_REVIEW",
+    reviewNote: "Ready for review",
+  });
+  assert.equal(submitted.success, false);
+  assert.deepEqual(submitted.error.issues.map((issue) => issue.path.join(".")), [
+    "provenance.imageCaption",
+    "provenance.imageCredit",
+    "provenance.imageSource",
+    "provenance.imageRightsBasis",
+  ]);
+});
+
 test("ritual publication requires at least one non-empty checklist label", () => {
   assert.equal(hasUsableChecklist([]), false);
   assert.equal(hasUsableChecklist([{ id: "empty", label: " " }]), false);
@@ -75,6 +115,7 @@ test("culture submission persists structured provenance and requires a content t
       bibliography: "",
       sourceLocator: "",
       localCommunity: "",
+      contentRightsBasis: "Original group authored article",
       imageCaption: "A family offering table",
       imageSource: "Photographed by the project team",
       imageRightsBasis: "Original project photograph",

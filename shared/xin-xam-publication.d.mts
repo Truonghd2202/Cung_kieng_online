@@ -7,5 +7,7 @@ export interface PublishableXamContent {
   source?: string | null;
 }
 
+export function normalizeXamPoemLines(value: string | string[] | null | undefined): string[];
+export function hasCompleteXamPoem(value: string | string[] | null | undefined): boolean;
 export function hasCompleteXamContent(content: PublishableXamContent): boolean;
 export function isPublishableXamCard(card: PublishableXamContent): boolean;

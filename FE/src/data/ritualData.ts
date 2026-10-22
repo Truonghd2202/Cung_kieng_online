@@ -56,8 +56,11 @@ export interface RitualDetailContent {
   fullTitle: string;
   subtitle: string;
   heroImage: string;
+  heroImageApproved?: boolean;
   heroCaption: string;
   heroArtCredit: string;
+  heroSourceUrl?: string;
+  heroRightsBasis?: string;
   meaningTitle: string;
   meaningParagraphs: string[];
   meaningQuote: string;
@@ -85,6 +88,7 @@ export interface RitualGuideItem {
   timeEstimate: string;
   desc: string;
   image: string;
+  imageApproved?: boolean;
   tagPill: string;
   actionText: string;
   occasion: RitualOccasionKey;
@@ -1137,6 +1141,7 @@ const slugify = (value: string) => value.normalize("NFD")
 export function adaptRemoteRitual(item: RemoteContentItem): RitualGuideItem {
   const id = asText(item.slug, item.id);
   const details = asRecord(item.detail);
+  const imageMetadata = asRecord(item.imageMetadata);
   const rawOfferings = asArray(item.offerings);
   const rawSteps = asArray(item.steps);
   const rawPrayers = asArray(item.prayers);
@@ -1209,12 +1214,8 @@ export function adaptRemoteRitual(item: RemoteContentItem): RitualGuideItem {
     ? occasionName
     : "all") as RitualOccasionKey;
   const local = getRitualById(id);
-  const usesRemembranceIllustration =
-    id === "tuong-nho-nguoi-than-tai-nha";
-
-  const image = usesRemembranceIllustration
-    ? "/images/goc-tuong-nho-minh-hoa.png"
-    : asText(item.image) || local?.image || "";
+  const imageApproved = imageMetadata.approved === true;
+  const image = imageApproved ? asText(item.imageUrl, asText(item.image)) : "";
   const title = asText(item.title) || local?.title || "Hướng dẫn nghi lễ";
   const desc = asText(item.desc) || local?.desc || title;
   const verified = item.verified === true;
@@ -1253,6 +1254,7 @@ export function adaptRemoteRitual(item: RemoteContentItem): RitualGuideItem {
     timeEstimate: local?.timeEstimate || "15 - 20 phút",
     desc,
     image,
+    imageApproved,
     tagPill: local?.tagPill || "THAM KHẢO VĂN HÓA",
     actionText: "Xem hướng dẫn",
     occasion,
@@ -1262,17 +1264,11 @@ export function adaptRemoteRitual(item: RemoteContentItem): RitualGuideItem {
       fullTitle: title,
       subtitle: desc,
       heroImage: image,
-      heroCaption: usesRemembranceIllustration
-        ? "Ảnh minh họa tạo bằng AI. Hoa và nước là lựa chọn trang trí, không phải yêu cầu của hướng dẫn."
-        : asText(details.heroCaption) ||
-          local?.detail?.heroCaption ||
-          "Hình minh họa cho hướng dẫn.",
-
-      heroArtCredit: usesRemembranceIllustration
-        ? "Minh họa tạo bằng AI cho dự án Tin Lắm Tâm Linh."
-        : asText(details.heroArtCredit) ||
-          local?.detail?.heroArtCredit ||
-          "Chưa cung cấp thông tin nguồn ảnh.",
+      heroImageApproved: imageApproved,
+      heroCaption: imageApproved ? asText(imageMetadata.imageCaption) : "",
+      heroArtCredit: imageApproved ? asText(imageMetadata.imageCredit) : "",
+      heroSourceUrl: imageApproved ? asText(imageMetadata.imageSource) : "",
+      heroRightsBasis: imageApproved ? asText(imageMetadata.imageRightsBasis) : "",
       meaningTitle: asText(details.meaningTitle),
       meaningParagraphs: asArray(details.meaningParagraphs).map((value) => asText(value)).filter(Boolean),
       meaningQuote: asText(details.meaningQuote),

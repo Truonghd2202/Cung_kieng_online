@@ -29,6 +29,7 @@ import { loadCultureArticles } from "../data/contentService";
 import { toCultureArticle } from "../data/cultureAdapter";
 import { Button } from "@/src/components/ui/button";
 import { ContentProvenance } from "../components/ContentProvenance";
+import { loadSignals } from "../data/moodSignalService";
 import { trackProductEvent } from "../data/productAnalytics";
 import "../styles/SignalResultScreen.css";
 
@@ -109,11 +110,45 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
     MOOD_CONTEXTS.find((context) => context.key === contextKey)?.label ??
     "Chưa muốn chọn";
 
-  const availableSignals = getSignalsByMood(signal.mood).filter(
-    (item) => item.contextKey === signal.contextKey
-  );
+  const [availableCount, setAvailableCount] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const canRefresh = availableSignals.length > 1;
+  useEffect(() => {
+    let active = true;
+    loadSignals(signal.mood, contextKey)
+      .then((res) => {
+        if (active && Array.isArray(res?.items)) {
+          setAvailableCount(res.items.length);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          const fallbackCount = getSignalsByMood(signal.mood).filter(
+            (item) => (item.contextKey ?? "general") === contextKey
+          ).length;
+          setAvailableCount(fallbackCount);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [signal.mood, contextKey]);
+
+  const fallbackCount = getSignalsByMood(signal.mood).filter(
+    (item) => (item.contextKey ?? "general") === contextKey
+  ).length;
+
+  const canRefresh = availableCount !== null ? availableCount > 1 : fallbackCount > 1;
+
+  const handleRefreshClick = async () => {
+    if (!canRefresh || isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await Promise.resolve(onRefreshSignal());
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
 
   const suggestedReading: Record<
     MoodContextKey,
@@ -379,15 +414,21 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
             <div className="flex flex-wrap items-center gap-3 mt-7 pt-5 border-t border-line/60">
               <button
                 type="button"
-                disabled={!canRefresh}
-                onClick={onRefreshSignal}
+                disabled={!canRefresh || isRefreshing}
+                onClick={handleRefreshClick}
                 className="signal-secondary-btn group"
-                title="Đổi một lời gợi mở khác cho tâm trạng này"
+                title={canRefresh ? "Đổi một lời gợi mở khác cho tâm trạng này" : "Hiện có một lời gợi mở duy nhất cho lựa chọn này"}
               >
-                <RotateCw className="w-4 h-4 text-accent transition-transform duration-500 group-hover:rotate-180" />
+                <RotateCw
+                  className={`w-4 h-4 text-accent transition-transform duration-500 ${
+                    isRefreshing ? "animate-spin" : "group-hover:rotate-180"
+                  }`}
+                />
                 <span>
                   {canRefresh
-                    ? "Đổi lời gợi mở khác"
+                    ? isRefreshing
+                      ? "Đang đổi gợi mở..."
+                      : "Đổi lời gợi mở khác"
                     : "Hiện có một lời gợi mở"}
                 </span>
               </button>
