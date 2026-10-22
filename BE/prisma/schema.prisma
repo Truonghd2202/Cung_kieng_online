@@ -981,6 +981,7 @@ enum subscription_status {
 
 enum user_role {
   USER
+  EDITOR
   ADMIN
 }
 

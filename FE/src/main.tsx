@@ -4,11 +4,13 @@ import App from './App.tsx';
 import './index.css';
 
 const AdminApp = lazy(() => import('./admin/AdminApp'));
+const EditorApp = lazy(() => import('./admin/EditorApp'));
 const isAdminPath = window.location.pathname.startsWith('/admin');
+const isEditorPath = window.location.pathname.startsWith('/editor');
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {isAdminPath ? <Suspense fallback={<div role="status">Đang tải cổng quản trị…</div>}><AdminApp /></Suspense> : <App />}
+    {isAdminPath ? <Suspense fallback={<div role="status">Đang tải cổng quản trị…</div>}><AdminApp /></Suspense> : isEditorPath ? <Suspense fallback={<div role="status">Đang tải không gian biên tập…</div>}><EditorApp /></Suspense> : <App />}
   </StrictMode>,
 );
 
@@ -22,7 +24,7 @@ if ("serviceWorker" in navigator && import.meta.env.DEV) {
       Promise.all(keys.filter((key) => key.startsWith("tltl-")).map((key) => caches.delete(key))),
     );
   }, { once: true });
-} else if ("serviceWorker" in navigator && !window.location.pathname.startsWith("/admin")) {
+} else if ("serviceWorker" in navigator && !isAdminPath && !isEditorPath) {
   window.addEventListener("load", () => {
     void navigator.serviceWorker.register("/service-worker.js").catch(() => {
       // The app remains usable online when service workers are unavailable.

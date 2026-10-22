@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
 
 // ==========================================
 // 1. MINI SPARKLINE CHART (Dùng cho Metric Cards)
@@ -16,12 +17,33 @@ export function SparklineChart({
 }) {
   if (!data || data.length < 2) return null;
   const min = Math.min(...data);
-  const max = Math.max(...data, min + 1);
+  const max = Math.max(...data);
   const padding = 3;
 
+  // Khi chưa có biến động (toàn bộ là 0), vẽ đường baseline nét đứt mờ trang nhã
+  if (max === 0 && min === 0) {
+    const yMid = height / 2;
+    return (
+      <svg width={width} height={height} className="admin-sparkline-svg" viewBox={`0 0 ${width} ${height}`}>
+        <line
+          x1={padding}
+          y1={yMid}
+          x2={width - padding}
+          y2={yMid}
+          stroke={color}
+          strokeWidth="1.5"
+          strokeDasharray="4 3"
+          strokeOpacity="0.45"
+        />
+        <circle cx={width - padding} cy={yMid} r="2.5" fill={color} fillOpacity="0.6" />
+      </svg>
+    );
+  }
+
+  const effectiveMax = Math.max(max, min + 1);
   const points = data.map((val, idx) => {
     const x = padding + (idx / (data.length - 1)) * (width - padding * 2);
-    const y = height - padding - ((val - min) / (max - min)) * (height - padding * 2);
+    const y = height - padding - ((val - min) / (effectiveMax - min)) * (height - padding * 2);
     return `${x},${y}`;
   });
 
@@ -72,6 +94,8 @@ export function InteractiveTrendChart({
   const padTop = 20;
   const padBottom = 35;
 
+  const isAllZero = !data.length || data.every((d) => (d.value || 0) === 0 && (!d.secondary || d.secondary === 0));
+
   const maxVal = Math.max(
     ...(data.length ? data.map((d) => Math.max(d.value, d.secondary || 0)) : [0]),
     100
@@ -105,10 +129,10 @@ export function InteractiveTrendChart({
         </div>
         <div className="admin-chart-legend">
           <span className="admin-legend-item">
-            <span className="admin-legend-dot gold" /> Lượt truy cập (Visits)
+            <span className="admin-legend-dot gold" /> Lượt truy cập
           </span>
           <span className="admin-legend-item">
-            <span className="admin-legend-dot crimson" /> Đọc & Gieo quẻ (Engage)
+            <span className="admin-legend-dot crimson" /> Tương tác chiêm nghiệm
           </span>
         </div>
       </div>
@@ -172,6 +196,16 @@ export function InteractiveTrendChart({
           })}
         </svg>
 
+        {/* Empty state nhẹ nhàng khi data = 0 */}
+        {isAllZero && (
+          <div className="admin-chart-empty-state">
+            <span className="admin-chart-empty-badge">
+              <Sparkles size={14} style={{ color: "var(--admin-gold)" }} />
+              Hệ thống sẵn sàng ghi nhận lượt truy cập và tương tác mới từ ứng dụng
+            </span>
+          </div>
+        )}
+
         {/* Tooltip khi hover */}
         {hoveredIndex !== null && data[hoveredIndex] && (
           <div
@@ -182,7 +216,7 @@ export function InteractiveTrendChart({
             }}
           >
             <strong>{data[hoveredIndex].label}</strong>
-            <div className="tooltip-line gold">Lượt xem: {data[hoveredIndex].value.toLocaleString("vi-VN")}</div>
+            <div className="tooltip-line gold">Lượt truy cập: {data[hoveredIndex].value.toLocaleString("vi-VN")}</div>
             {data[hoveredIndex].secondary !== undefined && (
               <div className="tooltip-line crimson">Tương tác: {data[hoveredIndex].secondary?.toLocaleString("vi-VN")}</div>
             )}
@@ -201,11 +235,13 @@ export function DonutChart({
   data = [],
   size = 170,
   strokeWidth = 24,
+  unit = "lượt",
 }: {
   title?: string;
   data?: Array<{ label: string; value: number; color: string }>;
   size?: number;
   strokeWidth?: number;
+  unit?: string;
 }) {
   const [activeSegment, setActiveSegment] = useState<number | null>(null);
 
@@ -281,8 +317,8 @@ export function DonutChart({
               </>
             ) : (
               <>
-                <strong>{realTotal}</strong>
-                <small>{realTotal === 0 ? "Chưa có mục" : "Tổng mục"}</small>
+                <strong>{realTotal.toLocaleString("vi-VN")}</strong>
+                <small>{realTotal === 0 ? "Chưa có lượt" : `Tổng ${unit}`}</small>
               </>
             )}
           </div>

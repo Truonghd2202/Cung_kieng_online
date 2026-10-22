@@ -11,7 +11,7 @@ function stateAfterReview(before, patch) {
     state.active = false;
     state.editorial_status = "REVOKED";
   } else if (patch.verified === true) {
-    if (before.editorial_status !== "IN_REVIEW") return { reviewRequired: true };
+    if (!["IN_REVIEW", "REVOKED"].includes(before.editorial_status)) return { reviewRequired: true };
     state.verified = true;
     state.active = false;
     state.editorial_status = "APPROVED";
