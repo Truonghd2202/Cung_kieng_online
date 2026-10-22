@@ -31,6 +31,7 @@ import {
   RegionType,
   TopicType,
   XinXamResult,
+  XIN_XAM_TOPICS,
 } from "../data/xinXamData";
 import {
   drawXinXam,
@@ -38,7 +39,8 @@ import {
   type XinXamAvailability,
 } from "../data/reflectionService";
 import { ApiError } from "../lib/api";
-import { isPublishableXamCard } from "../../../shared/xin-xam-publication.mjs";
+import { hasCompleteXamPoem, isPublishableXamCard, normalizeXamPoemLines } from "../../../shared/xin-xam-publication.mjs";
+import { enterDemoMode, isDemoMode } from "../data/demoMode";
 
 export type XinXamDrawResult = XinXamResult & {
   drawId: string;
@@ -313,11 +315,11 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
       return;
     }
 
-    const poemLines = (remote.poem || "")
-      .split(/\r?\n/)
-      .map((line) => line.trim());
+    const poemLines = normalizeXamPoemLines(remote.poem || "");
 
-    const publishable = isPublishableXamCard({
+    const publishable = isDemoMode()
+      ? Boolean(remote.source && hasCompleteXamPoem(remote.poem || "") && remote.meaning.trim() && remote.advice.trim())
+      : isPublishableXamCard({
       active: remote.active,
       verified: remote.verified,
       xam_type: remote.xamType,
@@ -580,16 +582,20 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
             </p>
 
             {!availabilityLoading && (
-              <Button
-                type="button"
-                variant="outline"
-                className="mt-3"
-                onClick={() => {
-                  setAvailabilityAttempt((value) => value + 1);
-                }}
-              >
-                Kiểm tra lại thư viện
-              </Button>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setAvailabilityAttempt((value) => value + 1)}
+                >
+                  Kiểm tra lại thư viện
+                </Button>
+                {!isDemoMode() && (availabilityError || availability?.available !== true || availability.count === 0) && (
+                  <Button type="button" onClick={enterDemoMode}>
+                    Chuyển sang dữ liệu demo
+                  </Button>
+                )}
+              </div>
             )}
           </section>
         )}
@@ -730,7 +736,7 @@ export const XinXamScreen: React.FC<XinXamScreenProps> = ({
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {(
-                  ["Học tập", "Công việc", "Gia đình", "Bình an"] satisfies TopicType[]
+                  XIN_XAM_TOPICS satisfies TopicType[]
                 ).map((topic) => (
                   <label
                     key={topic}

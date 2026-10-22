@@ -16,6 +16,20 @@ const REGIONS: Array<{ slug: CultureRegionSlug; title: string; subtitle: string 
   { slug: "south", title: "Nam Bộ", subtitle: "Mở nội dung và trải nghiệm miền Nam" },
 ];
 
+const HIGHLIGHTS: Record<CultureRegionSlug, Array<{ title: string; location: string; source: string; url: string }>> = {
+  north: [
+    { title: "Khu di tích trung tâm Hoàng thành Thăng Long", location: "Hà Nội", source: "UNESCO World Heritage Centre", url: "https://whc.unesco.org/en/list/1328/" },
+    { title: "Tín ngưỡng thờ cúng Hùng Vương", location: "Phú Thọ", source: "UNESCO Intangible Cultural Heritage", url: "https://ich.unesco.org/en/RL/worship-of-hng-kings-in-ph-th-00735" },
+    { title: "Hội Gióng tại đền Phù Đổng và đền Sóc", location: "Hà Nội", source: "UNESCO Intangible Cultural Heritage", url: "https://ich.unesco.org/en/RL/giong-festival-of-phu-djong-and-soc-temples-00443" },
+  ],
+  central: [
+    { title: "Đô thị cổ Hội An", location: "Quảng Nam", source: "UNESCO World Heritage Centre", url: "https://whc.unesco.org/en/list/948/" },
+  ],
+  south: [
+    { title: "Nghệ thuật Đờn ca tài tử Nam Bộ", location: "Nam Bộ", source: "UNESCO Intangible Cultural Heritage", url: "https://ich.unesco.org/en/RL/art-of-don-ca-tai-tu-music-and-song-in-south-viet-nam-00733" },
+  ],
+};
+
 export const CulturalMapScreen: React.FC<CulturalMapScreenProps> = ({ onBackToCulture, onSelectRegion }) => (
   <div className="screen-shell">
     <main className="page-container max-w-4xl">
@@ -47,6 +61,18 @@ export const CulturalMapScreen: React.FC<CulturalMapScreenProps> = ({ onBackToCu
             </Button>
           ))}
         </div>
+        <section className="mb-5 rounded-xl border border-line bg-surface-soft p-4" aria-labelledby="regional-highlights-title">
+          <h2 id="regional-highlights-title" className="mb-3 font-semibold text-ink">Điểm văn hóa có nguồn đối chiếu</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {REGIONS.flatMap((region) => HIGHLIGHTS[region.slug].map((item) => (
+              <article key={item.title} className="rounded-lg border border-line bg-surface p-4">
+                <p className="text-xs font-semibold text-muted">{region.title} · {item.location}</p>
+                <h3 className="mt-1 font-semibold text-ink">{item.title}</h3>
+                <a href={item.url} target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs text-accent underline underline-offset-2">Nguồn: {item.source}</a>
+              </article>
+            )))}
+          </div>
+        </section>
         <div className="flex items-start gap-3 rounded-xl border border-line bg-surface-soft p-4 text-sm text-muted">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
           <p>Lịch âm/dương và ghi chú cá nhân vẫn dùng được trong mục Lịch văn hóa.</p>

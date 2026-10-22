@@ -1,6 +1,7 @@
 import { FormEvent, MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
+  AlertTriangle,
   BookOpen,
   Check,
   CheckCircle2,
@@ -30,6 +31,7 @@ import {
   Send,
   ShieldAlert,
   ShieldCheck,
+  Smartphone,
   Sparkle,
   Sparkles,
   Sun,
@@ -38,8 +40,10 @@ import {
 } from "lucide-react";
 import checkInCatalog from "../../../shared/checkin-catalog.json";
 import { apiRequest } from "../lib/api";
+import { allowedEditorialActions, editorialStatusLabel } from "../../../shared/editorial-workflow.mjs";
 import { closeAdminOverlay, pushAdminOverlay } from "./adminNavigation";
 import { toast } from "../components/ui/Toast";
+import { UnverifiedImage } from "../components/UnverifiedImage";
 import { WithdrawModal } from "./WithdrawModal";
 import { useTheme } from "../hooks/useTheme";
 
@@ -55,15 +59,87 @@ type SignalContent = {
   artwork?: { image: string; caption?: string; [key: string]: unknown };
   [key: string]: unknown;
 };
-type SignalRow = { id: string; source: string; title: string | null; mood: string | null; context_key: string | null; category: string | null; content: string | SignalContent; editorial_status: EditorialStatus; active: boolean; verified: boolean; updated_at: string; submitted_by?: string | null; editor_feedback?: string | null; reviewed_at?: string | null; reviewer?: { full_name: string } | null };
+type SignalRow = { id: string; source: string; title: string | null; mood: string | null; context_key: string | null; category: string | null; content: string | SignalContent; editorial_status: EditorialStatus; active: boolean; verified: boolean; updated_at: string; submitted_by?: string | null; editor_feedback?: string | null; editor_feedback_meta?: { note: string; reviewerName: string; createdAt: string; feedbackKind?: "approval-revoked" | "changes-requested"; isPreviousRound: boolean } | null; reviewed_at?: string | null; reviewer?: { full_name: string } | null };
 type AuditRow = { id: string; action: string; details: Record<string, unknown>; created_at: string; users?: { full_name: string } | null };
 type Coverage = Record<string, Record<string, number>>;
 type SignalPage = { items: SignalRow[]; pagination: { page: number; pageSize: number; total: number; pageCount: number }; stats: { total: number; statuses: Record<EditorialStatus, number>; coverage: Coverage } };
 type DraftForm = { source: string; title: string; mood: string; contextKey: string; category: string; editorialStatus: "DRAFT" | "IN_REVIEW"; reviewNote: string; content: SignalContent };
 
-const STATUS_LABELS: Record<EditorialStatus, string> = { DRAFT: "Bản nháp", IN_REVIEW: "Chờ duyệt", APPROVED: "Đã duyệt · ẩn", PUBLISHED: "Đang phát hành", HIDDEN: "Đã duyệt · ẩn", REVOKED: "Đã thu hồi" };
+const STATUS_LABELS: Record<EditorialStatus, string> = {
+  DRAFT: editorialStatusLabel("DRAFT"),
+  IN_REVIEW: editorialStatusLabel("IN_REVIEW"),
+  APPROVED: editorialStatusLabel("APPROVED"),
+  PUBLISHED: editorialStatusLabel("PUBLISHED"),
+  HIDDEN: editorialStatusLabel("HIDDEN"),
+  REVOKED: `${editorialStatusLabel("REVOKED")} (dữ liệu cũ)`,
+};
 const STATUSES: EditorialStatus[] = ["DRAFT", "IN_REVIEW", "APPROVED", "PUBLISHED", "HIDDEN", "REVOKED"];
 const cssStatus: Record<EditorialStatus, string> = { DRAFT: "draft", IN_REVIEW: "review", APPROVED: "approved", PUBLISHED: "published", HIDDEN: "hidden", REVOKED: "revoked" };
+
+function signalErrorCopy(error: unknown, fallback: string): string {
+  const raw = error instanceof Error ? error.message : "";
+  const known: Array<[RegExp, string]> = [
+    [/Signal changed after it was opened|Reload before/i, "Dữ liệu lời chiêm nghiệm đã thay đổi. Hãy tải lại rồi thử lại."],
+    [/Only draft signals can be edited/i, "Chỉ bản nháp mới có thể chỉnh sửa. Hãy rút bài về bản nháp trước."],
+    [/Signal source key already exists/i, "Mã nguồn lời chiêm nghiệm đã được sử dụng."],
+    [/Signal source key is stable/i, "Không thể thay đổi mã nguồn của lời chiêm nghiệm."],
+    [/Submit the signal for review before approving/i, "Hãy gửi lời chiêm nghiệm chờ duyệt trước khi duyệt nội dung."],
+    [/Approve the signal first, then publish/i, "Hãy duyệt nội dung trước, sau đó mới công khai."],
+    [/Confirm actual content use rights/i, "Hãy xác nhận quyền sử dụng nội dung trước khi duyệt."],
+    [/Complete the provenance required/i, "Hãy bổ sung hồ sơ nguồn và quyền sử dụng trước khi duyệt."],
+    [/Only a signal awaiting review/i, "Chỉ lời chiêm nghiệm đang chờ duyệt hoặc đã bị thu hồi mới có thể trả sửa."],
+  ];
+  return known.find(([pattern]) => pattern.test(raw))?.[1] || (raw && !/^[A-Za-z][A-Za-z ]+\.$/.test(raw) ? raw : fallback);
+}
+
+const ADMIN_REVIEW_PRESETS = [
+  "Nội dung đáp ứng yêu cầu kiểm duyệt, nguồn đã được đối chiếu",
+  "Yêu cầu sửa lỗi chính tả & ngắt nhịp",
+  "Cần bổ sung tài liệu đối chiếu nguồn",
+  "Hình ảnh minh họa chưa phù hợp",
+  "Lời dặn chiêm nghiệm cần trau chuốt lại",
+];
+const ADMIN_PUBLICATION_PRESETS = [
+  "Công khai phiên bản đã duyệt sau khi kiểm tra nội dung hiển thị",
+  "Ẩn nội dung tạm thời để rà soát cách hiển thị",
+];
+
+const auditDateFormatter = new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium", timeStyle: "short" });
+
+function formatAuditDate(value: string | null | undefined): string {
+  if (!value) return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Không rõ thời gian" : auditDateFormatter.format(date);
+}
+
+function editorialFeedbackLabel(meta?: SignalRow["editor_feedback_meta"] | null): string {
+  if (meta?.feedbackKind === "approval-revoked") {
+    return meta.isPreviousRound ? "Lý do thu hồi duyệt · vòng trước" : "Lý do thu hồi duyệt";
+  }
+  return meta?.isPreviousRound ? "Góp ý vòng trước" : "Góp ý Admin";
+}
+
+function formatAuditAction(action: string, note?: string): { label: string; tone: "positive" | "warning" | "neutral" | "danger" } {
+  if (action === "CONTENT_REVIEW_UPDATED") {
+    if (note && (note.toLowerCase().includes("thu hồi") || note.toLowerCase().includes("check lại") || note.toLowerCase().includes("lại"))) {
+      return { label: "Cập nhật thẩm tra", tone: "warning" };
+    }
+    return { label: "Cập nhật kiểm duyệt", tone: "neutral" };
+  }
+  const map: Record<string, { label: string; tone: "positive" | "warning" | "neutral" | "danger" }> = {
+    CONTENT_CHANGES_REQUESTED: { label: "Yêu cầu chỉnh sửa", tone: "warning" },
+    CONTENT_WITHDRAWN_TO_DRAFT: { label: "Rút về bản nháp", tone: "warning" },
+    CONTENT_CREATED: { label: "Tạo mới bản thảo", tone: "neutral" },
+    CONTENT_SUBMITTED: { label: "Nộp chờ duyệt", tone: "neutral" },
+    CONTENT_APPROVED: { label: "Đã duyệt nội dung", tone: "positive" },
+    CONTENT_PUBLISHED: { label: "Công khai cho người dùng", tone: "positive" },
+    CONTENT_REVOKED: { label: "Thu hồi phê duyệt", tone: "danger" },
+    CONTENT_HIDDEN: { label: "Tạm ẩn nội dung", tone: "warning" },
+    VERIFY: { label: "Đã duyệt nội dung", tone: "positive" },
+    REVOKE: { label: "Thu hồi duyệt", tone: "danger" },
+  };
+  return map[action] || { label: action.replace(/_/g, " "), tone: "neutral" };
+}
 
 function emptyContent(): SignalContent {
   return {
@@ -142,6 +218,12 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
   const [sourcesText, setSourcesText] = useState("[]");
   const [editorialNote, setEditorialNote] = useState("");
   const [showLivePreview, setShowLivePreview] = useState(true);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const [adminFeedback, setAdminFeedback] = useState<SignalRow["editor_feedback_meta"]>(null);
+  const editorFormRef = useRef<HTMLFormElement>(null);
+  const cleanDraftRef = useRef<string | null>(null);
+  const pendingBackRef = useRef(false);
+  const [showDetailPreview, setShowDetailPreview] = useState(false);
   const [selected, setSelected] = useState<(SignalRow & { auditLogs?: AuditRow[] }) | null>(
     initialDetailId
       ? ({
@@ -164,10 +246,12 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
   const [rightsConfirmed, setRightsConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showWithdrawOwn, setShowWithdrawOwn] = useState(false);
+  const [pendingAdminTransition, setPendingAdminTransition] = useState<"hide" | "revoke" | null>(null);
   const [coverageExpanded, setCoverageExpanded] = useState(true);
   const request = useRef(0);
+  const detailRequest = useRef(0);
 
-  const loadPage = useCallback(async (requestedPage = page) => {
+  const loadPage = useCallback(async (requestedPage = page): Promise<boolean> => {
     const current = ++request.current;
     setLoading(true); setError("");
     const params = new URLSearchParams({ page: String(requestedPage) });
@@ -178,8 +262,10 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
     try {
       const result = await apiRequest<SignalPage>("/admin/signals?" + params.toString());
       if (current === request.current) { setData(result); setItems(result.items); }
+      return true;
     } catch (loadError) {
-      if (current === request.current) setError(loadError instanceof Error ? loadError.message : "Không tải được nội dung.");
+      if (current === request.current) setError(signalErrorCopy(loadError, "Không tải được nội dung."));
+      return false;
     } finally { if (current === request.current) setLoading(false); }
   }, [page, query, status, mood, contextKey]);
 
@@ -192,21 +278,47 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
     window.history.replaceState({ ...window.history.state }, "", `${url.pathname}${url.search}${url.hash}`);
   }, [status]);
 
-  const closeEditor = useCallback(() => {
+  const editorSnapshot = editing ? JSON.stringify({ form: editing.form, sourcesText, editorialNote }) : "";
+  const hasUnsavedChanges = Boolean(editing && cleanDraftRef.current !== null && cleanDraftRef.current !== editorSnapshot);
+
+  const forceCloseEditor = useCallback(() => {
     setEditing(null);
+    setShowDiscardConfirm(false);
+    cleanDraftRef.current = null;
+    closeAdminOverlay("signal-editor");
     const url = new URL(window.location.href);
     url.searchParams.delete("signalEdit");
     window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
   }, []);
 
+  const resumeEditing = useCallback(() => {
+    if (pendingBackRef.current) {
+      pushAdminOverlay("signal-editor");
+      pendingBackRef.current = false;
+    }
+    setShowDiscardConfirm(false);
+  }, []);
+
+  const closeEditor = useCallback(() => {
+    if (saving) return;
+    if (hasUnsavedChanges) {
+      setShowDiscardConfirm(true);
+      return;
+    }
+    forceCloseEditor();
+  }, [forceCloseEditor, hasUnsavedChanges, saving]);
+
   const closeDetail = useCallback(() => {
+    detailRequest.current += 1;
     setSelected(null);
     const url = new URL(window.location.href);
     url.searchParams.delete("signalDetail");
     window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
   }, []);
 
-  const openDetail = useCallback(async (id: string, updateUrl = true) => {
+  const openDetail = useCallback(async (id: string, updateUrl = true): Promise<boolean> => {
+    const currentRequest = ++detailRequest.current;
+    setEditing(null);
     if (updateUrl) {
       const url = new URL(window.location.href);
       url.searchParams.set("signalDetail", id);
@@ -217,19 +329,26 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
     setDetailLoading(true); setError("");
     try {
       const result = await apiRequest<SignalRow & { auditLogs: AuditRow[] }>("/admin/signals/" + encodeURIComponent(id));
+      if (currentRequest !== detailRequest.current) return false;
       setSelected(result); setReviewNote(""); setRightsConfirmed(false);
+      return true;
     } catch (loadError) {
+      if (currentRequest !== detailRequest.current) return false;
       const errUrl = new URL(window.location.href);
       errUrl.searchParams.delete("signalDetail");
       window.history.replaceState({}, "", `${errUrl.pathname}${errUrl.search}${errUrl.hash}`);
-      setError(loadError instanceof Error ? loadError.message : "Không tải được hồ sơ.");
+      setError(signalErrorCopy(loadError, "Không tải được hồ sơ."));
+      return false;
     }
-    finally { setDetailLoading(false); }
+    finally { if (currentRequest === detailRequest.current) setDetailLoading(false); }
   }, []);
 
   const openEditor = useCallback(async (id?: string, initialMood?: string, initialContext?: string, updateUrl = true) => {
     if (canReview) return;
+    detailRequest.current += 1;
     setError("");
+    setAdminFeedback(null);
+    setSelected(null);
     if (updateUrl) {
       const url = new URL(window.location.href);
       url.searchParams.set("signalEdit", id || "new");
@@ -244,12 +363,14 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
       setSourcesText("[]");
       setEditorialNote("");
       setEditing({ form, loading: false });
+      cleanDraftRef.current = JSON.stringify({ form, sourcesText: "[]", editorialNote: "" });
       return;
     }
 
     try {
       const row = await apiRequest<SignalRow>("/admin/signals/" + encodeURIComponent(id));
       const content = parseContent(row.content);
+      setAdminFeedback(row.editor_feedback_meta || null);
       setSourcesText(JSON.stringify(content.metadata.sources, null, 2));
       setEditorialNote(content.metadata.editorialNote);
       setEditing({
@@ -267,11 +388,25 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
         },
         loading: false,
       });
+      cleanDraftRef.current = JSON.stringify({
+        form: {
+          source: row.source,
+          title: row.title || "",
+          mood: row.mood || checkInCatalog.moods[0].key,
+          contextKey: row.context_key || "general",
+          category: row.category || "editorial",
+          editorialStatus: "DRAFT",
+          reviewNote: "",
+          content,
+        },
+        sourcesText: JSON.stringify(content.metadata.sources, null, 2),
+        editorialNote: content.metadata.editorialNote,
+      });
     } catch (loadError) {
       const errUrl = new URL(window.location.href);
       errUrl.searchParams.delete("signalEdit");
       window.history.replaceState({}, "", `${errUrl.pathname}${errUrl.search}${errUrl.hash}`);
-      setError(loadError instanceof Error ? loadError.message : "Không tải được bản thảo.");
+      setError(signalErrorCopy(loadError, "Không tải được bản thảo."));
       setEditing(null);
     }
   }, [canReview]);
@@ -297,7 +432,10 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
       if (editId && !canReview) {
         void openEditor(editId, undefined, undefined, false);
       } else {
-        setEditing(null);
+        if (editing && !saving) {
+          pendingBackRef.current = true;
+          closeEditor();
+        } else setEditing(null);
       }
       if (detailId) {
         void openDetail(detailId, false);
@@ -307,21 +445,17 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [canReview, openDetail, openEditor]);
+  }, [canReview, openDetail, openEditor, editing, saving, closeEditor]);
 
   // Lắng nghe sự kiện đổi tab / thoát modal từ sidebar hoặc phím Escape
   useEffect(() => {
     const handleCloseFromEvent = () => {
-      setEditing(null);
-      setSelected(null);
-      const url = new URL(window.location.href);
-      url.searchParams.delete("signalEdit");
-      url.searchParams.delete("signalDetail");
-      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+      if (editing && !saving) closeEditor();
+      else if (!editing) closeDetail();
     };
     window.addEventListener("admin:close-modals", handleCloseFromEvent);
     return () => window.removeEventListener("admin:close-modals", handleCloseFromEvent);
-  }, []);
+  }, [editing, saving, closeEditor, closeDetail]);
 
   useEffect(() => {
     const handleNewSignal = () => {
@@ -332,15 +466,31 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
   }, [canReview, openEditor]);
 
   useEffect(() => {
+    const handleRefresh = async (event: Event) => {
+      const detail = (event as CustomEvent<{ resolve?: (succeeded: boolean) => void }>).detail;
+      const results = await Promise.all([
+        loadPage(page),
+        ...(selected?.id ? [openDetail(selected.id, false)] : []),
+      ]);
+      detail?.resolve?.(results.every(Boolean));
+    };
+    window.addEventListener("admin:signal-refresh", handleRefresh);
+    return () => window.removeEventListener("admin:signal-refresh", handleRefresh);
+  }, [loadPage, page, selected?.id, openDetail]);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        if (editing && !saving) closeEditor();
+        if (editing && !saving) {
+          if (showDiscardConfirm) resumeEditing();
+          else closeEditor();
+        }
         else if (selected && !saving) closeDetail();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [editing, selected, saving, closeEditor, closeDetail]);
+  }, [editing, selected, saving, showDiscardConfirm, resumeEditing, closeEditor, closeDetail]);
 
   function setFormField<K extends keyof DraftForm>(key: K, value: DraftForm[K]) {
     setEditing((current) => current ? { ...current, form: { ...current.form, [key]: value } } : current);
@@ -370,6 +520,11 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
   async function saveDraft(event: FormEvent<HTMLFormElement> | MouseEvent<HTMLButtonElement>, nextStatus: "DRAFT" | "IN_REVIEW") {
     event.preventDefault();
     if (!editing || canReview) return;
+    if (nextStatus === "IN_REVIEW" && editing.form.reviewNote.trim().length < 8) {
+      setError("Ghi chú gửi duyệt cần tối thiểu 8 ký tự.");
+      return;
+    }
+    if (nextStatus === "IN_REVIEW" && !editorFormRef.current?.reportValidity()) return;
     let sources: SourceRecord[];
     try {
       const parsed: unknown = JSON.parse(sourcesText);
@@ -382,7 +537,7 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
     try {
       await apiRequest<SignalRow>(editing.id ? "/admin/signals/" + encodeURIComponent(editing.id) : "/admin/signals", { method: editing.id ? "PUT" : "POST", body: JSON.stringify(body) });
       const signalTitle = editing.form.title || "Lời chiêm nghiệm";
-      closeEditor();
+      forceCloseEditor();
       setNotice(nextStatus === "IN_REVIEW" ? "Đã gửi bản thảo chờ duyệt." : "Đã lưu bản nháp.");
       if (nextStatus === "IN_REVIEW") {
         toast.success(`Lời chiêm nghiệm "${signalTitle}" đã được gửi lên hàng đợi chờ duyệt.`, "Gửi duyệt thành công");
@@ -392,7 +547,7 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
       setPage(1); await loadPage(1);
       if (selected) await openDetail(selected.id);
     } catch (saveError) {
-      const msg = saveError instanceof Error ? saveError.message : "Không lưu được bản thảo.";
+      const msg = signalErrorCopy(saveError, "Không lưu được bản thảo.");
       setError(msg);
       toast.error(msg, "Lưu không thành công");
     }
@@ -400,17 +555,50 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
   }
 
   async function transition(patch: { verified?: boolean; active?: boolean }) {
-    if (!selected) return;
-    if (reviewNote.trim().length < 8) { setError("Ghi chú thao tác cần tối thiểu 8 ký tự."); return; }
-    if (patch.verified === true && !rightsConfirmed) { setError("Cần xác nhận đã đối chiếu quyền sử dụng thực tế trước khi duyệt."); return; }
+    if (!selected || saving) return;
+    const action = patch.verified === true ? "approve"
+      : patch.verified === false ? "revoke_approval"
+        : patch.active === true ? (selected.editorial_status === "HIDDEN" ? "show" : "publish")
+          : "hide";
+    if (!availableEditorialActions.has(action)) {
+      const msg = "Thao tác này không phù hợp với trạng thái nội dung hiện tại.";
+      setError(msg);
+      toast.warning(msg, "Không thể thực hiện");
+      return;
+    }
+    const effectiveNote = reviewNote.trim();
+    if (effectiveNote.length < 8) {
+      const msg = patch.verified === false
+        ? "Lý do thu hồi duyệt cần tối thiểu 8 ký tự."
+        : patch.active === false
+          ? "Lý do ẩn nội dung cần tối thiểu 8 ký tự."
+          : "Ghi chú duyệt cần tối thiểu 8 ký tự.";
+      setError(msg);
+      toast.warning(msg, "Cần bổ sung ghi chú");
+      return;
+    }
+
+    if (patch.verified === true && !rightsConfirmed) {
+      const msg = "Vui lòng tích ô 'Tôi xác nhận đã đối chiếu kỹ lưỡng...' trước khi phê duyệt.";
+      setError(msg);
+      toast.warning(msg, "Chưa xác nhận bản quyền");
+      return;
+    }
     setSaving(true); setError("");
     try {
-      await apiRequest<SignalRow>("/admin/signals/" + encodeURIComponent(selected.id) + "/review", { method: "PATCH", body: JSON.stringify({ ...patch, expectedUpdatedAt: selected.updated_at, reviewNote, ...(patch.verified === true ? { rightsConfirmed } : {}) }) });
-      setNotice(patch.verified === true ? "Đã duyệt phiên bản nội dung hiện tại." : patch.verified === false ? "Đã thu hồi duyệt và gỡ nội dung khỏi phát hành." : patch.active === false ? "Đã ẩn nội dung; hồ sơ duyệt được giữ nguyên." : "Đã phát hành lại phiên bản đã duyệt.");
+      if (patch.verified === false) {
+        await apiRequest<SignalRow>(`/admin/signals/${encodeURIComponent(selected.id)}/revoke-approval`, {
+          method: "POST",
+          body: JSON.stringify({ expectedUpdatedAt: selected.updated_at, reviewNote: effectiveNote }),
+        });
+      } else {
+        await apiRequest<SignalRow>("/admin/signals/" + encodeURIComponent(selected.id) + "/review", { method: "PATCH", body: JSON.stringify({ ...patch, expectedUpdatedAt: selected.updated_at, reviewNote: effectiveNote, ...(patch.verified === true ? { rightsConfirmed } : {}) }) });
+      }
+      setNotice(patch.verified === true ? "Đã duyệt phiên bản nội dung hiện tại." : patch.verified === false ? "Đã thu hồi duyệt và đưa nội dung về Bản nháp." : patch.active === false ? "Nội dung sẽ tạm ngừng hiển thị. Kết quả duyệt được giữ lại." : "Đã công khai lại phiên bản đã duyệt.");
       if (patch.verified === true) {
-        toast.success(`Đã thẩm định và phê duyệt lời chiêm nghiệm: "${selected.title}"`, "Phê duyệt hoàn tất");
+        toast.success(`Đã duyệt nội dung lời chiêm nghiệm: "${selected.title}"`, "Duyệt nội dung thành công");
       } else if (patch.verified === false) {
-        toast.info(`Đã thu hồi phê duyệt của lời chiêm nghiệm: "${selected.title}"`, "Thu hồi phê duyệt");
+        toast.info(`Đã thu hồi duyệt và đưa lời chiêm nghiệm "${selected.title}" về bản nháp để chỉnh sửa.`, "Thu hồi duyệt để chỉnh sửa");
       } else if (patch.active === true) {
         toast.success(`Lời chiêm nghiệm "${selected.title}" đã được công khai trên hệ thống.`, "Công khai thành công");
       } else if (patch.active === false) {
@@ -418,37 +606,71 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
       }
       setReviewNote(""); setRightsConfirmed(false); await loadPage(page); await openDetail(selected.id);
     } catch (reviewError) {
-      const msg = reviewError instanceof Error ? reviewError.message : "Không cập nhật được trạng thái.";
-      setError(msg);
-      toast.error(msg, "Thao tác không thành công");
+      const raw = reviewError instanceof Error ? reviewError.message : "Không cập nhật được trạng thái.";
+      if (raw.includes("Signal changed after it was opened") || raw.includes("Reload before")) {
+        toast.info("Lời chiêm nghiệm vừa được cập nhật. Đã đồng bộ phiên bản mới nhất; hãy thử lại.", "Đã đồng bộ dữ liệu");
+        await openDetail(selected.id);
+      } else {
+        const msg = signalErrorCopy(reviewError, "Không cập nhật được trạng thái.");
+        setError(msg);
+        toast.error(msg, "Thao tác không thành công");
+      }
     }
     finally { setSaving(false); }
   }
 
   async function returnToDraftFromDetail() {
-    if (!selected) return;
-    if (reviewNote.trim().length < 8) { setError("Nhập lý do yêu cầu chỉnh sửa (ít nhất 8 ký tự)."); return; }
+    if (!selected || saving) return;
+    if (!availableEditorialActions.has("request_changes")) {
+      setError("Chỉ nội dung chờ duyệt hoặc trạng thái thu hồi cũ mới có thể được đưa về bản nháp.");
+      return;
+    }
+    const effectiveNote = reviewNote.trim();
+    if (effectiveNote.length < 8) {
+      const msg = "Hãy nêu rõ nội dung cần chỉnh sửa (tối thiểu 8 ký tự).";
+      setError(msg);
+      toast.warning(msg, "Cần ghi rõ góp ý");
+      return;
+    }
+
     setSaving(true); setError("");
     try {
       await apiRequest<SignalRow>("/admin/signals/" + encodeURIComponent(selected.id) + "/review", {
         method: "PATCH",
-        body: JSON.stringify({ requestChanges: true, reviewNote: reviewNote.trim(), expectedUpdatedAt: selected.updated_at }),
+        body: JSON.stringify({ requestChanges: true, reviewNote: effectiveNote, expectedUpdatedAt: selected.updated_at }),
       });
       setNotice("Đã trả bản ghi về trạng thái Bản nháp.");
-      toast.info(`Đã chuyển lời chiêm nghiệm "${selected.title}" về bản nháp để chỉnh sửa.`, "Yêu cầu chỉnh sửa");
+      toast.success(`Đã chuyển lời chiêm nghiệm "${selected.title}" về bản nháp để chỉnh sửa.`, "Yêu cầu chỉnh sửa");
       setReviewNote("");
       await loadPage(page);
       await openDetail(selected.id);
     } catch (returnError) {
-      const msg = returnError instanceof Error ? returnError.message : "Không thể chuyển trạng thái.";
-      setError(msg);
-      toast.error(msg, "Lỗi cập nhật");
+      const raw = returnError instanceof Error ? returnError.message : "Không thể chuyển trạng thái.";
+      if (raw.includes("Signal changed after it was opened") || raw.includes("Reload before")) {
+        toast.info("Lời chiêm nghiệm vừa được cập nhật. Đã đồng bộ phiên bản mới nhất; hãy thử lại.", "Đã đồng bộ dữ liệu");
+        await openDetail(selected.id);
+      } else {
+        const msg = raw.replace("Signal changed after it was opened. Reload before reviewing.", "Lời chiêm nghiệm đã thay đổi. Vui lòng tải lại trước khi duyệt.");
+        setError(msg);
+        toast.error(msg, "Lỗi cập nhật");
+      }
     } finally {
       setSaving(false);
     }
   }
 
-  function withdrawOwnSignal() {
+  function withdrawOwnSignal(target: SignalRow | null = selected) {
+    const canWithdraw = target && allowedEditorialActions({
+      role: "EDITOR",
+      status: target.editorial_status,
+      ownsContent: true,
+    }).includes("withdraw_review");
+    if (!target || !canWithdraw) {
+      setError("Chỉ có thể rút yêu cầu duyệt khi nội dung đang Chờ duyệt.");
+      return;
+    }
+    setError("");
+    setSelected(target);
     setShowWithdrawOwn(true);
   }
 
@@ -462,13 +684,21 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
       });
       setNotice("Đã rút nội dung về Bản nháp.");
       toast.success(`Đã chuyển lời chiêm nghiệm "${selected.title}" về bản nháp.`, "Rút bài thành công");
+      const targetId = selected.id;
       setShowWithdrawOwn(false);
+      closeDetail();
       await loadPage(page);
-      await openDetail(selected.id);
+      void openEditor(targetId);
     } catch (withdrawError) {
-      const msg = withdrawError instanceof Error ? withdrawError.message : "Không thể rút nội dung về bản nháp.";
-      setError(msg);
-      toast.error(msg, "Lỗi rút bài");
+      const raw = withdrawError instanceof Error ? withdrawError.message : "Không thể rút nội dung về bản nháp.";
+      if (raw.includes("Signal changed after it was opened") || raw.includes("Reload before")) {
+        toast.info("Lời chiêm nghiệm vừa được cập nhật. Đã đồng bộ phiên bản mới nhất; hãy thử lại.", "Đã đồng bộ dữ liệu");
+        await openDetail(selected.id);
+      } else {
+        const msg = raw.replace("Signal changed after it was opened. Reload before withdrawing.", "Lời chiêm nghiệm đã thay đổi. Vui lòng tải lại trước khi rút về bản nháp.");
+        setError(msg);
+        toast.error(msg, "Lỗi rút bài");
+      }
       throw withdrawError;
     } finally {
       setSaving(false);
@@ -497,6 +727,12 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
   }
 
   const selectedContent = useMemo(() => selected ? parseContent(selected.content) : null, [selected]);
+  const availableEditorialActions = new Set(allowedEditorialActions({
+    role: canReview ? "ADMIN" : "EDITOR",
+    status: selected?.editorial_status || "DRAFT",
+    ownsContent: !canReview,
+    approvalCurrent: selected?.verified === true,
+  }));
 
   // Derived Analytics & Counts
   const totalSignals = data?.stats.total ?? 0;
@@ -508,6 +744,8 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
     HIDDEN: 0,
     REVOKED: 0,
   }, [data?.stats.statuses]);
+  const isRevokedDraft = selected?.editorial_status === "DRAFT"
+    && selected.editor_feedback_meta?.feedbackKind === "approval-revoked";
 
   const totalMatrixCells = checkInCatalog.moods.length * checkInCatalog.contexts.length;
   const coveredMatrixCells = useMemo(() => {
@@ -674,7 +912,7 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                                 isCurrentActive
                                   ? `${m.label} · ${ctx.label}: Đang chọn (Nhấn lần nữa để bỏ chọn)`
                                   : count > 0
-                                  ? `${m.label} · ${ctx.label}: ${count} lời chiêm nghiệm phát hành (Nhấn để lọc danh sách)`
+                                  ? `${m.label} · ${ctx.label}: ${count} lời chiêm nghiệm công khai (Nhấn để lọc danh sách)`
                                   : `${m.label} · ${ctx.label}: Chưa có nội dung (Nhấn để lọc hoặc soạn mới)`
                               }
                             >
@@ -750,7 +988,7 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
             onClick={() => { setStatus("PUBLISHED"); setPage(1); }}
           >
             <span className="tab-dot dot-published" />
-            <span>Đang phát hành</span>
+            <span>Đang công khai</span>
             <span className="admin-signal-tab-badge">{statusCounts.PUBLISHED || 0}</span>
           </button>
           <button
@@ -768,7 +1006,7 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
             onClick={() => { setStatus("REVOKED"); setPage(1); }}
           >
             <span className="tab-dot dot-revoked" />
-            <span>Đã thu hồi</span>
+            <span>Đã thu hồi (dữ liệu cũ)</span>
             <span className="admin-signal-tab-badge">{statusCounts.REVOKED || 0}</span>
           </button>
         </div>
@@ -863,14 +1101,6 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
             </button>
           </div>
 
-          <button
-            className="admin-signal-create-cta"
-            type="button"
-            onClick={() => void openEditor()}
-          >
-            <Plus size={16} />
-            <span>Soạn lời chiêm nghiệm mới</span>
-          </button>
         </div>
       </div>
 
@@ -990,7 +1220,10 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                             {row.editorial_status === "IN_REVIEW" && row.submitted_by && (
                               <small className="signal-table-advice-preview">Người gửi duyệt: {row.submitted_by}</small>
                             )}
-                            {row.editor_feedback && <small className="signal-table-advice-preview"><strong>Góp ý Admin:</strong> {row.editor_feedback}</small>}
+                            {row.editorial_status === "DRAFT" && row.editor_feedback_meta?.feedbackKind === "approval-revoked" && (
+                              <small className="signal-table-advice-preview"><strong>Được trả về do thu hồi duyệt</strong></small>
+                            )}
+                            {row.editor_feedback && <small className="signal-table-advice-preview"><strong>{editorialFeedbackLabel(row.editor_feedback_meta)}:</strong> {row.editor_feedback}{row.editor_feedback_meta?.reviewerName ? ` · ${row.editor_feedback_meta.reviewerName}` : ""}{row.editor_feedback_meta?.createdAt ? ` · ${formatAuditDate(row.editor_feedback_meta.createdAt)}` : ""}</small>}
                           </div>
                         </td>
                         <td>
@@ -1025,6 +1258,16 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                             >
                               <Eye size={14} />
                             </button>
+                            {!canReview && row.editorial_status === "IN_REVIEW" && <button
+                              className="table-action-icon-btn is-edit"
+                              type="button"
+                              title="Rút lời chiêm nghiệm đang chờ duyệt"
+                              aria-label={`Rút yêu cầu duyệt: ${row.title || row.source}`}
+                              disabled={saving}
+                              onClick={() => withdrawOwnSignal(row)}
+                            >
+                              <RotateCcw size={14} />
+                            </button>}
                             {!canReview && row.editorial_status === "DRAFT" && <button
                               className="table-action-icon-btn is-edit"
                               type="button"
@@ -1079,7 +1322,10 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                   <h3 className="admin-signal-card-title">
                     {row.title || row.source}
                   </h3>
-                  {row.editor_feedback && <p className="signal-table-advice-preview"><strong>Góp ý Admin:</strong> {row.editor_feedback}</p>}
+                  {row.editorial_status === "DRAFT" && row.editor_feedback_meta?.feedbackKind === "approval-revoked" && (
+                    <small className="signal-table-advice-preview"><strong>Được trả về do thu hồi duyệt</strong></small>
+                  )}
+                  {row.editor_feedback && <p className="signal-table-advice-preview"><strong>{editorialFeedbackLabel(row.editor_feedback_meta)}:</strong> {row.editor_feedback}{row.editor_feedback_meta?.reviewerName ? ` · ${row.editor_feedback_meta.reviewerName}` : ""}{row.editor_feedback_meta?.createdAt ? ` · ${formatAuditDate(row.editor_feedback_meta.createdAt)}` : ""}</p>}
 
                   {/* Card Reflection Quote */}
                   <div className="admin-signal-quote-box">
@@ -1143,6 +1389,15 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                         <Eye size={14} />
                         <span>Xem trước / Phê duyệt</span>
                       </button>
+                      {!canReview && row.editorial_status === "IN_REVIEW" && <button
+                        className="admin-signal-edit-btn"
+                        type="button"
+                        disabled={saving}
+                        onClick={() => withdrawOwnSignal(row)}
+                      >
+                        <RotateCcw size={14} />
+                        <span>Rút yêu cầu duyệt</span>
+                      </button>}
                       {!canReview && row.editorial_status === "DRAFT" && <button
                         className="admin-signal-edit-btn"
                         type="button"
@@ -1211,6 +1466,7 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
           }}
         >
           <form
+            ref={editorFormRef}
             className="admin-editor-modal admin-signal-editor-modal"
             onSubmit={(event) => void saveDraft(event, editing.form.editorialStatus)}
           >
@@ -1220,11 +1476,18 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                   <Sparkles size={13} /> CHECK-IN · PHÒNG BIÊN TẬP CHIÊM NGHIỆM
                 </span>
                 <h2 className="admin-editor-title">
-                  {editing.id ? "Hiệu đính lời chiêm nghiệm" : "Khởi tạo bản thảo chiêm nghiệm mới"}
+                  {editing.id ? "Chỉnh sửa lời chiêm nghiệm" : "Tạo lời chiêm nghiệm"}
                 </h2>
                 <p className="admin-editor-desc">
-                  Biên soạn chuẩn hóa tư liệu chiêm nghiệm tâm an dân gian đương đại. Bản thảo sau khi lưu hoặc gửi duyệt sẽ được đối chiếu trước khi phát hành.
+                  Biên soạn chuẩn hóa tư liệu chiêm nghiệm tâm an dân gian đương đại. Bản thảo sau khi lưu hoặc gửi duyệt sẽ được đối chiếu trước khi công khai.
                 </p>
+              {adminFeedback && (
+                <aside className="admin-editor-feedback-callout" role="note">
+                  <strong>{editorialFeedbackLabel(adminFeedback)}</strong>
+                  <span>{adminFeedback.reviewerName} · {adminFeedback.createdAt ? formatAuditDate(adminFeedback.createdAt) : "Không rõ thời gian"}</span>
+                  <p>{adminFeedback.note}</p>
+                </aside>
+              )}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <button
@@ -1348,7 +1611,6 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                         ))}
                       </select>
                     </label>
-
                     <label>
                       <span className="field-title">Ngữ cảnh check-in (Chủ đề)</span>
                       <select
@@ -1357,11 +1619,14 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                       >
                         {checkInCatalog.contexts.map((item) => (
                           <option key={item.key} value={item.key}>
-                            {item.key === "general" ? "Đời sống chung (Mặc định)" : item.label}
+                            {item.label}
                           </option>
                         ))}
                       </select>
                     </label>
+                    {editing.form.contextKey === "general" && (
+                      <small className="admin-signal-wide">Dùng khi lời chiêm nghiệm không gắn với một ngữ cảnh riêng.</small>
+                    )}
 
                     <label>
                       <span className="field-title">Nhãn chủ đề trên thẻ (Tag)</span>
@@ -1443,8 +1708,10 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
 
                     <label className="admin-signal-wide">
                       <span className="field-title">Lời gợi mở phụ đề (Thông điệp dẫn dắt)</span>
-                      <input
+                      <textarea
+                        rows={3}
                         maxLength={500}
+                        style={{ resize: "vertical" }}
                         placeholder="vd: Lời gợi mở chiêm nghiệm đương đại · Đồng hành cùng tâm an."
                         value={editing.form.content.poem.subtext}
                         onChange={(event) => setPoemField("subtext", event.target.value)}
@@ -1453,14 +1720,14 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                   </div>
                 </fieldset>
 
-                {/* Section 3: Tranh di sản nghệ thuật (Artwork) */}
+                {/* Section 3: Ảnh minh họa */}
                 <fieldset className="admin-form-group">
                   <legend className="group-legend">
-                    <Sparkle size={14} /> 3. Tranh di sản nghệ thuật (Tác phẩm thị giác)
+                    <Sparkle size={14} /> 3. Ảnh minh họa
                   </legend>
                   <div className="admin-signal-editor-grid">
                     <label>
-                      <span className="field-title">Chọn từ kho họa phẩm di sản kiểm định</span>
+                      <span className="field-title">Thư viện ảnh minh họa</span>
                       <select
                         value={editing.form.content.artwork?.image || ""}
                         onChange={(event) => {
@@ -1545,8 +1812,9 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                     </label>
 
                     <label className="admin-signal-wide">
-                      <span className="field-title">Thông điệp gợi mở sâu / Tự suy ngẫm</span>
+                      <span className="field-title">Thông điệp gợi mở sâu / Tự suy ngẫm *</span>
                       <textarea
+                        required
                         rows={3}
                         maxLength={10000}
                         placeholder="Câu văn chiêm nghiệm gợi mở bình an trong tâm..."
@@ -1557,10 +1825,10 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                   </div>
                 </fieldset>
 
-                {/* Section 5: Phiến ngọc việc nhỏ an yên */}
+                {/* Section 5: Hành động gợi ý */}
                 <fieldset className="admin-form-group">
                   <legend className="group-legend">
-                    <Compass size={14} /> 5. Phiến ngọc việc nhỏ an yên (Hành động gợi ý)
+                    <Compass size={14} /> 5. Hành động gợi ý
                   </legend>
                   <div className="admin-signal-editor-grid">
                     <label>
@@ -1683,7 +1951,7 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
 
                     <label className="admin-signal-wide">
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                        <span className="field-title" style={{ margin: 0 }}>Ghi chú lưu / gửi duyệt (tối thiểu 8 ký tự) *</span>
+                        <span className="field-title" style={{ margin: 0 }}>Ghi chú lưu / gửi duyệt</span>
                         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                           {["Khởi tạo bản thảo mới", "Hiệu đính câu chữ & nguồn", "Bổ sung tranh di sản & gợi ý", "Hoàn tất sẵn sàng thẩm định"].map((quickNote) => (
                             <button
@@ -1706,14 +1974,13 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                         </div>
                       </div>
                       <textarea
-                        required
                         rows={2}
-                        minLength={8}
                         maxLength={500}
                         value={editing.form.reviewNote}
                         onChange={(event) => setFormField("reviewNote", event.target.value)}
                         placeholder="Nội dung điều chỉnh trong phiên bản này..."
                       />
+                      <span className="field-hint">Tùy chọn khi lưu nháp; cần tối thiểu 8 ký tự khi gửi duyệt.</span>
                     </label>
                   </div>
                 </fieldset>
@@ -1726,6 +1993,9 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                     <div className="live-preview-header">
                       <Sparkles size={14} className="preview-sparkle" />
                       <strong>Trải nghiệm khách hàng thực tế (Live Preview)</strong>
+                      <span className="admin-preview-badge" style={{ marginLeft: "auto" }}>
+                        Bản xem trước · Chưa công khai
+                      </span>
                     </div>
 
                     <div className="admin-client-mockup-card">
@@ -1762,13 +2032,8 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
 
                       {editing.form.content.artwork?.image && editing.form.content.artwork.image !== "none" ? (
                         <figure className="mockup-artwork-frame">
-                          <img
-                            src={
-                              editing.form.content.artwork.image.startsWith("http") ||
-                              editing.form.content.artwork.image.startsWith("/")
-                                ? editing.form.content.artwork.image
-                                : `/images/${editing.form.content.artwork.image}`
-                            }
+                            <UnverifiedImage
+                              src={editing.form.content.artwork.image}
                             alt={editing.form.content.artwork.caption || "Minh họa di sản"}
                             className="mockup-artwork-img"
                           />
@@ -1849,13 +2114,26 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                       onClick={(event) => void saveDraft(event, "IN_REVIEW")}
                     >
                       <Send size={15} />
-                      <span>{saving ? "Đang gửi…" : "Gửi duyệt thẩm định"}</span>
+                      <span>{saving ? "Đang gửi…" : "Gửi duyệt"}</span>
                     </button>
                   </div>
                 </footer>
               </>
             )}
           </form>
+        </div>
+      )}
+      {showDiscardConfirm && editing && (
+        <div className="admin-editor-discard-backdrop" onClick={(event) => { if (event.target === event.currentTarget) resumeEditing(); }}>
+          <section className="admin-editor-discard-dialog" role="alertdialog" aria-modal="true" aria-labelledby="signal-discard-title">
+            <span className="admin-editor-discard-icon"><AlertCircle size={20} /></span>
+            <h3 id="signal-discard-title">Bỏ các thay đổi chưa lưu?</h3>
+            <p>Nội dung bạn vừa chỉnh sửa sẽ mất nếu đóng bản thảo ngay bây giờ.</p>
+            <div className="admin-editor-discard-actions">
+              <button type="button" className="admin-editor-action-btn is-cancel" onClick={resumeEditing}>Tiếp tục soạn</button>
+              <button type="button" className="admin-editor-action-btn is-discard" onClick={forceCloseEditor}>Bỏ thay đổi</button>
+            </div>
+          </section>
         </div>
       )}
 
@@ -1873,7 +2151,7 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
             <header className="admin-editor-header">
               <div className="admin-editor-header-copy">
                 <span className="admin-editor-eyebrow">
-                  <ShieldCheck size={13} /> THẨM ĐỊNH & KIỂM SOÁT DI SẢN CHIÊM NGHIỆM
+                  <ShieldCheck size={13} /> {canReview ? "HỒ SƠ THẨM ĐỊNH & KIỂM DUYỆT BÀI CHIÊM NGHIỆM" : "HỒ SƠ BIÊN TẬP & THEO DÕI KIỂM DUYỆT"}
                 </span>
                 <div className="admin-signal-detail-title-row">
                   <h2 className="admin-editor-title">
@@ -1906,6 +2184,15 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                   </button>
                   <button
                     type="button"
+                    className={`admin-toggle-preview-btn ${showDetailPreview ? "is-active" : ""}`}
+                    onClick={() => setShowDetailPreview((prev) => !prev)}
+                    title={showDetailPreview ? "Ẩn khung xem trước di động để tập trung thẩm định" : "Xem trước giao diện hiển thị trên ứng dụng khách hàng"}
+                  >
+                    {showDetailPreview ? <EyeOff size={14} /> : <Eye size={14} />}
+                    <span>{showDetailPreview ? "Ẩn xem trước" : "Xem trước"}</span>
+                  </button>
+                  <button
+                    type="button"
                     className="admin-theme-toggle-btn"
                     onClick={toggleTheme}
                     aria-label={dark ? "Chuyển giao diện sáng" : "Chuyển giao diện tối"}
@@ -1928,111 +2215,185 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
 
             {selected && selectedContent && (
               <div className="admin-signal-detail-body">
-                <div className="admin-signal-detail-split-grid">
+                {error && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      background: "rgba(239, 68, 68, 0.1)",
+                      border: "1px solid rgba(239, 68, 68, 0.3)",
+                      color: "#ef4444",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                    <span>{error}</span>
+                  </div>
+                )}
+                <div className={`admin-signal-detail-split-grid ${!showDetailPreview ? "is-preview-hidden" : ""}`}>
                   {/* ========================================================= */}
                   {/* CỘT TRÁI (52%): LIVE CLIENT CARD MOCKUP                  */}
                   {/* ========================================================= */}
-                  <div className="admin-signal-mockup-col">
+                  {showDetailPreview && (
+                    <div className="admin-signal-mockup-col">
                     <div className="detail-section-title">
-                      <Eye size={15} /> Giao diện hiển thị tới khách hàng (Live Mockup)
+                      <Smartphone size={15} /> Giao diện hiển thị tới khách hàng (Mô phỏng di động)
                     </div>
 
-                    <div className="admin-client-mockup-card">
-                      <div className="mockup-golden-rim" />
-
-                      {/* Header triện & nhãn */}
-                      <div className="mockup-header-row">
-                        <div className="mockup-seal-tag">
-                          <span className="mockup-seal-mark">啓</span>
-                          <span>{selectedContent.badge || "Chiêm nghiệm tâm an"}</span>
-                        </div>
-                        <span className="mockup-quotation-verified">
-                          {selectedContent.metadata.quotationVerified
-                            ? "✓ Đã đối chiếu nguồn"
-                            : "Chiêm nghiệm đương đại"}
-                        </span>
+                    <div className="admin-client-mockup-wrapper">
+                      <div className="mockup-phone-notch">
+                        <span className="notch-speaker" />
                       </div>
 
-                      {/* Bức trướng thư pháp 2 câu */}
-                      <div className="mockup-poem-block">
-                        <div className="mockup-quote-mark">“</div>
-                        <blockquote className="mockup-poem-lines">
-                          <p className="m-0">{selectedContent.poem.line1 || "Sương mai giăng kín mây mờ, chớ ngại mông lung giữa dòng đời trôi."}</p>
-                          <p className="m-0 mt-1">{selectedContent.poem.line2 || "Giữ tâm trong sáng thiện lành, mây tan nắng ấm trời xanh lại về."}</p>
-                        </blockquote>
-                        <p className="mockup-poem-subtext">
-                          {selectedContent.poem.subtext || "Lời gợi mở chiêm nghiệm đương đại · Đồng hành cùng tâm an."}
-                        </p>
-                      </div>
+                      <div className="admin-client-mockup-card">
+                        <div className="mockup-golden-rim" />
 
-                      {/* Tranh di sản minh họa (nếu có) */}
-                      {selectedContent.artwork?.image && selectedContent.artwork.image !== "none" ? (
-                        <figure className="mockup-artwork-frame">
-                          <img
-                            src={selectedContent.artwork.image}
-                            alt={selectedContent.artwork.caption || "Minh họa di sản"}
-                            className="mockup-artwork-img"
-                          />
-                          <figcaption className="mockup-artwork-caption">
-                            <span className="flex items-center gap-1.5">
-                              <Sparkle size={13} className="text-accent" />
-                              <span>{selectedContent.artwork.caption || "Hình ảnh di sản minh họa"}</span>
-                            </span>
-                            {(selectedContent.research?.region || selectedContent.metadata?.originCommunity) && (
-                              <span className="mockup-region-tag">
-                                {selectedContent.research?.region || selectedContent.metadata?.originCommunity}
-                              </span>
-                            )}
-                          </figcaption>
-                        </figure>
-                      ) : (
-                        <div className="mockup-artwork-empty">
-                          <Sparkles size={16} />
-                          <span>Nội dung chữ nguyên bản · Chưa gắn tài sản hình ảnh</span>
-                        </div>
-                      )}
-
-                      {/* Khối lời khuyên ấm áp */}
-                      <div className="mockup-advice-box">
-                        <div className="mockup-advice-tag">
-                          <Sparkle size={13} />
-                          <span>LỜI GỬI GẮM CHO NGÀY HÔM NAY</span>
-                        </div>
-                        <p className="mockup-advice-text">
-                          {selectedContent.reflection.advice || selectedContent.reflection.content || "Một bước đi nhỏ hôm nay gieo mầm bình yên cho tâm trí."}
-                        </p>
-                      </div>
-
-                      {/* Phiến ngọc việc nhỏ */}
-                      <div className="mockup-action-card">
-                        <div className="mockup-action-header">
-                          <div className="mockup-action-tag">
-                            <Sparkles size={13} />
-                            <span>MỘT VIỆC NHỎ AN YÊN</span>
+                        {/* Header triện & nhãn */}
+                        <div className="mockup-header-row">
+                          <div className="mockup-seal-tag">
+                            <span className="mockup-seal-mark">啓</span>
+                            <span>{selectedContent.badge || "Chiêm nghiệm tâm an"}</span>
                           </div>
-                          <span className="mockup-action-duration">
-                            <Clock size={12} />
-                            <span>{selectedContent.action.duration || "5 phút"}</span>
+                          <span className="mockup-quotation-verified">
+                            {selectedContent.metadata.quotationVerified
+                              ? "✓ Đã đối chiếu nguồn"
+                              : "Chiêm nghiệm đương đại"}
                           </span>
                         </div>
-                        <h4 className="mockup-action-title">
-                          {selectedContent.action.title || "Chọn một việc nhỏ vừa sức"}
-                        </h4>
-                        <p className="mockup-action-desc">
-                          {selectedContent.action.description || "Dành ít phút viết ra hoặc thực hiện ngay việc này."}
-                        </p>
-                        <div className="mockup-action-btn-preview">
-                          <Sparkles size={14} />
-                          <span>Tôi đã thực hiện</span>
+
+                        {/* Bức trướng thư pháp 2 câu */}
+                        <div className="mockup-poem-block">
+                          <div className="mockup-quote-mark">“</div>
+                          <blockquote className="mockup-poem-lines">
+                            <p className="m-0">{selectedContent.poem.line1 || "Sương mai giăng kín mây mờ, chớ ngại mông lung giữa dòng đời trôi."}</p>
+                            <p className="m-0 mt-1">{selectedContent.poem.line2 || "Giữ tâm trong sáng thiện lành, mây tan nắng ấm trời xanh lại về."}</p>
+                          </blockquote>
+                          <p className="mockup-poem-subtext">
+                            {selectedContent.poem.subtext || "Lời gợi mở chiêm nghiệm đương đại · Đồng hành cùng tâm an."}
+                          </p>
+                        </div>
+
+                        {/* Tranh di sản minh họa (nếu có) */}
+                        {selectedContent.artwork?.image && selectedContent.artwork.image !== "none" ? (
+                          <figure className="mockup-artwork-frame">
+                            <UnverifiedImage
+                              src={selectedContent.artwork.image}
+                              alt={selectedContent.artwork.caption || "Minh họa di sản"}
+                              className="mockup-artwork-img"
+                            />
+                            <figcaption className="mockup-artwork-caption">
+                              <span className="flex items-center gap-1.5">
+                                <Sparkle size={13} className="text-accent" />
+                                <span>{selectedContent.artwork.caption || "Hình ảnh di sản minh họa"}</span>
+                              </span>
+                              {(selectedContent.research?.region || selectedContent.metadata?.originCommunity) && (
+                                <span className="mockup-region-tag">
+                                  {selectedContent.research?.region || selectedContent.metadata?.originCommunity}
+                                </span>
+                              )}
+                            </figcaption>
+                          </figure>
+                        ) : (
+                          <div className="mockup-artwork-empty">
+                            <Sparkles size={16} />
+                            <span>Nội dung chữ nguyên bản · Chưa gắn tài sản hình ảnh</span>
+                          </div>
+                        )}
+
+                        {/* Khối lời khuyên ấm áp */}
+                        <div className="mockup-advice-box">
+                          <div className="mockup-advice-tag">
+                            <Sparkle size={13} />
+                            <span>LỜI GỬI GẮM CHO NGÀY HÔM NAY</span>
+                          </div>
+                          <p className="mockup-advice-text">
+                            {selectedContent.reflection.advice || selectedContent.reflection.content || "Một bước đi nhỏ hôm nay gieo mầm bình yên cho tâm trí."}
+                          </p>
+                        </div>
+
+                        {/* Hành động gợi ý */}
+                        <div className="mockup-action-card">
+                          <div className="mockup-action-header">
+                            <div className="mockup-action-tag">
+                              <Sparkles size={13} />
+                              <span>MỘT VIỆC NHỎ AN YÊN</span>
+                            </div>
+                            <span className="mockup-action-duration">
+                              <Clock size={12} />
+                              <span>{selectedContent.action.duration || "5 phút"}</span>
+                            </span>
+                          </div>
+                          <h4 className="mockup-action-title">
+                            {selectedContent.action.title || "Chọn một việc nhỏ vừa sức"}
+                          </h4>
+                          <p className="mockup-action-desc">
+                            {selectedContent.action.description || "Dành ít phút viết ra hoặc thực hiện ngay việc này."}
+                          </p>
+                          <div className="mockup-action-btn-preview">
+                            <Sparkles size={14} />
+                            <span>Tôi đã thực hiện</span>
+                          </div>
+                          <div className="mockup-action-preview-hint">
+                            <span>👆 Nút tương tác thực tế của người dùng trên ứng dụng</span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
+                )}
 
                   {/* ========================================================= */}
                   {/* CỘT PHẢI (48%): THẨM ĐỊNH & THAO TÁC BIÊN TẬP            */}
                   {/* ========================================================= */}
                   <div className="admin-signal-control-col">
+                    {/* 0. Card Trích lược nội dung bài chiêm nghiệm (Hiện nổi bật khi ẩn mockup) */}
+                    <div className="admin-signal-preview-summary-card">
+                      <div className="detail-section-title">
+                        <Sparkles size={15} /> Trích lược nội dung tác phẩm
+                      </div>
+
+                      {/* Thơ chiêm nghiệm */}
+                      <div className="detail-poem-display-box">
+                        <div className="poem-display-lines">
+                          <p className="poem-display-line is-primary">
+                            "{selectedContent.poem.line1 || selected.title}"
+                          </p>
+                          {selectedContent.poem.line2 && (
+                            <p className="poem-display-line is-secondary">
+                              "{selectedContent.poem.line2}"
+                            </p>
+                          )}
+                          {selectedContent.poem.subtext && (
+                            <span className="poem-display-subtext">~ {selectedContent.poem.subtext} ~</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Lời gửi gắm tâm an */}
+                      <div className="detail-reflection-summary-box">
+                        <span className="summary-badge">🌿 LỜI DẶN CHIÊM NGHIỆM</span>
+                        <p className="reflection-summary-text">
+                          {selectedContent.reflection.advice || selectedContent.reflection.content || "Một bước đi nhỏ hôm nay gieo mầm bình yên cho tâm trí."}
+                        </p>
+                      </div>
+
+                      {/* Một việc nhỏ an yên */}
+                      {selectedContent.action.title && (
+                        <div className="detail-action-summary-row">
+                          <span className="action-summary-duration">
+                            <Clock size={12} /> {selectedContent.action.duration || "5 phút"}
+                          </span>
+                          <span className="action-summary-title">
+                            Việc nhỏ an yên: <strong>{selectedContent.action.title}</strong>
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
                     {/* 1. Card Hồ sơ nguồn & Căn cứ bản quyền */}
                     <div className="admin-signal-provenance-card">
                       <div className="detail-section-title">
@@ -2043,8 +2404,8 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                           <span className="provenance-label">Loại nội dung:</span>
                           <strong className="provenance-value">
                             {selectedContent.metadata.contentKind === "folk"
-                              ? "📜 Ca dao / Trích dẫn dân gian (QUOTATION)"
-                              : "✍️ Tác phẩm nhóm tự biên soạn (GROUP_AUTHORED)"}
+                              ? "📜 Ca dao / Trích dẫn dân gian"
+                              : "✍️ Tác phẩm nhóm tự biên soạn"}
                           </strong>
                         </div>
                         <div className="provenance-item">
@@ -2103,50 +2464,55 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                         </span>
                         {selected.verified && (
                           <span className="workflow-verified-chip">
-                            <ShieldCheck size={13} /> Đã kiểm định
+                            <ShieldCheck size={13} /> Đã duyệt nội dung
                           </span>
                         )}
                       </div>
 
                       {selected.editorial_status === "REVOKED" && (
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            gap: "8px",
-                            padding: "10px 12px",
-                            borderRadius: "8px",
-                            background: "rgba(239, 68, 68, 0.08)",
-                            border: "1px solid rgba(239, 68, 68, 0.25)",
-                            fontSize: "12px",
-                            lineHeight: "1.5",
-                            color: "var(--admin-text-main, #333)",
-                            marginBottom: "12px",
-                          }}
-                        >
-                          <AlertCircle size={15} style={{ color: "#ef4444", flexShrink: 0, marginTop: "2px" }} />
-                          <span>
-                            Nội dung này đang bị thu hồi. Bạn có thể <strong>Trả về bản nháp</strong> để biên tập viên chỉnh sửa lại, hoặc <strong>Tái duyệt phiên bản này</strong> nếu đã kiểm tra đạt chuẩn.
-                          </span>
+                        <div className="admin-revoke-feedback-box" style={{ marginBottom: "14px" }}>
+                          <div className="revoke-feedback-header">
+                            <AlertTriangle size={15} className="text-amber-500" />
+                            <strong>Trạng thái: Đang thu hồi phê duyệt</strong>
+                          </div>
+                          <p className="revoke-feedback-text">
+                            Nội dung này đang tạm ngưng hiển thị công khai. Bạn có thể <strong>Trả về bản nháp</strong> để biên tập viên chỉnh sửa theo góp ý, hoặc <strong>Tái duyệt phiên bản này</strong> nếu đã kiểm tra đạt chuẩn.
+                          </p>
                         </div>
                       )}
 
                       <label className="admin-signal-review-note-label">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="field-title font-semibold text-xs">Ghi chú thao tác biên tập (tối thiểu 8 ký tự) *</span>
+                          <span className="field-title font-semibold text-xs">{pendingAdminTransition === "revoke" ? "Lý do thu hồi duyệt" : pendingAdminTransition === "hide" ? "Lý do ẩn" : "Ghi chú duyệt"} (tối thiểu 8 ký tự) *</span>
                           <span className={`text-[11px] ${reviewNote.trim().length >= 8 ? "text-emerald-500" : "text-amber-500"}`}>
                             {reviewNote.trim().length}/500 ký tự
                           </span>
                         </div>
                         <textarea
+                          required
                           rows={2}
                           minLength={8}
                           maxLength={500}
                           value={reviewNote}
                           onChange={(event) => setReviewNote(event.target.value)}
-                          placeholder="Ghi rõ nội dung đã thẩm định, đối chiếu nguồn hoặc lý do thay đổi trạng thái..."
+                          placeholder={pendingAdminTransition === "revoke" ? "Nêu lý do hủy hiệu lực duyệt và việc cần rà soát..." : pendingAdminTransition === "hide" ? "Nêu lý do tạm dừng hiển thị nội dung..." : "Ghi kết quả đối chiếu nội dung và nguồn..."}
                         />
                       </label>
+
+                      {/* Gợi ý lý do thẩm định nhanh */}
+                      <div className="admin-review-presets-wrap">
+                        <span className="presets-label">Gợi ý nhanh:</span>
+                        {(selected.verified ? ADMIN_PUBLICATION_PRESETS : ADMIN_REVIEW_PRESETS).map((preset) => (
+                          <button
+                            key={preset}
+                            type="button"
+                            className="admin-review-preset-chip"
+                            onClick={() => setReviewNote(preset)}
+                          >
+                            {preset}
+                          </button>
+                        ))}
+                      </div>
 
                       <label className="admin-signal-checkbox-styled">
                         <input
@@ -2154,11 +2520,24 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                           checked={rightsConfirmed}
                           onChange={(event) => setRightsConfirmed(event.target.checked)}
                         />
-                        <span>Tôi xác nhận đã đối chiếu kỹ lưỡng căn cứ quyền sử dụng và tính chuẩn xác của nội dung.</span>
+                        <span>
+                          Tôi xác nhận đã đối chiếu kỹ lưỡng căn cứ quyền sử dụng và tính chuẩn xác của nội dung.
+                          <small style={{ display: "block", color: "var(--admin-muted)", fontSize: "11px", marginTop: "2px" }}>
+                            (Bắt buộc khi bấm Duyệt hoặc Tái duyệt phiên bản)
+                          </small>
+                        </span>
                       </label>
 
                       {/* Băng nút hành động thông minh theo trạng thái */}
                       <div className="admin-signal-action-buttons-strip">
+                        {/* 0. TRƯỜNG HỢP: BẢN NHÁP (DRAFT) */}
+                        {selected.editorial_status === "DRAFT" && (
+                          <div className="admin-status-draft-notice" style={{ padding: "12px 14px", borderRadius: "10px", background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.25)", color: "#065f46", fontSize: "13px", lineHeight: "1.5", display: "flex", alignItems: "center", gap: "8px" }}>
+                            <Check size={18} style={{ flexShrink: 0, color: "#10b981" }} />
+                            <span>Nội dung này đã được chuyển về <strong>Bản nháp</strong>. Biên tập viên có thể mở lại để chỉnh sửa và gửi duyệt phiên bản mới.</span>
+                          </div>
+                        )}
+
                         {/* 1. TRƯỜNG HỢP: CHỜ DUYỆT (IN_REVIEW) */}
                         {!selected.verified && selected.editorial_status === "IN_REVIEW" && (
                           <>
@@ -2167,9 +2546,9 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                               className="btn-action-primary is-approve"
                               disabled={saving}
                               onClick={() => void transition({ verified: true })}
-                              title="Phê duyệt phiên bản nội dung này sau khi đã thẩm định"
+                              title="Duyệt nội dung sau khi thẩm định"
                             >
-                              <ShieldCheck size={16} /> Duyệt phiên bản này
+                              <ShieldCheck size={16} /> {saving ? "Đang xử lý..." : "Duyệt nội dung"}
                             </button>
                             <button
                               type="button"
@@ -2178,7 +2557,7 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                               onClick={returnToDraftFromDetail}
                               title="Yêu cầu chỉnh sửa và trả về bản nháp"
                             >
-                              <RotateCcw size={14} /> Yêu cầu chỉnh sửa
+                              <RotateCcw size={14} /> {saving ? "Đang xử lý..." : "Yêu cầu chỉnh sửa"}
                             </button>
                           </>
                         )}
@@ -2188,134 +2567,213 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
                           <>
                             <button
                               type="button"
-                              className="btn-action-primary is-approve"
-                              disabled={saving}
-                              onClick={() => void transition({ verified: true })}
-                              title="Tái thẩm định và phê duyệt lại phiên bản này"
-                            >
-                              <ShieldCheck size={16} /> Tái duyệt phiên bản này
-                            </button>
-                            <button
-                              type="button"
                               className="btn-action-secondary"
                               disabled={saving}
                               onClick={returnToDraftFromDetail}
                               title="Trả bản ghi về bản nháp để biên tập viên sửa đổi và nộp duyệt lại"
                             >
-                              <RotateCcw size={14} /> Trả về bản nháp để sửa
+                              <RotateCcw size={14} /> {saving ? "Đang xử lý..." : "Trả về bản nháp để sửa"}
                             </button>
                           </>
                         )}
 
                         {/* 3. TRƯỜNG HỢP: ĐÃ DUYỆT NHƯNG CHƯA PHÁT HÀNH */}
-                        {selected.verified && !selected.active && (
+                        {(availableEditorialActions.has("publish") || availableEditorialActions.has("show")) && (
                           <button
                             type="button"
                             className="btn-action-primary is-publish"
                             disabled={saving}
                             onClick={() => void transition({ active: true })}
                           >
-                            <Eye size={16} /> Xuất bản / Phát hành
+                            <Eye size={16} /> {availableEditorialActions.has("show") ? "Hiện lại" : "Công khai"}
                           </button>
                         )}
 
                         {/* 4. TRƯỜNG HỢP: ĐANG PHÁT HÀNH => CÓ THỂ TẠM ẨN */}
-                        {selected.active && (
+                        {availableEditorialActions.has("hide") && (
                           <button
                             type="button"
                             className="btn-action-secondary is-hide"
                             disabled={saving}
-                            onClick={() => void transition({ active: false })}
+                            onClick={() => setPendingAdminTransition("hide")}
                           >
-                            <EyeOff size={16} /> Tạm ẩn khỏi bạn đọc
+                            <EyeOff size={16} /> Ẩn nội dung
                           </button>
                         )}
 
                         {/* 5. THU HỒI PHÊ DUYỆT (NẾU ĐÃ DUYỆT) */}
-                        {selected.verified && (
+                        {availableEditorialActions.has("revoke_approval") && (
                           <button
                             type="button"
                             className="btn-action-danger"
                             disabled={saving}
-                            onClick={() => void transition({ verified: false })}
+                            onClick={() => setPendingAdminTransition("revoke")}
                           >
-                            Thu hồi phê duyệt
+                            Thu hồi duyệt để chỉnh sửa
                           </button>
                         )}
 
                       </div>
                     </div> : (
-                      <div className="admin-signal-review-panel" role="status">
-                        <div className="detail-section-title"><ShieldCheck size={15} /> Trạng thái biên tập</div>
-                        <p>Bản này đang ở trạng thái <strong>{STATUS_LABELS[selected.editorial_status]}</strong>. Gửi duyệt trong màn hình biên tập; Admin sẽ rà soát và phát hành.</p>
-                        {selected.editorial_status === "REVOKED" && (
-                          <p>Admin đã thu hồi phê duyệt. Đưa bản này về nháp, cập nhật nếu cần rồi gửi duyệt lại để Admin có thể phê duyệt phiên bản mới.</p>
+                      <div className="admin-signal-review-panel is-editor-view" role="status">
+                        <div className="detail-section-title"><Compass size={15} /> Tiến trình & Thao tác biên tập</div>
+
+                        {/* 1. Lộ trình vòng đời xuất bản (Publishing Stepper) */}
+                        <div className="admin-editorial-stepper">
+                          <div className={`stepper-step ${selected.editorial_status === "DRAFT" ? "is-active" : "is-complete"}`}>
+                            <div className="step-circle">{selected.editorial_status === "DRAFT" ? "1" : "✓"}</div>
+                            <span className="step-title">Soạn thảo</span>
+                          </div>
+                          <div className={`stepper-line ${selected.editorial_status !== "DRAFT" ? "is-active" : ""}`} />
+                          <div className={`stepper-step ${selected.editorial_status === "IN_REVIEW" ? "is-active" : selected.editorial_status === "APPROVED" || selected.editorial_status === "PUBLISHED" ? "is-complete" : ""}`}>
+                            <div className="step-circle">{selected.editorial_status === "APPROVED" || selected.editorial_status === "PUBLISHED" ? "✓" : "2"}</div>
+                            <span className="step-title">Thẩm định</span>
+                          </div>
+                          <div className={`stepper-line ${selected.editorial_status === "APPROVED" || selected.editorial_status === "PUBLISHED" ? "is-active" : ""}`} />
+                          <div className={`stepper-step ${selected.editorial_status === "PUBLISHED" ? "is-active is-complete" : ""}`}>
+                            <div className="step-circle">{selected.editorial_status === "PUBLISHED" ? "✓" : "3"}</div>
+                            <span className="step-title">Công khai</span>
+                          </div>
+                        </div>
+
+                        {/* 2. Callout trạng thái */}
+                        <div className="workflow-status-callout is-enhanced">
+                          <span className="status-callout-label">Trạng thái:</span>
+                          <span className={`admin-signal-status-pill is-${cssStatus[selected.editorial_status]}`}>
+                            <span className="status-glow-dot" />
+                            {STATUS_LABELS[selected.editorial_status]}
+                          </span>
+                          <span className="status-spec-chip">{moodName(selected.mood)}</span>
+                          <span className="status-spec-chip">{contextName(selected.context_key)}</span>
+                        </div>
+
+                        {/* 3. Phản hồi thu hồi nếu có */}
+                        {(selected.editorial_status === "REVOKED" || isRevokedDraft) && (
+                          <div className="admin-revoke-feedback-box">
+                            <div className="revoke-feedback-header">
+                              <AlertTriangle size={15} className="text-amber-500" />
+                              <strong>{isRevokedDraft ? "Được trả về bản nháp do thu hồi duyệt" : "Lý do Quản trị viên thu hồi duyệt:"}</strong>
+                            </div>
+                            <p className="revoke-feedback-text">
+                              {selected.editor_feedback ||
+                                ((selected.auditLogs?.find(l => l.details?.reviewNote)?.details?.reviewNote) as string) ||
+                                "Nội dung này đã được quản trị viên thu hồi để rà soát lại căn cứ bản quyền hoặc hoàn thiện câu từ. Vui lòng mở lại bản nháp để chỉnh sửa và gửi duyệt lại."}
+                            </p>
+                            {selected.editor_feedback_meta && (
+                              <small className="revoke-feedback-text">
+                                {selected.editor_feedback_meta.reviewerName} · {formatAuditDate(selected.editor_feedback_meta.createdAt)}
+                              </small>
+                            )}
+                          </div>
                         )}
-                        {selected.editorial_status === "DRAFT" ? (
-                          <button type="button" className="admin-secondary-button" onClick={() => void openEditor(selected.id)}>
-                            <Edit3 size={15} /> Sửa / gửi duyệt nội dung
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className="admin-secondary-button"
-                            disabled={saving}
-                            onClick={() => void withdrawOwnSignal()}
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: "8px",
-                              padding: "9px 18px",
-                              borderRadius: "10px",
-                              border: "1px solid rgba(200, 150, 85, 0.4)",
-                              background: "rgba(200, 150, 85, 0.08)",
-                              color: "var(--admin-gold, #c89655)",
-                              fontWeight: 600,
-                              fontSize: "13px",
-                              cursor: "pointer",
-                              transition: "all 0.2s ease",
-                            }}
-                          >
-                            <RotateCcw size={15} /> Rút bài về bản nháp để chỉnh sửa
-                          </button>
-                        )}
+
+                        {/* 4. Thẻ chỉ dẫn & Nút hành động chính */}
+                        <div className="admin-editor-action-hero-box">
+                          <p className="workflow-status-desc">
+                            {selected.editorial_status === "DRAFT"
+                              ? isRevokedDraft
+                                ? "Bản nháp này được trả về sau khi Admin thu hồi duyệt. Xem lý do bên trên, chỉnh sửa rồi gửi duyệt lại."
+                                : "Bản ghi đang ở trạng thái Bản nháp. Bạn có thể chỉnh sửa nội dung và cập nhật nguồn trước khi gửi duyệt."
+                              : selected.editorial_status === "IN_REVIEW"
+                              ? "Lời chiêm nghiệm đang chờ Admin duyệt. Bạn có thể rút về bản nháp nếu cần chỉnh sửa thêm."
+                              : selected.editorial_status === "REVOKED"
+                              ? "Đây là trạng thái thu hồi của quy trình cũ. Chỉ Admin mới có thể đưa nội dung về Bản nháp; lịch sử cũ vẫn được giữ lại."
+                              : "Lời chiêm nghiệm đã được Admin duyệt. Chỉ Admin mới có thể thu hồi lượt duyệt này."}
+                          </p>
+
+                          {selected.editorial_status === "DRAFT" ? (
+                            <button
+                              type="button"
+                              className="admin-hero-primary-btn"
+                              onClick={() => {
+                                const targetId = selected.id;
+                                closeDetail();
+                                void openEditor(targetId);
+                              }}
+                            >
+                              <Edit3 size={16} />
+                              <span>Mở trình soạn thảo & Gửi duyệt</span>
+                              <ChevronRight size={16} />
+                            </button>
+                          ) : selected.editorial_status === "IN_REVIEW" ? (
+                            <button
+                              type="button"
+                              className="btn-action-secondary"
+                              disabled={saving}
+                              onClick={() => void withdrawOwnSignal()}
+                              title="Rút bài khỏi hàng chờ thẩm định để quay về bản nháp chỉnh sửa"
+                            >
+                              <RotateCcw size={15} /> Rút yêu cầu duyệt
+                            </button>
+                          ) : selected.editorial_status === "REVOKED" ? (
+                            <div className="admin-locked-notice">
+                              <ShieldCheck size={16} />
+                              <span>Chờ Admin chuyển trạng thái thu hồi cũ về Bản nháp.</span>
+                            </div>
+                          ) : (
+                            <div className="admin-locked-notice">
+                              <ShieldCheck size={16} />
+                              <span>Nội dung đã được duyệt an toàn. Mọi điều chỉnh cần thông qua Quản trị viên.</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
 
                     {/* 3. Card Nhật ký kiểm duyệt & Dòng thời gian */}
-                    {canReview && <div className="admin-signal-audit-panel">
+                    <div className="admin-signal-audit-panel">
                       <div className="detail-section-title">
-                        <FileClock size={15} /> Nhật ký kiểm duyệt & thao tác ({selected.auditLogs?.length || 0})
+                        <FileClock size={15} /> Nhật ký kiểm duyệt & Dòng thời gian ({Math.max(1, selected.auditLogs?.length || 0)})
                       </div>
-                      {selected.auditLogs?.length ? (
-                        <div className="audit-timeline">
-                          {selected.auditLogs.map((log) => (
-                            <div className="audit-timeline-item" key={log.id}>
-                              <div className="audit-timeline-badge">
-                                <User size={13} />
-                              </div>
-                              <div className="audit-timeline-content">
-                                <div className="audit-header">
-                                  <strong>{log.users?.full_name || "Quản trị viên"}</strong>
-                                  <span className="audit-action-chip">{log.action}</span>
-                                  <time className="audit-time">
-                                    {new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium", timeStyle: "short" }).format(new Date(log.created_at))}
-                                  </time>
-                                </div>
-                                {Boolean(log.details.reviewNote) && (
-                                  <p className="audit-note">{String(log.details.reviewNote)}</p>
-                                )}
-                              </div>
+                      <div className="audit-timeline">
+                        {/* Mốc khởi tạo luôn có mặt */}
+                        <div className="audit-timeline-item is-genesis">
+                          <div className="audit-timeline-badge">
+                            <Sparkles size={12} />
+                          </div>
+                          <div className="audit-timeline-content">
+                            <div className="audit-header">
+                              <strong>{selectedContent.metadata.contentAuthor || "Biên tập viên"}</strong>
+                              <span className="audit-action-chip is-neutral">
+                                KHỞI TẠO BẢN THẢO
+                              </span>
+                              <time className="audit-time">
+                                {formatAuditDate(selected.updated_at)}
+                              </time>
                             </div>
-                          ))}
+                            <p className="audit-note">Bản thảo chiêm nghiệm được tạo lập với định danh <code>{selected.source}</code></p>
+                          </div>
                         </div>
-                      ) : (
-                        <div className="audit-empty-state">
-                          <Clock size={18} className="text-muted opacity-60" />
-                          <span>Chưa có lịch sử thao tác nào được ghi nhận cho bản ghi này.</span>
-                        </div>
-                      )}
-                    </div>}
+
+                        {/* Các mốc thao tác tiếp theo */}
+                        {selected.auditLogs?.map((log) => (
+                          <div className="audit-timeline-item" key={log.id}>
+                            <div className="audit-timeline-badge">
+                              <User size={13} />
+                            </div>
+                            <div className="audit-timeline-content">
+                              <div className="audit-header">
+                                <strong>{log.users?.full_name || "Quản trị viên"}</strong>
+                                {(() => {
+                                  const meta = formatAuditAction(log.action, String(log.details?.reviewNote || ""));
+                                  return (
+                                    <span className={`audit-action-chip is-${meta.tone}`}>
+                                      {meta.label}
+                                    </span>
+                                  );
+                                })()}
+                                <time className="audit-time">
+                                  {formatAuditDate(log.created_at)}
+                                </time>
+                              </div>
+                              {Boolean(log.details.reviewNote) && (
+                                <p className="audit-note">{String(log.details.reviewNote)}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2324,11 +2782,41 @@ export function SignalAdminPanel({ canReview = true }: { canReview?: boolean }) 
         </div>
       )}
 
+      {pendingAdminTransition && selected && (
+        <div className="admin-review-overlay" role="alertdialog" aria-modal="true" aria-labelledby="signal-transition-title">
+          <section className="admin-review-panel">
+            <h3 id="signal-transition-title">{pendingAdminTransition === "revoke" ? "Thu hồi duyệt để chỉnh sửa?" : "Ẩn nội dung?"}</h3>
+            <p className="admin-muted">
+              {pendingAdminTransition === "revoke"
+                ? "Nội dung sẽ ngừng hiển thị công khai và trở về bản nháp. Editor cần chỉnh sửa, gửi duyệt và chờ duyệt lại. Lịch sử duyệt cũ vẫn được giữ lại."
+                : "Nội dung sẽ tạm ngừng hiển thị. Kết quả duyệt được giữ lại."}
+            </p>
+            <p className="admin-muted">{pendingAdminTransition === "revoke" ? "Lý do thu hồi duyệt" : "Lý do ẩn"} cần có ít nhất 8 ký tự.</p>
+            <div className="admin-review-actions">
+              <button type="button" className="admin-secondary-button" disabled={saving} onClick={() => setPendingAdminTransition(null)}>Hủy</button>
+              <button
+                type="button"
+                className="admin-primary-button"
+                disabled={saving || reviewNote.trim().length < 8}
+                onClick={() => {
+                  const pendingAction = pendingAdminTransition;
+                  setPendingAdminTransition(null);
+                  if (pendingAction === "revoke") void transition({ verified: false });
+                  else void transition({ active: false });
+                }}
+              >
+                {pendingAdminTransition === "revoke" ? "Thu hồi duyệt để chỉnh sửa" : "Ẩn nội dung"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {/* Modal rút tín hiệu về bản nháp */}
       <WithdrawModal
         isOpen={showWithdrawOwn}
-        itemTitle={selected?.title || "Tín hiệu"}
-        itemTypeLabel="tín hiệu"
+        itemTitle={selected?.title || "Lời chiêm nghiệm"}
+        itemTypeLabel="lời chiêm nghiệm"
         onClose={() => setShowWithdrawOwn(false)}
         onConfirm={confirmWithdrawOwnSignal}
       />

@@ -35,10 +35,11 @@ type ReviewItem = {
   label: string;
   detail: string;
   icon: typeof BookOpenText;
-  count: number;
+  count: number | null;
+  failed?: boolean;
 };
 
-type SignalReviewPage = { pagination: { total: number } };
+type SignalReviewPage = { items: Array<Record<string, unknown>>; pagination: { total: number; pageCount: number } };
 
 const SOURCES = [
   { id: "culture", label: "Kho văn hóa", detail: "Bài viết, tư liệu và hồ sơ nguồn", icon: BookOpenText },
@@ -69,7 +70,7 @@ export function ReviewQueuePanel({
 }: {
   onSelect: (section: AdminSection) => void;
   onReviewItem?: (section: AdminSection, id: string) => void;
-  onTotalChange?: (total: number) => void;
+  onTotalChange?: (total: number | null) => void;
 }) {
   const [items, setItems] = useState<ReviewItem[]>([]);
   const [pendingRecords, setPendingRecords] = useState<PendingReviewItem[]>([]);
@@ -83,23 +84,19 @@ export function ReviewQueuePanel({
     try {
       const results = await Promise.all(
         SOURCES.map(async (source) => {
-          if (source.id === "signals") {
-            try {
-              const res = await apiRequest<SignalReviewPage>("/admin/signals?page=1&status=IN_REVIEW");
-              return { count: res.pagination?.total || 0, items: [] as PendingReviewItem[] };
-            } catch {
-              return { count: 0, items: [] as PendingReviewItem[] };
-            }
-          }
           try {
-            const res = (await loadAdminList<AdminRecord>(
-              source.id,
-              1,
-              "",
-              "IN_REVIEW",
-            )) as AdminPage<AdminRecord>;
+            const first = source.id === "signals"
+              ? await apiRequest<SignalReviewPage>("/admin/signals?page=1&status=IN_REVIEW")
+              : await loadAdminList<AdminRecord>(source.id, 1, "", "IN_REVIEW") as AdminPage<AdminRecord>;
+            const pageCount = first.pagination?.pageCount || 1;
+            const rest = await Promise.all(Array.from({ length: pageCount - 1 }, (_, index) =>
+              source.id === "signals"
+                ? apiRequest<SignalReviewPage>(`/admin/signals?page=${index + 2}&status=IN_REVIEW`)
+                : loadAdminList<AdminRecord>(source.id, index + 2, "", "IN_REVIEW") as Promise<AdminPage<AdminRecord>>,
+            ));
+            const allItems = [first, ...rest].flatMap((page) => page.items || []);
 
-            const mapped: PendingReviewItem[] = (res.items || []).map((rec) => {
+            const mapped: PendingReviewItem[] = allItems.map((rec) => {
               const title =
                 (typeof rec.title === "string" && rec.title.trim()) ||
                 (typeof rec.name === "string" && rec.name.trim()) ||
@@ -118,7 +115,7 @@ export function ReviewQueuePanel({
                   : null;
 
               return {
-                id: rec.id,
+                id: String(rec.id),
                 sectionId: source.id,
                 sectionLabel: source.label,
                 title,
@@ -126,13 +123,13 @@ export function ReviewQueuePanel({
                 source: sourceUrl,
                 updated_at: typeof rec.updated_at === "string" ? rec.updated_at : undefined,
                 created_at: typeof rec.created_at === "string" ? rec.created_at : undefined,
-                author: typeof rec.author === "string" ? rec.author : undefined,
+                author: typeof rec.submitted_by === "string" ? rec.submitted_by : typeof rec.author === "string" ? rec.author : undefined,
               };
             });
 
-            return { count: res.pagination?.total || 0, items: mapped };
-          } catch {
-            return { count: 0, items: [] as PendingReviewItem[] };
+            return { count: first.pagination?.total ?? mapped.length, items: mapped, failed: false };
+          } catch (error) {
+            return { count: null, items: [] as PendingReviewItem[], failed: true, error };
           }
         }),
       );
@@ -140,14 +137,16 @@ export function ReviewQueuePanel({
       const updatedItems = SOURCES.map((source, index) => ({
         ...source,
         count: results[index].count,
+        failed: results[index].failed,
       }));
       setItems(updatedItems);
+      setError(updatedItems.some((item) => item.failed) ? "Một số kho chưa tải được. Số liệu ở các kho đó chưa được tính; hãy thử lại." : "");
 
       const allPending = results.flatMap((r) => r.items);
       setPendingRecords(allPending);
 
-      const sumTotal = updatedItems.reduce((acc, curr) => acc + curr.count, 0);
-      onTotalChange?.(sumTotal);
+      const sumTotal = updatedItems.reduce((acc, curr) => acc + (curr.count || 0), 0);
+      onTotalChange?.(updatedItems.some((item) => item.failed) ? null : sumTotal);
     } catch (loadError) {
       setError(
         loadError instanceof Error ? loadError.message : "Không tải được danh sách bài chờ duyệt.",
@@ -161,9 +160,9 @@ export function ReviewQueuePanel({
     void loadCounts();
   }, []);
 
-  const total = items.reduce((sum, item) => sum + item.count, 0);
+  const total = items.reduce((sum, item) => sum + (item.count || 0), 0);
 
-  const categoriesWithPending = items.filter((item) => item.count > 0);
+  const categoriesWithPending = items.filter((item) => (item.count || 0) > 0);
 
   const displayedPending =
     activeCategoryFilter === "all"
@@ -188,9 +187,9 @@ export function ReviewQueuePanel({
         <div>
           <span>Tổng nội dung chờ duyệt</span>
           <strong>
-            {loading ? "—" : total.toLocaleString("vi-VN")}
+            {loading ? "—" : items.some((item) => item.failed) ? `${total.toLocaleString("vi-VN")} + chưa tải được` : total.toLocaleString("vi-VN")}
             {!loading && (
-              total > 0 ? (
+              total > 0 || items.some((item) => item.failed) ? (
                 <span className="admin-queue-pill-urgent">
                   <Flame size={12} /> Cần xử lý
                 </span>
@@ -203,7 +202,7 @@ export function ReviewQueuePanel({
           </strong>
         </div>
         <p>
-          Rà soát các bài gửi lên từ biên tập viên, đối chiếu nguồn tham khảo và xác nhận bản quyền nội dung trước khi phát hành.
+          Rà soát các bài gửi lên từ biên tập viên, đối chiếu nguồn tham khảo và xác nhận quyền nội dung trước khi công khai.
         </p>
         <div>
           {total > 0 ? (
@@ -242,11 +241,11 @@ export function ReviewQueuePanel({
         <div className="admin-review-queue-grid">
           {items.map((item) => {
             const Icon = item.icon;
-            const hasPending = item.count > 0;
+            const hasPending = (item.count || 0) > 0;
             return (
               <button
                 type="button"
-                className={`admin-review-queue-card ${hasPending ? "has-pending" : "is-empty"}`}
+                className={`admin-review-queue-card ${hasPending || item.failed ? "has-pending" : "is-empty"}`}
                 key={item.id}
                 onClick={() => onSelect(item.id)}
               >
@@ -258,7 +257,7 @@ export function ReviewQueuePanel({
                   <small>{item.detail}</small>
                 </span>
                 <span className={`admin-review-queue-count ${hasPending ? "has-items" : ""}`}>
-                  {hasPending ? `${item.count} bài` : "0"}
+                  {item.failed ? "Chưa tải được" : hasPending ? `${item.count} bài` : "0"}
                 </span>
                 <ArrowRight size={16} className="admin-review-queue-arrow" />
               </button>
@@ -376,7 +375,7 @@ export function ReviewQueuePanel({
       {/* 4. All Done Empty State */}
       {!loading && !error && total === 0 && (
         <div className="admin-review-queue-clear">
-          <CheckCircle2 size={18} /> Hiện không có nội dung nào cần duyệt. Tất cả bài viết và tư liệu đã được thẩm định hoàn tất!
+          <CheckCircle2 size={18} /> Hiện không có nội dung nào cần duyệt. Tất cả nội dung đã được thẩm định hoàn tất!
         </div>
       )}
     </section>

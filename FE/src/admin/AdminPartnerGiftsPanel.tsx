@@ -369,7 +369,7 @@ export function AdminPartnerGiftsPanel() {
           >
             <h3>{gift.name}</h3>
             <p>Đối tác: {gift.partner_name}</p>
-            <p>Trạng thái: {gift.active ? "Đang hiển thị" : "Đang ẩn"}</p>
+            <p>Trạng thái: {gift.active ? "Đang hiển thị" : "Đã ẩn"}</p>
             <p style={{ whiteSpace: "pre-wrap" }}>
               {gift.description}
             </p>

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import type { AdminRecord } from "../data/adminService";
 import type { Kind } from "./ContentEditor";
+import { normalizeContentRecord } from "./contentRecordAdapter";
 import { toast } from "../components/ui/Toast";
 
 interface ContentDetailModalProps {
@@ -74,12 +75,13 @@ export function ContentDetailModal({
     (typeof record.ritual_type === "string" && record.ritual_type) ||
     "";
 
-  const region = typeof record.region === "string" ? record.region : "";
+  const normalizedRecord = normalizeContentRecord(record as Record<string, unknown>);
+  const region = normalizedRecord.region;
   const regionLabel: Record<string, string> = {
     NORTH: "Miền Bắc",
     CENTRAL: "Miền Trung",
     SOUTH: "Miền Nam",
-    ALL: "Toàn quốc",
+    NATIONWIDE: "Toàn quốc",
   };
 
   const status = String(record.editorial_status || (record.verified ? "APPROVED" : "DRAFT"));
@@ -94,6 +96,13 @@ export function ContentDetailModal({
   const statusInfo = statusLabels[status] || { label: status, className: "is-draft" };
 
   const imageUrl = typeof record.image_url === "string" ? record.image_url : null;
+  const ritualImageProvenance = kind === "rituals" && record.content_provenance && typeof record.content_provenance === "object"
+    ? record.content_provenance as Record<string, unknown>
+    : {};
+  const ritualImageCaption = typeof ritualImageProvenance.imageCaption === "string" ? ritualImageProvenance.imageCaption : "";
+  const ritualImageCredit = typeof ritualImageProvenance.imageCredit === "string" ? ritualImageProvenance.imageCredit : "";
+  const ritualImageSource = typeof ritualImageProvenance.imageSource === "string" ? ritualImageProvenance.imageSource : "";
+  const ritualImageRightsBasis = typeof ritualImageProvenance.imageRightsBasis === "string" ? ritualImageProvenance.imageRightsBasis : "";
   const sourceUrl =
     typeof record.source === "string" && record.source.startsWith("https://")
       ? record.source
@@ -118,17 +127,39 @@ export function ContentDetailModal({
     body: (typeof sec.body === "string" && sec.body) || "",
   }));
 
-  const rawSteps = Array.isArray(record.steps)
+  const rawSteps = Array.isArray(record.ritual_steps)
+    ? record.ritual_steps
+    : Array.isArray(record.steps)
     ? record.steps
     : Array.isArray(contentObj.steps)
     ? contentObj.steps
     : [];
 
-  const steps = (rawSteps as Array<{ order?: number; title?: string; description?: string }>).map((st, idx) => ({
-    order: st.order ?? idx + 1,
-    title: (typeof st.title === "string" && st.title.trim()) || `Bước ${st.order ?? idx + 1}`,
-    description: (typeof st.description === "string" && st.description) || "",
-  }));
+  const steps = (
+    rawSteps as Array<{
+      order?: number | string;
+      step_number?: number | string;
+      stepNumber?: number | string;
+      title?: string;
+      description?: string;
+      desc?: string;
+    }>
+  )
+    .map((step, idx) => {
+      const rawOrder = step.step_number ?? step.stepNumber ?? step.order;
+      const order = Number(rawOrder);
+      return {
+        order: Number.isFinite(order) && order > 0 ? order : idx + 1,
+        title:
+          (typeof step.title === "string" && step.title.trim()) ||
+          `Bước ${Number.isFinite(order) && order > 0 ? order : idx + 1}`,
+        description:
+          (typeof step.description === "string" && step.description) ||
+          (typeof step.desc === "string" && step.desc) ||
+          "",
+      };
+    })
+    .sort((left, right) => left.order - right.order);
 
   const rawChecklists = Array.isArray(record.checklists)
     ? record.checklists
@@ -149,41 +180,39 @@ export function ContentDetailModal({
 
   const poem = typeof record.poem === "string" ? record.poem : "";
   const meaning = typeof record.meaning === "string" ? record.meaning : "";
+  const advice = typeof record.advice === "string" ? record.advice : "";
+  const xamType =
+    typeof record.xam_type === "string"
+      ? record.xam_type.replace(/\s*:\s*/g, " · ")
+      : "";
+  const stickNumber =
+    typeof record.stick_number === "number" || typeof record.stick_number === "string"
+      ? String(record.stick_number)
+      : "";
+  const fortuneLevel = typeof record.fortune_level === "string" ? record.fortune_level : "";
+  const calendarType =
+    record.calendar === "LUNAR"
+      ? "Âm lịch"
+      : record.calendar === "SOLAR"
+      ? "Dương lịch"
+      : "Chưa khai báo";
+  const calendarDay =
+    typeof record.day === "number" || typeof record.day === "string"
+      ? String(record.day)
+      : "—";
+  const calendarMonth =
+    typeof record.month === "number" || typeof record.month === "string"
+      ? String(record.month)
+      : "—";
+  const calendarDescription =
+    typeof record.description === "string" ? record.description : "";
+  const calendarRegion = region ? regionLabel[region] || region : "Chưa khai báo";
 
-  // Extract provenance
-  const provenance =
-    (contentObj.provenance as Record<string, unknown>) ||
-    (record.content_provenance as Record<string, unknown>) ||
-    (record.provenance as Record<string, unknown>) ||
-    {};
-
-  const sourceDoc = (provenance.sourceDoc as string) || (record.source_book as string) || "";
-  const sourceLocator = (provenance.sourceLocator as string) || (record.source_locator as string) || "";
-  const sourceAuthor = (provenance.sourceAuthor as string) || (record.author as string) || "";
-  const bibliography = (provenance.bibliography as string) || "";
-  const rightsBasis = (provenance.contentRightsBasis as string) || (record.usage_rights as string) || "";
-
-  // Reviewer and audit appraisal metadata
-  const reviewerName =
-    (typeof record.reviewerName === "string" && record.reviewerName.trim()) ||
-    (typeof record.reviewer_name === "string" && record.reviewer_name.trim()) ||
-    (typeof record.reviewed_by === "string" && record.reviewed_by.trim()) ||
-    (typeof contentObj.reviewerName === "string" && (contentObj.reviewerName as string).trim()) ||
-    "";
-
-  const reviewNote =
-    (typeof record.reviewNote === "string" && record.reviewNote.trim()) ||
-    (typeof record.review_note === "string" && record.review_note.trim()) ||
-    (typeof record.editor_feedback === "string" && record.editor_feedback.trim()) ||
-    "";
-
-  const rightsConfirmed =
-    record.rightsConfirmed === true ||
-    record.rights_confirmed === true ||
-    contentObj.rightsConfirmed === true;
+  const { sourceTitle: sourceDoc, sourceLocator, sourceAuthor, bibliography, rightsBasis, reviewerName, reviewNote, rightsConfirmed } = normalizedRecord;
 
   const hasProvenance = Boolean(
-    sourceUrl || sourceDoc || sourceLocator || sourceAuthor || bibliography || rightsBasis || reviewerName || reviewNote,
+    sourceUrl || sourceDoc || sourceLocator || sourceAuthor || bibliography || rightsBasis || reviewerName || reviewNote
+      || (kind === "rituals" && (ritualImageCaption || ritualImageCredit || ritualImageSource || ritualImageRightsBasis)),
   );
 
   const handleCopyJson = () => {
@@ -313,6 +342,9 @@ export function ContentDetailModal({
                   </div>
                 </div>
               )}
+              {kind === "rituals" && imageUrl && imageError && (
+                <p className="admin-detail-prov-warning" role="status">Không tải được ảnh tổng quan từ đường dẫn đã lưu.</p>
+              )}
 
               {/* 2. Excerpt / Summary */}
               {excerpt && (
@@ -321,11 +353,47 @@ export function ContentDetailModal({
                 </div>
               )}
 
+              {kind === "calendar" && (
+                <section className="admin-detail-sections-block" aria-label="Thông tin sự kiện lịch">
+                  <h4 className="admin-detail-block-title">
+                    <Clock size={15} /> Thông tin sự kiện
+                  </h4>
+                  <dl className="admin-detail-provenance-grid">
+                    <div className="admin-detail-prov-row">
+                      <dt className="prov-label">Tên sự kiện:</dt>
+                      <dd className="prov-value">{title}</dd>
+                    </div>
+                    <div className="admin-detail-prov-row">
+                      <dt className="prov-label">Ngày / tháng:</dt>
+                      <dd className="prov-value">Ngày {calendarDay}, tháng {calendarMonth}</dd>
+                    </div>
+                    <div className="admin-detail-prov-row">
+                      <dt className="prov-label">Hệ lịch:</dt>
+                      <dd className="prov-value">{calendarType}</dd>
+                    </div>
+                    <div className="admin-detail-prov-row">
+                      <dt className="prov-label">Vùng:</dt>
+                      <dd className="prov-value">{calendarRegion}</dd>
+                    </div>
+                    <div className="admin-detail-prov-row">
+                      <dt className="prov-label">Cách lặp:</dt>
+                      <dd className="prov-value">Hằng năm theo ngày / tháng cố định</dd>
+                    </div>
+                    <div className="admin-detail-prov-row" style={{ gridColumn: "1 / -1" }}>
+                      <dt className="prov-label">Mô tả:</dt>
+                      <dd className="prov-value" style={{ whiteSpace: "pre-line" }}>
+                        {calendarDescription || "Chưa có mô tả."}
+                      </dd>
+                    </div>
+                  </dl>
+                </section>
+              )}
+
               {/* 3. Main Content: Sections (Culture) */}
               {sections.length > 0 && (
                 <div className="admin-detail-sections-block">
                   <h4 className="admin-detail-block-title">
-                    <FileText size={15} /> Nội dung chi tiết bài viết ({sections.length} phần)
+                    <FileText size={15} /> Nội dung chi tiết ({sections.length} phần)
                   </h4>
                   <div className="admin-detail-sections-list">
                     {sections.map((sec, idx) => (
@@ -420,8 +488,25 @@ export function ContentDetailModal({
               )}
 
               {/* 6. Xin Xam Poem & Meaning */}
-              {(poem || meaning) && (
+              {kind === "xam" && (xamType || stickNumber || fortuneLevel || poem || meaning || advice) && (
                 <div className="admin-detail-sections-block">
+                  <h4 className="admin-detail-block-title">
+                    <Sparkles size={15} /> Nội dung thẻ xăm
+                  </h4>
+                  <dl className="admin-detail-provenance-grid" style={{ marginBottom: 12 }}>
+                    <div className="admin-detail-prov-row">
+                      <dt className="prov-label">Bộ xăm:</dt>
+                      <dd className="prov-value">{xamType || "Chưa khai báo"}</dd>
+                    </div>
+                    <div className="admin-detail-prov-row">
+                      <dt className="prov-label">Số thẻ:</dt>
+                      <dd className="prov-value">{stickNumber || "Chưa khai báo"}</dd>
+                    </div>
+                    <div className="admin-detail-prov-row">
+                      <dt className="prov-label">Phân loại:</dt>
+                      <dd className="prov-value">{fortuneLevel || "Chưa phân loại"}</dd>
+                    </div>
+                  </dl>
                   {poem && (
                     <div className="admin-detail-prayer-card" style={{ marginBottom: 12 }}>
                       <strong style={{ display: "block", marginBottom: 6, color: "var(--admin-gold)" }}>
@@ -434,6 +519,12 @@ export function ContentDetailModal({
                     <div className="admin-detail-section-card">
                       <h5 className="admin-detail-section-heading">Ý nghĩa & Diễn giải</h5>
                       <p className="admin-detail-section-text">{meaning}</p>
+                    </div>
+                  )}
+                  {advice && (
+                    <div className="admin-detail-section-card" style={{ marginTop: 12 }}>
+                      <h5 className="admin-detail-section-heading">Lời khuyên</h5>
+                      <p className="admin-detail-section-text" style={{ whiteSpace: "pre-line" }}>{advice}</p>
                     </div>
                   )}
                 </div>
@@ -475,7 +566,7 @@ export function ContentDetailModal({
                     )}
                     {sourceAuthor && (
                       <div className="admin-detail-prov-row">
-                        <span className="prov-label">Tác giả / Tổ chức:</span>
+                        <span className="prov-label">{kind === "xam" ? "Tác giả nguyên tác:" : "Tác giả / Tổ chức:"}</span>
                         <span className="prov-value">{sourceAuthor}</span>
                       </div>
                     )}
@@ -490,6 +581,14 @@ export function ContentDetailModal({
                         <span className="prov-label">Căn cứ quyền nội dung:</span>
                         <span className="prov-value">{rightsBasis}</span>
                       </div>
+                    )}
+                    {kind === "rituals" && imageUrl && (
+                      <>
+                        {ritualImageCaption && <div className="admin-detail-prov-row"><span className="prov-label">Chú thích ảnh:</span><span className="prov-value">{ritualImageCaption}</span></div>}
+                        {ritualImageCredit && <div className="admin-detail-prov-row"><span className="prov-label">Tác giả / ghi công ảnh:</span><span className="prov-value">{ritualImageCredit}</span></div>}
+                        {ritualImageSource && <div className="admin-detail-prov-row"><span className="prov-label">Trang nguồn ảnh:</span>{ritualImageSource.startsWith("https://") ? <a href={ritualImageSource} target="_blank" rel="noreferrer" className="table-source-link prov-value"><ExternalLink size={12} /> {ritualImageSource}</a> : <span className="prov-value">{ritualImageSource}</span>}</div>}
+                        {ritualImageRightsBasis && <div className="admin-detail-prov-row"><span className="prov-label">Căn cứ quyền ảnh:</span><span className="prov-value">{ritualImageRightsBasis}</span></div>}
+                      </>
                     )}
 
                     {/* Hồ sơ thẩm định của Ban Quản trị */}
@@ -636,18 +735,18 @@ export function ContentDetailModal({
               Đóng chi tiết
             </button>
 
-            {status === "IN_REVIEW" && !showRejectForm && onRequestChanges && (
+            {(status === "IN_REVIEW" || status === "REVOKED") && !showRejectForm && onRequestChanges && (
               <button
                 type="button"
                 className="admin-secondary-button"
                 style={{ borderColor: "rgba(220, 38, 38, 0.4)", color: "#ef4444" }}
                 onClick={() => setShowRejectForm(true)}
               >
-                Yêu cầu chỉnh sửa
+                {status === "REVOKED" ? "Đưa trạng thái thu hồi cũ về bản nháp" : "Yêu cầu chỉnh sửa"}
               </button>
             )}
 
-            {onWithdraw && status !== "DRAFT" && (
+            {onWithdraw && status === "IN_REVIEW" && (
               <button
                 type="button"
                 className="admin-secondary-button"
@@ -657,7 +756,7 @@ export function ContentDetailModal({
                 }}
               >
                 <RotateCcw size={14} />
-                <span>Rút về bản nháp</span>
+                <span>Rút yêu cầu duyệt</span>
               </button>
             )}
 
@@ -675,7 +774,7 @@ export function ContentDetailModal({
               </button>
             )}
 
-            {onEdit && (
+            {onEdit && status === "DRAFT" && (
               <button
                 type="button"
                 className="admin-primary-button"
@@ -685,7 +784,7 @@ export function ContentDetailModal({
                 }}
               >
                 <Edit3 size={15} />
-                <span>{status === "DRAFT" ? "Chỉnh sửa bài viết" : "Mở biên tập"}</span>
+                <span>Chỉnh sửa bản nháp</span>
               </button>
             )}
           </div>

@@ -11,12 +11,16 @@ const reviewSchema = z.object({
   active: z.boolean().optional(),
   verified: z.boolean().optional(),
   rightsConfirmed: z.boolean().optional(),
+  imageRightsConfirmed: z.boolean().optional(),
   source: z.string().trim().refine((value) => !value || /^https:\/\/[^\s]+$/i.test(value), "Source must use HTTPS when provided").optional(),
   sourceLocator: z.string().trim().max(500).optional(),
-  usageRights: z.enum(["confirmed", "public-domain", "permission-required", "unknown"]).optional(),
+  usageRights: z.enum(["confirmed", "public-domain", "permission-required", "unknown", "group-authored"]).optional(),
   reviewNote: z.string().trim().min(8).max(500),
 }).strict().refine((value) => value.active !== undefined || value.verified !== undefined, {
   message: "Choose at least one status to update",
+}).refine((value) => value.verified !== false, {
+  message: "Use the revoke approval workflow to return approved content to draft",
+  path: ["verified"],
 });
 
 module.exports = { listSchema, idParamsSchema, reviewSchema };

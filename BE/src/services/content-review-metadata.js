@@ -24,6 +24,7 @@ function resolveReviewMetadata(logs, isVerified, { contentType, provenance } = {
       ...(details.sourceLocator ? { sourceLocator: details.sourceLocator } : {}),
       ...(details.usageRights ? { usageRights: details.usageRights } : {}),
       rightsConfirmed: details.rightsConfirmed === true,
+      imageRightsConfirmed: details.imageRightsConfirmed === true,
     };
   }
   return null;

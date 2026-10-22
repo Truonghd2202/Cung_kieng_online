@@ -41,9 +41,22 @@ async function get(id, includeAuditLogs = true, client = prisma, actorId = null)
   }))) return null;
   const record = await repository.findById(id, client);
   if (!record) return null;
-  if (!includeAuditLogs) return publicAdminRecord(record);
   const auditLogs = await repository.listAuditLogs(id, client);
-  return { ...publicAdminRecord(record), auditLogs };
+  const submission = auditLogs.find((log) => ["CONTENT_CREATED", "CONTENT_EDITED"].includes(log.action));
+  const editorialFeedback = auditLogs.find((log) => ["CONTENT_CHANGES_REQUESTED", "CONTENT_APPROVAL_REVOKED"].includes(log.action));
+  const editorialContext = {
+    submitted_by: submission?.users?.full_name || null,
+    editor_feedback: editorialFeedback?.details?.reviewNote || null,
+    editor_feedback_meta: editorialFeedback ? {
+      note: editorialFeedback.details?.reviewNote || "",
+      reviewerName: editorialFeedback.users?.full_name || "Quản trị viên",
+      createdAt: editorialFeedback.created_at,
+      feedbackKind: editorialFeedback.action === "CONTENT_APPROVAL_REVOKED" ? "approval-revoked" : "changes-requested",
+      isPreviousRound: Boolean(submission && submission.created_at > editorialFeedback.created_at),
+    } : null,
+  };
+  if (!includeAuditLogs) return { ...publicAdminRecord(record), ...editorialContext };
+  return { ...publicAdminRecord(record), ...editorialContext, auditLogs };
 }
 
 async function save(id, actorId, input, client = prisma, enforceOwnership = false) {
@@ -56,16 +69,16 @@ async function save(id, actorId, input, client = prisma, enforceOwnership = fals
       select: { id: true },
     }))) return null;
     if (id && enforceOwnership && existing.editorial_status !== "DRAFT") {
-      throw new ApiError(409, "Only draft signals can be edited. Withdraw the signal to draft first.");
+      throw new ApiError(409, "Chỉ bản nháp mới có thể chỉnh sửa. Hãy đưa lời chiêm nghiệm về bản nháp trước.");
     }
     if (id && (!expectedUpdatedAt || new Date(expectedUpdatedAt).getTime() !== existing.updated_at.getTime())) {
-      throw new ApiError(409, "Signal changed after it was opened. Reload before saving.");
+      throw new ApiError(409, "Dữ liệu lời chiêm nghiệm đã thay đổi. Hãy tải lại rồi thử lưu.");
     }
     if (existing && draft.source !== existing.source) {
-      throw new ApiError(422, "Signal source key is stable and cannot be changed.");
+      throw new ApiError(422, "Mã nguồn lời chiêm nghiệm được giữ cố định và không thể thay đổi.");
     }
     if (!existing && await repository.findBySource(draft.source, tx)) {
-      throw new ApiError(409, "Signal source key already exists.");
+      throw new ApiError(409, "Mã nguồn lời chiêm nghiệm đã được sử dụng. Hãy chọn mã khác.");
     }
 
     const content = normalizeContent(draft.content);
@@ -91,7 +104,7 @@ async function save(id, actorId, input, client = prisma, enforceOwnership = fals
         where: { id, updated_at: { gte: versionStart, lt: new Date(versionStart.getTime() + 1) } },
         data,
       });
-      if (result.count !== 1) throw new ApiError(409, "Signal changed after it was opened. Reload before saving.");
+      if (result.count !== 1) throw new ApiError(409, "Dữ liệu lời chiêm nghiệm đã thay đổi. Hãy tải lại rồi thử lưu.");
       record = await repository.findById(id, tx);
     } else {
       record = await tx.signals.create({ data: { ...data, region: null } });
@@ -119,18 +132,19 @@ async function review(id, actorId, input, client = prisma) {
     const before = await repository.findById(id, tx);
     if (!before) return null;
     if (!input.expectedUpdatedAt || new Date(input.expectedUpdatedAt).getTime() !== before.updated_at.getTime()) {
-      throw new ApiError(409, "Signal changed after it was opened. Reload before reviewing.");
+      throw new ApiError(409, "Dữ liệu lời chiêm nghiệm đã thay đổi. Hãy tải lại rồi thử duyệt.");
     }
     if (input.requestChanges === true) {
       if (!["IN_REVIEW", "REVOKED"].includes(before.editorial_status)) {
-        throw new ApiError(422, "Only a signal awaiting review or revoked can be returned for changes.");
+        throw new ApiError(422, "Chỉ lời chiêm nghiệm đang chờ duyệt hoặc đã thu hồi duyệt mới có thể trả về chỉnh sửa.");
       }
+      const versionStart = new Date(input.expectedUpdatedAt);
       const updatedAt = new Date(Math.max(Date.now(), before.updated_at.getTime() + 1));
       const result = await tx.signals.updateMany({
-        where: { id, updated_at: before.updated_at },
+        where: { id, updated_at: { gte: versionStart, lt: new Date(versionStart.getTime() + 1) } },
         data: { editorial_status: "DRAFT", active: false, reviewed_by: null, reviewed_at: null, approved_content_hash: null, updated_at: updatedAt },
       });
-      if (result.count !== 1) throw new ApiError(409, "Signal changed after it was opened. Reload before reviewing.");
+      if (result.count !== 1) throw new ApiError(409, "Dữ liệu lời chiêm nghiệm đã thay đổi. Hãy tải lại rồi thử duyệt.");
       const updated = await repository.findById(id, tx);
       await tx.admin_audit_logs.create({ data: {
         actor_id: actorId,
@@ -141,6 +155,9 @@ async function review(id, actorId, input, client = prisma) {
       } });
       return publicAdminRecord(updated);
     }
+    if (input.verified === false) {
+      throw new ApiError(422, "Dùng thao tác thu hồi duyệt để đưa nội dung đã duyệt về bản nháp.");
+    }
     const approvalCurrent = hasCurrentApproval(before);
     const workflowBefore = {
       verified: approvalCurrent,
@@ -148,23 +165,23 @@ async function review(id, actorId, input, client = prisma) {
       editorial_status: before.editorial_status,
     };
     const nextWorkflow = stateAfterReview(workflowBefore, input);
-    if (nextWorkflow.reviewRequired) throw new ApiError(422, "Submit the signal for review before approving it.");
-    if (nextWorkflow.reviewAndPublishInOneStep) throw new ApiError(422, "Approve the signal first, then publish it in a separate action.");
-    if (nextWorkflow.approvalRequired) throw new ApiError(422, "Approve the current signal version before publishing it.");
+    if (nextWorkflow.reviewRequired) throw new ApiError(422, "Hãy gửi lời chiêm nghiệm chờ duyệt trước khi duyệt nội dung.");
+    if (nextWorkflow.reviewAndPublishInOneStep) throw new ApiError(422, "Hãy duyệt lời chiêm nghiệm trước, sau đó dùng thao tác công khai.");
+    if (nextWorkflow.approvalRequired) throw new ApiError(422, "Hãy duyệt phiên bản hiện tại trước khi công khai.");
 
     if (input.verified === true) {
       await ensureDifferentReviewer(tx, repository.TARGET, id, actorId);
       if (!["IN_REVIEW", "REVOKED"].includes(before.editorial_status)) {
-        throw new ApiError(422, "Submit the signal for review before approving it.");
+        throw new ApiError(422, "Hãy gửi lời chiêm nghiệm chờ duyệt trước khi duyệt nội dung.");
       }
       const content = normalizeContent(parseSignalContent(before.content));
       const candidate = { ...before, content: JSON.stringify(content) };
-      if (input.rightsConfirmed !== true) throw new ApiError(422, "Confirm actual content use rights before approval.");
-      if (!hasPublishableProvenance(candidate)) throw new ApiError(422, "Complete the provenance required for this content type before approval.");
+      if (input.rightsConfirmed !== true) throw new ApiError(422, "Hãy xác nhận quyền sử dụng nội dung trước khi duyệt.");
+      if (!hasPublishableProvenance(candidate)) throw new ApiError(422, "Hãy hoàn thiện hồ sơ nguồn và quyền sử dụng trước khi duyệt.");
     }
 
     if (input.active === true && !approvalCurrent && input.verified !== true) {
-      throw new ApiError(422, "A current approval is required before publication.");
+      throw new ApiError(422, "Cần có lượt duyệt hợp lệ cho phiên bản hiện tại trước khi công khai.");
     }
 
     const data = {
@@ -193,7 +210,7 @@ async function review(id, actorId, input, client = prisma) {
       where: { id, updated_at: { gte: versionStart, lt: new Date(versionStart.getTime() + 1) } },
       data,
     });
-    if (updateResult.count !== 1) throw new ApiError(409, "Signal changed after it was opened. Reload before reviewing.");
+    if (updateResult.count !== 1) throw new ApiError(409, "Dữ liệu lời chiêm nghiệm đã thay đổi. Hãy tải lại rồi thử duyệt.");
     const updated = await repository.findById(id, tx);
     await tx.admin_audit_logs.create({ data: {
       actor_id: actorId,
@@ -201,8 +218,8 @@ async function review(id, actorId, input, client = prisma) {
       target_type: repository.TARGET,
       target_id: id,
       details: {
-        before: { active: before.active, editorial_status: before.editorial_status, reviewed_by: before.reviewed_by, approved_content_hash: before.approved_content_hash },
-        after: { active: updated.active, editorial_status: updated.editorial_status, reviewed_by: updated.reviewed_by, reviewed_at: updated.reviewed_at },
+        before: { active: before.active, editorial_status: before.editorial_status, reviewed_by: before.reviewed_by, approved_content_hash: before.approved_content_hash, updated_at: before.updated_at.toISOString() },
+        after: { active: updated.active, editorial_status: updated.editorial_status, reviewed_by: updated.reviewed_by, reviewed_at: updated.reviewed_at, updated_at: updated.updated_at.toISOString() },
         reviewNote: input.reviewNote,
         ...(input.verified === true ? { rightsConfirmed: true } : {}),
       },
@@ -220,14 +237,15 @@ async function withdrawToDraft(id, actorId, input, client = prisma) {
     if (!owned) return null;
     const before = await repository.findById(id, tx);
     if (!before) return null;
-    if (!input.expectedUpdatedAt || new Date(input.expectedUpdatedAt).getTime() !== before.updated_at.getTime()) throw new ApiError(409, "Signal changed after it was opened. Reload before withdrawing.");
-    if (before.editorial_status === "DRAFT") throw new ApiError(409, "Signal is already a draft.");
+    if (!input.expectedUpdatedAt || new Date(input.expectedUpdatedAt).getTime() !== before.updated_at.getTime()) throw new ApiError(409, "Dữ liệu lời chiêm nghiệm đã thay đổi. Hãy tải lại rồi thử rút khỏi hàng chờ.");
+    if (before.editorial_status !== "IN_REVIEW") throw new ApiError(409, "Bạn chỉ có thể rút lời chiêm nghiệm đang chờ duyệt.");
+    const versionStart = new Date(input.expectedUpdatedAt);
     const updatedAt = new Date(Math.max(Date.now(), before.updated_at.getTime() + 1));
     const result = await tx.signals.updateMany({
-      where: { id, updated_at: before.updated_at },
+      where: { id, updated_at: { gte: versionStart, lt: new Date(versionStart.getTime() + 1) } },
       data: { editorial_status: "DRAFT", active: false, reviewed_by: null, reviewed_at: null, approved_content_hash: null, updated_at: updatedAt },
     });
-    if (result.count !== 1) throw new ApiError(409, "Signal changed after it was opened. Reload before withdrawing.");
+    if (result.count !== 1) throw new ApiError(409, "Dữ liệu lời chiêm nghiệm đã thay đổi. Hãy tải lại rồi thử rút khỏi hàng chờ.");
     const updated = await repository.findById(id, tx);
     await tx.admin_audit_logs.create({ data: {
       actor_id: actorId,
@@ -240,8 +258,41 @@ async function withdrawToDraft(id, actorId, input, client = prisma) {
   });
 }
 
+async function revokeApprovalToDraft(id, actorId, input, client = prisma) {
+  return client.$transaction(async (tx) => {
+    const before = await repository.findById(id, tx);
+    if (!before) return null;
+    if (!input.expectedUpdatedAt || new Date(input.expectedUpdatedAt).getTime() !== before.updated_at.getTime()) {
+      throw new ApiError(409, "Dữ liệu lời chiêm nghiệm đã thay đổi. Hãy tải lại rồi thử thu hồi duyệt.");
+    }
+    if (!hasCurrentApproval(before)) {
+      throw new ApiError(409, "Chỉ nội dung đã duyệt, đang công khai hoặc đã ẩn mới có thể thu hồi duyệt để chỉnh sửa.");
+    }
+    const versionStart = new Date(input.expectedUpdatedAt);
+    const updatedAt = new Date(Math.max(Date.now(), before.updated_at.getTime() + 1));
+    const result = await tx.signals.updateMany({
+      where: { id, updated_at: { gte: versionStart, lt: new Date(versionStart.getTime() + 1) } },
+      data: { editorial_status: "DRAFT", active: false, reviewed_by: null, reviewed_at: null, approved_content_hash: null, updated_at: updatedAt },
+    });
+    if (result.count !== 1) throw new ApiError(409, "Dữ liệu lời chiêm nghiệm đã thay đổi. Hãy tải lại rồi thử thu hồi duyệt.");
+    const updated = await repository.findById(id, tx);
+    await tx.admin_audit_logs.create({ data: {
+      actor_id: actorId,
+      action: "CONTENT_APPROVAL_REVOKED",
+      target_type: repository.TARGET,
+      target_id: id,
+      details: {
+        before: { editorial_status: before.editorial_status, active: before.active, verified: before.verified, updated_at: before.updated_at.toISOString(), approved_content_hash: before.approved_content_hash },
+        after: { editorial_status: updated.editorial_status, active: updated.active, verified: updated.verified, updated_at: updated.updated_at.toISOString() },
+        reviewNote: input.reviewNote,
+      },
+    } });
+    return publicAdminRecord(updated);
+  });
+}
+
 async function logs(id, client = prisma) {
   return repository.listAuditLogs(id, client);
 }
 
-module.exports = { hasCurrentApproval, publicAdminRecord, list, get, save, review, withdrawToDraft, logs };
+module.exports = { hasCurrentApproval, publicAdminRecord, list, get, save, review, withdrawToDraft, revokeApprovalToDraft, logs };

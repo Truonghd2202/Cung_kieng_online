@@ -79,6 +79,8 @@ model calendar_events {
   month          Int?             @db.SmallInt
   region         vietnam_region?  @default(NATIONWIDE)
   category       String?          @db.VarChar(100)
+  image_url      String?
+  editorial_metadata Json         @default("{}") @db.JsonB
   source         String?
   editorial_status content_editorial_status @default(DRAFT)
   verified       Boolean          @default(false)
@@ -390,6 +392,9 @@ model prayers {
   content        String
   region         vietnam_region? @default(NATIONWIDE)
   language_style String?         @default("NOM") @db.VarChar(100)
+  category       String?         @db.VarChar(100)
+  image_url      String?
+  editorial_metadata Json       @default("{}") @db.JsonB
   source         String?
   editorial_status content_editorial_status @default(DRAFT)
   verified       Boolean         @default(false)
@@ -487,8 +492,10 @@ model rituals {
   slug             String             @unique @db.VarChar(255)
   description      String?
   occasion         String?            @db.VarChar(150)
+  category         String?            @db.VarChar(100)
   region           vietnam_region?    @default(NATIONWIDE)
   calendar         calendar_type?
+  image_url        String?
   source           String?
   editorial_status content_editorial_status @default(DRAFT)
   checklists       Json               @default("[]") @db.JsonB
@@ -863,6 +870,8 @@ model xin_xam {
   xam_type      String          @db.VarChar(100)
   region        vietnam_region  @default(NATIONWIDE)
   category      String?         @db.VarChar(100)
+  image_url     String?
+  editorial_metadata Json       @default("{}") @db.JsonB
   fortune_level String?         @db.VarChar(80)
   poem          String?
   meaning       String?

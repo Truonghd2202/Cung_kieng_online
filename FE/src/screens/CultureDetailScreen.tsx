@@ -629,6 +629,7 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
             <div className="relative h-60 sm:h-96 md:h-[440px] overflow-hidden bg-surface-soft">
               <UnverifiedImage
                 src={article.image}
+                approvedByContent={canShowArticleImage(article) && article.metadata?.editorialStatus === "approved" && Boolean(article.metadata?.imageSource?.trim() && article.metadata?.imageRightsBasis?.trim() && article.metadata?.usageRights)}
                 alt={article.caption || article.title}
                 title={article.title}
                 description={article.caption}
@@ -643,8 +644,11 @@ const CultureDetailContent: React.FC<CultureDetailScreenProps> = ({
                 <MapPin className="w-4 h-4 text-accent shrink-0" />
                 <span className="italic text-ink font-medium">{article.caption}</span>
               </div>
-              {article.metadata?.imageSource && <span className="text-xs text-muted">Nguồn ảnh: {article.metadata.imageSource}</span>}
-              {article.metadata?.imageRightsBasis && <span className="text-xs text-muted">Quyền sử dụng: {article.metadata.imageRightsBasis}</span>}
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
+                {article.metadata?.imageCredit && <span className="text-xs text-muted">Ghi công: {article.metadata.imageCredit}</span>}
+                {article.metadata?.imageSource && <a href={article.metadata.imageSource} target="_blank" rel="noreferrer" className="text-xs text-accent underline underline-offset-2">Trang ảnh gốc ↗</a>}
+                {article.metadata?.imageRightsBasis && <span className="text-xs text-muted">Quyền sử dụng: {article.metadata.imageRightsBasis}</span>}
+              </div>
             </div>
           </div>
         </ScrollReveal>}

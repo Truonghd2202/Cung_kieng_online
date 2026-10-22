@@ -109,6 +109,11 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
   const [textSize, setTextSize] = useState<TextSize>("normal");
   const [copiedLink, setCopiedLink] = useState(false);
   const [ritualSaveError, setRitualSaveError] = useState("");
+  const [heroImageError, setHeroImageError] = useState(false);
+
+  useEffect(() => {
+    setHeroImageError(false);
+  }, [detail.heroImage]);
 
   const isBookmarked = useReadingBookmark(
     "ritual",
@@ -470,6 +475,31 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
             {detail.fullTitle}
           </h1>
 
+          {detail.heroImage && !heroImageError && (
+            <ScrollReveal variant="scale" className="mb-6">
+              <figure className="rounded-3xl overflow-hidden border border-amber-500/30 bg-surface shadow-md">
+                <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden bg-surface">
+                  <UnverifiedImage
+                    src={detail.heroImage}
+                    alt={detail.heroCaption || detail.fullTitle}
+                    allowExpand={true}
+                    title={detail.fullTitle}
+                    description={detail.heroCaption}
+                    approvedByContent={detail.heroImageApproved === true}
+                    onLoadError={() => setHeroImageError(true)}
+                    className="w-full h-full object-cover object-[center_30%]"
+                  />
+                </div>
+                <figcaption className="p-3 bg-surface border-t border-line/60 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted">
+                  <span>{detail.heroCaption}</span>
+                  <span>Ghi công: {detail.heroArtCredit}</span>
+                  {detail.heroSourceUrl && <a href={detail.heroSourceUrl} target="_blank" rel="noreferrer" className="underline">Nguồn ảnh ↗</a>}
+                  {detail.heroRightsBasis && <span>Căn cứ quyền: {detail.heroRightsBasis}</span>}
+                </figcaption>
+              </figure>
+            </ScrollReveal>
+          )}
+
           <p className="text-base sm:text-lg text-ink/80 leading-relaxed max-w-3xl mb-5 font-serif">
             {detail.subtitle}
           </p>
@@ -494,30 +524,6 @@ const RitualDetailContent: React.FC<RitualDetailLoaderProps> = ({
             </span>
           </div>
         </div>
-
-        {/* Hero Artwork Banner */}
-        {detail.heroImage && <ScrollReveal variant="scale" className="mb-8">
-          <div className="rounded-3xl overflow-hidden border border-amber-500/30 bg-surface shadow-md">
-            <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden bg-surface">
-              <UnverifiedImage
-                src={detail.heroImage}
-                alt={detail.fullTitle}
-                allowExpand={true}
-                title={detail.fullTitle}
-                description={detail.heroCaption}
-                className="w-full h-full object-cover object-[center_30%]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-              <div className="absolute bottom-3 left-4 right-4 text-white/90 text-xs sm:text-sm font-medium drop-shadow-md">
-                {detail.heroCaption}
-              </div>
-            </div>
-            <div className="p-3 bg-surface border-t border-line/60 flex items-center justify-between text-xs text-muted">
-              <span className="italic">Nếp nhà thuần phong mỹ tục Việt Nam</span>
-              <span>{detail.heroArtCredit}</span>
-            </div>
-          </div>
-        </ScrollReveal>}
 
         {/* Two Columns Layout: Main Guide (8 cols) & Sticky Checklist (4 cols) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">

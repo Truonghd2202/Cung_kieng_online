@@ -7,6 +7,7 @@ import {
   type SetStateAction,
 } from "react";
 import { readPrivateJson, writePrivateJson } from "./lib/privateStorage";
+import { DEMO_MODE_LABEL, exitDemoMode, isDemoMode } from "./data/demoMode";
 import { apiRequest, ApiError } from "./lib/api";
 import { clearPersonalStorage } from "./lib/clearPersonalStorage";
 import { getMoodContentUnavailableMessage } from "./data/moodAvailability";
@@ -2696,6 +2697,7 @@ export default function App() {
 
   return (
     <div className={`app-shell ${dark ? "dark" : ""} ${["login", "register", "forgot", "reset-password"].includes(screen) ? "lg:h-screen lg:max-h-screen lg:overflow-hidden" : ""}`}>
+      {isDemoMode() && <div role="status" className="sticky top-0 z-[80] flex items-center justify-center gap-3 border-b border-gold/30 bg-gold/10 px-4 py-1.5 text-xs font-semibold text-ink"><span>{DEMO_MODE_LABEL}</span><button type="button" onClick={exitDemoMode} className="underline underline-offset-2">Thoát demo</button></div>}
       {/* Universal Header - tự động ẩn khi ấn đăng nhập tại LoginScreen */}
       {!isLoginImmersive && (
         <AppHeader

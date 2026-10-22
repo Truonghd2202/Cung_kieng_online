@@ -25,9 +25,9 @@ function getEditorialLabel(metadata: ContentMetadata): string {
 
   switch (metadata.editorialStatus) {
     case "published":
-      return "Đang phát hành";
+      return "Đang công khai";
     case "hidden":
-      return "Đang ẩn";
+      return "Đã ẩn";
     case "revoked":
       return "Đã thu hồi duyệt";
     case "approved":
@@ -118,7 +118,7 @@ export function ContentProvenance({
 
                 {source.authorOrOrganization && (
                   <p className="text-xs sm:text-sm text-ink/90">
-                    <strong className="text-muted font-normal">Tác giả / Cơ quan:</strong> {source.authorOrOrganization}
+                    <strong className="text-muted font-normal">{source.authorLabel || "Tác giả / Cơ quan"}:</strong> {source.authorOrOrganization}
                   </p>
                 )}
 

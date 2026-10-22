@@ -1,4 +1,5 @@
 import { ApiError, apiRequest, beginSessionTransition, getSessionGeneration, isSessionCurrent, refreshAccessTokenState, setAccessToken } from "../lib/api";
+import { isDemoMode } from "./demoMode";
 import { trackProductEvent } from "./productAnalytics";
 import { safeAuthErrorMessage } from "./authErrorCopy";
 
@@ -251,6 +252,10 @@ export function restoreSession(): Promise<RestoreSessionResult> {
 }
 
 async function restoreSessionFor(session: number): Promise<RestoreSessionResult> {
+  if (isDemoMode()) {
+    if (isSessionCurrent(session)) setAccessToken(null);
+    return { status: "anonymous", user: null };
+  }
   const stored = loadStoredUser();
   if (!stored) {
     // Phiên không được ghi nhớ hoặc trình duyệt vừa mở lại: xóa token dở dang

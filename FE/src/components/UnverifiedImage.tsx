@@ -15,6 +15,8 @@ export interface UnverifiedImageProps {
   title?: string;
   description?: string;
   onClick?: (e: React.MouseEvent<HTMLImageElement>) => void;
+  onLoadError?: () => void;
+  approvedByContent?: boolean;
 }
 
 /**
@@ -33,6 +35,8 @@ export function UnverifiedImage({
   title,
   description,
   onClick,
+  onLoadError,
+  approvedByContent = false,
 }: UnverifiedImageProps) {
   const [hasError, setHasError] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,7 +48,7 @@ export function UnverifiedImage({
     setIsModalOpen(false);
   }, [src]);
 
-  if (!src || hasError) {
+  if (!src || hasError || (!approvedImage && !approvedByContent)) {
     return (
       <div
         className={`unverified-image ${className}`}
@@ -69,6 +73,11 @@ export function UnverifiedImage({
     }
   };
 
+  const handleImageError = () => {
+    setHasError(true);
+    onLoadError?.();
+  };
+
   const imageInfo: LightboxImageInfo = {
     src,
     alt,
@@ -86,7 +95,7 @@ export function UnverifiedImage({
         loading={loading}
         decoding={decoding}
         fetchPriority={fetchPriority}
-        onError={() => setHasError(true)}
+        onError={handleImageError}
         onClick={onClick}
       />
     );
@@ -106,7 +115,7 @@ export function UnverifiedImage({
           loading={loading}
           decoding={decoding}
           fetchPriority={fetchPriority}
-          onError={() => setHasError(true)}
+          onError={handleImageError}
         />
       </div>
 

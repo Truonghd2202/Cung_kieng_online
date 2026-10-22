@@ -20,7 +20,7 @@ const COMMON_REASONS = [
 export function WithdrawModal({
   isOpen,
   itemTitle,
-  itemTypeLabel = "bài viết",
+  itemTypeLabel = "nội dung",
   onClose,
   onConfirm,
 }: WithdrawModalProps) {
@@ -79,7 +79,8 @@ export function WithdrawModal({
 
   return (
     <div
-      className="admin-review-overlay"
+      className="admin-review-overlay admin-withdraw-overlay"
+      style={{ zIndex: 100 }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="withdraw-modal-title"

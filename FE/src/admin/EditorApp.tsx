@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BookOpenText,
   CalendarDays,
@@ -38,6 +38,7 @@ import { ContentDetailModal } from "./ContentDetailModal";
 import { WithdrawModal } from "./WithdrawModal";
 import { SignalAdminPanel } from "./SignalAdminPanel";
 import { EDITOR_SECTIONS } from "./adminAccess";
+import { allowedEditorialActions, editorialStatusLabel } from "../../../shared/editorial-workflow.mjs";
 import { closeAdminOverlay, pushAdminOverlay } from "./adminNavigation";
 import { toast, ToastContainer } from "../components/ui/Toast";
 import "./admin.css";
@@ -77,10 +78,10 @@ const STATUS_LABEL: Record<StatusFilter, string> = {
   all: "Tất cả",
   DRAFT: "Bản nháp",
   IN_REVIEW: "Chờ duyệt",
-  APPROVED: "Đã duyệt",
-  PUBLISHED: "Đang phát hành",
-  HIDDEN: "Đang ẩn",
-  REVOKED: "Đã thu hồi",
+  APPROVED: editorialStatusLabel("APPROVED"),
+  PUBLISHED: editorialStatusLabel("PUBLISHED"),
+  HIDDEN: editorialStatusLabel("HIDDEN"),
+  REVOKED: `${editorialStatusLabel("REVOKED")} (dữ liệu cũ)`,
 };
 
 function getSection(): Section {
@@ -91,7 +92,7 @@ function getSection(): Section {
 }
 
 function labelForStatus(status?: string) {
-  return status ? STATUS_LABEL[status as StatusFilter] || status : "Bản nháp";
+  return status ? STATUS_LABEL[status as StatusFilter] || editorialStatusLabel(status) : "Bản nháp";
 }
 
 function titleFor(record: AdminRecord) {
@@ -134,6 +135,16 @@ export default function EditorApp() {
     }
     return null;
   });
+  const editingRef = useRef(false);
+  editingRef.current = Boolean(editing);
+  const pendingSectionRef = useRef<Section | null>(null);
+  const listRequest = useRef(0);
+
+  useEffect(() => {
+    const cancelPendingNavigation = () => { pendingSectionRef.current = null; };
+    window.addEventListener("admin:cancel-content-editor-close", cancelPendingNavigation);
+    return () => window.removeEventListener("admin:cancel-content-editor-close", cancelPendingNavigation);
+  }, []);
   const [viewing, setViewing] = useState<AdminRecord | null>(null);
   const [withdrawingRecord, setWithdrawingRecord] = useState<AdminRecord | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -168,15 +179,24 @@ export default function EditorApp() {
     };
   }, []);
 
-  const loadContent = useCallback(async () => {
-    if (!user || section === "signals") return;
+  const loadContent = useCallback(async (): Promise<boolean> => {
+    if (!user) return false;
+    const requestId = ++listRequest.current;
+    if (section === "signals") {
+      setLoading(false);
+      return await new Promise((resolve) => {
+        window.dispatchEvent(new CustomEvent("admin:signal-refresh", { detail: { resolve } }));
+      });
+    }
     setLoading(true);
     setError("");
     try {
-      setPageData(
-        await loadAdminList<AdminRecord>(section, page, submittedQuery, status),
-      );
+      const result = await loadAdminList<AdminRecord>(section, page, submittedQuery, status);
+      if (requestId !== listRequest.current) return false;
+      setPageData(result);
+      return true;
     } catch (loadError) {
+      if (requestId !== listRequest.current) return false;
       if (loadError instanceof ApiError && loadError.status === 403)
         setError(
           "Phiên làm việc không còn quyền biên tập. Hãy đăng nhập lại hoặc liên hệ quản trị viên.",
@@ -187,10 +207,21 @@ export default function EditorApp() {
             ? loadError.message
             : "Không thể tải danh sách nội dung.",
         );
+      return false;
+    } finally {
+      if (requestId === listRequest.current) setLoading(false);
+    }
+  }, [section, status, submittedQuery, user, page]);
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      const succeeded = await loadContent();
+      if (succeeded) toast.success(`Đã làm mới dữ liệu ${meta.label.toLowerCase()}.`, "Làm mới thành công");
     } finally {
       setLoading(false);
     }
-  }, [section, status, submittedQuery, user, page]);
+  };
 
   useEffect(() => {
     void loadContent();
@@ -206,7 +237,7 @@ export default function EditorApp() {
         const editId = params.get("editId") || undefined;
         setEditing({ kind: contentEdit, id: editId });
       } else {
-        setEditing(null);
+        if (editingRef.current) window.dispatchEvent(new CustomEvent("admin:request-content-editor-close"));
       }
     };
     window.addEventListener("popstate", onPopState);
@@ -229,8 +260,14 @@ export default function EditorApp() {
 
   function navigate(nextSection: Section) {
     if (editing) {
+      pendingSectionRef.current = nextSection;
       closeEditor();
+      return;
     }
+    commitSectionNavigation(nextSection);
+  }
+
+  function commitSectionNavigation(nextSection: Section) {
     setSection(nextSection);
     setStatus("all");
     setPage(1);
@@ -277,6 +314,10 @@ export default function EditorApp() {
   }
 
   function closeEditor() {
+    window.dispatchEvent(new CustomEvent("admin:request-content-editor-close"));
+  }
+
+  function forceCloseEditor() {
     setEditing(null);
     closeAdminOverlay("content-editor");
     const url = new URL(window.location.href);
@@ -287,9 +328,17 @@ export default function EditorApp() {
       "",
       url.toString(),
     );
+    const pendingSection = pendingSectionRef.current;
+    pendingSectionRef.current = null;
+    if (pendingSection) commitSectionNavigation(pendingSection);
   }
 
   function withdrawToDraft(record: AdminRecord) {
+    const actions = allowedEditorialActions({ role: "EDITOR", status: String(record.editorial_status || "DRAFT"), ownsContent: true });
+    if (!actions.includes("withdraw_review")) {
+      setError("Chỉ có thể rút yêu cầu duyệt khi nội dung đang Chờ duyệt.");
+      return;
+    }
     setWithdrawingRecord(record);
   }
 
@@ -303,7 +352,7 @@ export default function EditorApp() {
       const title = titleFor(withdrawingRecord);
       setWithdrawingRecord(null);
       await loadContent();
-      toast.success(`Đã chuyển bài viết "${title}" về bản nháp thành công.`, "Rút bài thành công");
+      toast.success(`Đã chuyển nội dung "${title}" về bản nháp thành công.`, "Rút bài thành công");
     } catch (withdrawError) {
       const msg = withdrawError instanceof Error ? withdrawError.message : "Không thể rút bài về bản nháp.";
       setError(msg);
@@ -327,19 +376,52 @@ export default function EditorApp() {
 
   if (booting)
     return (
-      <main className="editor-loading" role="status">
-        <RefreshCw className="editor-spin" /> Đang xác thực không gian biên tập…
-      </main>
+      <div className="editor-boot-backdrop" role="status">
+        <div className="editor-boot-card">
+          <div className="editor-boot-aura">
+            <div className="editor-boot-ring" />
+            <div className="editor-boot-ring-inner" />
+            <div className="editor-boot-logo">
+              <Sparkles size={28} className="editor-boot-icon" />
+            </div>
+          </div>
+          <div className="editor-boot-brand">
+            <strong className="editor-boot-title">Tin Lắm Tâm Linh</strong>
+            <span className="editor-boot-badge">KHÔNG GIAN BIÊN TẬP</span>
+          </div>
+          <p className="editor-boot-status">Đang xác thực quyền hạn biên tập…</p>
+          <div className="editor-boot-progress-track">
+            <div className="editor-boot-progress-bar" />
+          </div>
+          <span className="editor-boot-hint">
+            Đồng bộ hồ sơ tác nghiệp & thư viện tư liệu văn hóa
+          </span>
+        </div>
+      </div>
     );
 
   if (!user)
     return (
-      <main className="editor-access-denied">
-        <ShieldCheck />
-        <h1>Không thể vào không gian biên tập</h1>
-        <p>{error}</p>
-        <a href="/">Về trang chủ</a>
-      </main>
+      <div className="editor-boot-backdrop" role="alert">
+        <div className="editor-boot-card is-error">
+          <div className="editor-boot-aura is-error">
+            <ShieldCheck size={28} className="editor-boot-icon text-crimson" />
+          </div>
+          <div className="editor-boot-brand">
+            <strong className="editor-boot-title">Tin Lắm Tâm Linh</strong>
+            <span className="editor-boot-badge is-error">TRUY CẬP BỊ TỪ CHỐI</span>
+          </div>
+          <p className="editor-boot-status">{error || "Tài khoản chưa được cấp quyền truy cập không gian biên tập."}</p>
+          <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+            <a href="/?login=true&redirect=/editor" className="editor-primary-btn" style={{ textDecoration: "none" }}>
+              Đăng nhập tài khoản khác
+            </a>
+            <a href="/" className="editor-secondary-btn" style={{ textDecoration: "none" }}>
+              Về trang chủ
+            </a>
+          </div>
+        </div>
+      </div>
     );
 
   const meta = SECTION_META[section];
@@ -370,7 +452,7 @@ export default function EditorApp() {
     },
     {
       id: "PUBLISHED" as StatusFilter,
-      label: "Đã xuất bản lưu hành",
+      label: "Đã công khai",
       value: counts.published,
       icon: CheckCircle2,
       color: "metric-emerald",
@@ -418,7 +500,7 @@ export default function EditorApp() {
         <div className="editor-sidebar-bottom">
           <div className="editor-sidebar-note">
             <ShieldCheck size={16} />
-            <span>Quyền duyệt và xuất bản cuối cùng thuộc về Quản trị viên hệ thống.</span>
+            <span>Quyền duyệt và công khai cuối cùng thuộc về Quản trị viên hệ thống.</span>
           </div>
 
           <div className="editor-session-card">
@@ -467,7 +549,7 @@ export default function EditorApp() {
             <button
               type="button"
               className="editor-quick-refresh-btn"
-              onClick={() => void loadContent()}
+              onClick={() => void handleRefresh()}
               title="Tải lại nội dung"
               disabled={loading}
             >
@@ -498,7 +580,7 @@ export default function EditorApp() {
                 <Icon size={14} /> KHÔNG GIAN SOẠN THẢO · {meta.label.toUpperCase()}
               </span>
               <h1>{meta.label}</h1>
-              <p>Soạn nội dung, bổ sung nguồn tư liệu và gửi quản trị viên phê duyệt xuất bản.</p>
+              <p>Soạn nội dung, bổ sung nguồn tư liệu và gửi quản trị viên duyệt nội dung trước khi công khai.</p>
             </div>
 
             {isSignals ? (
@@ -567,9 +649,9 @@ export default function EditorApp() {
                       { key: "DRAFT", label: "Bản nháp", count: counts.draft },
                       { key: "IN_REVIEW", label: "Chờ duyệt", count: counts.review },
                       { key: "APPROVED", label: "Đã duyệt", count: counts.approved },
-                      { key: "PUBLISHED", label: "Đang phát hành", count: counts.published },
-                      { key: "HIDDEN", label: "Đang ẩn", count: counts.hidden },
-                      { key: "REVOKED", label: "Đã thu hồi", count: counts.revoked },
+                      { key: "PUBLISHED", label: "Đang công khai", count: counts.published },
+                      { key: "HIDDEN", label: "Đã ẩn", count: counts.hidden },
+                      { key: "REVOKED", label: "Đã thu hồi (dữ liệu cũ)", count: counts.revoked },
                     ] as const
                   ).map((item) => (
                     <button
@@ -606,7 +688,7 @@ export default function EditorApp() {
                       }
                     }}
                     placeholder="Tìm theo tiêu đề hoặc từ khóa…"
-                    aria-label="Tìm bài viết"
+                    aria-label="Tìm nội dung"
                   />
                   {query && (
                     <button
@@ -642,7 +724,7 @@ export default function EditorApp() {
               {loading ? (
                 <div className="editor-loading-state" role="status">
                   <RefreshCw className="editor-spin" size={24} />
-                  <p>Đang đồng bộ dữ liệu bài viết…</p>
+                  <p>Đang đồng bộ nội dung…</p>
                 </div>
               ) : pageData?.items.length ? (
                 <div className="editor-record-list">
@@ -656,6 +738,9 @@ export default function EditorApp() {
                             <span className="editor-status-dot" />
                             {labelForStatus(record.editorial_status)}
                           </span>
+                          {record.editorial_status === "DRAFT" && (record.editor_feedback_meta as { feedbackKind?: string } | null)?.feedbackKind === "approval-revoked" && (
+                            <span className="editor-status-badge status-revoked">Được trả về do thu hồi duyệt</span>
+                          )}
                         </div>
                         <h2 className="editor-record-title">{titleFor(record)}</h2>
                         <p className="editor-record-meta">
@@ -666,7 +751,18 @@ export default function EditorApp() {
                             .join(" · ") || "Chưa có danh mục hoặc xuất xứ"}
                         </p>
                         {typeof record.editor_feedback === "string" && record.editor_feedback && (
-                          <p className="editor-record-meta" role="note"><strong>Góp ý Admin:</strong> {record.editor_feedback}</p>
+                          <p className="editor-record-meta editor-record-feedback" role="note">
+                            <strong>{(() => {
+                              const feedbackMeta = record.editor_feedback_meta as { isPreviousRound?: boolean; feedbackKind?: string } | null;
+                              if (feedbackMeta?.feedbackKind === "approval-revoked") {
+                                return feedbackMeta.isPreviousRound ? "Lý do thu hồi duyệt · lượt trước:" : "Lý do thu hồi duyệt · lượt hiện tại:";
+                              }
+                              return feedbackMeta?.isPreviousRound ? "Góp ý vòng trước:" : "Góp ý Admin · lượt hiện tại:";
+                            })()}</strong> {record.editor_feedback}
+                            {(record.editor_feedback_meta as { reviewerName?: string; createdAt?: string } | null)?.reviewerName && (
+                              <small> · {(record.editor_feedback_meta as { reviewerName: string }).reviewerName}{(record.editor_feedback_meta as { createdAt?: string }).createdAt ? ` · ${new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium", timeStyle: "short" }).format(new Date((record.editor_feedback_meta as { createdAt: string }).createdAt))}` : ""}</small>
+                            )}
+                          </p>
                         )}
                       </div>
 
@@ -682,15 +778,17 @@ export default function EditorApp() {
                         <button type="button" className="editor-edit-btn" onClick={() => void viewRecord(record)}>
                           <Eye size={14} /> Xem chi tiết
                         </button>
-                        {record.editorial_status === "DRAFT" ? (
+                        {allowedEditorialActions({ role: "EDITOR", status: String(record.editorial_status || "DRAFT"), ownsContent: true }).includes("edit_draft") ? (
                           <button type="button" className="editor-edit-btn" onClick={() => openEditor(section as Kind, record.id)}>
                             <Edit3 size={14} /> Mở chỉnh sửa
                           </button>
-                        ) : (
+                        ) : allowedEditorialActions({ role: "EDITOR", status: String(record.editorial_status || "DRAFT"), ownsContent: true }).includes("withdraw_review") ? (
                           <button type="button" className="editor-edit-btn" onClick={() => void withdrawToDraft(record)}>
-                            <Edit3 size={14} /> Rút về bản nháp
+                            <Edit3 size={14} /> Rút yêu cầu duyệt
                           </button>
-                        )}
+                        ) : record.editorial_status === "REVOKED" ? (
+                          <span className="editor-record-locked-note">Trạng thái thu hồi cũ · chờ Admin xử lý</span>
+                        ) : null}
                       </div>
                     </article>
                   ))}
@@ -718,7 +816,7 @@ export default function EditorApp() {
                     <span className="workflow-arrow">➔</span>
                     <div className="workflow-step">
                       <span className="step-num">3</span>
-                      <span>Admin duyệt & xuất bản lên app</span>
+                      <span>Admin duyệt & công khai trên ứng dụng</span>
                     </div>
                   </div>
 
@@ -770,7 +868,7 @@ export default function EditorApp() {
                 <Sparkles size={18} />
                 <span>
                   Danh sách và thao tác ở đây chỉ gồm lời chiêm nghiệm do bạn
-                  tạo. Quản trị viên sẽ thẩm định trước khi phát hành tới người dùng.
+                  tạo. Quản trị viên sẽ thẩm định trước khi công khai tới người dùng.
                 </span>
               </div>
               <SignalAdminPanel canReview={false} />
@@ -839,18 +937,26 @@ export default function EditorApp() {
       <WithdrawModal
         isOpen={Boolean(withdrawingRecord)}
         itemTitle={withdrawingRecord ? titleFor(withdrawingRecord) : ""}
-        itemTypeLabel="bài viết"
+        itemTypeLabel="nội dung"
         onClose={() => setWithdrawingRecord(null)}
         onConfirm={confirmWithdraw}
       />
 
       {editing && (
         <ContentEditor
+          key={`${editing.kind}:${editing.id || "new"}`}
           kind={editing.kind}
           id={editing.id}
-          onClose={closeEditor}
-          onSaved={() => {
-            closeEditor();
+          onClose={forceCloseEditor}
+          onSaved={({ id: savedId, submittedForReview }) => {
+            if (submittedForReview) {
+              forceCloseEditor();
+            } else if (savedId) {
+              setEditing((current) => current ? { kind: current.kind, id: savedId } : current);
+              const url = new URL(window.location.href);
+              url.searchParams.set("editId", savedId);
+              window.history.replaceState(window.history.state, "", url.toString());
+            }
             void loadContent();
           }}
         />

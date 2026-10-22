@@ -34,6 +34,25 @@ const normalizeRitualSearch = (value: string) =>
     .trim()
     .replace(/\s+/g, " ");
 
+function RitualCardImage({ image, title, approvedByContent }: { image: string; title: string; approvedByContent: boolean }) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [image]);
+  if (!image || failed) return null;
+  return (
+    <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-surface-soft md:h-44 md:w-full md:rounded-none">
+      <UnverifiedImage
+        src={image}
+        alt={title}
+        loading="lazy"
+        decoding="async"
+        approvedByContent={approvedByContent}
+        onLoadError={() => setFailed(true)}
+        className="h-full w-full object-cover object-[center_30%]"
+      />
+    </div>
+  );
+}
+
 interface RitualGuideScreenProps {
   onSelectRitual: (id: string) => void;
   onGoToCulture?: () => void;
@@ -336,15 +355,7 @@ export const RitualGuideScreen: React.FC<
                     }`}
                   >
                     <div className="flex items-start gap-4 p-4 md:block md:p-0">
-                      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-surface-soft md:h-44 md:w-full md:rounded-none">
-                        <UnverifiedImage
-                          src={item.image}
-                          alt={item.title}
-                          loading="lazy"
-                          decoding="async"
-                          className="h-full w-full object-cover object-[center_30%]"
-                        />
-                      </div>
+                      <RitualCardImage image={item.image} title={item.title} approvedByContent={item.imageApproved === true} />
 
                       <div className="min-w-0 flex-1 md:p-5">
                         <p className="mb-1.5 text-xs font-medium text-accent">

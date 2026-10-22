@@ -42,9 +42,14 @@ async function withdrawSignal(req, res) {
   if (!data) throw new ApiError(404, "Signal not found");
   return sendSuccess(res, { data });
 }
+async function revokeSignalApproval(req, res) {
+  const data = await signalAdminService.revokeApprovalToDraft(req.params.id, req.user.id, req.body);
+  if (!data) throw new ApiError(404, "Signal not found");
+  return sendSuccess(res, { data });
+}
 async function signalAuditLogs(req, res) { return sendSuccess(res, { data: await signalAdminService.logs(req.params.id) }); }
 async function teamMembers(_req, res) { return sendSuccess(res, { data: await teamService.listMembers() }); }
 async function addTeamEditor(req, res) { return sendSuccess(res, { statusCode: 201, data: await teamService.addEditorByEmail(req.body.email, req.user.id) }); }
 async function updateTeamMember(req, res) { return sendSuccess(res, { data: await teamService.setEditorialAccess(req.params.id, req.body.role, req.user.id) }); }
 
-module.exports = { overview, articles, calendar, xam, rituals, prayers, interests, auditLogs, updateArticle, updateCalendar, updateXam, updateRitual, updatePrayer, signals, signal, createSignal, updateSignal, reviewSignal, withdrawSignal, signalAuditLogs, teamMembers, addTeamEditor, updateTeamMember };
+module.exports = { overview, articles, calendar, xam, rituals, prayers, interests, auditLogs, updateArticle, updateCalendar, updateXam, updateRitual, updatePrayer, signals, signal, createSignal, updateSignal, reviewSignal, withdrawSignal, revokeSignalApproval, signalAuditLogs, teamMembers, addTeamEditor, updateTeamMember };

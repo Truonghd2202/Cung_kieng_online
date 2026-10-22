@@ -33,6 +33,7 @@ import {
   saveCalendarPersonalNotes,
 } from "../data/calendarData";
 import { loadCalendarEvents, type RemoteContentItem } from "../data/contentService";
+import { isDemoMode } from "../data/demoMode";
 
 interface CulturalCalendarScreenProps {
   onGoToToday?: () => void;
@@ -865,6 +866,20 @@ export const CulturalCalendarScreen: React.FC<CulturalCalendarScreenProps> = ({
                   Ngày âm lịch dùng dữ liệu tính lịch của Hồ Ngọc Đức. Thông tin sự kiện có thể khác theo địa phương; xem nguồn cụ thể nếu được đính kèm.
                 </div>
               </div>
+              {isDemoMode() && (
+                <section className="mt-5 rounded-panel border border-line bg-surface-soft p-4" aria-labelledby="demo-events-title">
+                  <h3 id="demo-events-title" className="font-semibold text-ink">Một số ngày lễ trong năm · dữ liệu demo</h3>
+                  <p className="mt-1 mb-3 text-xs text-muted">Ngày âm được đối chiếu theo lịch trong ứng dụng; lịch tổ chức tại từng địa phương có thể thay đổi.</p>
+                  <div className="space-y-2">
+                    {[...new Map(allEvents.filter((event) => event.type === "festival").map((event) => [event.title, event])).values()].map((event) => (
+                      <button key={event.title} type="button" onClick={() => onSelectEvent(event.id)} className="flex w-full items-center justify-between gap-3 rounded-lg border border-line bg-surface p-3 text-left hover:border-accent">
+                        <span><strong className="block text-sm text-ink">{event.title}</strong><span className="text-xs text-muted">{event.region} · {event.lunarDate}</span></span>
+                        <ArrowRight className="h-4 w-4 shrink-0 text-accent" />
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
             </Card>
           </div>
         </div>
