@@ -25,11 +25,11 @@ async function updateReview(model, id, actorId, input) {
 
 module.exports = {
   getOverview: repository.getOverview,
-  listArticles: repository.listArticles,
-  listCalendarEvents: repository.listCalendarEvents,
-  listXamLots: repository.listXamLots,
-  listRituals: repository.listRituals,
-  listPrayers: repository.listPrayers,
+  listArticles: (params, actorId) => repository.listArticles(params, actorId),
+  listCalendarEvents: (params, actorId) => repository.listCalendarEvents(params, actorId),
+  listXamLots: (params, actorId) => repository.listXamLots(params, actorId),
+  listRituals: (params, actorId) => repository.listRituals(params, actorId),
+  listPrayers: (params, actorId) => repository.listPrayers(params, actorId),
   listMembershipInterests: repository.listMembershipInterests,
   listAuditLogs: repository.listAuditLogs,
   updateArticleReview: (id, actorId, input) => updateReview("culture_articles", id, actorId, input),

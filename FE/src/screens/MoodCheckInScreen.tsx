@@ -17,6 +17,7 @@ import {
   Home,
   UserCheck,
   Compass,
+  ShieldCheck,
 } from "lucide-react";
 
 import {
@@ -76,6 +77,19 @@ const MOOD_SHORT_DESCRIPTIONS: Record<MoodKey, string> = {
   "Cô đơn": "Cần một khoảng kết nối ấm áp",
   "Vui vẻ": "Có niềm vui tươi sáng muốn giữ",
   "Mông lung": "Chưa rõ phương hướng bước tiếp",
+};
+
+const MOOD_EMPATHY_QUOTES: Record<MoodKey, string> = {
+  "An yên": "Tâm tĩnh lặng là phúc lành lớn nhất của ngày hôm nay.",
+  "Chênh vênh": "Mọi ngọn sóng rồi sẽ trả lại mặt nước phẳng lặng. Hít sâu một hơi bạn nhé.",
+  "Băn khoăn": "Mọi nút thắt trong lòng rồi sẽ dần hé mở theo thời gian.",
+  "Nôn nóng": "Cây đơm hoa kết trái cần có mùa. Hãy cho bản thân thêm chút kiên nhẫn.",
+  "Biết ơn": "Trân trọng những điều bình dị là cội nguồn của an lạc dài lâu.",
+  "Cần điểm tựa": "Bạn không hề đơn độc. Luôn có một chốn an trú sẵn sàng đón bạn.",
+  "Áp lực": "Gánh nặng hôm nay bạn hoàn toàn có thể đặt xuống một phần.",
+  "Cô đơn": "Khoảng lặng này là cơ hội để bạn ôm ấp và lắng nghe chính mình.",
+  "Vui vẻ": "Nuôi dưỡng niềm hân hoan này và lan tỏa năng lượng ấm áp nhé.",
+  "Mông lung": "Khi chưa rõ đường đi, chỉ cần bước từng bước nhỏ ngay dưới chân.",
 };
 
 const CONTEXT_ICONS: Record<string, React.ReactNode> = {
@@ -242,6 +256,16 @@ export const MoodCheckInScreen: React.FC<MoodCheckInScreenProps> = ({
             </span>
           </div>
 
+          {/* Dynamic Empathy Card: Lời thấu cảm tức thì */}
+          <div className="mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-accent/8 via-accent/4 to-transparent border border-accent/20 flex items-center gap-3 transition-all duration-300 shadow-2xs">
+            <div className="w-7 h-7 rounded-full bg-accent/15 flex items-center justify-center text-accent shrink-0">
+              <Sparkles className="w-3.5 h-3.5 text-accent animate-pulse" />
+            </div>
+            <p className="text-xs sm:text-sm font-medium text-ink italic leading-relaxed">
+              “{MOOD_EMPATHY_QUOTES[selectedMood]}”
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {MOODS_LIST.map((mood) => {
               const isSelected = selectedMood === mood.key;
@@ -348,9 +372,17 @@ export const MoodCheckInScreen: React.FC<MoodCheckInScreenProps> = ({
           </div>
         </fieldset>
 
-        <details className="mb-6 rounded-2xl border border-line bg-surface p-4">
-          <summary className="cursor-pointer text-sm font-semibold text-ink">AI và dữ liệu trong lời gợi mở này</summary>
-          <div className="mt-3 space-y-2 text-sm leading-relaxed text-muted">
+        <details className="mb-6 rounded-2xl border border-line bg-surface p-4 group transition-all">
+          <summary className="cursor-pointer text-sm font-semibold text-ink flex items-center justify-between list-none">
+            <div className="flex items-center gap-2.5 text-ink">
+              <span className="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <ShieldCheck className="w-3.5 h-3.5" />
+              </span>
+              <span>Minh bạch bảo mật & Cam kết đạo đức AI</span>
+            </div>
+            <ChevronDown className="w-4 h-4 text-muted transition-transform duration-200 group-open:rotate-180" />
+          </summary>
+          <div className="mt-3.5 pt-3.5 border-t border-line/60 space-y-2 text-xs sm:text-sm leading-relaxed text-muted">
             <p>{isLoggedIn ? "Check-in gửi cảm xúc và bối cảnh đã chọn tới máy chủ Tin Lắm Tâm Linh." : "Khi đăng nhập để ghi nhận check-in, cảm xúc và bối cảnh đã chọn sẽ được gửi tới máy chủ Tin Lắm Tâm Linh."} Khi bạn chọn một bối cảnh cụ thể và Gemini được cấu hình, máy chủ chỉ gửi hai lựa chọn này tới Google Gemini để viết lời gợi mở. Ghi chú và lịch sử check-in không được gửi sang Gemini.</p>
             <p>Nếu chọn “Chưa muốn chọn”, hoặc Gemini không khả dụng, hệ thống dùng nội dung biên tập sẵn. Lời gợi mở không phải chẩn đoán hay dự đoán.</p>
             <p>Check-in được lưu theo tài khoản để xem lại; bạn có thể xóa bản lưu tại ứng dụng trong Cài đặt → Xóa dữ liệu cá nhân. Việc này cũng xóa lịch sử chiêm nghiệm AI theo năm, nhưng ứng dụng không có chức năng xóa yêu cầu đã được gửi ở phía Gemini.</p>
@@ -439,6 +471,13 @@ export const MoodCheckInScreen: React.FC<MoodCheckInScreenProps> = ({
               <ArrowLeft className="w-4 h-4" aria-hidden="true" />
               <span>Quay lại</span>
             </Button>
+
+            <div className="hidden md:flex items-center gap-1.5 text-xs text-muted">
+              <span>Đang gửi gắm:</span>
+              <strong className="text-accent">{selectedMood}</strong>
+              <span>·</span>
+              <span>{MOOD_CONTEXTS.find((c) => c.key === contextKey)?.label || "Tự do"}</span>
+            </div>
 
             <button
               type="button"

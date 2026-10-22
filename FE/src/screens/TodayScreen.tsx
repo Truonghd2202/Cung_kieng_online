@@ -74,10 +74,17 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
 
   const timeSubtext =
     currentHour < 12
-      ? "Bạn muốn ghi lại tâm trạng, đọc bài văn hóa hay xem hướng dẫn nghi lễ?"
+      ? "Khởi đầu ngày mới an tĩnh. Bạn muốn ghi nhận tâm trạng hay tìm kiếm một cẩm nang nghi lễ?"
       : currentHour < 18
-      ? "Chọn điều bạn muốn xem. Bạn có thể bỏ qua mục không phù hợp."
-      : "Bạn có thể xem nội dung hoặc quay lại sau, tùy ý.";
+      ? "Một khoảng lặng giữa ngày bận rộn để lắng đọng tâm tư và tái tạo năng lượng."
+      : "Dành cho mình vài phút thở chậm lại và an trú sau một ngày bộn bề.";
+
+  const timeHeroTag =
+    currentHour < 12
+      ? "Bắt đầu ngày mới từ cảm xúc"
+      : currentHour < 18
+      ? "Khoảng thở thả lỏng giữa ngày"
+      : "Lắng đọng tâm trí cuối ngày";
 
   const localDateISO = [
     today.getFullYear(),
@@ -406,7 +413,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
             <div className="md:col-span-7 p-6 sm:p-10 flex flex-col justify-center">
               <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent mb-3">
                 <Flower2 className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>{isCheckedIn ? "Lần check-in trước" : "Bắt đầu ngày mới từ cảm xúc"}</span>
+                <span>{isCheckedIn ? "Lần check-in trước" : timeHeroTag}</span>
               </div>
 
               <h2
@@ -442,7 +449,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
             </div>
 
             <div className="md:col-span-5 p-4 sm:p-6 flex items-center justify-center">
-              <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-sm border border-line/60 bg-surface-soft">
+              <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-sm border border-line/60 bg-surface-soft relative">
                 <img
                   src="/images/tea_bowl.jpg"
                   alt="Chén trà trong không gian yên tĩnh thanh tịnh"
@@ -450,6 +457,16 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
                   decoding="async"
                   className="w-full h-full object-cover transition-transform duration-700 hover:scale-103"
                 />
+                {/* Làn khói trà bốc lên nhẹ nhàng */}
+                <div className="tea-steam-layer" aria-hidden="true">
+                  <div className="tea-steam-emitter">
+                    <span className="tea-steam-tendril tea-steam-tendril--1" />
+                    <span className="tea-steam-tendril tea-steam-tendril--2" />
+                    <span className="tea-steam-tendril tea-steam-tendril--3" />
+                    <span className="tea-steam-tendril tea-steam-tendril--4" />
+                    <span className="tea-steam-tendril tea-steam-tendril--5" />
+                  </div>
+                </div>
               </div>
             </div>
           </section>

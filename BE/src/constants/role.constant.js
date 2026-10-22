@@ -1,4 +1,4 @@
 module.exports = Object.freeze({
-  ROLE: Object.freeze({ USER: "USER", ADMIN: "ADMIN" }),
+  ROLE: Object.freeze({ USER: "USER", EDITOR: "EDITOR", ADMIN: "ADMIN" }),
   ACCOUNT_STATUS: Object.freeze({ ACTIVE: "ACTIVE", INACTIVE: "INACTIVE", BANNED: "BANNED", PENDING_EMAIL_VERIFICATION: "PENDING_EMAIL_VERIFICATION" }),
 });

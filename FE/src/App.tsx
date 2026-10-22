@@ -1840,16 +1840,18 @@ export default function App() {
 
     saveStoredProfile(user);
 
-    if (userRole?.toUpperCase() === "ADMIN") {
+    if (["ADMIN", "EDITOR"].includes(userRole?.toUpperCase() || "")) {
+      const isAdmin = userRole?.toUpperCase() === "ADMIN";
+      const destination = isAdmin ? "/admin" : "/editor";
       try {
-        sessionStorage.setItem("tltl_admin_just_logged_in", user.name || "Quản trị viên");
+        if (isAdmin) sessionStorage.setItem("tltl_admin_just_logged_in", user.name || "Quản trị viên");
       } catch {}
       toast.success(
-        `Chào mừng Quản trị viên ${user.name}! Đang chuyển hướng vào Cổng Quản Trị...`,
+        `Chào mừng ${isAdmin ? "Quản trị viên" : "biên tập viên"} ${user.name}! Đang chuyển vào không gian làm việc...`,
         "Đăng nhập thành công"
       );
       setTimeout(() => {
-        window.location.href = "/admin";
+        window.location.href = destination;
       }, 750);
       return;
     }

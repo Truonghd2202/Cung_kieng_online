@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
   ArrowDown,
+  ArrowLeft,
   ArrowUp,
   BookOpenText,
   CalendarDays,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
+  Crown,
   Eye,
   FileCheck2,
   FileText,
@@ -18,18 +21,23 @@ import {
   Link2,
   Lock,
   MapPin,
+  Moon,
   Plus,
   RefreshCw,
   Save,
   Send,
   ShieldCheck,
   Sparkles,
+  Sun,
   Trash2,
   Unlock,
   X,
 } from "lucide-react";
 import { apiRequest } from "../lib/api";
 import { loadAdminList, type AdminRecord } from "../data/adminService";
+import { pushAdminOverlay } from "./adminNavigation";
+import { useTheme } from "../hooks/useTheme";
+import { toast } from "../components/ui/Toast";
 
 export type Kind = "culture" | "calendar" | "xam" | "rituals" | "prayers";
 type Step = { title: string; description: string };
@@ -80,7 +88,7 @@ const KIND_META: Record<
   { title: string; tag: string; icon: typeof BookOpenText }
 > = {
   culture: {
-    title: "bài viết văn hóa",
+    title: "Bài viết văn hóa",
     tag: "KHO VĂN HÓA",
     icon: BookOpenText,
   },
@@ -117,6 +125,7 @@ export function ContentEditor({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { dark, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<"info" | "content" | "media" | "preview">("info");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [slugUnlocked, setSlugUnlocked] = useState(!id);
@@ -164,6 +173,7 @@ export function ContentEditor({
   const [imageSource, setImageSource] = useState("");
   const [imageRightsBasis, setImageRightsBasis] = useState("");
   const [imageLoadError, setImageLoadError] = useState(false);
+  const [imageFitMode, setImageFitMode] = useState<"contain" | "cover">("contain");
   const [membersOnly, setMembersOnly] = useState(false);
 
   // Dynamic sections (culture) and steps (rituals)
@@ -175,19 +185,88 @@ export function ContentEditor({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(Boolean(id));
   const [savingMode, setSavingMode] = useState<"draft" | "submit" | null>(null);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const cleanSnapshotRef = useRef<string | null>(null);
+  const historyBackPendingRef = useRef(false);
+  const discardStayButtonRef = useRef<HTMLButtonElement>(null);
+
+  const editorSnapshot = JSON.stringify({
+    values,
+    sourceDoc,
+    sourceAuthor,
+    bibliography,
+    contentType,
+    sourceLocator,
+    localCommunity,
+    scopeOfPractice,
+    contentRightsBasis,
+    imageCaption,
+    imageCredit,
+    imageSource,
+    imageRightsBasis,
+    membersOnly,
+    sections,
+    steps,
+    checklists,
+  });
+  const hasUnsavedChanges = cleanSnapshotRef.current !== null && cleanSnapshotRef.current !== editorSnapshot;
+
+  const resumeEditing = () => {
+    if (historyBackPendingRef.current) {
+      pushAdminOverlay("content-editor");
+      historyBackPendingRef.current = false;
+    }
+    setShowDiscardConfirm(false);
+  };
+
+  useEffect(() => {
+    if (!loading && cleanSnapshotRef.current === null) {
+      cleanSnapshotRef.current = editorSnapshot;
+    }
+  }, [editorSnapshot, loading]);
+
+  useEffect(() => {
+    if (showDiscardConfirm) discardStayButtonRef.current?.focus();
+  }, [showDiscardConfirm]);
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      if (savingMode) return;
+      if (showDiscardConfirm) {
+        resumeEditing();
+      } else if (hasUnsavedChanges) {
+        setShowDiscardConfirm(true);
+      } else {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [hasUnsavedChanges, onClose, resumeEditing, savingMode, showDiscardConfirm]);
+
+  const requestClose = () => {
+    if (savingMode) return;
+    if (hasUnsavedChanges) {
+      setShowDiscardConfirm(true);
+      return;
+    }
+    onClose();
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (savingMode) return;
+      historyBackPendingRef.current = true;
+      requestClose();
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [requestClose, savingMode]);
 
   const meta = KIND_META[kind];
-  const activeWorkflowStage: Partial<Record<EditorialStatus, number>> = {
-    DRAFT: 0,
-    IN_REVIEW: 1,
-    APPROVED: 2,
-    HIDDEN: 2,
-    PUBLISHED: 3,
-  };
-  const currentWorkflowStage = editorialStatus
-    ? activeWorkflowStage[editorialStatus]
-    : undefined;
-
   // Load rituals if kind is prayers
   useEffect(() => {
     let active = true;
@@ -371,9 +450,58 @@ export function ContentEditor({
     Boolean(values.title && values.excerpt) &&
     values.excerpt.trim().toLowerCase() === values.title.trim().toLowerCase();
 
+  const isStep1Complete = (() => {
+    if (kind === "xam") {
+      return Boolean(values.name?.trim() && values.stick_number && values.fortune_level);
+    }
+    const hasTitle = Boolean(values.title?.trim());
+    const hasCategory = Boolean(values.category?.trim());
+    if (kind === "culture") {
+      return hasTitle && hasCategory && Boolean(contentType);
+    }
+    if (kind === "calendar") {
+      return hasTitle && hasCategory && Boolean(values.day && values.month);
+    }
+    return hasTitle && hasCategory;
+  })();
+
+  const isStep2Complete = (() => {
+    if (kind === "culture") {
+      return sections.length > 0 && sections.every((s) => s.heading.trim() && s.body.trim());
+    }
+    if (kind === "rituals") {
+      return steps.length > 0 && steps.every((s) => s.title.trim() && s.description.trim());
+    }
+    if (kind === "prayers") {
+      return Boolean(values.content?.trim());
+    }
+    if (kind === "xam") {
+      return Boolean(values.meaning?.trim());
+    }
+    if (kind === "calendar") {
+      return Boolean(values.description?.trim());
+    }
+    return false;
+  })();
+
+  const isStep3Complete = (() => {
+    if (isSourceUrlInvalid) return false;
+    return Boolean(values.source?.trim() || values.image_url?.trim() || sourceDoc?.trim());
+  })();
+
+  const isEditorPortal =
+    typeof window !== "undefined" && window.location.pathname.startsWith("/editor");
+
   const save = async (event?: React.FormEvent, submitForReview = false) => {
     if (event) event.preventDefault();
     if (savingMode) return;
+
+    const mainTitle = kind === "xam" ? values.name?.trim() : values.title?.trim();
+    if (!mainTitle) {
+      setError(kind === "xam" ? "Vui lòng nhập tên thẻ quẻ trước khi lưu." : "Vui lòng nhập tiêu đề bài viết trước khi tiếp tục.");
+      setActiveTab("info");
+      return;
+    }
 
     // Validate HTTPS source URL
     if (isSourceUrlInvalid) {
@@ -382,12 +510,12 @@ export function ContentEditor({
       return;
     }
     if (kind === "culture" && !contentType) {
-      setError("Hãy chọn loại nội dung để khai báo hồ sơ nguồn phù hợp.");
+      setError("Hãy chọn phương thức biên soạn & tính chất tư liệu ở Bước 1 để hoàn tất hồ sơ nội dung.");
       setActiveTab("info");
       return;
     }
     if (kind === "rituals" && submitForReview && !contentType) {
-      setError("Hãy khai báo hướng dẫn là nội dung nhóm biên soạn hay nội dung dựa trên tư liệu trước khi gửi duyệt.");
+      setError("Hãy khai báo phương thức biên soạn (nguyên bản hay dựa trên tư liệu) ở Bước 1 trước khi gửi duyệt.");
       setActiveTab("info");
       return;
     }
@@ -479,13 +607,25 @@ export function ContentEditor({
         method: id ? "PUT" : "POST",
         body: JSON.stringify(payload),
       });
+      if (submitForReview) {
+        toast.success(
+          `Nội dung "${mainTitle}" đã được gửi lên hàng đợi chờ duyệt.`,
+          "Gửi duyệt thành công"
+        );
+      } else {
+        toast.success(
+          `Bản thảo "${mainTitle}" đã được lưu an toàn vào hệ thống.`,
+          "Đã lưu bản nháp"
+        );
+      }
       onSaved();
     } catch (saveError) {
-      setError(
+      const msg =
         saveError instanceof Error
           ? saveError.message
-          : "Chưa lưu được nội dung bản thảo.",
-      );
+          : "Chưa lưu được nội dung bản thảo.";
+      setError(msg);
+      toast.error(msg, "Lưu không thành công");
     } finally {
       setSavingMode(null);
     }
@@ -498,7 +638,7 @@ export function ContentEditor({
       aria-modal="true"
       aria-labelledby="content-editor-title"
       onClick={(e) => {
-        if (e.target === e.currentTarget && !savingMode) onClose();
+        if (e.target === e.currentTarget) requestClose();
       }}
     >
       <div className="admin-editor-modal">
@@ -511,63 +651,86 @@ export function ContentEditor({
             <h2 id="content-editor-title" className="admin-editor-title">
               {id ? `Biên tập ${meta.title}` : `Tạo bản nháp ${meta.title}`}
             </h2>
-            <div className="admin-editor-workflow" style={{ marginTop: "4px" }}>
-              <span className={`admin-editor-step ${currentWorkflowStage === 0 ? "is-active" : ""}`}>
-                <FileText size={12} /> 1. Bản nháp
+            <div className="admin-editor-heading-row">
+              <div className="admin-editor-breadcrumb">
+                {isEditorPortal ? "Không gian biên tập" : "Cổng quản trị"} <ChevronRight size={14} /> {meta.tag}
+              </div>
+              <span className={`admin-editor-status-pill ${editorialStatus === "PUBLISHED" ? "is-published" : editorialStatus === "IN_REVIEW" ? "is-review" : ""}`}>
+                <span className="admin-editor-status-dot" />
+                {editorialStatus ? EDITORIAL_STATUS_LABELS[editorialStatus] : "Đang tải trạng thái"}
               </span>
-              <span className="admin-editor-step-arrow">➔</span>
-              <span className={`admin-editor-step ${currentWorkflowStage === 1 ? "is-active" : ""}`}>
-                <ClockIcon size={12} /> 2. Chờ duyệt
-              </span>
-              <span className="admin-editor-step-arrow">➔</span>
-              <span className={`admin-editor-step ${currentWorkflowStage === 2 ? "is-active" : ""}`}>
-                <CheckCircle2 size={12} /> 3. Đã duyệt
-              </span>
-              <span className="admin-editor-step-arrow">➔</span>
-              <span className={`admin-editor-step ${currentWorkflowStage === 3 ? "is-active" : ""}`}>
-                <Globe size={12} /> 4. Đang công khai
-              </span>
-            </div>
-            <div className="admin-editor-current-status">
-              Trạng thái hiện tại: <strong>{editorialStatus ? EDITORIAL_STATUS_LABELS[editorialStatus] : "Chưa xác định"}</strong>
             </div>
           </div>
-          <button
-            type="button"
-            className="admin-editor-close-btn"
-            onClick={onClose}
-            disabled={Boolean(savingMode)}
-            title="Đóng bản thảo (Esc)"
-            aria-label="Đóng bản thảo"
-          >
-            <X size={18} />
-          </button>
+          <div className="admin-editor-header-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <button
+              type="button"
+              className="admin-theme-toggle-btn"
+              onClick={toggleTheme}
+              aria-label={dark ? "Chuyển giao diện sáng" : "Chuyển giao diện tối"}
+              title={dark ? "Chuyển sang giao diện Sáng" : "Chuyển sang giao diện Tối"}
+            >
+              {dark ? <Moon size={16} /> : <Sun size={16} />}
+            </button>
+            <button
+              type="button"
+              className="admin-editor-close-btn"
+              onClick={requestClose}
+              disabled={Boolean(savingMode)}
+              title="Đóng bản thảo (Esc)"
+              aria-label="Đóng bản thảo"
+            >
+              <ArrowLeft size={18} />
+            </button>
+          </div>
         </div>
 
-        {/* Explain the distinct save and review actions. */}
-        <div style={{ padding: "0 28px", paddingTop: "14px" }}>
-          <div className="admin-editor-notice">
-            <AlertCircle size={16} style={{ color: "var(--admin-gold)", flexShrink: 0, marginTop: "2px" }} />
-            <div>
-              <div style={{ fontWeight: 650, marginBottom: "4px" }}>
-                Quy trình duyệt bài
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "12px", lineHeight: "1.5" }}>
-                <div>
-                  • <strong>Lưu bản nháp:</strong> Lưu nội dung ở trạng thái Nháp để tiếp tục chỉnh sửa. Nội dung chưa hiển thị với người dùng.
-                </div>
-                <div>
-                  • <strong>Gửi duyệt:</strong> Chuyển nội dung sang Chờ duyệt. Quản trị viên kiểm tra nội dung và hồ sơ nguồn, quyền sử dụng (nếu có). Nội dung chỉ hiển thị sau khi được duyệt và công khai.
-                </div>
-                {editorialStatus === "PUBLISHED" && (
-                  <div>
-                    • Nội dung này đang công khai. Sau khi lưu thay đổi, nội dung sẽ tạm ẩn và cần được duyệt, công khai lại.
-                  </div>
-                )}
-              </div>
+        {/* Keep the workflow guidance available without crowding the editor. */}
+        <div className="admin-editor-notice-wrap">
+          <details className="admin-editor-notice">
+            <summary className="admin-editor-notice-summary">
+              <Info size={16} aria-hidden="true" />
+              <span><strong>Quy trình duyệt bài</strong> · Lưu nháp để tiếp tục chỉnh sửa; gửi duyệt để chuyển cho người phụ trách rà soát.</span>
+              <ChevronDown size={16} className="admin-editor-notice-chevron" aria-hidden="true" />
+            </summary>
+            <div className="admin-editor-notice-details">
+              <div><strong>Lưu bản nháp:</strong> Nội dung chưa hiển thị với người dùng.</div>
+              <div><strong>Gửi duyệt:</strong> Chuyển nội dung sang Chờ duyệt để kiểm tra nội dung, nguồn và quyền sử dụng trước khi công khai.</div>
+              {editorialStatus === "PUBLISHED" && (
+                <div><strong>Lưu ý:</strong> Bài đang công khai sẽ tạm ẩn sau khi lưu thay đổi và cần được duyệt, công khai lại.</div>
+              )}
             </div>
-          </div>
+          </details>
         </div>
+
+        {showDiscardConfirm && (
+          <div
+            className="admin-editor-discard-backdrop"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) resumeEditing();
+            }}
+          >
+            <section
+              className="admin-editor-discard-dialog"
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="admin-editor-discard-title"
+              aria-describedby="admin-editor-discard-description"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <span className="admin-editor-discard-icon"><AlertCircle size={20} /></span>
+              <h3 id="admin-editor-discard-title">Bỏ các thay đổi chưa lưu?</h3>
+              <p id="admin-editor-discard-description">Nội dung bạn vừa chỉnh sửa sẽ mất nếu đóng bản nháp ngay bây giờ.</p>
+              <div className="admin-editor-discard-actions">
+                <button type="button" className="admin-editor-action-btn is-cancel" ref={discardStayButtonRef} onClick={resumeEditing}>
+                  Tiếp tục chỉnh sửa
+                </button>
+                <button type="button" className="admin-editor-action-btn is-discard" onClick={onClose}>
+                  Bỏ thay đổi
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
 
         {/* Form Body */}
         {loading ? (
@@ -592,37 +755,45 @@ export function ContentEditor({
             )}
 
             {/* 3 MVP Group Tabs + Live Preview */}
-            <div className="admin-editor-tabs-nav">
+            <div className="admin-editor-workspace">
+            <nav className="admin-editor-tabs-nav" aria-label="Các phần biên tập">
               <button
                 type="button"
+                aria-current={activeTab === "info" ? "page" : undefined}
                 className={`admin-editor-tab-btn ${activeTab === "info" ? "is-active" : ""}`}
                 onClick={() => setActiveTab("info")}
               >
                 <BookOpenText size={15} /> 1. Thông tin bài viết
+                {isStep1Complete && <CheckCircle2 size={13} className="tab-completed-check" />}
               </button>
               <button
                 type="button"
+                aria-current={activeTab === "content" ? "page" : undefined}
                 className={`admin-editor-tab-btn ${activeTab === "content" ? "is-active" : ""}`}
                 onClick={() => setActiveTab("content")}
               >
                 <FileText size={15} /> 2. Nội dung chi tiết
+                {isStep2Complete && <CheckCircle2 size={13} className="tab-completed-check" />}
               </button>
               <button
                 type="button"
+                aria-current={activeTab === "media" ? "page" : undefined}
                 className={`admin-editor-tab-btn ${activeTab === "media" ? "is-active" : ""}`}
                 onClick={() => setActiveTab("media")}
               >
                 <Link2 size={15} /> 3. Nguồn & Ảnh minh họa
+                {isStep3Complete && <CheckCircle2 size={13} className="tab-completed-check" />}
               </button>
               <button
                 type="button"
+                aria-current={activeTab === "preview" ? "page" : undefined}
                 className={`admin-editor-tab-btn ${activeTab === "preview" ? "is-active" : ""}`}
                 onClick={() => setActiveTab("preview")}
-                style={{ marginLeft: "auto" }}
               >
                 <Eye size={15} /> Xem trước bài viết
               </button>
-            </div>
+            </nav>
+            <div className="admin-editor-main-panel">
 
             {/* TAB 1: THÔNG TIN BÀI VIẾT */}
             {activeTab === "info" && (
@@ -656,26 +827,6 @@ export function ContentEditor({
                     }
                   />
                 </div>
-
-                {kind === "culture" && (
-                  <label className="admin-editor-col-full flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      checked={membersOnly}
-                      onChange={(event) =>
-                        setMembersOnly(event.target.checked)
-                      }
-                    />
-
-                    <span>
-                      <strong>Chỉ dành cho hội viên Tâm An</strong>
-                      <span className="block text-sm">
-                        Bài vẫn phải được duyệt và xuất bản.
-                        Bài hội viên không xuất hiện trong danh mục văn hóa miễn phí.
-                      </span>
-                    </span>
-                  </label>
-                )}
 
                 {/* Chủ đề văn hóa */}
                 <div className="admin-editor-field">
@@ -723,23 +874,28 @@ export function ContentEditor({
                     value={values.region || "NATIONWIDE"}
                     onChange={(event) => set("region", event.target.value)}
                   >
-                    <option value="NATIONWIDE">🇻🇳 Toàn quốc (Chung)</option>
-                    <option value="NORTH">🏔️ Bắc Bộ</option>
-                    <option value="CENTRAL">🌊 Trung Bộ</option>
-                    <option value="SOUTH">🌾 Nam Bộ</option>
+                    <option value="NATIONWIDE">Toàn quốc (Chung)</option>
+                    <option value="NORTH">Miền Bắc (Bắc Bộ)</option>
+                    <option value="CENTRAL">Miền Trung (Trung Bộ)</option>
+                    <option value="SOUTH">Miền Nam (Nam Bộ)</option>
                   </select>
                 </div>
 
-                {kind === "rituals" && <div className="admin-editor-field">
-                  <label htmlFor="field-ritual-content-type" className="admin-editor-label">Loại hướng dẫn</label>
-                  <select id="field-ritual-content-type" className="admin-editor-select" value={contentType} onChange={(event) => setContentType(event.target.value as typeof contentType)}>
-                    <option value="">Chưa phân loại</option>
-                    <option value="GROUP_AUTHORED">Hướng dẫn nguyên bản do nhóm biên soạn</option>
-                    <option value="FACT">Nhận định dựa trên tư liệu</option>
-                    <option value="LEGEND">Truyền thuyết / tín ngưỡng</option>
-                    <option value="QUOTATION">Có câu trích dẫn</option>
-                  </select>
-                </div>}
+                {kind === "rituals" && (
+                  <div className="admin-editor-field">
+                    <label htmlFor="field-ritual-content-type" className="admin-editor-label">
+                      <span>Phương thức biên soạn & Tính chất tư liệu</span>
+                      <span className="admin-editor-label-hint">Căn cứ lưu vết bản quyền & đối chiếu</span>
+                    </label>
+                    <select id="field-ritual-content-type" className="admin-editor-select" value={contentType} onChange={(event) => setContentType(event.target.value as typeof contentType)}>
+                      <option value="">Chưa phân loại</option>
+                      <option value="GROUP_AUTHORED">Hướng dẫn nguyên bản do ban biên tập tự biên soạn</option>
+                      <option value="FACT">Nhận định nghi thức dựa trên khảo chứng tư liệu</option>
+                      <option value="LEGEND">Tập tục truyền khẩu / tín ngưỡng bản địa</option>
+                      <option value="QUOTATION">Có đoạn trích dẫn nghi lễ cổ</option>
+                    </select>
+                  </div>
+                )}
 
                 {/* Phạm vi nội dung: Địa phương / Cộng đồng cụ thể */}
                 <div className="admin-editor-field admin-editor-col-full">
@@ -764,13 +920,16 @@ export function ContentEditor({
 
                 {kind === "culture" && (
                   <div className="admin-editor-field">
-                    <label htmlFor="field-content-type" className="admin-editor-label">Loại nội dung</label>
+                    <label htmlFor="field-content-type" className="admin-editor-label">
+                      <span>Phương thức biên soạn & Tính chất tư liệu <span style={{ color: "var(--admin-crimson)" }}>*</span></span>
+                      <span className="admin-editor-label-hint">Căn cứ lưu vết bản quyền & đối chiếu nguồn</span>
+                    </label>
                     <select id="field-content-type" className="admin-editor-select" required value={contentType} onChange={(event) => setContentType(event.target.value as typeof contentType)}>
-                      <option value="">Chọn loại nội dung</option>
-                      <option value="GROUP_AUTHORED">Do nhóm biên soạn</option>
-                      <option value="FACT">Thông tin / sự kiện</option>
-                      <option value="LEGEND">Truyền thuyết / tín ngưỡng</option>
-                      <option value="QUOTATION">Có câu trích dẫn</option>
+                      <option value="">-- Chọn tính chất biên soạn --</option>
+                      <option value="GROUP_AUTHORED">Nội dung nguyên bản do ban biên tập tự nghiên cứu & biên soạn</option>
+                      <option value="FACT">Nhận định / tư liệu lịch sử có khảo chứng khoa học</option>
+                      <option value="LEGEND">Ghi chép truyền thuyết, tích xưa & tín ngưỡng dân gian</option>
+                      <option value="QUOTATION">Trích dẫn trực tiếp từ thư tịch, sách cổ hoặc tư liệu ngoài</option>
                     </select>
                   </div>
                 )}
@@ -796,6 +955,34 @@ export function ContentEditor({
                         <span>Lưu ý: Tóm tắt đang lặp nguyên tiêu đề. Hãy viết 1–3 câu khái quát nội dung và bối cảnh.</span>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* Đặc quyền hội viên Tâm An (Card thiết kế sang trọng) */}
+                {kind === "culture" && (
+                  <div className="admin-editor-col-full admin-editor-membership-card">
+                    <div className="admin-editor-membership-header">
+                      <div className="admin-editor-membership-icon">
+                        <Crown size={18} />
+                      </div>
+                      <div className="admin-editor-membership-info">
+                        <label htmlFor="field-members-only" className="admin-editor-membership-title">
+                          Đặc quyền hội viên Tâm An
+                        </label>
+                        <p className="admin-editor-membership-desc">
+                          Khi kích hoạt, bài viết chỉ hiển thị cho người dùng đã đăng ký gói hội viên Tâm An. Bài vẫn tuân thủ đầy đủ quy trình xét duyệt và kiểm chứng nguồn trước khi xuất bản.
+                        </p>
+                      </div>
+                      <label className="admin-editor-switch" title="Bật/tắt nội dung đặc quyền hội viên">
+                        <input
+                          id="field-members-only"
+                          type="checkbox"
+                          checked={membersOnly}
+                          onChange={(event) => setMembersOnly(event.target.checked)}
+                        />
+                        <span className="admin-editor-slider" />
+                      </label>
+                    </div>
                   </div>
                 )}
 
@@ -979,9 +1166,9 @@ export function ContentEditor({
                         />
                         <textarea
                           required
-                          rows={4}
-                          className="admin-editor-textarea"
-                          placeholder="Nội dung chi tiết phân mục…"
+                          rows={8}
+                          className="admin-editor-textarea admin-editor-section-body"
+                          placeholder="Nội dung chi tiết phân mục (phân tích nguồn gốc, nghi thức, giá trị nhân văn)…"
                           value={section.body}
                           onChange={(e) =>
                             setSections(
@@ -1245,10 +1432,10 @@ export function ContentEditor({
                       <label htmlFor="field-source-doc" className="admin-editor-label">
                         <span>Tên nguồn / tài liệu</span>
                       </label>
-                      <input
+                      <textarea
                         id="field-source-doc"
-                        className="admin-editor-input"
-                        type="text"
+                        rows={2}
+                        className="admin-editor-textarea"
                         placeholder="Tên sách, văn bản hoặc cơ quan lưu trữ…"
                         value={sourceDoc}
                         onChange={(e) => setSourceDoc(e.target.value)}
@@ -1260,10 +1447,10 @@ export function ContentEditor({
                       <label htmlFor="field-source-locator" className="admin-editor-label">
                         <span>Trang hoặc mục tham khảo</span>
                       </label>
-                      <input
+                      <textarea
                         id="field-source-locator"
-                        className="admin-editor-input"
-                        type="text"
+                        rows={2}
+                        className="admin-editor-textarea"
                         placeholder="Ví dụ: Tập 2, tr. 145-148, Mục II…"
                         value={sourceLocator}
                         onChange={(e) => setSourceLocator(e.target.value)}
@@ -1274,11 +1461,25 @@ export function ContentEditor({
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "12px" }}>
                     <div className="admin-editor-field">
                       <label htmlFor="field-source-author" className="admin-editor-label">Tác giả / tổ chức</label>
-                      <input id="field-source-author" className="admin-editor-input" type="text" value={sourceAuthor} onChange={(event) => setSourceAuthor(event.target.value)} />
+                      <textarea
+                        id="field-source-author"
+                        rows={2}
+                        className="admin-editor-textarea"
+                        placeholder="Tên tác giả hoặc tổ chức ban hành…"
+                        value={sourceAuthor}
+                        onChange={(event) => setSourceAuthor(event.target.value)}
+                      />
                     </div>
                     <div className="admin-editor-field">
                       <label htmlFor="field-bibliography" className="admin-editor-label">Thông tin xuất bản / thư mục</label>
-                      <input id="field-bibliography" className="admin-editor-input" type="text" value={bibliography} onChange={(event) => setBibliography(event.target.value)} />
+                      <textarea
+                        id="field-bibliography"
+                        rows={2}
+                        className="admin-editor-textarea"
+                        placeholder="NXB, năm xuất bản, số lưu trữ…"
+                        value={bibliography}
+                        onChange={(event) => setBibliography(event.target.value)}
+                      />
                     </div>
                   </div>
                   {kind === "rituals" && <>
@@ -1318,15 +1519,73 @@ export function ContentEditor({
 
                   {/* Live Image Preview Card */}
                   <div className="admin-img-preview-card">
-                    <span style={{ fontSize: "12px", fontWeight: 650, color: "var(--admin-subtle)" }}>
-                      Ảnh dùng trong nội dung:
-                    </span>
-                    <div className="admin-img-preview-viewport">
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
+                      <span style={{ fontSize: "12.5px", fontWeight: 650, color: "var(--admin-subtle)", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <ImageIcon size={14} /> Ảnh dùng trong nội dung (Xem trước):
+                      </span>
+                      {values.image_url && !imageLoadError && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <button
+                            type="button"
+                            onClick={() => setImageFitMode("contain")}
+                            style={{
+                              padding: "4px 10px",
+                              fontSize: "11.5px",
+                              fontWeight: imageFitMode === "contain" ? 650 : 500,
+                              borderRadius: "6px",
+                              border: imageFitMode === "contain" ? "1px solid var(--admin-gold)" : "1px solid var(--admin-line)",
+                              background: imageFitMode === "contain" ? "rgba(200, 150, 85, 0.15)" : "transparent",
+                              color: imageFitMode === "contain" ? "var(--admin-gold)" : "var(--admin-muted)",
+                              cursor: "pointer",
+                              transition: "all 0.15s ease",
+                            }}
+                          >
+                            Trọn vẹn ảnh (100%)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setImageFitMode("cover")}
+                            style={{
+                              padding: "4px 10px",
+                              fontSize: "11.5px",
+                              fontWeight: imageFitMode === "cover" ? 650 : 500,
+                              borderRadius: "6px",
+                              border: imageFitMode === "cover" ? "1px solid var(--admin-gold)" : "1px solid var(--admin-line)",
+                              background: imageFitMode === "cover" ? "rgba(200, 150, 85, 0.15)" : "transparent",
+                              color: imageFitMode === "cover" ? "var(--admin-gold)" : "var(--admin-muted)",
+                              cursor: "pointer",
+                              transition: "all 0.15s ease",
+                            }}
+                          >
+                            Cắt vừa khung 16:9
+                          </button>
+                          <a
+                            href={values.image_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              padding: "4px 10px",
+                              fontSize: "11.5px",
+                              borderRadius: "6px",
+                              border: "1px solid var(--admin-line)",
+                              color: "var(--admin-subtle)",
+                              textDecoration: "none",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                            }}
+                          >
+                            Mở ảnh gốc ↗
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                    <div className={`admin-img-preview-viewport ${imageFitMode === "cover" ? "is-cover" : "is-contain"}`}>
                       {values.image_url && !imageLoadError ? (
                         <img
                           src={values.image_url}
                           alt="Ảnh minh họa"
-                          className="admin-img-preview-img"
+                          className={`admin-img-preview-img ${imageFitMode === "cover" ? "is-cover" : "is-contain"}`}
                           onError={() => setImageLoadError(true)}
                         />
                       ) : (
@@ -1348,13 +1607,14 @@ export function ContentEditor({
                       <label htmlFor="field-img-caption" className="admin-editor-label">
                         <span>Chú thích ảnh minh họa</span>
                       </label>
-                      <input
+                      <textarea
                         id="field-img-caption"
-                        className="admin-editor-input"
-                        type="text"
-                        placeholder="Mô tả đúng nội dung ảnh"
+                        className="admin-editor-textarea"
+                        rows={3}
+                        placeholder="Mô tả đúng nội dung ảnh, nhân vật, công trình hoặc bối cảnh…"
                         value={imageCaption}
                         onChange={(e) => setImageCaption(e.target.value)}
+                        style={{ minHeight: "76px" }}
                       />
                     </div>
 
@@ -1363,19 +1623,30 @@ export function ContentEditor({
                       <label htmlFor="field-img-credit" className="admin-editor-label">
                         <span>Nguồn / tác giả ảnh</span>
                       </label>
-                      <input
+                      <textarea
                         id="field-img-credit"
-                        className="admin-editor-input"
-                        type="text"
-                        placeholder="Người chụp hoặc kho ảnh có liên kết"
+                        className="admin-editor-textarea"
+                        rows={3}
+                        placeholder="Người chụp, cơ quan phát hành hoặc kho ảnh kèm liên kết…"
                         value={imageCredit}
                         onChange={(e) => setImageCredit(e.target.value)}
+                        style={{ minHeight: "76px" }}
                       />
                     </div>
                   </div>
                   <div className="admin-editor-field">
-                    <label htmlFor="field-image-rights" className="admin-editor-label">Căn cứ quyền sử dụng ảnh</label>
-                    <input id="field-image-rights" className="admin-editor-input" type="text" placeholder="Ví dụ: giấy phép, liên kết cấp phép hoặc xác nhận của chủ sở hữu" value={imageRightsBasis} onChange={(event) => setImageRightsBasis(event.target.value)} />
+                    <label htmlFor="field-image-rights" className="admin-editor-label">
+                      <span>Căn cứ quyền sử dụng ảnh</span>
+                    </label>
+                    <textarea
+                      id="field-image-rights"
+                      className="admin-editor-textarea"
+                      rows={2}
+                      placeholder="Ví dụ: Giấy phép Creative Commons CC BY-SA 4.0, tài liệu thuộc phạm vi công cộng (Public Domain), hoặc văn bản xác nhận bản quyền…"
+                      value={imageRightsBasis}
+                      onChange={(event) => setImageRightsBasis(event.target.value)}
+                      style={{ minHeight: "56px" }}
+                    />
                   </div>
                 </div>
               </div>
@@ -1577,69 +1848,226 @@ export function ContentEditor({
                 </div>
               )}
             </div>
+            </div>
+            </div>
           </form>
         )}
 
         {/* Footer */}
         <div className="admin-editor-footer">
-          <div className="admin-editor-footer-hint">
-            <ShieldCheck size={16} style={{ color: "var(--admin-gold)" }} />
-            <span>Thay đổi chỉ được lưu khi chọn “Lưu bản nháp” hoặc “Gửi duyệt nội dung”.</span>
+          <div className={`admin-editor-footer-hint ${savingMode ? "is-saving" : hasUnsavedChanges ? "is-dirty" : id ? "is-saved" : "is-not-saved"}`}>
+            {savingMode ? (
+              <RefreshCw size={16} className="admin-spin-icon" aria-hidden="true" />
+            ) : hasUnsavedChanges ? (
+              <AlertCircle size={16} aria-hidden="true" />
+            ) : id ? (
+              <CheckCircle2 size={16} aria-hidden="true" />
+            ) : (
+              <Info size={16} aria-hidden="true" />
+            )}
+            <span aria-live="polite">
+              {savingMode === "draft"
+                ? "Đang lưu bản nháp…"
+                : savingMode === "submit"
+                  ? "Đang gửi nội dung để duyệt…"
+                  : hasUnsavedChanges
+                    ? "Có thay đổi chưa được lưu."
+                    : id
+                      ? "Đang hiển thị nội dung đã lưu gần nhất."
+                      : "Bản nháp mới chưa được lưu."}
+            </span>
           </div>
           <div className="admin-editor-footer-actions">
-            <button
-              type="button"
-              className="admin-editor-action-btn is-cancel"
-              disabled={Boolean(savingMode)}
-              onClick={onClose}
-            >
-              Đóng
-            </button>
-            <button
-              type="button"
-              className="admin-editor-action-btn is-draft"
-              disabled={Boolean(savingMode) || loading || isSourceUrlInvalid}
-              onClick={() => void save(undefined, false)}
-              title="Lưu lại các nội dung đang soạn và giữ bài ở chế độ nháp để tiếp tục hoàn thiện"
-            >
-              {savingMode === "draft" ? (
-                <>
-                  <RefreshCw size={14} className="admin-spin-icon" />
-                  <span>Đang lưu nháp…</span>
-                </>
-              ) : (
-                <>
-                  <Save size={15} />
-                  <span>Lưu bản nháp</span>
-                </>
-              )}
-            </button>
-            <button
-              type="button"
-              className="admin-editor-action-btn is-submit"
-              disabled={Boolean(savingMode) || loading || isSourceUrlInvalid}
-              onClick={() => void save(undefined, true)}
-              title="Chuyển bài sang trạng thái Chờ duyệt để người phụ trách rà soát"
-            >
-              {savingMode === "submit" ? (
-                <>
-                  <RefreshCw size={14} className="admin-spin-icon" />
-                  <span>Đang gửi duyệt…</span>
-                </>
-              ) : (
-                <>
-                  <Send size={15} />
-                  <span>Gửi duyệt nội dung</span>
-                </>
-              )}
-            </button>
+            {activeTab === "info" && (
+              <>
+                <button
+                  type="button"
+                  className="admin-editor-action-btn is-cancel"
+                  disabled={Boolean(savingMode)}
+                  onClick={requestClose}
+                >
+                  Đóng
+                </button>
+                <button
+                  type="button"
+                  className="admin-editor-action-btn is-draft"
+                  disabled={Boolean(savingMode) || loading || isSourceUrlInvalid}
+                  onClick={() => void save(undefined, false)}
+                  title="Lưu lại các nội dung đang soạn và giữ bài ở chế độ nháp để tiếp tục hoàn thiện"
+                >
+                  {savingMode === "draft" ? (
+                    <>
+                      <RefreshCw size={14} className="admin-spin-icon" />
+                      <span>Đang lưu nháp…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save size={15} />
+                      <span>Lưu bản nháp</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="admin-editor-action-btn is-next"
+                  onClick={() => setActiveTab("content")}
+                  title="Chuyển sang Bước 2: Nhập nội dung chi tiết"
+                >
+                  <span>Sang Bước 2: Nhập nội dung</span>
+                  <ChevronRight size={15} />
+                </button>
+              </>
+            )}
+
+            {activeTab === "content" && (
+              <>
+                <button
+                  type="button"
+                  className="admin-editor-action-btn is-prev"
+                  onClick={() => setActiveTab("info")}
+                  title="Quay lại Bước 1: Thông tin bài viết"
+                >
+                  <ChevronLeft size={15} />
+                  <span>Bước 1</span>
+                </button>
+                <button
+                  type="button"
+                  className="admin-editor-action-btn is-draft"
+                  disabled={Boolean(savingMode) || loading || isSourceUrlInvalid}
+                  onClick={() => void save(undefined, false)}
+                  title="Lưu lại các nội dung đang soạn và giữ bài ở chế độ nháp để tiếp tục hoàn thiện"
+                >
+                  {savingMode === "draft" ? (
+                    <>
+                      <RefreshCw size={14} className="admin-spin-icon" />
+                      <span>Đang lưu nháp…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save size={15} />
+                      <span>Lưu bản nháp</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="admin-editor-action-btn is-next"
+                  onClick={() => setActiveTab("media")}
+                  title="Chuyển sang Bước 3: Nguồn & Ảnh minh họa"
+                >
+                  <span>Sang Bước 3: Nguồn & Ảnh</span>
+                  <ChevronRight size={15} />
+                </button>
+              </>
+            )}
+
+            {activeTab === "media" && (
+              <>
+                <button
+                  type="button"
+                  className="admin-editor-action-btn is-prev"
+                  onClick={() => setActiveTab("content")}
+                  title="Quay lại Bước 2: Nội dung chi tiết"
+                >
+                  <ChevronLeft size={15} />
+                  <span>Bước 2</span>
+                </button>
+                <button
+                  type="button"
+                  className="admin-editor-action-btn is-draft"
+                  disabled={Boolean(savingMode) || loading || isSourceUrlInvalid}
+                  onClick={() => void save(undefined, false)}
+                  title="Lưu lại các nội dung đang soạn và giữ bài ở chế độ nháp để tiếp tục hoàn thiện"
+                >
+                  {savingMode === "draft" ? (
+                    <>
+                      <RefreshCw size={14} className="admin-spin-icon" />
+                      <span>Đang lưu nháp…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save size={15} />
+                      <span>Lưu bản nháp</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="admin-editor-action-btn is-next"
+                  onClick={() => setActiveTab("preview")}
+                  title="Xem trước bài viết hoàn chỉnh trước khi gửi duyệt"
+                >
+                  <Eye size={15} />
+                  <span>Xem trước bài viết</span>
+                  <ChevronRight size={15} />
+                </button>
+              </>
+            )}
+
+            {activeTab === "preview" && (
+              <>
+                <button
+                  type="button"
+                  className="admin-editor-action-btn is-prev"
+                  onClick={() => setActiveTab("media")}
+                  title="Quay lại Bước 3 để điều chỉnh"
+                >
+                  <ChevronLeft size={15} />
+                  <span>Quay lại sửa</span>
+                </button>
+                <button
+                  type="button"
+                  className="admin-editor-action-btn is-draft"
+                  disabled={Boolean(savingMode) || loading || isSourceUrlInvalid}
+                  onClick={() => void save(undefined, false)}
+                  title="Lưu lại các nội dung đang soạn và giữ bài ở chế độ nháp để tiếp tục hoàn thiện"
+                >
+                  {savingMode === "draft" ? (
+                    <>
+                      <RefreshCw size={14} className="admin-spin-icon" />
+                      <span>Đang lưu nháp…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save size={15} />
+                      <span>Lưu bản nháp</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="admin-editor-action-btn is-submit"
+                  disabled={
+                    Boolean(savingMode) ||
+                    loading ||
+                    isSourceUrlInvalid ||
+                    !isStep1Complete ||
+                    !isStep2Complete
+                  }
+                  onClick={() => void save(undefined, true)}
+                  title={
+                    !isStep1Complete || !isStep2Complete
+                      ? "Cần hoàn thiện tối thiểu Bước 1 & Bước 2 trước khi gửi duyệt"
+                      : "Chuyển bài sang trạng thái Chờ duyệt để người phụ trách rà soát"
+                  }
+                >
+                  {savingMode === "submit" ? (
+                    <>
+                      <RefreshCw size={14} className="admin-spin-icon" />
+                      <span>Đang gửi duyệt…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send size={15} />
+                      <span>Gửi duyệt nội dung</span>
+                    </>
+                  )}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
-}
-
-function ClockIcon({ size }: { size?: number }) {
-  return <Sparkles size={size || 14} />;
 }

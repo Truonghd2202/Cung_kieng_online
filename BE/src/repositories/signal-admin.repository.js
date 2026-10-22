@@ -28,8 +28,15 @@ function buildCoverage(rows) {
   return coverage;
 }
 
-async function list({ q, page, status, mood, contextKey }, client = prisma) {
-  const where = buildWhere({ q, status, mood, contextKey });
+async function list({ q, page, status, mood, contextKey }, client = prisma, actorId = null) {
+  let where = buildWhere({ q, status, mood, contextKey });
+  if (actorId) {
+    const authored = await client.admin_audit_logs.findMany({
+      where: { actor_id: actorId, target_type: TARGET, action: { in: ["CONTENT_CREATED", "CONTENT_EDITED"] } },
+      distinct: ["target_id"], select: { target_id: true },
+    });
+    where = { AND: [where, { id: { in: authored.map((row) => row.target_id) } }] };
+  }
   const [items, total, statuses, allSignals] = await Promise.all([
     client.signals.findMany({
       where,
@@ -39,8 +46,8 @@ async function list({ q, page, status, mood, contextKey }, client = prisma) {
       include: { reviewer: { select: { full_name: true } } },
     }),
     client.signals.count({ where }),
-    client.signals.groupBy({ by: ["editorial_status"], _count: { _all: true } }),
-    client.signals.findMany({ select: {
+    client.signals.groupBy({ by: ["editorial_status"], where, _count: { _all: true } }),
+    client.signals.findMany({ where: actorId ? { id: where.AND[1].id } : {}, select: {
       id: true, source: true, mood: true, context_key: true, title: true,
       category: true, advice: true, region: true, content: true, active: true,
       editorial_status: true, reviewed_by: true, reviewed_at: true,
@@ -49,8 +56,19 @@ async function list({ q, page, status, mood, contextKey }, client = prisma) {
   ]);
   const statusCounts = Object.fromEntries(STATUS_VALUES.map((value) => [value, 0]));
   for (const row of statuses) statusCounts[row.editorial_status] = row._count._all;
+  const edits = items.length ? await client.admin_audit_logs.findMany({
+    where: { target_type: TARGET, target_id: { in: items.map((item) => item.id) }, action: { in: ["CONTENT_CREATED", "CONTENT_EDITED", "CONTENT_CHANGES_REQUESTED"] } },
+    orderBy: { created_at: "desc" },
+    select: { target_id: true, action: true, details: true, users: { select: { full_name: true } } },
+  }) : [];
+  const editors = new Map();
+  const feedback = new Map();
+  for (const edit of edits) {
+    if (["CONTENT_CREATED", "CONTENT_EDITED"].includes(edit.action) && !editors.has(edit.target_id)) editors.set(edit.target_id, edit.users?.full_name || "Thành viên nhóm");
+    if (edit.action === "CONTENT_CHANGES_REQUESTED" && !feedback.has(edit.target_id)) feedback.set(edit.target_id, edit.details?.reviewNote || "");
+  }
   return {
-    items,
+    items: items.map((item) => ({ ...item, submitted_by: editors.get(item.id) || null, editor_feedback: feedback.get(item.id) || null })),
     pagination: { page, pageSize: 25, total, pageCount: Math.ceil(total / 25) },
     stats: { total: allSignals.length, statuses: statusCounts, coverage: buildCoverage(allSignals) },
   };

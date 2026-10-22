@@ -326,18 +326,21 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
                     <UnverifiedImage
                       src={signal.artwork.image}
                       alt={signal.artwork.caption || "Minh họa di sản văn hóa"}
+                      title={signal.artwork.caption}
+                      description={signal.research?.region}
+                      allowExpand={true}
                       loading="lazy"
                       decoding="async"
-                      className="signal-artwork-img"
+                      className="signal-artwork-img cursor-pointer"
                     />
                   </div>
                   <figcaption className="signal-artwork-caption">
                     <span className="flex items-center gap-1.5">
-                      <Sparkle className="w-3 h-3 text-accent shrink-0" />
+                      <Sparkle className="w-3.5 h-3.5 text-accent shrink-0" />
                       <span>{signal.artwork.caption}</span>
                     </span>
                     {signal.research?.region && !signal.research.region.includes("Không gán") && (
-                      <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-accent/10 border border-accent/20 text-accent shrink-0">
+                      <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-accent shrink-0">
                         {signal.research.region}
                       </span>
                     )}
@@ -457,14 +460,18 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
                 }`}
               >
                 <span className="signal-action-sheen" />
-                <Check className="w-4 h-4 shrink-0" />
+                {isActionDone ? (
+                  <Check className="w-4 h-4 shrink-0 text-emerald-100" strokeWidth={2.5} />
+                ) : (
+                  <Sparkles className="w-4 h-4 shrink-0 text-amber-200" />
+                )}
                 <span>
                   {isActionDone ? "Đã thực hiện xong ✓" : "Tôi đã thực hiện"}
                 </span>
               </button>
 
               {isActionDone && (
-                <p className="mt-2.5 text-xs text-center text-success font-medium">
+                <p className="mt-2.5 text-xs text-center text-emerald-700 dark:text-emerald-400 font-medium">
                   Tâm an thì vạn sự an. Bạn có thể bấm lần nữa để bỏ đánh dấu.
                 </p>
               )}
@@ -487,10 +494,8 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
               <button
                 type="button"
                 onClick={isSaved ? onGoToDiary : onSaveToAccount}
-                className={`w-full h-11 text-sm font-semibold flex items-center justify-center gap-2 rounded-xl transition-all duration-300 cursor-pointer ${
-                  isSaved
-                    ? "bg-accent/15 border-1.5 border-accent text-accent hover:bg-accent/25 shadow-xs"
-                    : "bg-surface-soft hover:bg-surface border border-accent/40 hover:border-accent text-ink shadow-xs"
+                className={`signal-save-btn ${
+                  isSaved ? "signal-save-btn--saved" : ""
                 }`}
               >
                 <Bookmark
@@ -507,6 +512,9 @@ export const SignalResultScreen: React.FC<SignalResultScreenProps> = ({
 
               <p className="mt-2.5 text-xs text-center text-muted leading-relaxed">
                 Bạn có thể lưu giữ lời chiêm nghiệm này vào sổ tay bất cứ lúc nào.
+              </p>
+              <p className="mt-2 text-[11.5px] text-center text-muted/75 italic">
+                “Vạn dặm đường xa, khởi từ bước chân vững vàng.”
               </p>
             </div>
           </section>

@@ -70,8 +70,9 @@ const reviewSchema = z.object({
   active: z.boolean().optional(),
   verified: z.boolean().optional(),
   rightsConfirmed: z.boolean().optional(),
+  requestChanges: z.boolean().optional(),
   reviewNote: text.min(8).max(500),
-}).strict().refine((value) => value.active !== undefined || value.verified !== undefined, {
+}).strict().refine((value) => value.requestChanges === true || value.active !== undefined || value.verified !== undefined, {
   message: "Choose at least one workflow transition",
 });
 

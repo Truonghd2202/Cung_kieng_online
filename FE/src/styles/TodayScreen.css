@@ -285,3 +285,99 @@
 .dark .today-heritage-card:hover .today-card-corner {
   color: rgba(223, 189, 125, 0.8);
 }
+
+/* ==========================================================================
+   HIỆU ỨNG KHÓI TRÀ BỐC LÊN TỰ NHIÊN (TEA STEAM ANIMATION)
+   ========================================================================== */
+.tea-steam-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.tea-steam-emitter {
+  position: absolute;
+  left: 52%;
+  bottom: 38%;
+  width: 100px;
+  height: 140px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.tea-steam-tendril {
+  position: absolute;
+  bottom: 0;
+  border-radius: 50% 50% 35% 35%;
+  background: radial-gradient(ellipse at 50% 55%, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.28) 40%, transparent 70%);
+  filter: blur(7px);
+  opacity: 0;
+  animation: teaSteamRise 5.2s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+  mix-blend-mode: screen;
+}
+
+.tea-steam-tendril--1 {
+  left: 20%;
+  width: 26px;
+  height: 52px;
+  animation-duration: 5s;
+  animation-delay: 0s;
+}
+
+.tea-steam-tendril--2 {
+  left: 44%;
+  width: 36px;
+  height: 70px;
+  animation-duration: 5.6s;
+  animation-delay: 1.2s;
+}
+
+.tea-steam-tendril--3 {
+  left: 30%;
+  width: 30px;
+  height: 60px;
+  animation-duration: 4.8s;
+  animation-delay: 2.3s;
+}
+
+.tea-steam-tendril--4 {
+  left: 56%;
+  width: 24px;
+  height: 48px;
+  animation-duration: 6s;
+  animation-delay: 3.5s;
+}
+
+.tea-steam-tendril--5 {
+  left: 38%;
+  width: 32px;
+  height: 64px;
+  animation-duration: 5.4s;
+  animation-delay: 4.2s;
+}
+
+@keyframes teaSteamRise {
+  0% {
+    transform: translateY(0) scaleX(0.7) scaleY(0.7) rotate(0deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.65;
+    transform: translateY(-22px) scaleX(0.95) scaleY(1) rotate(2deg);
+  }
+  50% {
+    opacity: 0.48;
+    transform: translateY(-60px) scaleX(1.35) scaleY(1.4) rotate(-3deg);
+  }
+  80% {
+    opacity: 0.22;
+    transform: translateY(-105px) scaleX(1.8) scaleY(1.7) rotate(4deg);
+  }
+  100% {
+    transform: translateY(-145px) scaleX(2.2) scaleY(2) rotate(-5deg);
+    opacity: 0;
+  }
+}
+

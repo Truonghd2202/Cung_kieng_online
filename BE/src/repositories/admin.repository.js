@@ -4,6 +4,7 @@ const { hasUsableChecklist, isGroupAuthoredRitual, ritualApprovalIssue } = requi
 const { reviewAuditAction } = require("../services/content-review-metadata");
 const { stateAfterReview } = require("../services/editorial-workflow");
 const { hasPublishableCultureContent, cultureContentHash } = require("../services/culture-publication");
+const { ensureDifferentReviewer } = require("../services/content-review-guard");
 const PAGE_SIZE = 25;
 
 function pageResult(items, total, page, stats) {
@@ -28,27 +29,47 @@ function contentWhere(model, q, status) {
   return conditions.length ? { AND: conditions } : {};
 }
 
-async function contentStats(model) {
+async function contentStats(model, where = {}) {
   const [total, grouped, regions, missingSource, withSource] = await Promise.all([
-    prisma[model].count(),
-    prisma[model].groupBy({ by: ["editorial_status"], _count: { _all: true } }),
-    prisma[model].groupBy({ by: ["region"], _count: { _all: true } }),
-    prisma[model].count({ where: { OR: [{ source: null }, { source: "" }] } }),
-    prisma[model].count({ where: { AND: [{ source: { not: null } }, { source: { not: "" } }] } }),
+    prisma[model].count({ where }),
+    prisma[model].groupBy({ by: ["editorial_status"], where, _count: { _all: true } }),
+    prisma[model].groupBy({ by: ["region"], where, _count: { _all: true } }),
+    prisma[model].count({ where: { AND: [where, { OR: [{ source: null }, { source: "" }] }] } }),
+    prisma[model].count({ where: { AND: [where, { source: { not: null } }, { source: { not: "" } }] } }),
   ]);
   const statuses = Object.fromEntries(EDITORIAL_STATUSES.map((key) => [key, 0]));
   for (const row of grouped) statuses[row.editorial_status] = row._count._all;
   return { total, statuses, missingSource, withSource, regions: Object.fromEntries(regions.map((row) => [row.region || "UNKNOWN", row._count._all])) };
 }
 
-async function listContent(model, { q, page, status }, orderBy, select) {
-  const where = contentWhere(model, q, status);
+async function listContent(model, { q, page, status }, orderBy, select, actorId = null) {
+  let ownerWhere = {};
+  if (actorId) {
+    const authored = await prisma.admin_audit_logs.findMany({
+      where: { actor_id: actorId, target_type: model, action: { in: ["CONTENT_CREATED", "CONTENT_EDITED"] } },
+      distinct: ["target_id"], select: { target_id: true },
+    });
+    ownerWhere = { id: { in: authored.map((row) => row.target_id) } };
+  }
+  const where = { AND: [ownerWhere, contentWhere(model, q, status)] };
   const [items, total, stats] = await Promise.all([
     prisma[model].findMany({ where, orderBy, skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE, select }),
     prisma[model].count({ where }),
-    contentStats(model),
+    contentStats(model, ownerWhere),
   ]);
-  return pageResult(items, total, page, stats);
+  if (!items.length) return pageResult(items, total, page, stats);
+  const edits = await prisma.admin_audit_logs.findMany({
+    where: { target_type: model, target_id: { in: items.map((item) => item.id) }, action: { in: ["CONTENT_CREATED", "CONTENT_EDITED", "CONTENT_CHANGES_REQUESTED"] } },
+    orderBy: { created_at: "desc" },
+    select: { target_id: true, action: true, details: true, users: { select: { full_name: true } } },
+  });
+  const editors = new Map();
+  const feedback = new Map();
+  for (const edit of edits) {
+    if (!editors.has(edit.target_id)) editors.set(edit.target_id, edit.users?.full_name || "Thành viên nhóm");
+    if (edit.action === "CONTENT_CHANGES_REQUESTED" && !feedback.has(edit.target_id)) feedback.set(edit.target_id, edit.details?.reviewNote || "");
+  }
+  return pageResult(items.map((item) => ({ ...item, submitted_by: editors.get(item.id) || null, editor_feedback: feedback.get(item.id) || null })), total, page, stats);
 }
 
 async function getOverview() {
@@ -69,15 +90,15 @@ async function getOverview() {
   return { analytics, content: { activeArticles: articleCount, articlesAwaitingReview: unverifiedArticles, activeCalendarEvents: calendarCount, calendarEventsAwaitingReview: unverifiedCalendar, activeXamLots: xamCount, xamLotsAwaitingReview: unverifiedXam, activeRituals: ritualCount, ritualsAwaitingReview: unverifiedRituals, activePrayers: prayerCount, prayersAwaitingReview: unverifiedPrayers }, membershipInterestCount };
 }
 
-function listArticles(params) { return listContent("culture_articles", params, [{ editorial_status: "asc" }, { updated_at: "desc" }], { id: true, slug: true, title: true, category: true, region: true, source: true, content: true, verified: true, active: true, editorial_status: true, updated_at: true }); }
+function listArticles(params, actorId) { return listContent("culture_articles", params, [{ editorial_status: "asc" }, { updated_at: "desc" }], { id: true, slug: true, title: true, category: true, region: true, source: true, content: true, verified: true, active: true, editorial_status: true, updated_at: true }, actorId); }
 
-function listCalendarEvents(params) { return listContent("calendar_events", params, [{ editorial_status: "asc" }, { month: "asc" }, { day: "asc" }], { id: true, title: true, description: true, calendar: true, day: true, month: true, region: true, category: true, source: true, verified: true, active: true, editorial_status: true, updated_at: true }); }
+function listCalendarEvents(params, actorId) { return listContent("calendar_events", params, [{ editorial_status: "asc" }, { month: "asc" }, { day: "asc" }], { id: true, title: true, description: true, calendar: true, day: true, month: true, region: true, category: true, source: true, verified: true, active: true, editorial_status: true, updated_at: true }, actorId); }
 
-function listXamLots(params) { return listContent("xin_xam", params, [{ editorial_status: "asc" }, { xam_type: "asc" }, { stick_number: "asc" }], { id: true, stick_number: true, name: true, xam_type: true, region: true, category: true, fortune_level: true, source: true, verified: true, active: true, editorial_status: true, updated_at: true }); }
+function listXamLots(params, actorId) { return listContent("xin_xam", params, [{ editorial_status: "asc" }, { xam_type: "asc" }, { stick_number: "asc" }], { id: true, stick_number: true, name: true, xam_type: true, region: true, category: true, fortune_level: true, source: true, verified: true, active: true, editorial_status: true, updated_at: true }, actorId); }
 
-function listRituals(params) { return listContent("rituals", params, [{ editorial_status: "asc" }, { updated_at: "desc" }], { id: true, slug: true, title: true, occasion: true, region: true, source: true, content_provenance: true, checklists: true, verified: true, active: true, editorial_status: true, updated_at: true }); }
+function listRituals(params, actorId) { return listContent("rituals", params, [{ editorial_status: "asc" }, { updated_at: "desc" }], { id: true, slug: true, title: true, occasion: true, region: true, source: true, content_provenance: true, checklists: true, verified: true, active: true, editorial_status: true, updated_at: true }, actorId); }
 
-function listPrayers(params) { return listContent("prayers", params, [{ editorial_status: "asc" }, { updated_at: "desc" }], { id: true, title: true, ritual_id: true, region: true, language_style: true, source: true, verified: true, active: true, editorial_status: true, updated_at: true }); }
+function listPrayers(params, actorId) { return listContent("prayers", params, [{ editorial_status: "asc" }, { updated_at: "desc" }], { id: true, title: true, ritual_id: true, region: true, source: true, language_style: true, verified: true, active: true, editorial_status: true, updated_at: true }, actorId); }
 
 async function listMembershipInterests({ q, page }) {
   const where = q ? { email: { contains: q, mode: "insensitive" } } : {};
@@ -104,6 +125,7 @@ async function updateReview({ model, id, actorId, patch, expectedUpdatedAt, revi
     const effectiveSource = typeof source === "string" ? source.trim() : before.source;
     if (source !== undefined && source.trim() && !/^https:\/\/[^\s]+$/i.test(source.trim())) return { sourceInvalid: true };
     const nextWorkflow = stateAfterReview(before, patch);
+    if (patch.verified === true) await ensureDifferentReviewer(tx, model, id, actorId);
     if (nextWorkflow.reviewRequired) return { reviewRequired: true };
     if (nextWorkflow.reviewAndPublishInOneStep) return { reviewAndPublishInOneStep: true };
     if (nextWorkflow.approvalRequired) return { approvalRequired: true };

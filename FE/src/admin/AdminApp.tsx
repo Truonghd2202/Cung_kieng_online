@@ -13,6 +13,8 @@ import {
   Clock3,
   Copy,
   CreditCard,
+  ClipboardCheck,
+  Crown,
   Edit3,
   ExternalLink,
   Eye,
@@ -42,7 +44,7 @@ import {
   X,
 } from "lucide-react";
 import { useTheme } from "../hooks/useTheme";
-import { ApiError } from "../lib/api";
+import { ApiError, apiRequest } from "../lib/api";
 import {
   loginAccount,
   logoutAccount,
@@ -56,7 +58,8 @@ import {
   type AdminPage,
   type AdminRecord,
 } from "../data/adminService";
-import { ContentEditor } from "./ContentEditor";
+import { ContentEditor, type Kind } from "./ContentEditor";
+import { ContentDetailModal } from "./ContentDetailModal";
 import { SignalAdminPanel } from "./SignalAdminPanel";
 import { PartnershipPanel } from "../components/PartnershipPanel";
 import { AdminPaymentsPanel } from "./AdminPaymentsPanel";
@@ -71,26 +74,26 @@ import {
 } from "./AdminCharts";
 import { LogoutConfirmDialog } from "../components/LogoutConfirmDialog";
 import { toast, ToastContainer } from "../components/ui/Toast";
-import { getAdminAccessState } from "./adminAccess";
+import { EDITOR_SECTIONS, getAdminAccessState, getAllowedAdminSection } from "./adminAccess";
+import { TeamAccessPanel } from "./TeamAccessPanel";
+import { ReviewQueuePanel } from "./ReviewQueuePanel";
+import {
+  getAdminSectionFromSearch,
+  getAdminSectionUrl,
+  closeAdminOverlay,
+  pushAdminOverlay,
+  type AdminSection,
+} from "./adminNavigation";
 import "./admin.css";
 
-type Section =
-  | "overview"
-  | "culture"
-  | "calendar"
-  | "xam"
-  | "rituals"
-  | "prayers"
-  | "signals"
-  | "payments"
-  | "payment-alerts"
-  | "partnerships"
-  | "partner-gifts"
-  | "membership-interests"
-  | "audit-logs";
+type Section = AdminSection;
 type ReviewField = "verified" | "active";
 type ContentFilter = "all" | "DRAFT" | "IN_REVIEW" | "APPROVED" | "PUBLISHED" | "HIDDEN" | "REVOKED" | "needs_source";
 type ViewMode = "grid" | "table";
+
+function isReviewableSection(section: Section): section is Kind {
+  return ["culture", "calendar", "xam", "rituals", "prayers"].includes(section);
+}
 
 const NAV: Array<{
   id: Section;
@@ -102,60 +105,67 @@ const NAV: Array<{
     id: "overview",
     label: "Tổng quan",
     icon: LayoutDashboard,
-    group: "VẬN HÀNH",
+    group: "TỔNG QUAN",
+  },
+  {
+    id: "review-queue",
+    label: "Hàng chờ duyệt",
+    icon: ClipboardCheck,
+    group: "KIỂM DUYỆT",
   },
   {
     id: "culture",
     label: "Kho văn hóa",
     icon: BookOpenText,
-    group: "NỘI DUNG",
+    group: "KHO NỘI DUNG",
   },
   {
     id: "calendar",
     label: "Lịch sự kiện",
     icon: CalendarDays,
-    group: "NỘI DUNG",
+    group: "KHO NỘI DUNG",
   },
-  { id: "xam", label: "Danh mục xin xăm", icon: LibraryBig, group: "NỘI DUNG" },
-  { id: "rituals", label: "Nghi lễ", icon: BookOpenText, group: "NỘI DUNG" },
-  { id: "prayers", label: "Văn khấn", icon: FileCheck2, group: "NỘI DUNG" },
-  { id: "signals", label: "Lời chiêm nghiệm", icon: Sparkles, group: "NỘI DUNG" },
+  { id: "xam", label: "Danh mục xin xăm", icon: LibraryBig, group: "KHO NỘI DUNG" },
+  { id: "rituals", label: "Nghi lễ", icon: BookOpenText, group: "KHO NỘI DUNG" },
+  { id: "prayers", label: "Văn khấn", icon: FileCheck2, group: "KHO NỘI DUNG" },
+  { id: "signals", label: "Lời chiêm nghiệm", icon: Sparkles, group: "KHO NỘI DUNG" },
   {
     id: "payments",
     label: "Đơn thanh toán",
     icon: CreditCard,
-    group: "THƯƠNG MẠI & ĐỐI TÁC",
+    group: "VẬN HÀNH & ĐỐI TÁC",
   },
   {
     id: "payment-alerts",
     label: "Cảnh báo thanh toán",
     icon: ShieldAlert,
-    group: "THƯƠNG MẠI & ĐỐI TÁC",
+    group: "VẬN HÀNH & ĐỐI TÁC",
   },
   {
     id: "partnerships",
     label: "Đề xuất hợp tác",
     icon: Handshake,
-    group: "THƯƠNG MẠI & ĐỐI TÁC",
+    group: "VẬN HÀNH & ĐỐI TÁC",
   },
   {
     id: "partner-gifts",
     label: "Hộp quà văn hóa",
     icon: Gift,
-    group: "THƯƠNG MẠI & ĐỐI TÁC",
+    group: "VẬN HÀNH & ĐỐI TÁC",
   },
   {
     id: "membership-interests",
     label: "Quan tâm hội viên",
     icon: UsersRound,
-    group: "TĂNG TRƯỞNG",
+    group: "VẬN HÀNH & ĐỐI TÁC",
   },
   {
     id: "audit-logs",
     label: "Nhật ký quản trị",
     icon: FileCheck2,
-    group: "HỆ THỐNG",
+    group: "QUẢN TRỊ HỆ THỐNG",
   },
+  { id: "team", label: "Tài khoản nhóm", icon: UsersRound, group: "QUẢN TRỊ HỆ THỐNG" },
 ];
 
 const TITLES: Record<
@@ -165,8 +175,13 @@ const TITLES: Record<
   overview: {
     title: "Tổng quan vận hành",
     description:
-      "Bảng tổng hợp hoạt động, trạng thái nội dung và lượt quan tâm hội viên.",
-    tag: "EXECUTIVE DASHBOARD",
+      "Bảng tổng hợp chỉ số hoạt động, chất lượng nội dung và tiến độ kết nối hội viên.",
+    tag: "TỔNG QUAN ĐIỀU HÀNH",
+  },
+  "review-queue": {
+    title: "Hàng chờ duyệt",
+    description: "Xem các nội dung thành viên gửi lên và mở đúng danh mục để thẩm định.",
+    tag: "KIỂM DUYỆT NỘI DUNG",
   },
   culture: {
     title: "Kho văn hóa",
@@ -235,6 +250,11 @@ const TITLES: Record<
       "Lịch sử chi tiết mọi thao tác kiểm duyệt, thay đổi trạng thái nội dung của quản trị viên.",
     tag: "HỆ THỐNG KIỂM SOÁT",
   },
+  team: {
+    title: "Tài khoản nhóm",
+    description: "Quản lý cơ cấu nhân sự, cấp quyền biên tập và kiểm soát an toàn truy cập nội bộ.",
+    tag: "PHÂN QUYỀN NỘI BỘ",
+  },
 };
 
 function readableError(error: unknown) {
@@ -301,7 +321,9 @@ function reviewProvenanceIsIncomplete(
   sourceLocator: string,
 ) {
   if (!rightsConfirmed) return true;
-  if (section === "culture") return !["confirmed", "public-domain"].includes(usageRights);
+  if (section === "culture") {
+    return !["confirmed", "public-domain"].includes(usageRights);
+  }
   if (section === "prayers" || (section === "rituals" && !isGroupAuthoredRitual(record))) {
     return !/^https:\/\//i.test(sourceUrl.trim())
       || sourceLocator.trim().length < 2
@@ -314,6 +336,73 @@ function reviewProvenanceIsIncomplete(
       || !String(provenance.contentRightsBasis || "").trim();
   }
   return false;
+}
+
+function getCultureApprovalIssues(record: AdminRecord) {
+  const content = record.content && typeof record.content === "object"
+    ? record.content as Record<string, unknown>
+    : {};
+  const provenance = content.provenance && typeof content.provenance === "object"
+    ? content.provenance as Record<string, unknown>
+    : {};
+  const groupAuthored = provenance.contentType === "GROUP_AUTHORED";
+  const sections = Array.isArray(content.sections) ? content.sections : [];
+  const issues: string[] = [];
+
+  if (content.contentKind !== "article" || !sections.some((section) => {
+    if (!section || typeof section !== "object") return false;
+    return String((section as Record<string, unknown>).body || "").trim().length >= 120;
+  })) {
+    issues.push("cần ít nhất một phần nội dung dài 120 ký tự");
+  }
+  if (!groupAuthored && !String(provenance.sourceTitle || "").trim()) {
+    issues.push("thiếu tên nguồn tư liệu");
+  }
+  if (!groupAuthored && !String(provenance.bibliography || provenance.sourceUrl || record.source || "").trim()) {
+    issues.push("thiếu URL hoặc thông tin thư mục nguồn");
+  }
+  if (!groupAuthored && !String(provenance.sourceLocator || "").trim()) {
+    issues.push("thiếu trang hoặc vị trí trích dẫn");
+  }
+  if (Boolean(record.image_url) && (
+    !String(provenance.imageCaption || "").trim()
+    || !String(provenance.imageSource || "").trim()
+    || !String(provenance.imageRightsBasis || "").trim()
+  )) {
+    issues.push("ảnh cần chú thích, nguồn ảnh và căn cứ quyền sử dụng");
+  }
+  return issues;
+}
+
+function reviewSubmitBlockMessage(
+  section: Section | null,
+  record: AdminRecord,
+  reviewField: ReviewField | null,
+  reviewValue: boolean,
+  reviewNote: string,
+  rightsConfirmed: boolean,
+  usageRights: string,
+  sourceUrl: string,
+  sourceLocator: string,
+) {
+  if (reviewField !== "verified" || !reviewValue) return "";
+  if (!section || !isReviewableSection(section)) return "";
+  if (section === "culture") {
+    const issues = getCultureApprovalIssues(record);
+    if (issues.length) {
+      return `Chưa thể phê duyệt: ${issues.join("; ")}. Hãy yêu cầu Editor bổ sung rồi gửi duyệt lại.`;
+    }
+  }
+  if (reviewNote.trim().length < 8) return "Ghi chú thẩm định cần ít nhất 8 ký tự.";
+  if (reviewProvenanceIsIncomplete(section, record, rightsConfirmed, usageRights, sourceUrl, sourceLocator)) {
+    if (!rightsConfirmed) return "Hãy đánh dấu xác nhận đã đối chiếu nguồn và quyền sử dụng ở trên.";
+    if ((section === "culture" || section === "prayers" || (section === "rituals" && !isGroupAuthoredRitual(record)))
+      && !["confirmed", "public-domain"].includes(usageRights)) {
+      return "Hãy chọn căn cứ quyền sử dụng đã xác minh: có giấy phép hoặc thuộc phạm vi công cộng.";
+    }
+    return "Hãy hoàn tất các trường nguồn và căn cứ quyền bắt buộc ở trên.";
+  }
+  return "";
 }
 
 function getRecordTitle(row: AdminRecord, section: Section): string {
@@ -349,14 +438,19 @@ function getRecordTitle(row: AdminRecord, section: Section): string {
 
 export default function AdminApp() {
   const { dark, toggleTheme } = useTheme();
-  const [section, setSection] = useState<Section>("overview");
+  const [section, setSection] = useState<Section>(() =>
+    getAdminSectionFromSearch(window.location.search),
+  );
   const [adminName, setAdminName] = useState("");
+  const [userRole, setUserRole] = useState("USER");
   const [booting, setBooting] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [forbidden, setForbidden] = useState(false);
   const [sessionUnavailable, setSessionUnavailable] = useState("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [overview, setOverview] = useState<AdminOverview | null>(null);
+  const [pendingQueueCount, setPendingQueueCount] = useState<number | null>(null);
+  const [reviewQueueKey, setReviewQueueKey] = useState(0);
   const [pageData, setPageData] = useState<AdminPage<AdminRecord> | null>(null);
   const [rows, setRows] = useState<AdminRecord[]>([]);
   const [page, setPage] = useState(1);
@@ -367,6 +461,7 @@ export default function AdminApp() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [reviewRecord, setReviewRecord] = useState<AdminRecord | null>(null);
   const [reviewField, setReviewField] = useState<ReviewField | null>(null);
+  const [reviewSection, setReviewSection] = useState<Kind | null>(null);
   const [reviewValue, setReviewValue] = useState(false);
   const [reviewNote, setReviewNote] = useState("");
   const [rightsConfirmed, setRightsConfirmed] = useState(false);
@@ -378,8 +473,20 @@ export default function AdminApp() {
   const [editing, setEditing] = useState<{
     kind: "culture" | "calendar" | "xam" | "rituals" | "prayers";
     id?: string;
-  } | null>(null);
+  } | null>(() => {
+    if (typeof window === "undefined") return null;
+    const params = new URLSearchParams(window.location.search);
+    const contentEdit = params.get("contentEdit") as Kind | null;
+    if (contentEdit && ["culture", "calendar", "xam", "rituals", "prayers"].includes(contentEdit)) {
+      const editId = params.get("editId") || undefined;
+      return { kind: contentEdit, id: editId };
+    }
+    return null;
+  });
   const [savingReview, setSavingReview] = useState(false);
+  const [contentDetails, setContentDetails] = useState<{ kind: Kind; id: string; record: AdminRecord } | null>(null);
+  const [changeRequestNote, setChangeRequestNote] = useState("");
+  const [contentDetailError, setContentDetailError] = useState("");
 
   // New Interactive Controls
   const [activeFilter, setActiveFilter] = useState<ContentFilter>("all");
@@ -388,7 +495,7 @@ export default function AdminApp() {
 
   const fetchSection = useCallback(
     async (target: Section, nextPage = 1, query = "", status: ContentFilter = "all") => {
-      if (target === "signals") {
+      if (target === "signals" || target === "review-queue") {
         latestRequest.current += 1;
         setLoading(false);
         setPageData(null);
@@ -406,11 +513,11 @@ export default function AdminApp() {
           setPageData(null);
           setRows([]);
         } else if (
-          target === "signals" ||
           target === "payments" ||
           target === "payment-alerts" ||
           target === "partnerships" ||
-          target === "partner-gifts"
+          target === "partner-gifts" ||
+          target === "team"
         ) {
           if (requestId !== latestRequest.current) return;
           setPageData(null);
@@ -455,6 +562,14 @@ export default function AdminApp() {
         window.location.replace("/?login=true&redirect=/admin");
         return;
       }
+      if (user.role?.toUpperCase() === "EDITOR") {
+        const requestedSection = getAdminSectionFromSearch(window.location.search);
+        const editorSection = EDITOR_SECTIONS.includes(requestedSection as (typeof EDITOR_SECTIONS)[number])
+          ? requestedSection
+          : "culture";
+        window.location.replace(`/editor?section=${encodeURIComponent(editorSection)}`);
+        return;
+      }
       const access = getAdminAccessState(user);
       if (access === "forbidden") {
         setForbidden(true);
@@ -462,10 +577,29 @@ export default function AdminApp() {
         return;
       }
       setAdminName(user.name);
+      setUserRole(user.role?.toUpperCase() || "USER");
       setIsAuthenticated(true);
-      await fetchSection("overview");
+      const requestedSection = getAdminSectionFromSearch(window.location.search);
+      const initialSection = getAllowedAdminSection(user.role, requestedSection) as Section;
+      const requestedStatus = new URLSearchParams(window.location.search).get("status") as ContentFilter | null;
+      const initialFilter: ContentFilter = requestedStatus && ["all", "DRAFT", "IN_REVIEW", "APPROVED", "PUBLISHED", "HIDDEN", "REVOKED", "needs_source"].includes(requestedStatus)
+        ? requestedStatus
+        : "all";
+      setSection(initialSection);
+      setActiveFilter(initialFilter);
+      if (initialSection !== requestedSection) {
+        window.history.replaceState(window.history.state, "", getAdminSectionUrl(window.location.href, initialSection));
+      }
+      await fetchSection(initialSection, 1, "", initialFilter);
       if (mounted) {
         setBooting(false);
+        if (initialSection !== "overview") {
+          void loadAdminOverview().then((data) => {
+            if (mounted && data) {
+              setOverview(data);
+            }
+          }).catch(() => {});
+        }
         try {
           const justLoggedIn = sessionStorage.getItem("tltl_admin_just_logged_in");
           if (justLoggedIn) {
@@ -483,15 +617,137 @@ export default function AdminApp() {
     };
   }, [fetchSection]);
 
-  const navigate = (target: Section) => {
+  const navigate = (target: Section, initialFilter: ContentFilter = "all") => {
+    if (userRole === "EDITOR" && !EDITOR_SECTIONS.includes(target as (typeof EDITOR_SECTIONS)[number])) return;
+    const nextUrl = new URL(getAdminSectionUrl(window.location.href, target), window.location.origin);
+    if (initialFilter === "all") nextUrl.searchParams.delete("status");
+    else nextUrl.searchParams.set("status", initialFilter);
+    nextUrl.searchParams.delete("signalEdit");
+    nextUrl.searchParams.delete("signalDetail");
+    window.history.pushState(
+      { adminSection: target, status: initialFilter },
+      "",
+      `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
+    );
     setSection(target);
     setPage(1);
     setSearch("");
     setSearchDraft("");
-    setActiveFilter("all");
+    setActiveFilter(initialFilter);
     setReviewRecord(null);
+    setEditing(null);
     setMobileNavOpen(false);
-    void fetchSection(target, 1, "");
+    window.dispatchEvent(new CustomEvent("admin:close-modals"));
+    void fetchSection(target, 1, "", initialFilter);
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const contentEdit = params.get("contentEdit") as Kind | null;
+      if (contentEdit && ["culture", "calendar", "xam", "rituals", "prayers"].includes(contentEdit)) {
+        const editId = params.get("editId") || undefined;
+        setEditing({ kind: contentEdit, id: editId });
+      } else {
+        setEditing(null);
+      }
+      if (reviewRecord) {
+        setReviewRecord(null);
+        setReviewField(null);
+        return;
+      }
+      const target = getAllowedAdminSection(userRole, getAdminSectionFromSearch(window.location.search)) as Section;
+      const requested = getAdminSectionFromSearch(window.location.search);
+      if (target !== requested) {
+        window.history.replaceState(window.history.state, "", getAdminSectionUrl(window.location.href, target));
+      }
+      setSection(target);
+      setPage(1);
+      setSearch("");
+      setSearchDraft("");
+      const requestedStatus = new URLSearchParams(window.location.search).get("status") as ContentFilter | null;
+      const restoredFilter: ContentFilter = requestedStatus && ["all", "DRAFT", "IN_REVIEW", "APPROVED", "PUBLISHED", "HIDDEN", "REVOKED", "needs_source"].includes(requestedStatus)
+        ? requestedStatus
+        : "all";
+      setActiveFilter(restoredFilter);
+      setReviewRecord(null);
+      void fetchSection(target, 1, "", restoredFilter);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [fetchSection, reviewRecord, userRole]);
+
+  const openContentEditor = (kind: Kind, id?: string) => {
+    pushAdminOverlay("content-editor");
+    setEditing({ kind, id });
+    const url = new URL(window.location.href);
+    url.searchParams.set("contentEdit", kind);
+    if (id) url.searchParams.set("editId", id);
+    else url.searchParams.delete("editId");
+    window.history.pushState(window.history.state, "", url.toString());
+  };
+
+  const openContentDetails = async (kind: Kind, id: string) => {
+    setContentDetailError("");
+    setChangeRequestNote("");
+    try {
+      const record = await apiRequest<AdminRecord>(`/admin/${kind}/${encodeURIComponent(id)}`);
+      setContentDetails({ kind, id, record });
+      const url = new URL(window.location.href);
+      url.searchParams.set("contentEdit", kind);
+      url.searchParams.set("editId", id);
+      window.history.replaceState(window.history.state, "", url.toString());
+    } catch (detailError) {
+      setContentDetailError(detailError instanceof Error ? detailError.message : "Không thể tải nội dung.");
+    }
+  };
+
+  const closeContentDetails = () => {
+    setContentDetails(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("contentEdit");
+    url.searchParams.delete("editId");
+    window.history.replaceState(window.history.state, "", url.toString());
+  };
+
+  const requestContentChanges = async () => {
+    if (!contentDetails || changeRequestNote.trim().length < 8) {
+      setContentDetailError("Vui lòng nhập lý do chỉnh sửa, tối thiểu 8 ký tự.");
+      return;
+    }
+    setContentDetailError("");
+    try {
+      await apiRequest(`/admin/${contentDetails.kind}/${encodeURIComponent(contentDetails.id)}/request-changes`, {
+        method: "POST",
+        body: JSON.stringify({ expectedUpdatedAt: contentDetails.record.updated_at, reviewNote: changeRequestNote.trim() }),
+      });
+      const title = getRecordTitle(contentDetails.record, contentDetails.kind);
+      closeContentDetails();
+      setChangeRequestNote("");
+      setReviewQueueKey((key) => key + 1);
+      await fetchSection(section, page, search, activeFilter);
+      toast.success(`Đã gửi yêu cầu chỉnh sửa cho bài viết "${title}".`, "Yêu cầu chỉnh sửa");
+    } catch (requestError) {
+      const msg = requestError instanceof Error ? requestError.message : "Không thể gửi yêu cầu chỉnh sửa.";
+      setContentDetailError(msg);
+      toast.error(msg, "Lỗi gửi yêu cầu");
+    }
+  };
+
+  const closeContentEditor = () => {
+    setEditing(null);
+    closeAdminOverlay("content-editor");
+    const url = new URL(window.location.href);
+    url.searchParams.delete("contentEdit");
+    url.searchParams.delete("editId");
+    window.history.pushState(window.history.state, "", url.toString());
+  };
+
+  const closeReview = () => {
+    setReviewRecord(null);
+    setReviewField(null);
+    setReviewSection(null);
+    closeAdminOverlay("review");
   };
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -514,55 +770,69 @@ export default function AdminApp() {
     void fetchSection(section, nextPage, search, activeFilter);
   };
 
-  const beginReview = (record: AdminRecord, field: ReviewField) => {
+  const beginReview = (record: AdminRecord, field: ReviewField, targetSection: Kind = section as Kind) => {
+    pushAdminOverlay("review");
     setReviewRecord(record);
     setReviewField(field);
+    setReviewSection(targetSection);
     setReviewValue(!Boolean(record[field]));
     setReviewNote("");
     setRightsConfirmed(false);
     setSourceUrl(typeof record.source === "string" ? record.source : "");
-    setSourceLocator(section === "rituals" ? String(getRitualProvenance(record).sourceLocator || "") : "");
+    setSourceLocator(targetSection === "rituals" ? String(getRitualProvenance(record).sourceLocator || "") : "");
     setUsageRights("unknown");
   };
 
   const saveReview = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (
-      !reviewRecord ||
-      !reviewField ||
-      section === "overview" ||
-      section === "signals" ||
-      section === "membership-interests" ||
-      section === "audit-logs"
-    )
-      return;
+    const targetSection = reviewSection;
+    if (!reviewRecord || !reviewField || !targetSection || !isReviewableSection(targetSection)) return;
     setSavingReview(true);
     setError("");
     try {
       const needsRights =
-        (section === "culture" || section === "xam" || section === "rituals" || section === "prayers") &&
+        (targetSection === "culture" || targetSection === "xam" || targetSection === "rituals" || targetSection === "prayers") &&
         reviewField === "verified" &&
         reviewValue;
-      await reviewAdminRecord(section, reviewRecord.id, {
+      await reviewAdminRecord(targetSection, reviewRecord.id, {
         expectedUpdatedAt: String(reviewRecord.updated_at || ""),
         [reviewField]: reviewValue,
         reviewNote,
         ...(needsRights
           ? {
               rightsConfirmed,
-              ...(section === "rituals" || section === "prayers"
-                ? { source: section === "rituals" && isGroupAuthoredRitual(reviewRecord) ? "" : sourceUrl.trim() }
+              ...(targetSection === "rituals" || targetSection === "prayers"
+                ? { source: targetSection === "rituals" && isGroupAuthoredRitual(reviewRecord) ? "" : sourceUrl.trim() }
                 : {}),
               sourceLocator,
               usageRights,
             }
           : {}),
       });
-      setReviewRecord(null);
+      const title = getRecordTitle(reviewRecord, targetSection);
+      const isApproved = reviewField === "verified" && reviewValue;
+      const isRevoked = reviewField === "verified" && !reviewValue;
+      const isPublished = reviewField === "active" && reviewValue;
+      const isHidden = reviewField === "active" && !reviewValue;
+
+      closeReview();
       setPage(1);
-      await fetchSection(section, 1, search, activeFilter);
+      setReviewQueueKey((key) => key + 1);
+      if (section === targetSection) await fetchSection(targetSection, 1, search, activeFilter);
+
+      if (isApproved) {
+        toast.success(`Đã thẩm định và phê duyệt thành công: "${title}"`, "Phê duyệt hoàn tất");
+      } else if (isRevoked) {
+        toast.info(`Đã thu hồi trạng thái phê duyệt của: "${title}"`, "Thu hồi thẩm định");
+      } else if (isPublished) {
+        toast.success(`Nội dung "${title}" đã được công khai trên hệ thống.`, "Công khai thành công");
+      } else if (isHidden) {
+        toast.info(`Nội dung "${title}" đã được chuyển sang chế độ ẩn.`, "Đã ẩn nội dung");
+      }
     } catch (saveError) {
-      setError(readableError(saveError));
+      const msg = readableError(saveError);
+      setError(msg);
+      toast.error(msg, "Thao tác không thành công");
     } finally {
       setSavingReview(false);
     }
@@ -601,7 +871,7 @@ export default function AdminApp() {
       statuses: statuses ?? { DRAFT: 0, IN_REVIEW: 0, APPROVED: 0, PUBLISHED: 0, HIDDEN: 0, REVOKED: 0 },
       missingSource: stats?.missingSource ?? Math.max(0, total - hasSourceCount),
     };
-  }, [pageData, rows]);
+  }, [pageData, rows, section]);
 
   if (booting) {
     return (
@@ -680,18 +950,20 @@ export default function AdminApp() {
     section === "payments" ||
     section === "payment-alerts" ||
     section === "partnerships" ||
-    section === "partner-gifts";
+    section === "partner-gifts" ||
+    section === "team";
   const hasSearch =
     section !== "overview" &&
+    section !== "review-queue" &&
     section !== "audit-logs" &&
     section !== "signals" &&
     !isCommerceSection;
-  const canCreate =
+  const canCreate = userRole === "EDITOR" && (
     section === "culture" ||
     section === "calendar" ||
     section === "xam" ||
     section === "rituals" ||
-    section === "prayers";
+    section === "prayers");
   const isContentSection =
     section === "culture" ||
     section === "calendar" ||
@@ -729,13 +1001,23 @@ export default function AdminApp() {
               <small>QUẢN TRỊ NỘI BỘ</small>
             </div>
           </a>
-          <div className="admin-portal-badge">ADMIN</div>
+          <div className="admin-portal-badge">{userRole === "ADMIN" ? "ADMIN" : "BIÊN TẬP"}</div>
         </div>
 
         <nav className="admin-nav">
-          {NAV.map((item, index) => {
+          {NAV.filter((item) => userRole === "ADMIN" || EDITOR_SECTIONS.includes(item.id as (typeof EDITOR_SECTIONS)[number])).map((item, index, visibleNav) => {
             const Icon = item.icon;
-            const previous = NAV[index - 1];
+            const previous = visibleNav[index - 1];
+            const totalOverviewPending = overview?.content
+              ? (overview.content.articlesAwaitingReview || 0) +
+                (overview.content.calendarEventsAwaitingReview || 0) +
+                (overview.content.xamLotsAwaitingReview || 0) +
+                (overview.content.ritualsAwaitingReview || 0) +
+                (overview.content.prayersAwaitingReview || 0)
+              : 0;
+            const displayPendingCount =
+              pendingQueueCount !== null ? pendingQueueCount : (overview ? totalOverviewPending : null);
+
             return (
               <div key={item.id} className="admin-nav-group-wrapper">
                 {item.group !== previous?.group && (
@@ -753,6 +1035,11 @@ export default function AdminApp() {
                     className="admin-nav-icon"
                   />
                   <span className="admin-nav-label">{item.label}</span>
+                  {item.id === "review-queue" && (displayPendingCount ?? 0) > 0 && (
+                    <span className="admin-nav-badge" aria-label={`${displayPendingCount} mục chờ duyệt`}>
+                      {displayPendingCount}
+                    </span>
+                  )}
                   {section === item.id && (
                     <span className="admin-nav-indicator" aria-hidden="true" />
                   )}
@@ -770,9 +1057,18 @@ export default function AdminApp() {
             <div className="admin-session-info">
               <strong>{adminName || "Quản trị viên"}</strong>
               <small>
-                <span className="admin-live-dot" /> Quản trị tối cao (ADMIN)
+                <span className="admin-live-dot" /> {userRole === "ADMIN" ? "Quản trị toàn hệ thống" : "Biên tập nội dung"}
               </small>
             </div>
+            <button
+              type="button"
+              className="admin-session-logout-btn"
+              onClick={() => setShowLogoutConfirm(true)}
+              title="Đăng xuất khỏi Cổng Quản Trị"
+              aria-label="Đăng xuất"
+            >
+              <LogOut size={16} />
+            </button>
           </div>
         </div>
       </aside>
@@ -839,16 +1135,6 @@ export default function AdminApp() {
               />
               <span>Làm mới</span>
             </button>
-            <button
-              type="button"
-              className="admin-topbar-logout-btn"
-              onClick={() => setShowLogoutConfirm(true)}
-              title="Đăng xuất khỏi Cổng Quản Trị"
-              aria-label="Đăng xuất"
-            >
-              <LogOut size={15} />
-              <span>Đăng xuất</span>
-            </button>
           </div>
         </header>
 
@@ -897,16 +1183,7 @@ export default function AdminApp() {
                 <button
                   className="admin-create-button"
                   type="button"
-                  onClick={() =>
-                    setEditing({
-                      kind: section as
-                        | "culture"
-                        | "calendar"
-                        | "xam"
-                        | "rituals"
-                        | "prayers",
-                    })
-                  }
+                  onClick={() => openContentEditor(section as Kind)}
                 >
                   <Plus size={16} /> Tạo bản thảo mới
                 </button>
@@ -939,8 +1216,24 @@ export default function AdminApp() {
             />
           )}
 
+          {section === "review-queue" && (
+            <ReviewQueuePanel
+              key={reviewQueueKey}
+              onSelect={(target) => navigate(target, "IN_REVIEW")}
+              onReviewItem={(kind, id) => {
+                if (kind === "signals") {
+                  navigate("signals", "IN_REVIEW");
+                } else {
+                  void openContentDetails(kind as Kind, id);
+                }
+              }}
+              onTotalChange={(total) => setPendingQueueCount(total)}
+            />
+          )}
+
           {/* Section View: Content & Data List */}
-          {section === "signals" && <SignalAdminPanel />}
+          {section === "signals" && <SignalAdminPanel canReview={userRole === "ADMIN"} />}
+          {section === "team" && userRole === "ADMIN" && <TeamAccessPanel />}
 
           {/* Section View: Commerce & Partnership Management Panels */}
           {section === "payments" && (
@@ -968,6 +1261,7 @@ export default function AdminApp() {
           )}
 
           {section !== "overview" &&
+            section !== "review-queue" &&
             section !== "signals" &&
             !isCommerceSection && (
             <section
@@ -1100,19 +1394,9 @@ export default function AdminApp() {
                   section={section}
                   rows={filteredRows}
                   viewMode={viewMode}
+                  canReview={userRole === "ADMIN"}
                   onReview={beginReview}
-                  onEdit={(id) => {
-                    if (canCreate)
-                      setEditing({
-                        kind: section as
-                          | "culture"
-                          | "calendar"
-                          | "xam"
-                          | "rituals"
-                          | "prayers",
-                        id,
-                      });
-                  }}
+                  onEdit={(id) => { void openContentDetails(section as Kind, id); }}
                 />
               )}
 
@@ -1127,102 +1411,174 @@ export default function AdminApp() {
                       <div>
                         <h3>
                           {reviewField === "verified"
-                            ? "Cập nhật trạng thái duyệt"
-                            : "Cập nhật trạng thái hiển thị"}
+                            ? (reviewValue ? "Xác nhận phê duyệt nội dung" : "Thu hồi phê duyệt bài viết")
+                            : (reviewValue ? "Công khai nội dung" : "Ẩn nội dung khỏi người dùng")}
                         </h3>
                         <p className="admin-muted">
-                          Bạn cần tự kiểm tra nội dung, nguồn và quyền sử dụng trước khi duyệt. Thao tác này sẽ được ghi vào nhật ký quản trị.
+                          {reviewValue
+                            ? "Vui lòng rà soát nguồn trích dẫn và căn cứ bản quyền bên dưới trước khi xác nhận phê duyệt xuất bản."
+                            : "Thao tác này sẽ chuyển nội dung về trạng thái chưa duyệt/đã ẩn và được lưu trong nhật ký hệ thống."}
                         </p>
                       </div>
                       <button
                         type="button"
                         className="admin-review-close"
-                        onClick={() => setReviewRecord(null)}
+                        onClick={closeReview}
                         aria-label="Đóng bảng"
                       >
                         <X size={18} />
                       </button>
                     </div>
 
-                    {section === "culture" && (
+                    {error && <div className="admin-alert" role="alert">{error}</div>}
+
+                    {reviewSection === "culture" && (
                       <div className="admin-review-form-fields" aria-label="Hồ sơ nguồn và quyền nội dung">
-                        <strong>Hồ sơ nguồn và quyền sử dụng</strong>
+                        <strong style={{ fontSize: "14px", color: "var(--admin-heading)", display: "flex", alignItems: "center", gap: 6 }}>
+                          <BookOpenText size={16} style={{ color: "var(--admin-gold)" }} />
+                          Hồ sơ nguồn đối chiếu
+                        </strong>
                         {(() => {
                           const provenance = getArticleProvenance(reviewRecord);
-                          const contentTypes: Record<string, string> = { GROUP_AUTHORED: "Do nhóm biên soạn", FACT: "Thông tin / sự kiện", LEGEND: "Truyền thuyết / tín ngưỡng", QUOTATION: "Có câu trích dẫn" };
-                          return <dl className="admin-record-details">
-                            <div><dt>Loại nội dung</dt><dd>{contentTypes[String(provenance.contentType)] || "Chưa khai báo"}</dd></div>
-                            <div><dt>Nguồn / tài liệu</dt><dd>{displayValue(provenance.sourceTitle)}</dd></div>
-                            <div><dt>Tác giả / tổ chức</dt><dd>{displayValue(provenance.sourceAuthor)}</dd></div>
-                            <div><dt>URL nguồn</dt><dd>{displayValue(reviewRecord.source)}</dd></div>
-                            <div><dt>Thông tin xuất bản</dt><dd>{displayValue(provenance.bibliography)}</dd></div>
-                            <div><dt>Vị trí trong tài liệu</dt><dd>{displayValue(provenance.sourceLocator)}</dd></div>
-                            <div><dt>Địa phương / cộng đồng</dt><dd>{displayValue(provenance.localCommunity)}</dd></div>
-                            <div><dt>Chú thích ảnh</dt><dd>{displayValue(provenance.imageCaption)}</dd></div>
-                            <div><dt>Nguồn ảnh</dt><dd>{displayValue(provenance.imageSource)}</dd></div>
-                            <div><dt>Căn cứ quyền ảnh</dt><dd>{displayValue(provenance.imageRightsBasis)}</dd></div>
-                          </dl>;
+                          const contentTypes: Record<string, string> = {
+                            GROUP_AUTHORED: "Do nhóm biên soạn",
+                            FACT: "Thông tin / sự kiện",
+                            LEGEND: "Truyền thuyết / tín ngưỡng",
+                            QUOTATION: "Có câu trích dẫn",
+                          };
+                          const items = [
+                            { label: "Loại nội dung", value: contentTypes[String(provenance.contentType)] || (provenance.contentType ? String(provenance.contentType) : "") },
+                            { label: "Nguồn / tài liệu", value: provenance.sourceTitle ? String(provenance.sourceTitle) : "" },
+                            { label: "Tác giả / tổ chức", value: provenance.sourceAuthor ? String(provenance.sourceAuthor) : "" },
+                            { label: "URL nguồn", value: reviewRecord.source ? String(reviewRecord.source) : "", isUrl: true },
+                            { label: "Thông tin xuất bản", value: provenance.bibliography ? String(provenance.bibliography) : "" },
+                            { label: "Trang / Mục trích dẫn", value: provenance.sourceLocator ? String(provenance.sourceLocator) : "" },
+                            { label: "Địa phương / cộng đồng", value: provenance.localCommunity ? String(provenance.localCommunity) : "" },
+                            { label: "Chú thích ảnh", value: provenance.imageCaption ? String(provenance.imageCaption) : "" },
+                            { label: "Nguồn ảnh", value: provenance.imageSource ? String(provenance.imageSource) : "" },
+                            { label: "Căn cứ quyền ảnh", value: provenance.imageRightsBasis ? String(provenance.imageRightsBasis) : "" },
+                          ].filter((item) => item.value && item.value.trim().length > 0 && item.value.trim() !== "—");
+
+                          if (items.length === 0) {
+                            return (
+                              <div className="admin-detail-prov-warning" style={{ margin: "4px 0" }}>
+                                <span>Chưa có thông tin đối chiếu nguồn trong hồ sơ bài viết.</span>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <dl className="admin-record-details">
+                              {items.map((it, idx) => (
+                                <div key={idx}>
+                                  <dt>{it.label}</dt>
+                                  <dd>
+                                    {it.isUrl && it.value.startsWith("https://") ? (
+                                      <a href={it.value} target="_blank" rel="noreferrer" className="table-source-link">
+                                        <ExternalLink size={12} /> {it.value}
+                                      </a>
+                                    ) : (
+                                      it.value
+                                    )}
+                                  </dd>
+                                </div>
+                              ))}
+                            </dl>
+                          );
                         })()}
                       </div>
                     )}
 
-                    {section === "rituals" && (
+                    {reviewSection === "rituals" && (
                       <div className="admin-review-form-fields" aria-label="Phạm vi và nguồn hướng dẫn nghi lễ">
+                        <strong style={{ fontSize: "14px", color: "var(--admin-heading)", display: "flex", alignItems: "center", gap: 6 }}>
+                          <BookOpenText size={16} style={{ color: "var(--admin-gold)" }} />
+                          Phạm vi và nguồn hướng dẫn nghi lễ
+                        </strong>
                         {(() => {
                           const provenance = getRitualProvenance(reviewRecord);
-                          return <dl className="admin-record-details">
-                            <div><dt>Loại nội dung</dt><dd>{displayValue(provenance.contentType)}</dd></div>
-                            <div><dt>Người / nhóm biên soạn</dt><dd>{displayValue(provenance.authorOrOrganization)}</dd></div>
-                            <div><dt>Phạm vi áp dụng</dt><dd>{displayValue(provenance.scope)}</dd></div>
-                            <div><dt>Cộng đồng / địa phương</dt><dd>{displayValue(provenance.localCommunity)}</dd></div>
-                            <div><dt>Căn cứ quyền nội dung</dt><dd>{displayValue(provenance.contentRightsBasis)}</dd></div>
-                            <div><dt>URL nguồn</dt><dd>{displayValue(reviewRecord.source)}</dd></div>
-                            <div><dt>Locator nguồn</dt><dd>{displayValue(provenance.sourceLocator)}</dd></div>
-                          </dl>;
+                          const items = [
+                            { label: "Loại nội dung", value: provenance.contentType ? String(provenance.contentType) : "" },
+                            { label: "Người / nhóm biên soạn", value: provenance.authorOrOrganization ? String(provenance.authorOrOrganization) : "" },
+                            { label: "Phạm vi áp dụng", value: provenance.scope ? String(provenance.scope) : "" },
+                            { label: "Cộng đồng / địa phương", value: provenance.localCommunity ? String(provenance.localCommunity) : "" },
+                            { label: "Căn cứ quyền nội dung", value: provenance.contentRightsBasis ? String(provenance.contentRightsBasis) : "" },
+                            { label: "URL nguồn", value: reviewRecord.source ? String(reviewRecord.source) : "", isUrl: true },
+                            { label: "Trang / Mục trích dẫn", value: provenance.sourceLocator ? String(provenance.sourceLocator) : "" },
+                          ].filter((item) => item.value && item.value.trim().length > 0 && item.value.trim() !== "—");
+
+                          if (items.length === 0) {
+                            return (
+                              <div className="admin-detail-prov-warning" style={{ margin: "4px 0" }}>
+                                <span>Chưa có thông tin đối chiếu nguồn trong hồ sơ nghi lễ.</span>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <dl className="admin-record-details">
+                              {items.map((it, idx) => (
+                                <div key={idx}>
+                                  <dt>{it.label}</dt>
+                                  <dd>
+                                    {it.isUrl && it.value.startsWith("https://") ? (
+                                      <a href={it.value} target="_blank" rel="noreferrer" className="table-source-link">
+                                        <ExternalLink size={12} /> {it.value}
+                                      </a>
+                                    ) : (
+                                      it.value
+                                    )}
+                                  </dd>
+                                </div>
+                              ))}
+                            </dl>
+                          );
                         })()}
                         {isGroupAuthoredRitual(reviewRecord) && <p className="admin-muted">Hướng dẫn nguyên bản không cần URL ngoài; kiểm tra người biên soạn, phạm vi áp dụng, checklist và căn cứ quyền thực tế.</p>}
                       </div>
                     )}
 
-                    {(section === "culture" || section === "xam" ||
-                      section === "rituals" ||
-                      section === "prayers") &&
+                    {(reviewSection === "culture" || reviewSection === "xam" ||
+                      reviewSection === "rituals" ||
+                      reviewSection === "prayers") &&
                       reviewField === "verified" &&
                       reviewValue && (
                         <div className="admin-review-form-fields">
-                          {section === "culture" && (
+                          {reviewSection === "culture" && (
                             <div className="admin-form-row">
-                              <label htmlFor="admin-usage-rights">Căn cứ quyền sử dụng ảnh <span aria-hidden="true">*</span></label>
-                              <select id="admin-usage-rights" value={usageRights} onChange={(event) => setUsageRights(event.target.value as typeof usageRights)}>
-                                <option value="unknown">Chưa xác minh</option>
-                                <option value="confirmed">Đã có văn bản ủy quyền</option>
-                                <option value="public-domain">Thuộc phạm vi công cộng</option>
+                              <label htmlFor="admin-usage-rights">
+                                Căn cứ quyền sử dụng nội dung / ảnh <span aria-hidden="true">*</span>
+                              </label>
+                              <select
+                                id="admin-usage-rights"
+                                value={usageRights}
+                                onChange={(event) => setUsageRights(event.target.value as typeof usageRights)}
+                              >
+                                <option value="unknown">Chưa xác minh quyền sử dụng</option>
+                                <option value="confirmed">Đã có văn bản ủy quyền / giấy phép</option>
+                                <option value="public-domain">Nội dung thuộc phạm vi công cộng (Public Domain)</option>
                                 <option value="permission-required">Cần bổ sung văn bản cho phép</option>
                               </select>
                             </div>
                           )}
-                          {(section === "prayers" || (section === "rituals" && !isGroupAuthoredRitual(reviewRecord))) && (
+                          {(reviewSection === "prayers" || (reviewSection === "rituals" && !isGroupAuthoredRitual(reviewRecord))) && (
                             <>
                               <div className="admin-form-row">
                                 <label htmlFor="admin-source-url">
-                                  URL nguồn tham chiếu HTTPS{" "}
-                                  <span aria-hidden="true">*</span>
+                                  URL nguồn tham chiếu HTTPS <span aria-hidden="true">*</span>
                                 </label>
                                 <input
                                   id="admin-source-url"
                                   type="url"
                                   required
                                   value={sourceUrl}
-                                  onChange={(event) =>
-                                    setSourceUrl(event.target.value)
-                                  }
+                                  onChange={(event) => setSourceUrl(event.target.value)}
                                   placeholder="https://dlib.vn/..."
                                 />
                               </div>
                               <div className="admin-form-row">
                                 <label htmlFor="admin-source-locator">
-                                  Vị trí trích dẫn / Locator{" "}
-                                  <span aria-hidden="true">*</span>
+                                  Trang / Mục trích dẫn <span aria-hidden="true">*</span>
                                 </label>
                                 <input
                                   id="admin-source-locator"
@@ -1230,60 +1586,51 @@ export default function AdminApp() {
                                   minLength={2}
                                   maxLength={500}
                                   value={sourceLocator}
-                                  onChange={(event) =>
-                                    setSourceLocator(event.target.value)
-                                  }
+                                  onChange={(event) => setSourceLocator(event.target.value)}
                                   placeholder="Trang, mục, quyển, số hiệu văn bản…"
                                 />
                               </div>
                               <div className="admin-form-row">
                                 <label htmlFor="admin-usage-rights">
-                                  Căn cứ quyền sử dụng{" "}
-                                  <span aria-hidden="true">*</span>
+                                  Căn cứ quyền sử dụng <span aria-hidden="true">*</span>
                                 </label>
                                 <select
                                   id="admin-usage-rights"
                                   value={usageRights}
-                                  onChange={(event) =>
-                                    setUsageRights(
-                                      event.target.value as typeof usageRights,
-                                    )
-                                  }
+                                  onChange={(event) => setUsageRights(event.target.value as typeof usageRights)}
                                 >
                                   <option value="unknown">Chưa xác minh</option>
-                                  <option value="confirmed">
-                                    Đã có văn bản ủy quyền
-                                  </option>
-                                  <option value="public-domain">
-                                    Thuộc phạm vi công cộng (Public Domain)
-                                  </option>
-                                  <option value="permission-required">
-                                    Cần bổ sung văn bản cho phép
-                                  </option>
+                                  <option value="confirmed">Đã có văn bản ủy quyền</option>
+                                  <option value="public-domain">Thuộc phạm vi công cộng (Public Domain)</option>
+                                  <option value="permission-required">Cần bổ sung văn bản cho phép</option>
                                 </select>
                               </div>
                             </>
                           )}
-                          <label className="admin-review-rights">
+                          <label className="admin-review-rights-box">
                             <input
                               type="checkbox"
+                              style={{ width: "18px", height: "18px", marginTop: "2px", accentColor: "var(--admin-gold)" }}
                               checked={rightsConfirmed}
-                              onChange={(event) =>
-                                setRightsConfirmed(event.target.checked)
-                              }
+                              onChange={(event) => setRightsConfirmed(event.target.checked)}
                             />
-                            <span>
-                              Tôi đã đối chiếu hồ sơ nguồn và căn cứ quyền sử dụng phù hợp với loại nội dung này.
-                            </span>
+                            <div className="admin-review-rights-copy">
+                              <strong>Xác nhận đối chiếu tư liệu</strong>
+                              <span>Tôi xác nhận đã đối chiếu tư liệu nguồn tham khảo và kiểm tra bản quyền hợp lệ.</span>
+                            </div>
                           </label>
                         </div>
                       )}
 
                     <div className="admin-form-row">
-                      <label htmlFor="admin-review-note">
-                        Ghi chú rà soát / Lý do kiểm duyệt{" "}
-                        <span aria-hidden="true">*</span>
-                      </label>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                        <label htmlFor="admin-review-note">
+                          Ghi chú thẩm định <span aria-hidden="true">*</span>
+                        </label>
+                        <span className={`admin-note-counter ${reviewNote.trim().length >= 8 ? "is-valid" : ""}`}>
+                          {reviewNote.trim().length < 8 ? `Tối thiểu 8 ký tự (còn ${8 - reviewNote.trim().length})` : "✓ Đạt yêu cầu"}
+                        </span>
+                      </div>
                       <textarea
                         id="admin-review-note"
                         required
@@ -1292,15 +1639,41 @@ export default function AdminApp() {
                         rows={3}
                         value={reviewNote}
                         onChange={(event) => setReviewNote(event.target.value)}
-                        placeholder="Nêu rõ nguồn tài liệu, ấn bản đối chiếu và căn cứ duyệt…"
+                        placeholder="Nêu rõ nguồn tài liệu, ấn bản đối chiếu và căn cứ duyệt (ví dụ: Đã đối chiếu hồ sơ di sản UNESCO, nội dung đạt chuẩn)…"
                       />
                     </div>
+
+                    {reviewSubmitBlockMessage(
+                      reviewSection,
+                      reviewRecord,
+                      reviewField,
+                      reviewValue,
+                      reviewNote,
+                      rightsConfirmed,
+                      usageRights,
+                      sourceUrl,
+                      sourceLocator,
+                    ) && (
+                      <p className="admin-review-validation" role="status">
+                        {reviewSubmitBlockMessage(
+                          reviewSection,
+                          reviewRecord,
+                          reviewField,
+                          reviewValue,
+                          reviewNote,
+                          rightsConfirmed,
+                          usageRights,
+                          sourceUrl,
+                          sourceLocator,
+                        )}
+                      </p>
+                    )}
 
                     <div className="admin-review-actions">
                       <button
                         className="admin-secondary-button"
                         type="button"
-                        onClick={() => setReviewRecord(null)}
+                        onClick={closeReview}
                       >
                         Hủy bỏ
                       </button>
@@ -1310,21 +1683,26 @@ export default function AdminApp() {
                         disabled={
                           savingReview ||
                           reviewNote.trim().length < 8 ||
-                          ((section === "culture" || section === "xam" ||
-                            section === "rituals" || section === "prayers") &&
+                          ((reviewSection === "culture" || reviewSection === "xam" ||
+                            reviewSection === "rituals" || reviewSection === "prayers") &&
                             reviewField === "verified" &&
                             reviewValue &&
-                            reviewProvenanceIsIncomplete(
-                              section,
-                              reviewRecord,
-                              rightsConfirmed,
-                              usageRights,
-                              sourceUrl,
-                              sourceLocator,
-                            ))
+                            (reviewProvenanceIsIncomplete(
+                                reviewSection,
+                                reviewRecord,
+                                rightsConfirmed,
+                                usageRights,
+                                sourceUrl,
+                                sourceLocator,
+                              ) ||
+                              (reviewSection === "culture" && getCultureApprovalIssues(reviewRecord).length > 0)))
                         }
                       >
-                        {savingReview ? "Đang ghi nhận…" : "Lưu quyết định"}
+                        {savingReview
+                          ? "Đang ghi nhận…"
+                          : reviewField === "verified"
+                          ? (reviewValue ? "Phê duyệt bài viết" : "Xác nhận thu hồi")
+                          : (reviewValue ? "Xác nhận công khai" : "Xác nhận ẩn")}
                       </button>
                     </div>
                   </form>
@@ -1369,15 +1747,43 @@ export default function AdminApp() {
           )}
 
           {/* Content Editor Dialog */}
-          {editing && (
+          {editing && userRole !== "ADMIN" && (
             <ContentEditor
               key={`${editing.kind}:${editing.id || "new"}`}
               {...editing}
-              onClose={() => setEditing(null)}
+              onClose={closeContentEditor}
               onSaved={() => {
-                setEditing(null);
+                closeContentEditor();
                 setPage(1);
+                setReviewQueueKey((k) => k + 1);
                 void fetchSection(section, 1, search, activeFilter);
+              }}
+            />
+          )}
+
+          {contentDetails && (
+            <ContentDetailModal
+              kind={contentDetails.kind}
+              id={contentDetails.id}
+              record={contentDetails.record}
+              onClose={closeContentDetails}
+              onApprove={(kind, record) => beginReview(record, "verified", kind)}
+              onRequestChanges={async (note) => {
+                await apiRequest(
+                  `/admin/${contentDetails.kind}/${encodeURIComponent(contentDetails.id)}/request-changes`,
+                  {
+                    method: "POST",
+                    body: JSON.stringify({
+                      expectedUpdatedAt: contentDetails.record.updated_at,
+                      reviewNote: note,
+                    }),
+                  },
+                );
+                const itemTitle = getRecordTitle(contentDetails.record, contentDetails.kind);
+                closeContentDetails();
+                setReviewQueueKey((key) => key + 1);
+                await fetchSection(section, page, search, activeFilter);
+                toast.success(`Đã gửi yêu cầu chỉnh sửa cho bài viết "${itemTitle}".`, "Yêu cầu chỉnh sửa");
               }}
             />
           )}
@@ -1484,43 +1890,47 @@ function OverviewPanel({
 
   const metricCards = [
     {
-      label: "Visitor ID hoạt động hôm nay",
+      label: "Khách truy cập hôm nay",
       value: overview.analytics.dau,
-      note: "DAU · ngày Asia/Ho_Chi_Minh · có consent telemetry",
+      note: "Theo giờ Việt Nam (GMT+7) · Đã cấp phép đo lường",
       icon: Activity,
       color: "metric-crimson",
       sparkColor: "#8b252e",
       sparkData: overview.analytics.sparklines?.dau || [],
     },
     {
-      label: "Visitor ID hoạt động tháng này",
+      label: "Khách truy cập tháng này",
       value: overview.analytics.mau,
-      note: "MAU tháng lịch Asia/Ho_Chi_Minh · anonymous_id · có consent telemetry",
+      note: "Tính trong tháng hiện tại · Ẩn danh hợp lệ",
       icon: UsersRound,
       color: "metric-gold",
       sparkColor: "#c89655",
       sparkData: overview.analytics.sparklines?.engagements || [],
     },
     {
-      label: "Kích hoạt trong 24 giờ",
+      label: "Tỷ lệ trải nghiệm ngày đầu",
       value:
         overview.analytics.activationRate30d === null
-          ? "—"
+          ? "0%"
           : `${overview.analytics.activationRate30d}%`,
-      note: overview.analytics.activationRate30d === null ? "Chưa có đủ mẫu đăng ký để tính" : "Hoàn thành ít nhất một luồng MVP trong 24 giờ",
+      note:
+        overview.analytics.activationRate30d === null
+          ? "Đo lường người dùng gieo quẻ hoặc đọc bài trong 24h"
+          : "Hoàn thành xin xăm hoặc đọc bài trong 24 giờ đầu",
       icon: ArrowUpRight,
       color: "metric-emerald",
       sparkColor: "#2d7a52",
       sparkData: [],
     },
     {
-      label: "Lượt quan tâm hội viên",
+      label: "Đăng ký gói hội viên",
       value: overview.membershipInterestCount,
-      note: "Đăng ký nhận cập nhật · chưa có thanh toán",
-      icon: UsersRound,
+      note: "Người dùng tiềm năng quan tâm gói tâm linh",
+      icon: Crown,
       color: "metric-blue",
       sparkColor: "#2c6ca8",
       sparkData: [],
+      target: "membership-interests" as const,
     },
   ];
 
@@ -1619,10 +2029,15 @@ function OverviewPanel({
       <div className="admin-metric-grid">
         {metricCards.map((metric) => {
           const Icon = metric.icon;
+          const isClickable = Boolean(metric.target);
           return (
             <article
-              className={`admin-metric-card ${metric.color}`}
+              className={`admin-metric-card ${metric.color} ${isClickable ? "is-clickable" : ""}`}
               key={metric.label}
+              onClick={isClickable && metric.target ? () => onNavigate(metric.target) : undefined}
+              role={isClickable ? "button" : undefined}
+              tabIndex={isClickable ? 0 : undefined}
+              title={isClickable ? "Bấm để mở danh sách đăng ký hội viên" : undefined}
             >
               <div className="admin-metric-header">
                 <div className="admin-metric-icon">
@@ -1650,7 +2065,7 @@ function OverviewPanel({
       {/* FULL-WIDTH INTERACTIVE TREND CHART */}
       <InteractiveTrendChart
         title="Lưu lượng Truy cập & Tương tác Tâm Linh (7 ngày)"
-        subtitle="Dữ liệu thực tế tổng hợp theo ngày từ máy chủ backend (analytics_events)"
+        subtitle="Xu hướng tương tác và truy cập thực tế theo ngày"
         data={overview.analytics.trends || []}
       />
 
@@ -1665,6 +2080,7 @@ function OverviewPanel({
           data={acquisitionDonutData}
           size={160}
           strokeWidth={22}
+          unit="lượt"
         />
       </div>
 
@@ -1838,19 +2254,21 @@ function RecordList({
   viewMode = "grid",
   onReview,
   onEdit,
+  canReview: canReviewPermission,
 }: {
   section: Section;
   rows: AdminRecord[];
   viewMode?: ViewMode;
   onReview: (record: AdminRecord, field: ReviewField) => void;
   onEdit: (id: string) => void;
+  canReview: boolean;
 }) {
-  const canReview =
+  const canReview = canReviewPermission && (
     section === "culture" ||
     section === "calendar" ||
     section === "xam" ||
     section === "rituals" ||
-    section === "prayers";
+    section === "prayers");
   const canEdit =
     section === "culture" ||
     section === "calendar" ||
@@ -2068,9 +2486,9 @@ function RecordList({
                           type="button"
                           className="admin-mini-action-btn edit"
                           onClick={() => onEdit(row.id)}
-                          title="Biên tập"
+                          title="Xem chi tiết"
                         >
-                          <Edit3 size={13} /> Sửa
+                          <Eye size={13} /> Xem chi tiết
                         </button>
                       )}
                       {canReview && row.verified !== undefined && (
@@ -2294,6 +2712,9 @@ function RecordList({
 
             <div className="card-body">
               <h3 className="card-title">{title}</h3>
+              {row.editorial_status === "IN_REVIEW" && typeof row.submitted_by === "string" && (
+                <p className="card-meta">Người gửi duyệt: <strong>{row.submitted_by}</strong></p>
+              )}
 
               {/* Lịch sự kiện: Description Snippet */}
               {section === "calendar" && Boolean(row.description) && (
@@ -2340,9 +2761,9 @@ function RecordList({
                   type="button"
                   className="card-action-btn btn-edit"
                   onClick={() => onEdit(row.id)}
-                  title="Biên tập nội dung"
+                  title="Xem chi tiết nội dung"
                 >
-                  <Edit3 size={13} /> Biên tập
+                  <Eye size={13} /> Xem chi tiết
                 </button>
               )}
 

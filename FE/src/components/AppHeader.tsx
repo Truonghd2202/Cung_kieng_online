@@ -98,6 +98,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     onNavigate(screen);
     closeMenu();
   };
+  const isAdmin = user?.role?.toUpperCase() === "ADMIN";
+  const isEditor = user?.role?.toUpperCase() === "EDITOR";
+  const workspaceHref = isAdmin ? "/admin" : "/editor";
+  const workspaceLabel = isAdmin ? "Vào Cổng Quản Trị (ADMIN)" : "Không gian biên tập";
 
   const renderNavigation = (mobile = false) => (
     <nav className={mobile ? "mobile-menu" : "primary-nav"} aria-label="Điều hướng chính" data-open={mobile ? mobileMenuOpen : undefined}>
@@ -133,14 +137,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           Đăng nhập
         </Button>
       )}
-      {mobile && user?.role?.toUpperCase() === "ADMIN" && (
+      {mobile && (isAdmin || isEditor) && (
         <a
-          href="/admin"
+          href={workspaceHref}
           className="mt-2 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-serif text-xs font-semibold text-amber-900 dark:text-amber-200 bg-amber-400/20 border border-amber-500/50 shadow-sm"
           onClick={closeMenu}
         >
           <ShieldCheck className="h-4 w-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
-          <span>Vào Cổng Quản Trị (ADMIN)</span>
+          <span>{workspaceLabel}</span>
         </a>
       )}
       {mobile && user && onLogout && (
@@ -188,14 +192,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             {dark ? <Moon className="h-4 w-4" aria-hidden="true" /> : <Sun className="h-4 w-4" aria-hidden="true" />}
           </button>
 
-          {user?.role?.toUpperCase() === "ADMIN" && (
+          {(isAdmin || isEditor) && (
             <a
-              href="/admin"
+              href={workspaceHref}
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-serif text-xs font-semibold text-amber-950 dark:text-amber-200 bg-amber-400/20 hover:bg-amber-400/35 border border-amber-500/50 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
-              title="Truy cập Cổng Quản Trị Viên"
+              title={workspaceLabel}
             >
               <ShieldCheck className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
-              <span>Cổng Quản Trị</span>
+              <span>{isAdmin ? "Cổng Quản Trị" : "Không gian biên tập"}</span>
             </a>
           )}
 

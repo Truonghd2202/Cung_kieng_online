@@ -44,7 +44,7 @@ export function UnverifiedImage({
     setIsModalOpen(false);
   }, [src]);
 
-  if (!src || hasError || !approvedImage) {
+  if (!src || hasError) {
     return (
       <div
         className={`unverified-image ${className}`}

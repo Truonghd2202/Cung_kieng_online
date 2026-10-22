@@ -15,11 +15,35 @@ function hasPublishableCultureContent({ content, imageUrl }) {
   return sectionsValid && sourceValid && sourcePositionValid && quotationValid && imageRightsValid;
 }
 
-function cultureContentHash({ content, imageUrl }) {
+function canonicalize(value) {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(
+    Object.keys(value).sort().map((key) => [key, canonicalize(value[key])]),
+  );
+}
+
+function hashReviewableContent(content, imageUrl, { canonical = true, sourceUrlLast = false } = {}) {
   const { review: _review, ...reviewableContent } = content || {};
+  if (sourceUrlLast && reviewableContent.provenance && Object.prototype.hasOwnProperty.call(reviewableContent.provenance, "sourceUrl")) {
+    const { sourceUrl, ...provenance } = reviewableContent.provenance;
+    reviewableContent.provenance = { ...provenance, sourceUrl };
+  }
+  const value = { content: reviewableContent, imageUrl: imageUrl || null };
   return createHash("sha256")
-    .update(JSON.stringify({ content: reviewableContent, imageUrl: imageUrl || null }))
+    .update(JSON.stringify(canonical ? canonicalize(value) : value))
     .digest("hex");
+}
+
+function cultureContentHash({ content, imageUrl }) {
+  return hashReviewableContent(content, imageUrl);
+}
+
+function legacyCultureContentHash({ content, imageUrl }) {
+  // Before canonical hashing, review inserted provenance.sourceUrl at the end of
+  // the object. PostgreSQL JSONB reordered it on read, making an unchanged
+  // approved article appear to have changed. Accept that exact legacy encoding.
+  return hashReviewableContent(content, imageUrl, { canonical: false, sourceUrlLast: true });
 }
 
 function isCultureArticlePublished(row, { membersOnly = false } = {}) {
@@ -37,8 +61,11 @@ function isCultureArticlePublished(row, { membersOnly = false } = {}) {
       && typeof review.note === "string" && review.note.trim().length >= 8
       && review.rightsConfirmed === true
       && ["confirmed", "public-domain"].includes(review.usageRights)
-      && review.versionHash === cultureContentHash({ content: row.content, imageUrl: row.image_url }),
+      && [
+        cultureContentHash({ content: row.content, imageUrl: row.image_url }),
+        legacyCultureContentHash({ content: row.content, imageUrl: row.image_url }),
+      ].includes(review.versionHash),
   );
 }
 
-module.exports = { hasPublishableCultureContent, cultureContentHash, isCultureArticlePublished };
+module.exports = { hasPublishableCultureContent, cultureContentHash, legacyCultureContentHash, isCultureArticlePublished };

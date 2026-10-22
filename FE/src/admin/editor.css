@@ -1,0 +1,1042 @@
+/* ==========================================================================
+   TIN LẮM TÂM LINH - KHÔNG GIAN BIÊN TẬP (10/10 MASTERCLASS EDITION)
+   Theme: Royal Parchment / Obsidian Lacquer & Crimson
+   ========================================================================== */
+
+.editor-workspace {
+  --editor-bg: #f5f0e8;
+  --editor-panel: #ffffff;
+  --editor-panel-elevated: #faf6f0;
+  --editor-ink: #1a120e;
+  --editor-heading: #140d0a;
+  --editor-muted: #564438;
+  --editor-subtle: #766051;
+  --editor-line: rgba(28, 20, 16, 0.12);
+  --editor-line-gold: rgba(140, 99, 40, 0.35);
+
+  --editor-crimson: #8f202b;
+  --editor-crimson-hover: #71151f;
+  --editor-crimson-soft: rgba(143, 32, 43, 0.1);
+  --editor-crimson-border: rgba(143, 32, 43, 0.28);
+
+  --editor-gold: #9d6f2c;
+  --editor-gold-soft: rgba(157, 111, 44, 0.12);
+  --editor-gold-border: rgba(157, 111, 44, 0.32);
+
+  --editor-emerald: #1e6b45;
+  --editor-emerald-soft: rgba(30, 107, 69, 0.12);
+  --editor-emerald-border: rgba(30, 107, 69, 0.3);
+
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  background: var(--editor-bg);
+  color: var(--editor-ink);
+  font-family: var(--font-sans, "Be Vietnam Pro", -apple-system, sans-serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+.dark .editor-workspace {
+  --editor-bg: #120e0d;
+  --editor-panel: #1a1412;
+  --editor-panel-elevated: #221a17;
+  --editor-ink: #fff7ee;
+  --editor-heading: #ffffff;
+  --editor-muted: #a69386;
+  --editor-subtle: #736357;
+  --editor-line: rgba(255, 255, 255, 0.09);
+  --editor-line-gold: rgba(200, 150, 85, 0.35);
+
+  --editor-crimson: #8b252e;
+  --editor-crimson-hover: #a12c37;
+  --editor-crimson-soft: rgba(139, 37, 46, 0.22);
+  --editor-crimson-border: rgba(139, 37, 46, 0.45);
+
+  --editor-gold: #c89655;
+  --editor-gold-soft: rgba(200, 150, 85, 0.16);
+  --editor-gold-border: rgba(200, 150, 85, 0.38);
+
+  --editor-emerald: #2d7a52;
+  --editor-emerald-soft: rgba(45, 122, 82, 0.2);
+  --editor-emerald-border: rgba(45, 122, 82, 0.45);
+}
+
+/* ==========================================================================
+   1. SIDEBAR (STICKY & ERGONOMIC)
+   ========================================================================== */
+.editor-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--editor-panel);
+  border-right: 1px solid var(--editor-line);
+  padding: 24px 16px 20px;
+  z-index: 70;
+}
+
+.editor-sidebar-top {
+  flex-shrink: 0;
+  padding: 0 6px 20px;
+  border-bottom: 1px solid var(--editor-line);
+  margin-bottom: 16px;
+}
+
+.editor-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.editor-brand-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #38241e, #241613);
+  border: 1px solid rgba(200, 150, 85, 0.45);
+  color: var(--editor-gold);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.editor-brand-text strong {
+  display: block;
+  font-family: var(--font-serif, "Fraunces", Georgia, serif);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--editor-heading);
+}
+
+.editor-brand-text small {
+  display: block;
+  margin-top: 2px;
+  color: var(--editor-muted);
+  font-size: 9.5px;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+}
+
+.editor-nav-label {
+  flex-shrink: 0;
+  margin: 0 10px 8px;
+  color: var(--editor-subtle);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+}
+
+.editor-nav {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(200, 150, 85, 0.25) transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 2px;
+}
+
+.editor-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--editor-ink);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 550;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.18s ease;
+}
+
+.editor-nav-item:hover {
+  background: var(--editor-crimson-soft);
+  color: var(--editor-crimson);
+  transform: translateX(2px);
+}
+
+.editor-nav-item.is-current {
+  background: var(--editor-crimson-soft);
+  border-color: var(--editor-crimson-border);
+  color: var(--editor-crimson);
+  font-weight: 700;
+}
+
+.editor-nav-indicator {
+  position: absolute;
+  left: 0;
+  width: 3.5px;
+  height: 22px;
+  border-radius: 0 3px 3px 0;
+  background: var(--editor-gold);
+  box-shadow: 0 0 8px var(--editor-gold);
+}
+
+.editor-sidebar-bottom {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--editor-line);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.editor-sidebar-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--editor-bg);
+  border: 1px solid var(--editor-line);
+  border-radius: 10px;
+  color: var(--editor-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.editor-sidebar-note svg {
+  flex-shrink: 0;
+  color: var(--editor-gold);
+  margin-top: 1px;
+}
+
+.editor-session-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--editor-bg);
+  border: 1px solid var(--editor-line);
+  border-radius: 12px;
+}
+
+.editor-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1b4d36, #0e291d);
+  color: #a3e0b8;
+  border: 1px solid rgba(46, 122, 82, 0.4);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.editor-session-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-session-info strong {
+  display: block;
+  font-size: 13px;
+  color: var(--editor-heading);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-session-info small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--editor-muted);
+}
+
+.editor-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 6px #34d399;
+}
+
+.editor-session-logout-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--editor-muted);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.editor-session-logout-btn:hover {
+  background: var(--editor-crimson-soft);
+  color: var(--editor-crimson);
+  border-color: var(--editor-crimson-border);
+}
+
+/* ==========================================================================
+   2. TOPBAR (HEADER ACTIONS)
+   ========================================================================== */
+.editor-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 64px;
+  padding: 0 clamp(20px, 3.5vw, 48px);
+  background: var(--editor-panel);
+  border-bottom: 1px solid var(--editor-line);
+  backdrop-filter: blur(12px);
+}
+
+.editor-breadcrumb-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+}
+
+.editor-breadcrumb-root {
+  color: var(--editor-muted);
+}
+
+.editor-breadcrumb-arrow {
+  color: var(--editor-subtle);
+}
+
+.editor-breadcrumb-current {
+  color: var(--editor-heading);
+  font-weight: 700;
+}
+
+.editor-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.editor-public-link,
+.editor-quick-refresh-btn,
+.editor-theme-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 13px;
+  background: var(--editor-bg);
+  border: 1px solid var(--editor-line);
+  border-radius: 10px;
+  color: var(--editor-ink);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.editor-theme-btn {
+  width: 36px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.editor-public-link:hover,
+.editor-quick-refresh-btn:hover,
+.editor-theme-btn:hover {
+  border-color: var(--editor-line-gold);
+  color: var(--editor-gold);
+}
+
+/* ==========================================================================
+   3. CONTENT CONTAINER & PAGE HEADING
+   ========================================================================== */
+.editor-content {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: clamp(24px, 3.5vw, 44px) clamp(20px, 3.5vw, 48px) 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.editor-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.editor-heading-text h1 {
+  margin: 8px 0 6px;
+  font-family: var(--font-serif, "Fraunces", Georgia, serif);
+  font-size: clamp(28px, 3.2vw, 38px);
+  font-weight: 700;
+  color: var(--editor-heading);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.editor-heading-text p {
+  margin: 0;
+  color: var(--editor-muted);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.editor-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--editor-gold);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.editor-primary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  background: var(--editor-crimson);
+  border: 1px solid var(--editor-crimson-border);
+  border-radius: 11px;
+  color: #fffaf4;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(143, 32, 43, 0.25);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.editor-primary-btn:hover {
+  background: var(--editor-crimson-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(143, 32, 43, 0.35);
+}
+
+/* ==========================================================================
+   4. SUMMARY METRIC CARDS (INTERACTIVE / CLICKABLE)
+   ========================================================================== */
+.editor-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.editor-summary-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 20px;
+  background: var(--editor-panel);
+  border: 1px solid var(--editor-line);
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.editor-summary-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--card-accent, var(--editor-gold));
+  opacity: 0.8;
+}
+
+.editor-summary-card.metric-neutral { --card-accent: var(--editor-ink); }
+.editor-summary-card.metric-gold { --card-accent: var(--editor-gold); }
+.editor-summary-card.metric-crimson { --card-accent: var(--editor-crimson); }
+.editor-summary-card.metric-emerald { --card-accent: var(--editor-emerald); }
+
+.editor-summary-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--card-accent);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.editor-summary-card.is-active {
+  border-color: var(--card-accent);
+  background: var(--editor-panel-elevated);
+  box-shadow: 0 0 0 2px var(--card-accent);
+}
+
+.editor-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.editor-card-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: var(--editor-bg);
+  color: var(--card-accent);
+  display: grid;
+  place-items: center;
+}
+
+.editor-card-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--editor-subtle);
+  background: var(--editor-bg);
+  padding: 2px 8px;
+  border-radius: 99px;
+  border: 1px solid var(--editor-line);
+}
+
+.editor-card-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--editor-muted);
+  margin-bottom: 4px;
+}
+
+.editor-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--editor-heading);
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   5. TOOLBAR: STATUS TABS & SEARCH
+   ========================================================================== */
+.editor-toolbar-deck {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 14px;
+  background: var(--editor-panel);
+  border: 1px solid var(--editor-line);
+  border-radius: 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.editor-status-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.editor-status-tab {
+  min-height: 36px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--editor-muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.editor-status-tab:hover {
+  color: var(--editor-ink);
+  background: var(--editor-bg);
+}
+
+.editor-status-tab.is-selected {
+  background: var(--editor-bg);
+  border-color: var(--editor-line);
+  color: var(--editor-crimson);
+  font-weight: 750;
+}
+
+.tab-count {
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.editor-search-form {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: min(340px, 100%);
+  gap: 6px;
+  background: var(--editor-bg);
+  border: 1px solid var(--editor-line);
+  border-radius: 10px;
+  padding: 3px 4px 3px 12px;
+}
+
+.editor-search-icon {
+  color: var(--editor-subtle);
+  flex-shrink: 0;
+}
+
+.editor-search-form input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  color: var(--editor-ink);
+  font-family: inherit;
+  font-size: 12.5px;
+  outline: none;
+}
+
+.editor-search-clear {
+  background: transparent;
+  border: none;
+  color: var(--editor-subtle);
+  cursor: pointer;
+  padding: 4px;
+  display: grid;
+  place-items: center;
+}
+
+.editor-search-btn {
+  padding: 6px 14px;
+  background: var(--editor-panel);
+  border: 1px solid var(--editor-line);
+  border-radius: 7px;
+  color: var(--editor-ink);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.editor-search-btn:hover {
+  border-color: var(--editor-line-gold);
+  color: var(--editor-gold);
+}
+
+/* ==========================================================================
+   6. RECORD LIST & RECORD CARDS
+   ========================================================================== */
+.editor-record-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.editor-record-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 22px;
+  background: var(--editor-panel);
+  border: 1px solid var(--editor-line);
+  border-radius: 14px;
+  transition: all 0.18s ease;
+}
+
+.editor-record-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--editor-line-gold);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.editor-record-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-record-status-row {
+  margin-bottom: 6px;
+}
+
+.editor-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--editor-bg);
+  border: 1px solid var(--editor-line);
+  color: var(--editor-muted);
+}
+
+.editor-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.editor-status-badge.status-in_review {
+  background: var(--editor-crimson-soft);
+  border-color: var(--editor-crimson-border);
+  color: var(--editor-crimson);
+}
+
+.editor-status-badge.status-published {
+  background: var(--editor-emerald-soft);
+  border-color: var(--editor-emerald-border);
+  color: var(--editor-emerald);
+}
+
+.editor-status-badge.status-approved {
+  background: var(--editor-gold-soft);
+  border-color: var(--editor-gold-border);
+  color: var(--editor-gold);
+}
+
+.editor-record-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--editor-heading);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-record-meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--editor-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-record-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.editor-record-time {
+  font-size: 11.5px;
+  color: var(--editor-subtle);
+}
+
+.editor-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 14px;
+  background: var(--editor-bg);
+  border: 1px solid var(--editor-line);
+  border-radius: 9px;
+  color: var(--editor-ink);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.editor-edit-btn:hover {
+  border-color: var(--editor-line-gold);
+  color: var(--editor-crimson);
+  background: var(--editor-panel);
+}
+
+/* ==========================================================================
+   7. WARM EMPTY STATE (QUY TRÌNH BIÊN TẬP THÂN THIỆN)
+   ========================================================================== */
+.editor-warm-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--editor-panel);
+  border: 1px solid var(--editor-line);
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.editor-empty-icon-wrap {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: var(--editor-gold-soft);
+  border: 1px solid var(--editor-gold-border);
+  color: var(--editor-gold);
+  display: grid;
+  place-items: center;
+  margin-bottom: 16px;
+}
+
+.editor-warm-empty h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--editor-heading);
+}
+
+.editor-warm-empty p {
+  max-width: 500px;
+  margin: 0 0 24px;
+  font-size: 13.5px;
+  color: var(--editor-muted);
+  line-height: 1.6;
+}
+
+.editor-empty-workflow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  background: var(--editor-bg);
+  border: 1px solid var(--editor-line);
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.workflow-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--editor-ink);
+}
+
+.step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--editor-crimson);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.workflow-arrow {
+  color: var(--editor-subtle);
+  font-size: 12px;
+}
+
+/* ==========================================================================
+   8. PAGINATION, FOOTER & UTILITIES
+   ========================================================================== */
+.editor-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  font-size: 12.5px;
+  color: var(--editor-muted);
+}
+
+.editor-pagination-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.editor-pagination-buttons button {
+  min-height: 36px;
+  padding: 0 14px;
+  background: var(--editor-panel);
+  border: 1px solid var(--editor-line);
+  border-radius: 8px;
+  color: var(--editor-ink);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.editor-pagination-buttons button:hover:not(:disabled) {
+  border-color: var(--editor-line-gold);
+  color: var(--editor-crimson);
+}
+
+.editor-pagination-buttons button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.editor-error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background: var(--editor-crimson-soft);
+  border: 1px solid var(--editor-crimson-border);
+  border-radius: 12px;
+  color: var(--editor-crimson);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.editor-error-banner button {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.editor-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 200px;
+  background: var(--editor-panel);
+  border: 1px solid var(--editor-line);
+  border-radius: 16px;
+  color: var(--editor-muted);
+  font-size: 13.5px;
+}
+
+.editor-signal-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--editor-panel);
+  border: 1px solid var(--editor-line);
+  border-radius: 12px;
+  color: var(--editor-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.editor-signal-intro svg {
+  color: var(--editor-gold);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.editor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: auto;
+  padding: 20px clamp(20px, 3.5vw, 48px);
+  border-top: 1px solid var(--editor-line);
+  font-size: 12px;
+  color: var(--editor-subtle);
+}
+
+.editor-footer a {
+  color: var(--editor-crimson);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.editor-footer a:hover {
+  text-decoration: underline;
+}
+
+.editor-spin {
+  animation: editorSpin 1s linear infinite;
+}
+
+@keyframes editorSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   9. RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .editor-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .editor-empty-workflow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .workflow-arrow {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .editor-workspace {
+    display: block;
+  }
+  .editor-sidebar {
+    position: static;
+    height: auto;
+    padding: 16px;
+  }
+  .editor-sidebar-bottom,
+  .editor-sidebar-note {
+    display: none;
+  }
+  .editor-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+  .editor-nav-item {
+    white-space: nowrap;
+  }
+  .editor-heading {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .editor-primary-btn {
+    justify-content: center;
+  }
+  .editor-toolbar-deck {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .editor-search-form {
+    width: 100%;
+  }
+  .editor-record-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .editor-record-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
