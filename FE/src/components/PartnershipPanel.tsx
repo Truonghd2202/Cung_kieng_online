@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { apiRequest } from "../lib/api";
+import { isDemoMode } from "../data/demoMode";
+import { readDemoValue, writeDemoValue } from "../data/demoStorage";
 
 type Status = "NEW" | "REVIEWING" | "CLOSED";
 
@@ -51,6 +53,16 @@ export function PartnershipPanel({
 
     setLoading(true);
     setItems([]);
+
+    if (isDemoMode() && !admin) {
+      const demoEntries = readDemoValue<Entry[]>("partnerships", [
+        { id: "demo-partnership-1", organization: "Không gian văn hóa An Nhiên", message: "Mong muốn kết nối để giới thiệu các hoạt động gìn giữ văn hóa Việt và trải nghiệm tâm linh lành mạnh.", status: "REVIEWING" },
+      ]);
+      setItems(demoEntries.slice((page - 1) * pageSize, page * pageSize));
+      setTotal(demoEntries.length);
+      setLoading(false);
+      return;
+    }
 
     const path = admin
       ? "/partnerships/admin"
@@ -110,6 +122,22 @@ export function PartnershipPanel({
     setNotice("");
 
     try {
+      if (isDemoMode() && !admin) {
+        const entries = readDemoValue<Entry[]>("partnerships", []);
+        entries.unshift({
+          id: `demo-partnership-${crypto.randomUUID()}`,
+          organization: cleanOrganization,
+          message: cleanMessage,
+          status: "NEW",
+        });
+        writeDemoValue("partnerships", entries);
+        if (!mounted.current) return;
+        setMessage("");
+        setNotice("Đã lưu đề xuất minh họa trên trình duyệt này.");
+        setPage(1);
+        setReload((value) => value + 1);
+        return;
+      }
       await apiRequest("/partnerships", {
         method: "POST",
         body: JSON.stringify({

@@ -49,6 +49,10 @@ export const AppFooter: React.FC<AppFooterProps> = ({ onNavigate, showMembership
   }, []);
 
   useEffect(() => {
+    if (isDemoMode()) {
+      setMembershipStatus({ salesEnabled: false, checkoutAvailable: false, paymentEnvironment: "sandbox", subscription: null, aiUsage: { successfulUsed: 1, inProgress: 0, successfulRemaining: 2, successfulLimit: 3, attemptsUsed: 1, attemptsRemaining: 4, providerAttemptLimit: 5, nextUsableAt: null } });
+      return;
+    }
     let active = true;
     apiRequest<FooterMembershipStatus>("/membership/status")
       .then((status) => { if (active) setMembershipStatus(status); })

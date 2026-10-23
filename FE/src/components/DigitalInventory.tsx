@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../lib/api";
+import { isDemoMode } from "../data/demoMode";
+import { readDemoValue } from "../data/demoStorage";
 
 interface Item {
   code: string;
@@ -24,6 +26,18 @@ export function DigitalInventory({
 
     setItems([]);
     setError("");
+
+    if (isDemoMode()) {
+      const owned = readDemoValue<string[]>("owned-items", ["ROYAL_LANTERN"]);
+      const demoItems: Item[] = [
+        { code: "ROYAL_LANTERN", name: "Đèn Tâm An", kind: "PERMANENT", description: "Vật phẩm trang trí không gian tưởng niệm.", quantity: owned.includes("ROYAL_LANTERN") ? 1 : 0 },
+        { code: "GOLDEN_LOTUS", name: "Sen vàng", kind: "PERMANENT", description: "Biểu tượng thanh tịnh trong không gian thờ.", quantity: owned.includes("GOLDEN_LOTUS") ? 1 : 0 },
+        { code: "INCENSE_BURNER", name: "Nén hương thành tâm", kind: "CONSUMABLE", description: "Vật phẩm dâng hương dùng thử.", quantity: owned.includes("INCENSE_BURNER") ? 5 : 0 },
+      ];
+      setItems(demoItems.filter((item) => item.quantity > 0));
+      setLoading(false);
+      return;
+    }
 
     if (!email) {
       setLoading(false);
@@ -50,7 +64,7 @@ export function DigitalInventory({
     };
   }, [email, reload]);
 
-  if (!email) return null;
+  if (!email && !isDemoMode()) return null;
 
   return (
     <section className="my-8 rounded-3xl border border-line bg-surface p-6">

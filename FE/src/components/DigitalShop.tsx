@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ApiError, apiRequest } from "../lib/api";
+import { isDemoMode } from "../data/demoMode";
+import { readDemoValue, writeDemoValue } from "../data/demoStorage";
 import {
   submitSePayCheckout,
   type SePayCheckoutResponse,
@@ -121,6 +123,22 @@ export function DigitalShop({ email }: { email?: string }) {
 
     const load = async () => {
       try {
+        if (isDemoMode()) {
+          const nextCatalog: Catalog = {
+            checkoutAvailable: false,
+            currency: "VND",
+            items: [
+              { code: "ROYAL_LANTERN", name: "Đèn Tâm An", kind: "PERMANENT", description: "Vật phẩm thắp sáng góc tưởng niệm trong không gian demo.", price: 49000, quantity: 1 },
+              { code: "GOLDEN_LOTUS", name: "Sen vàng", kind: "PERMANENT", description: "Biểu tượng thanh tịnh để trang trí bàn thờ ảo.", price: 39000, quantity: 1 },
+              { code: "INCENSE_BURNER", name: "Nén hương thành tâm", kind: "CONSUMABLE", description: "Vật phẩm dâng hương dùng thử trong bản demo.", price: 9000, quantity: 5 },
+            ],
+          };
+          const owned = readDemoValue<string[]>("owned-items", ["ROYAL_LANTERN"]);
+          setOwnedCodes(owned);
+          setCatalog(nextCatalog);
+          setMessage("Danh mục và vật phẩm mẫu chỉ lưu trên trình duyệt; thanh toán thật đang tắt.");
+          return;
+        }
         const nextCatalog = await apiRequest<Catalog>("/shop");
 
         let nextOrder: Order | null = null;

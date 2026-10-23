@@ -36,6 +36,7 @@ import { ChauVanAudioLibrary } from "../components/ChauVanAudioLibrary";
 import { ScrollReveal } from "../components/ScrollReveal";
 import { ApiError, apiRequest } from "../lib/api";
 import { loadCultureArticles, type RemoteContentItem } from "../data/contentService";
+import { isDemoMode } from "../data/demoMode";
 import { canShowArticleImage, toCultureArticle } from "../data/cultureAdapter";
 import { UnverifiedImage } from "../components/UnverifiedImage";
 
@@ -1090,6 +1091,26 @@ export const CultureDetailScreen: React.FC<
     setLoadError("");
     setNotFound(false);
     setArticle(undefined);
+
+    if (isDemoMode()) {
+      void loadCultureArticles()
+        .then((items) => {
+          if (!active) return;
+          const item = items.find((candidate) => candidate.id === articleId);
+          if (item) setArticle(toCultureArticle(item));
+          else {
+            setNotFound(true);
+            setLoadError("Bài viết này chưa có trong dữ liệu minh họa.");
+          }
+        })
+        .catch(() => {
+          if (active) setLoadError("Chưa tải được bài viết minh họa.");
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+      return () => { active = false; };
+    }
 
     void apiRequest<RemoteContentItem>(
       `/content/culture/${encodeURIComponent(articleId)}`,

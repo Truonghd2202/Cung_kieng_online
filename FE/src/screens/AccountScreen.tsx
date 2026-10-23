@@ -27,6 +27,7 @@ import { MoodKey, type MoodContextKey, type SignalData } from "../data/demoSigna
 import { SavedItemActions } from "../components/SavedItemActions";
 import { AppDialog } from "../components/AppDialog";
 import { apiRequest } from "../lib/api";
+import { isDemoMode } from "../data/demoMode";
 
 interface AccountMembershipStatus {
   subscription: { started_at: string; expires_at: string } | null;
@@ -175,6 +176,23 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
   useEffect(() => {
     let active = true;
+    if (isDemoMode()) {
+      setMembershipStatus({
+        subscription: null,
+        aiUsage: {
+          successfulUsed: 1,
+          inProgress: 0,
+          successfulRemaining: 2,
+          successfulLimit: 3,
+          attemptsUsed: 1,
+          attemptsRemaining: 4,
+          providerAttemptLimit: 5,
+          nextUsableAt: null,
+        },
+      });
+      setMembershipLoadFailed(false);
+      return () => { active = false; };
+    }
     apiRequest<AccountMembershipStatus>("/membership/status")
       .then((value) => { if (active) setMembershipStatus(value); })
       .catch(() => { if (active) setMembershipLoadFailed(true); });

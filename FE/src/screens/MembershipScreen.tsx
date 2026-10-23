@@ -31,6 +31,7 @@ import { DigitalInventory } from "../components/DigitalInventory";
 import { PaymentHistory } from "../components/PaymentHistory";
 import { PartnershipPanel } from "../components/PartnershipPanel";
 import { PartnerGifts } from "../components/PartnerGifts";
+import { isDemoMode } from "../data/demoMode";
 import type { MembershipTerm } from "../data/membershipIntent";
 
 interface MembershipScreenProps {
@@ -375,7 +376,7 @@ export const MembershipScreen: React.FC<MembershipScreenProps> = ({
 
         <PartnerGifts />
 
-        {currentUserEmail ? (
+        {currentUserEmail || isDemoMode() ? (
           <PartnershipPanel key={currentUserEmail} />
         ) : (
           <p className="my-6 text-sm text-muted">

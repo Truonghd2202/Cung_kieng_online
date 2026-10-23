@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ApiError, apiRequest } from "../lib/api";
+import { isDemoMode } from "../data/demoMode";
 import {
   submitSePayCheckout,
   type SePayCheckoutResponse,
@@ -108,6 +109,29 @@ export function MembershipCheckout({
     setAcceptNewOrder(false);
     setPaymentWindowExpired(false);
     setCanResumeOrder(false);
+
+    if (isDemoMode()) {
+      const demoStatus: Status = {
+        price: 49000,
+        plans: [
+          { term: "monthly", name: "1 tháng", price: 49000, months: 1 },
+          { term: "yearly", name: "12 tháng", price: 490000, months: 12 },
+        ],
+        currency: "VND",
+        paymentEnvironment: "sandbox",
+        aiLimits: { successfulReadingsPer24Hours: 3, providerAttemptsPer24Hours: 5 },
+        salesEnabled: false,
+        checkoutAvailable: false,
+        subscription: null,
+        benefits: [],
+        aiUsage: { windowHours: 24, successfulLimit: 3, providerAttemptLimit: 5, successfulUsed: 1, inProgress: 0, successfulRemaining: 2, attemptsUsed: 1, attemptsRemaining: 4, nextUsableAt: null },
+      };
+      setStatus(demoStatus);
+      onStatusChange?.(demoStatus);
+      setMessage("Đang xem dữ liệu minh họa. Thanh toán đã được tắt trong chế độ demo.");
+      setLoading(false);
+      return;
+    }
 
     try {
       let nextStatus = await apiRequest<Status>(

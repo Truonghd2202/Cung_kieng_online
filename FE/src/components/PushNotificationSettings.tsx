@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { enableDevicePush, disableDevicePush } from "../data/pushService";
+import { isDemoMode } from "../data/demoMode";
+import { readDemoValue, writeDemoValue } from "../data/demoStorage";
 export function PushNotificationSettings() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -10,6 +12,11 @@ export function PushNotificationSettings() {
     setMessage("");
 
     try {
+      if (isDemoMode()) {
+        writeDemoValue("push-enabled", enabled);
+        setMessage(enabled ? "Đã bật nhắc nhở mẫu trên trình duyệt này." : "Đã tắt nhắc nhở mẫu trên trình duyệt này.");
+        return;
+      }
       if (enabled) {
         await enableDevicePush();
 
@@ -60,6 +67,7 @@ export function PushNotificationSettings() {
           Ngừng nhận trên thiết bị
         </button>
       </div>
+      {isDemoMode() && <p className="mt-2 text-xs text-muted">Trạng thái demo: {readDemoValue("push-enabled", false) ? "Đang bật" : "Đang tắt"}. Không đăng ký với máy chủ.</p>}
       {message && <p role="status" className="mt-3 text-sm">{message}</p>}
     </section>
   );

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, CalendarDays, LoaderCircle } from "lucide-react";
 import { apiRequest } from "../lib/api";
+import { isDemoMode } from "../data/demoMode";
 
 type CheckIn = { id: string; mood: string; contextKey: string; note: string | null; createdAt: string; actionDone: boolean };
 type History = {
@@ -26,6 +27,44 @@ export function MoodHistoryPanel({ isLoggedIn }: { isLoggedIn: boolean }) {
 
   useEffect(() => {
     if (!isLoggedIn) return;
+    if (isDemoMode()) {
+      const days = [0, 1, 3, 5, 6];
+      const moods = ["An yên", "Biết ơn", "Bình an", "Hy vọng", "An yên"];
+      const items: CheckIn[] = days.map((offset, index) => {
+        const date = new Date(`${anchor}T12:00:00+07:00`);
+        date.setDate(date.getDate() - offset);
+        return {
+          id: `demo-checkin-${index}`,
+          mood: moods[index],
+          contextKey: "general",
+          note: ["Dành một chút thời gian cho gia đình.", "Hoàn thành việc còn dang dở.", "Tâm trí nhẹ nhàng hơn.", "Mong mọi điều thuận lợi.", "Biết ơn những điều giản dị."][index],
+          createdAt: date.toISOString(),
+          actionDone: index % 2 === 0,
+        };
+      }).filter((item) => !mood || item.mood === mood);
+      const counts = items.reduce<Record<string, number>>((result, item) => {
+        result[item.mood] = (result[item.mood] ?? 0) + 1;
+        return result;
+      }, {});
+      const summary = {
+        total: items.length,
+        byMood: Object.entries(counts).map(([label, count]) => ({ mood: label, count })),
+        byDay: items.map((item) => ({ day: item.createdAt.slice(0, 10), count: 1 })),
+      };
+      setData({
+        anchor,
+        period,
+        range: { start: anchor, end: anchor },
+        timezone: "Asia/Ho_Chi_Minh",
+        scope: "all_check_ins",
+        summary,
+        items,
+        pagination: { page: 1, pageSize: 20, total: items.length, pages: 1 },
+      });
+      setLoading(false);
+      setError("");
+      return;
+    }
     const params = new URLSearchParams({ period, anchor, page: String(page), pageSize: "20" });
     if (mood) params.set("mood", mood);
     let active = true;

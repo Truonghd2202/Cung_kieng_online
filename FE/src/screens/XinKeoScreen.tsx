@@ -98,6 +98,7 @@ const CrescentKeoPiece: React.FC<{
   shadowClass?: string;
   settledClass?: string;
   settledShadowClass?: string;
+  onSettle?: () => void;
 }> = ({
   side,
   mirror = false,
@@ -108,6 +109,7 @@ const CrescentKeoPiece: React.FC<{
   shadowClass = "",
   settledClass = "",
   settledShadowClass = "",
+  onSettle,
 }) => {
   // Keo thật là nửa bầu dục dựng đứng: mép ngoài tròn, mép trong cắt cong.
   const outerPath = "M 96,10 C 140,18 164,52 162,94 C 160,137 133,166 98,172";
@@ -124,6 +126,9 @@ const CrescentKeoPiece: React.FC<{
             ? `transition-none ${settledClass}`
             : `transition-transform duration-700 ${rotationClass}`
         }`}
+        onAnimationEnd={(event) => {
+          if (event.target === event.currentTarget && isCasting) onSettle?.();
+        }}
       >
         <svg viewBox="0 0 180 180" className="w-full h-full overflow-visible">
           <defs>
@@ -306,6 +311,8 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
   // Chốt quẻ trước khi tung. Nhờ vậy mặt nhìn thấy trong lúc xoay chính là
   // mặt sẽ chạm đĩa, không bị thay hình ở khoảnh khắc animation kết thúc.
   const [landingResult, setLandingResult] = useState<KeoOutcome | null>(null);
+  const landingOutcomeRef = useRef<KeoOutcome | null>(null);
+  const settledPiecesRef = useRef(new Set<string>());
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [throwCount, setThrowCount] = useState(0);
   const [requestError, setRequestError] = useState("");
@@ -324,9 +331,6 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
     useState(0);
 
   const sessionVersionRef = useRef(0);
-
-  const animationTimerRef =
-    useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const keoAttemptRef = useRef<{
     sessionId: string;
@@ -412,11 +416,6 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
 
     return () => {
       sessionVersionRef.current += 1;
-
-      if (animationTimerRef.current !== null) {
-        clearTimeout(animationTimerRef.current);
-        animationTimerRef.current = null;
-      }
     };
   }, [drawId, isLoggedIn, sessionReload]);
 
@@ -468,6 +467,7 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
     }
 
     const version = sessionVersionRef.current;
+    let animationStarted = false;
 
     requestLockRef.current = true;
     setIsRequestingKeo(true);
@@ -595,21 +595,24 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
       if (version !== sessionVersionRef.current) return;
 
       setLandingResult(outcome);
+      landingOutcomeRef.current = outcome;
       setCastResult(null);
+      animationStarted = true;
       setIsCasting(true);
 
       const reducedMotion = window.matchMedia(
         "(prefers-reduced-motion: reduce)",
       ).matches;
 
-      animationTimerRef.current = setTimeout(() => {
-        if (version !== sessionVersionRef.current) return;
-
-        animationTimerRef.current = null;
-        setCastResult(outcome);
-        setIsCasting(false);
-        requestLockRef.current = false;
-      }, reducedMotion ? 200 : 2200);
+      settledPiecesRef.current.clear();
+      if (reducedMotion) {
+        requestAnimationFrame(() => {
+          if (version !== sessionVersionRef.current) return;
+          setCastResult(outcome);
+          setIsCasting(false);
+          requestLockRef.current = false;
+        });
+      }
     } catch {
       if (version !== sessionVersionRef.current) return;
 
@@ -623,8 +626,7 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
     } finally {
       if (version === sessionVersionRef.current) {
         setIsRequestingKeo(false);
-
-        if (animationTimerRef.current === null) {
+        if (!animationStarted) {
           requestLockRef.current = false;
         }
       }
@@ -857,6 +859,16 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
                       shadowClass="anim-keo-shadow-left"
                       settledClass="keo-settled-left"
                       settledShadowClass="keo-shadow-settled-left"
+                      onSettle={() => {
+                        settledPiecesRef.current.add("left");
+                        if (settledPiecesRef.current.size === 2) {
+                          if (landingOutcomeRef.current) {
+                            setCastResult(landingOutcomeRef.current);
+                          }
+                          setIsCasting(false);
+                          requestLockRef.current = false;
+                        }
+                      }}
                     />
 
                     {/* Keo Piece 2 */}
@@ -875,6 +887,16 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
                       shadowClass="anim-keo-shadow-right"
                       settledClass="keo-settled-right"
                       settledShadowClass="keo-shadow-settled-right"
+                      onSettle={() => {
+                        settledPiecesRef.current.add("right");
+                        if (settledPiecesRef.current.size === 2) {
+                          if (landingOutcomeRef.current) {
+                            setCastResult(landingOutcomeRef.current);
+                          }
+                          setIsCasting(false);
+                          requestLockRef.current = false;
+                        }
+                      }}
                     />
                   </div>
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ApiError, apiRequest } from "../lib/api";
+import { isDemoMode } from "../data/demoMode";
 
 type Entry = {
   slug: string;
@@ -47,6 +48,15 @@ export function MemberLibrary({
     setNextOffset(null);
     openVersion.current += 1;
 
+    if (isDemoMode()) {
+      setItems([
+        { slug: "demo-viet-gia-dao", title: "Việt gia đạo: gìn giữ nếp nhà", excerpt: "Một bài đọc minh họa về sự kết nối giữa các thế hệ." },
+        { slug: "demo-tinh-tam", title: "Tĩnh tâm trong đời sống thường ngày", excerpt: "Gợi ý thực hành ngắn để nuôi dưỡng sự bình an." },
+      ]);
+      setLoading(false);
+      return;
+    }
+
     if (!email) {
       setLoading(false);
       return;
@@ -90,6 +100,19 @@ export function MemberLibrary({
     setError("");
     setArticle(null);
 
+    if (isDemoMode()) {
+      setArticle({
+        slug,
+        title: slug === "demo-viet-gia-dao" ? "Việt gia đạo: gìn giữ nếp nhà" : "Tĩnh tâm trong đời sống thường ngày",
+        excerpt: "Bài đọc minh họa trong chế độ demo.",
+        source: "Thư viện minh họa",
+        sections: [{ title: "Một góc suy ngẫm", body: "Nếp nhà được nuôi dưỡng qua sự quan tâm, lắng nghe và những việc nhỏ được duy trì mỗi ngày. Hãy chọn một điều phù hợp để thực hành trong tuần này." }],
+        provenance: null,
+      });
+      setOpening(false);
+      return;
+    }
+
     try {
       const result = await apiRequest<Article>(
         `/membership/library/${encodeURIComponent(slug)}`
@@ -128,7 +151,7 @@ export function MemberLibrary({
         Thư viện hội viên
       </h2>
 
-      {!email && (
+      {!email && !isDemoMode() && (
         <p className="mt-3 text-sm text-muted">
           Đăng nhập để kiểm tra quyền truy cập thư viện.
         </p>
@@ -155,7 +178,7 @@ export function MemberLibrary({
         </div>
       )}
 
-      {email && !loading && !error && items.length === 0 && (
+      {(email || isDemoMode()) && !loading && !error && items.length === 0 && (
         <p className="mt-3 text-sm text-muted">
           Chưa có bài hội viên được xuất bản.
         </p>

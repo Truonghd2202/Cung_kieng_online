@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ShieldCheck } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
 import type { CultureRegionSlug } from "./CulturalMapScreen";
+import { loadCultureArticles, type RemoteContentItem } from "../data/contentService";
 
 interface RegionCultureScreenProps {
   region: CultureRegionSlug;
@@ -27,9 +28,25 @@ const REGION_EXPERIENCES: Record<CultureRegionSlug, { kind: "chau-van" | "sea-pr
 export const RegionCultureScreen: React.FC<RegionCultureScreenProps> = ({
   region,
   onBack,
+  onSelectArticle,
   onGoToExperience,
   onGoToRegionalExperience,
-}) => (
+}) => {
+  const [articles, setArticles] = useState<RemoteContentItem[]>([]);
+  const [loadingArticles, setLoadingArticles] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    void loadCultureArticles()
+      .then((items) => { if (active) setArticles(items.filter((item) => item.verified === true)); })
+      .catch(() => { if (active) setArticles([]); })
+      .finally(() => { if (active) setLoadingArticles(false); });
+    return () => { active = false; };
+  }, []);
+
+  const regionArticles = articles.filter((item) => item.region === REGION_LABELS[region]);
+
+  return (
   <div className="screen-shell">
     <main className="page-container max-w-4xl">
       <Button type="button" variant="outline" onClick={onBack} className="mb-6 gap-2">
@@ -57,6 +74,10 @@ export const RegionCultureScreen: React.FC<RegionCultureScreenProps> = ({
             Mở không gian trải nghiệm
           </Button>
         </div>
+        <section className="mb-5" aria-labelledby="region-demo-articles">
+          <h2 id="region-demo-articles" className="mb-3 font-semibold text-ink">Bài viết nổi bật · {REGION_LABELS[region]}</h2>
+          {loadingArticles ? <p role="status" className="text-sm text-muted">Đang tải bài viết…</p> : regionArticles.length ? <div className="grid gap-3 sm:grid-cols-2">{regionArticles.map((item) => <button key={item.id} type="button" onClick={() => onSelectArticle(item.id)} className="rounded-xl border border-line bg-surface-soft p-4 text-left transition hover:border-accent"><span className="font-semibold text-ink">{item.title}</span>{typeof item.excerpt === "string" && <span className="mt-2 block text-sm text-muted">{item.excerpt}</span>}</button>)}</div> : <p className="text-sm text-muted">Chưa có bài viết đã xác minh cho vùng này trong dữ liệu demo.</p>}
+        </section>
         <div className="flex items-start gap-3 rounded-xl border border-line bg-surface-soft p-4 text-sm text-muted">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
           <p>Không dùng hình minh họa hoặc mô tả biên soạn thay cho thông tin di sản đã xác minh.</p>
@@ -64,4 +85,5 @@ export const RegionCultureScreen: React.FC<RegionCultureScreenProps> = ({
       </Card>
     </main>
   </div>
-);
+  );
+};

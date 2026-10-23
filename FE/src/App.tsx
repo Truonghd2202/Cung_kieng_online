@@ -8,6 +8,8 @@ import {
 } from "react";
 import { readPrivateJson, writePrivateJson } from "./lib/privateStorage";
 import { DEMO_MODE_LABEL, exitDemoMode, isDemoMode } from "./data/demoMode";
+import { ensureDemoSeeded } from "./data/demoSeed";
+import { clearDemoValues, readDemoValue, writeDemoValue } from "./data/demoStorage";
 import { apiRequest, ApiError } from "./lib/api";
 import { clearPersonalStorage } from "./lib/clearPersonalStorage";
 import { getMoodContentUnavailableMessage } from "./data/moodAvailability";
@@ -725,6 +727,12 @@ export default function App() {
   } = useTheme();
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [demoProfileName, setDemoProfileName] = useState(() =>
+    readDemoValue("profile-name", "An Nhiên")
+  );
+  const displayUser = currentUser ?? (isDemoMode()
+    ? { name: demoProfileName, email: "demo@tinlamtamlinh.local" }
+    : null);
 
   const cornerAccountScopeRef = useRef({
     email: currentUser?.email ?? null,
@@ -742,7 +750,9 @@ export default function App() {
 
   const cornerDeleteLocksRef = useRef(new Set<string>());
   const [sessionResolved, setSessionResolved] = useState(false);
-  const [userSettings, setUserSettings] = useState<UserSettings>(DEFAULT_USER_SETTINGS);
+  const [userSettings, setUserSettings] = useState<UserSettings>(() =>
+    readDemoValue("user-settings", DEFAULT_USER_SETTINGS)
+  );
   const [pendingSave, setPendingSave] = useState<PendingSave | null>(null);
   const [isLoginImmersive, setIsLoginImmersive] = useState(false);
 
@@ -930,6 +940,10 @@ export default function App() {
   });
 
   useEffect(() => {
+    if (isDemoMode()) ensureDemoSeeded();
+  }, []);
+
+  useEffect(() => {
     if (!sessionResolved) return;
 
     const scope = cornerAccountScopeRef.current;
@@ -941,6 +955,23 @@ export default function App() {
         xam: [],
         wishes: [],
       };
+
+      if (isDemoMode()) {
+        let active = true;
+        setCornerLoadState({ email: null, status: "loading" });
+        void Promise.all([loadSavedSignals(), loadSavedXam(), loadSavedWishes()])
+          .then(([signals, xam, wishes]) => {
+            if (!active || cornerAccountScopeRef.current !== scope) return;
+            setUserCornerData({ signals, xam, wishes });
+            setCornerLoadState({ email: null, status: "ready" });
+          })
+          .catch(() => {
+            if (!active || cornerAccountScopeRef.current !== scope) return;
+            setUserCornerData(empty);
+            setCornerLoadState({ email: null, status: "ready" });
+          });
+        return () => { active = false; };
+      }
 
       setUserCornerData(empty);
       setCornerLoadState({
@@ -1033,7 +1064,7 @@ export default function App() {
       return;
     }
 
-    if (!currentUser) {
+    if (!currentUser && !isDemoMode()) {
       returnScreenRef.current = "account";
       navigateTo("login");
       return;
@@ -1137,11 +1168,16 @@ export default function App() {
 
   useEffect(() => {
     setMemorial(loadMemorialRecord(currentUser?.email));
+    if (isDemoMode()) {
+      void loadMemorialProfiles().then((profiles) => {
+        if (profiles.length) setMemorial((current) => current || memorialProfileToRecord(profiles[0]));
+      }).catch(() => {});
+    }
   }, [currentUser?.email]);
 
-  // Account và Settings yêu cầu hồ sơ đăng nhập.
+  // Tài khoản và cài đặt yêu cầu đăng nhập ngoài chế độ demo.
   useEffect(() => {
-    if (!sessionResolved) return;
+    if (!sessionResolved || isDemoMode()) return;
     if (currentUser) return;
 
     const path = window.location.pathname.replace(
@@ -1264,7 +1300,7 @@ export default function App() {
       // Handle screen routing with guards for missing context
       if (
         ["account", "settings"].includes(path) &&
-        !currentUser
+        !currentUser && !isDemoMode()
       ) {
         setScreen("login");
       } else if (path === "loading") {
@@ -1344,7 +1380,7 @@ export default function App() {
 
     if (
       ["account", "settings"].includes(targetScreen) &&
-      !effectiveUser
+      !effectiveUser && !isDemoMode()
     ) {
       targetScreen = "login";
     }
@@ -1786,7 +1822,7 @@ export default function App() {
     } catch {}
 
     try {
-      if (!currentUser) {
+      if (!currentUser && !isDemoMode()) {
         setPendingSave({ type: "signal", item: newEntry });
         navigateTo("login");
         return;
@@ -1803,7 +1839,7 @@ export default function App() {
       });
       setUserCornerData((previous) => ({ ...previous, signals: [remoteEntry, ...previous.signals.filter((entry) => entry.id !== remoteEntry.id)] }));
       setPendingMoodCheckInId(remoteEntry.id);
-      try { localStorage.setItem(getAccountScopedKey("tltl-current-checkin-id", currentUser.email), remoteEntry.id); } catch {}
+      try { localStorage.setItem(getAccountScopedKey("tltl-current-checkin-id", currentUser?.email), remoteEntry.id); } catch {}
       setPendingSave(null);
       resultSaveKeyRef.current = null;
       activeResultIdempotencyKeyRef.current = null;
@@ -2141,7 +2177,13 @@ export default function App() {
   const handleUpdateProfile = async (
     updated: { name: string; email?: string }
   ): Promise<boolean> => {
-    if (!currentUser) return false;
+    if (!currentUser) {
+      const cleanName = updated.name.trim();
+      if (!isDemoMode() || !cleanName || cleanName.length > 120) return false;
+      writeDemoValue("profile-name", cleanName);
+      setDemoProfileName(cleanName);
+      return true;
+    }
 
     const cleanName = updated.name.trim();
 
@@ -2160,8 +2202,13 @@ export default function App() {
   };
 
   const handleSaveTopics = async (topics: string[]): Promise<boolean> => {
-    if (!currentUser) return false;
     const nextTopics = sanitizeCulturalTopics(topics);
+    if (!currentUser) {
+      if (!isDemoMode()) return false;
+      setSelectedTopics(nextTopics);
+      writeDemoValue("selected-topics", nextTopics);
+      return true;
+    }
 
     try {
       const savedTopics = sanitizeCulturalTopics(await replaceTopics(nextTopics));
@@ -2181,7 +2228,16 @@ export default function App() {
   };
 
   const handleChangeTheme = async (theme: typeof themePreference): Promise<boolean> => {
-    if (!currentUser) return false;
+    if (!currentUser) {
+      if (!isDemoMode()) return false;
+      setThemePreference(theme);
+      setUserSettings((previous) => {
+        const next = { ...previous, theme };
+        writeDemoValue("user-settings", next);
+        return next;
+      });
+      return true;
+    }
     const previous = themePreference;
     setThemePreference(theme);
 
@@ -2199,7 +2255,15 @@ export default function App() {
   const handleChangeNotifications = async (
     notifications: Pick<UserSettings, "emailNotifications" | "pushNotifications">
   ): Promise<boolean> => {
-    if (!currentUser) return false;
+    if (!currentUser) {
+      if (!isDemoMode()) return false;
+      setUserSettings((previous) => {
+        const next = { ...previous, ...notifications };
+        writeDemoValue("user-settings", next);
+        return next;
+      });
+      return true;
+    }
     try {
       const saved = await updateSettings(notifications);
       setUserSettings(saved);
@@ -2249,7 +2313,7 @@ export default function App() {
     const scope = cornerAccountScopeRef.current;
     const email = scope.email;
 
-    if (!email) return false;
+    if (!email && !isDemoMode()) return false;
 
     const lockId = `${scope.version}:${kind}:${id}`;
 
@@ -2281,6 +2345,15 @@ export default function App() {
 
       if (!isCurrentAccount()) return false;
 
+      if (isDemoMode()) {
+        const current = userCornerDataRef.current;
+        setUserCornerData({
+          ...current,
+          [kind]: current[kind].filter((item) => item.id !== id),
+        });
+        return true;
+      }
+
       // Dùng cùng hàng đợi với cập nhật yêu thích để tránh
       // hai thao tác ghi đè bộ nhớ đệm của nhau.
       const cacheWrite = favoriteCacheQueueRef.current.then(
@@ -2301,7 +2374,7 @@ export default function App() {
           let cached = false;
 
           try {
-            cached = await saveUserCornerData(email, updated);
+            cached = await saveUserCornerData(email!, updated);
           } catch {
             cached = false;
           }
@@ -2309,7 +2382,7 @@ export default function App() {
           if (!cached) {
             try {
               localStorage.removeItem(
-                getUserCornerStorageKey(email)
+                getUserCornerStorageKey(email!)
               );
             } catch {
               if (isCurrentAccount()) {
@@ -2381,7 +2454,7 @@ export default function App() {
     const scope = cornerAccountScopeRef.current;
     const email = scope.email;
 
-    if (!email) return;
+    if (!email && !isDemoMode()) return;
 
     const lockId = `${scope.version}:${kind}:${id}`;
 
@@ -2412,6 +2485,16 @@ export default function App() {
             : await updateSavedWish(id, nextStarred);
 
       if (!isCurrentAccount()) return;
+
+      if (isDemoMode()) {
+        setUserCornerData((current) => ({
+          ...current,
+          [kind]: current[kind].map((item) =>
+            item.id === id ? { ...item, starred: remoteItem.starred } : item
+          ),
+        }));
+        return;
+      }
 
       const remoteStarred = remoteItem.starred;
 
@@ -2446,7 +2529,7 @@ export default function App() {
           let cached = false;
 
           try {
-            cached = await saveUserCornerData(email, updated);
+            cached = await saveUserCornerData(email!, updated);
           } catch {
             cached = false;
           }
@@ -2455,7 +2538,7 @@ export default function App() {
             // Tránh giữ cache cũ trái với trạng thái máy chủ.
             try {
               localStorage.removeItem(
-                getUserCornerStorageKey(email)
+                getUserCornerStorageKey(email!)
               );
             } catch {
               // Không đổi kết quả đã được máy chủ xác nhận.
@@ -2516,7 +2599,7 @@ export default function App() {
     const email = scope.email;
     const createdAt = Date.now();
 
-    if (!email) {
+    if (!email && !isDemoMode()) {
       const newWish: SavedWishItem = {
         id: requestId,
         category,
@@ -2561,6 +2644,14 @@ export default function App() {
 
     if (!isCurrentAccount()) return false;
 
+    if (isDemoMode()) {
+      setUserCornerData((previous) => ({
+        ...previous,
+        wishes: [remoteWish, ...previous.wishes.filter((item) => item.id !== remoteWish.id)],
+      }));
+      return true;
+    }
+
     // Dùng cùng hàng đợi với xóa và yêu thích.
     const cacheWrite = favoriteCacheQueueRef.current.then(
       async () => {
@@ -2583,7 +2674,7 @@ export default function App() {
         let cached = false;
 
         try {
-          cached = await saveUserCornerData(email, updated);
+          cached = await saveUserCornerData(email!, updated);
         } catch {
           cached = false;
         }
@@ -2591,7 +2682,7 @@ export default function App() {
         if (!cached) {
           try {
             localStorage.removeItem(
-              getUserCornerStorageKey(email)
+              getUserCornerStorageKey(email!)
             );
           } catch {
             // BE đã xác nhận lưu.
@@ -2655,7 +2746,7 @@ export default function App() {
         type: "personal" as const,
       };
 
-      const savedNote = currentUser ? await saveCalendarNote(dayData) : newNote;
+      const savedNote = currentUser || isDemoMode() ? await saveCalendarNote(dayData) : newNote;
       const nextList = [savedNote, ...currentList.filter((note) =>
         !(note.title === dayData.title && note.day === dayData.day &&
           note.month === dayData.month && note.year === dayData.year)
@@ -2703,11 +2794,12 @@ export default function App() {
         <AppHeader
           currentScreen={screen}
           onNavigate={navigateTo}
+          demoMode={isDemoMode()}
           dark={dark}
           onToggleDark={handleToggleTheme}
           onLoginClick={() => navigateTo("login")}
-          user={currentUser}
-          onLogout={handleRequestLogout}
+          user={displayUser}
+          onLogout={isDemoMode() ? undefined : handleRequestLogout}
         />
       )}
 
@@ -2763,7 +2855,7 @@ export default function App() {
             onBackToToday={() => navigateTo("today")}
             onSubmit={handleSubmitMood}
             isSubmitting={isMoodSubmitting}
-            isLoggedIn={Boolean(currentUser)}
+            isLoggedIn={Boolean(currentUser) || isDemoMode()}
             contextKey={selectedContextKey}
             onChangeContext={setSelectedContextKey}
           />
@@ -2844,7 +2936,7 @@ export default function App() {
             onGoToZen={() => navigateTo("zen")}
             onGoToLogin={() => navigateTo("login")}
             onRecordIncense={async () => {
-              if (!currentUser || !memorial?.id) throw new Error("Hãy đăng nhập và chọn hồ sơ tưởng niệm.");
+              if ((!currentUser && !isDemoMode()) || !memorial?.id) throw new Error("Hãy chọn hồ sơ tưởng niệm.");
               await recordIncense(memorial.id);
             }}
           />
@@ -2857,9 +2949,9 @@ export default function App() {
             currentUserEmail={currentUser?.email}
             onBack={() => navigateTo("sanctuary")}
             onGoToMemorial={() => navigateTo("memorial")}
-            isLoggedIn={Boolean(currentUser)}
+            isLoggedIn={Boolean(currentUser) || isDemoMode()}
             onRecordIncense={async () => {
-              if (!currentUser || !memorial?.id) return false;
+              if ((!currentUser && !isDemoMode()) || !memorial?.id) return false;
               try {
                 await recordIncense(memorial.id);
                 return true;
@@ -2904,14 +2996,14 @@ export default function App() {
             initialValue={
               memorialFormMode === "edit" ? memorial : null
             }
-            isLoggedIn={Boolean(currentUser)}
+            isLoggedIn={Boolean(currentUser) || isDemoMode()}
             onBack={() => navigateTo("memorial")}
             onSave={async (nextMemorial, options) => {
               const scope = cornerAccountScopeRef.current;
               const accountId =
                 currentUser?.email?.trim().toLowerCase() || "guest";
               let savedMemorial = nextMemorial;
-              if (currentUser) {
+              if (currentUser || isDemoMode()) {
                 const input = {
                   fullName: nextMemorial.name.trim(),
                   relationship: nextMemorial.relation.trim(),
@@ -3350,7 +3442,7 @@ export default function App() {
           (!currentUser || cornerReady) && (
             <AccountScreen
             key={currentUser?.email ?? "guest"}
-            currentUser={currentUser}
+            currentUser={displayUser}
             savedSignals={userCornerData.signals}
             savedXamList={userCornerData.xam}
             savedWishList={userCornerData.wishes}
@@ -3448,10 +3540,21 @@ export default function App() {
             onChangeTopics={handleSaveTopics}
             userSettings={userSettings}
             onChangeNotifications={handleChangeNotifications}
-            user={currentUser}
+            user={displayUser}
             onUpdateProfile={handleUpdateProfile}
             onLogout={handleRequestLogout}
             onClearAllLocalData={async () => {
+              if (isDemoMode()) {
+                clearDemoValues();
+                setUserCornerData({ signals: [], xam: [], wishes: [] });
+                setDemoProfileName("An Nhiên");
+                setUserSettings(DEFAULT_USER_SETTINGS);
+                setSelectedTopics([]);
+                setMemorial(null);
+                setJournalText("");
+                setPendingSave(null);
+                return true;
+              }
               if (!currentUser) return false;
               try { await apiRequest("/users/me/personal-content", { method: "DELETE" }); }
               catch { return false; }

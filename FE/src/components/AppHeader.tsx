@@ -52,6 +52,7 @@ interface AppHeaderProps {
   onLoginClick?: () => void;
   user?: { name: string; email: string; role?: string } | null;
   onLogout?: () => void;
+  demoMode?: boolean;
 }
 
 const navItems: { label: string; target: NavScreen; screens: NavScreen[] }[] = [
@@ -69,6 +70,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onLoginClick,
   user,
   onLogout,
+  demoMode = false,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -125,7 +127,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </button>
         );
       })}
-      {mobile && !user && (
+      {mobile && !user && !demoMode && (
         <Button
           variant="default"
           className="mt-2 w-full"
@@ -225,6 +227,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 </button>
               )}
             </>
+          ) : demoMode ? (
+            <button
+              type="button"
+              className="hidden sm:inline-flex min-h-10 items-center rounded-full border border-amber-400/40 px-3 text-xs font-semibold text-amber-200"
+              onClick={() => goTo("account")}
+            >
+              Bản demo
+            </button>
           ) : (
             <button
               type="button"

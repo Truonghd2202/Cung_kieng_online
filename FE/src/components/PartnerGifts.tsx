@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../lib/api";
+import { isDemoMode } from "../data/demoMode";
 
 interface Gift {
   id: string;
@@ -40,6 +41,15 @@ export function PartnerGifts() {
     setLoading(true);
     setError("");
     setItems([]);
+
+    if (isDemoMode()) {
+      setItems([
+        { id: "demo-incense", name: "Bộ trà sen an nhiên", description: "Bộ trà gốm thủ công, phù hợp cho những phút tĩnh tâm.", partner_name: "Làng nghề An Nhiên", purchase_url: "https://example.com/bo-tra-sen" },
+        { id: "demo-incense-holder", name: "Đế hương gốm mộc", description: "Sản phẩm minh họa từ đối tác trong dữ liệu demo.", partner_name: "Gốm Việt Mộc", purchase_url: "https://example.com/de-huong" },
+      ]);
+      setLoading(false);
+      return;
+    }
 
     void apiRequest<{ items: Gift[] }>("/partner-gifts")
       .then((result) => {
