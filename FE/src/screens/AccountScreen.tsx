@@ -178,7 +178,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
     let active = true;
     if (isDemoMode()) {
       setMembershipStatus({
-        subscription: null,
+        subscription: { started_at: new Date().toISOString(), expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() },
         aiUsage: {
           successfulUsed: 1,
           inProgress: 0,

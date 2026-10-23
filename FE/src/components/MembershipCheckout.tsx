@@ -122,13 +122,20 @@ export function MembershipCheckout({
         aiLimits: { successfulReadingsPer24Hours: 3, providerAttemptsPer24Hours: 5 },
         salesEnabled: false,
         checkoutAvailable: false,
-        subscription: null,
-        benefits: [],
+        subscription: {
+          id: "demo-member-active",
+          expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        },
+        benefits: [
+          { name: "Thành viên Tâm An", free: "Chưa đăng ký", premium: "Đang hoạt động trong demo", availability: "Đã kích hoạt · dữ liệu giả lập" },
+          { name: "Đèn hoa đăng hoàng gia", free: "Không có lượt", premium: "1 lượt dùng", availability: "Có 1 lượt demo trong kho" },
+          { name: "Thư viện hội viên", free: "Bài đọc mở", premium: "Bài đọc hội viên", availability: "Đang hoạt động trong demo" },
+        ],
         aiUsage: { windowHours: 24, successfulLimit: 3, providerAttemptLimit: 5, successfulUsed: 1, inProgress: 0, successfulRemaining: 2, attemptsUsed: 1, attemptsRemaining: 4, nextUsableAt: null },
       };
       setStatus(demoStatus);
       onStatusChange?.(demoStatus);
-      setMessage("Đang xem dữ liệu minh họa. Thanh toán đã được tắt trong chế độ demo.");
+      setMessage("Trạng thái hội viên đã đăng ký đang được mô phỏng. Thanh toán đã được tắt trong chế độ demo.");
       setLoading(false);
       return;
     }

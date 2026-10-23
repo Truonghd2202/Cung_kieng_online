@@ -1123,6 +1123,130 @@ html:not(.dark) {
   color: var(--admin-ink);
 }
 
+.admin-demo-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(197, 151, 63, 0.35);
+  background: rgba(197, 151, 63, 0.12);
+  color: var(--admin-ink);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.admin-demo-banner button {
+  color: var(--admin-gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.admin-demo-module-panel {
+  background: var(--admin-surface-card);
+  border: 1px solid var(--admin-line);
+  border-radius: 18px;
+  padding: 24px;
+  color: var(--admin-muted);
+}
+
+.admin-demo-module-panel p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.admin-demo-kicker {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--admin-gold);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+}
+
+.admin-demo-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.admin-demo-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: var(--admin-surface);
+}
+
+.admin-demo-stats span,
+.admin-demo-rows small {
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.admin-demo-stats strong {
+  color: var(--admin-heading);
+  font-size: 21px;
+}
+
+.admin-demo-rows {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-demo-rows article {
+  padding: 16px;
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: var(--admin-surface);
+}
+
+.admin-demo-row-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-demo-row-heading h3 {
+  margin: 0;
+  color: var(--admin-heading);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.admin-demo-row-heading span {
+  flex: 0 0 auto;
+  padding: 4px 9px;
+  border: 1px solid var(--admin-line-gold);
+  border-radius: 999px;
+  color: var(--admin-gold);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.admin-demo-rows article p {
+  margin: 7px 0;
+  color: var(--admin-muted);
+  font-size: 13px;
+}
+
+.admin-demo-footnote {
+  margin-top: 16px !important;
+  padding-top: 12px;
+  border-top: 1px solid var(--admin-line);
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .admin-demo-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Sidebar */
 .admin-sidebar {
   width: 270px;

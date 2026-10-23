@@ -15,6 +15,7 @@ import {
   Zap,
 } from "lucide-react";
 import { loadAdminList, type AdminPage, type AdminRecord } from "../data/adminService";
+import { isDemoMode } from "../data/demoMode";
 import { apiRequest } from "../lib/api";
 import type { AdminSection } from "./adminNavigation";
 
@@ -85,12 +86,12 @@ export function ReviewQueuePanel({
       const results = await Promise.all(
         SOURCES.map(async (source) => {
           try {
-            const first = source.id === "signals"
+            const first = source.id === "signals" && !isDemoMode()
               ? await apiRequest<SignalReviewPage>("/admin/signals?page=1&status=IN_REVIEW")
               : await loadAdminList<AdminRecord>(source.id, 1, "", "IN_REVIEW") as AdminPage<AdminRecord>;
             const pageCount = first.pagination?.pageCount || 1;
             const rest = await Promise.all(Array.from({ length: pageCount - 1 }, (_, index) =>
-              source.id === "signals"
+              source.id === "signals" && !isDemoMode()
                 ? apiRequest<SignalReviewPage>(`/admin/signals?page=${index + 2}&status=IN_REVIEW`)
                 : loadAdminList<AdminRecord>(source.id, index + 2, "", "IN_REVIEW") as Promise<AdminPage<AdminRecord>>,
             ));

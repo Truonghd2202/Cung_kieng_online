@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "../hooks/useTheme";
 import { ApiError, apiRequest } from "../lib/api";
+import { DEMO_MODE_LABEL, exitDemoMode, isDemoMode } from "../data/demoMode";
 import {
   loginAccount,
   logoutAccount,
@@ -54,6 +55,8 @@ import {
   loadAdminList,
   loadAdminOverview,
   reviewAdminRecord,
+  getDemoAdminRecord,
+  requestDemoAdminChanges,
   type AdminOverview,
   type AdminPage,
   type AdminRecord,
@@ -256,6 +259,60 @@ const TITLES: Record<
     title: "Tài khoản nhóm",
     description: "Quản lý cơ cấu nhân sự, cấp quyền biên tập và kiểm soát an toàn truy cập nội bộ.",
     tag: "PHÂN QUYỀN NỘI BỘ",
+  },
+};
+
+const DEMO_ADMIN_MODULES: Partial<Record<Section, {
+  stats: Array<{ label: string; value: string }>;
+  rows: Array<{ title: string; detail: string; status: string; meta: string }>;
+}>> = {
+  signals: {
+    stats: [{ label: "Tổng lời khuyên", value: "24" }, { label: "Chờ duyệt", value: "5" }, { label: "Đang hiển thị", value: "19" }],
+    rows: [
+      { title: "Chậm lại để lắng nghe", detail: "An yên · Bình an & Tâm trí", status: "Chờ duyệt", meta: "Cập nhật hôm nay · Tài khoản demo" },
+      { title: "Chia nhỏ việc cần làm", detail: "Công việc · Tập trung", status: "Đang hiển thị", meta: "Cập nhật hôm qua · Tài khoản demo" },
+      { title: "Gửi lời hỏi thăm", detail: "Gia đình · Kết nối", status: "Bản nháp", meta: "Cập nhật 2 ngày trước · Tài khoản demo" },
+    ],
+  },
+  payments: {
+    stats: [{ label: "Đơn trong tháng", value: "128" }, { label: "Đã thanh toán", value: "96" }, { label: "Cần đối soát", value: "4" }],
+    rows: [
+      { title: "TL-DEMO-24081 · Nguyễn Minh Anh", detail: "Gói An Nhiên · 3 tháng", status: "Đã thanh toán", meta: "450.000 ₫ · Hôm nay, 09:42" },
+      { title: "TL-DEMO-24080 · Trần Thu Hà", detail: "Hộp quà văn hóa · Trầm hương", status: "Chờ xác nhận", meta: "320.000 ₫ · Hôm nay, 08:17" },
+      { title: "TL-DEMO-24079 · Lê Hoàng Nam", detail: "Gói Đồng Hành · 12 tháng", status: "Đã thanh toán", meta: "1.200.000 ₫ · Hôm qua, 20:31" },
+    ],
+  },
+  "payment-alerts": {
+    stats: [{ label: "Cảnh báo mới", value: "3" }, { label: "Đang rà soát", value: "2" }, { label: "Đã xử lý", value: "11" }],
+    rows: [
+      { title: "IPN phản hồi chậm · TL-DEMO-24075", detail: "Cổng thanh toán · Gói An Nhiên", status: "Cần rà soát", meta: "450.000 ₫ · 12 phút trước" },
+      { title: "Số tiền lệch · TL-DEMO-24062", detail: "Đơn hàng · Hộp quà văn hóa", status: "Đang kiểm tra", meta: "320.000 ₫ · Hôm nay, 08:03" },
+      { title: "Giao dịch lặp · TL-DEMO-24018", detail: "Cổng thanh toán · Gói Đồng Hành", status: "Đã xử lý", meta: "1.200.000 ₫ · Hôm qua" },
+    ],
+  },
+  partnerships: {
+    stats: [{ label: "Hồ sơ mới", value: "7" }, { label: "Đang trao đổi", value: "4" }, { label: "Đã hợp tác", value: "12" }],
+    rows: [
+      { title: "Ban quản lý di tích Phủ Dầy", detail: "Đề xuất nội dung lễ hội và tư liệu địa phương", status: "Mới tiếp nhận", meta: "Nguyễn Thu Trang · Hôm nay" },
+      { title: "Hợp tác quà tặng làng nghề Huế", detail: "Kết nối sản phẩm thủ công với trải nghiệm văn hóa", status: "Đang trao đổi", meta: "Trần Minh Đức · Hôm qua" },
+      { title: "Trung tâm bảo tồn di sản miền Trung", detail: "Đề xuất chia sẻ nguồn tư liệu", status: "Đã xác nhận", meta: "Lê Hoàng Nam · 18/10/2026" },
+    ],
+  },
+  "partner-gifts": {
+    stats: [{ label: "Mẫu quà", value: "18" }, { label: "Đang phân phối", value: "12" }, { label: "Đơn chờ gửi", value: "6" }],
+    rows: [
+      { title: "Trầm hương An Nhiên", detail: "Mã quà DEMO-GIFT-08 · Đối tác Huế", status: "Đang phân phối", meta: "Còn 42 phần · Cập nhật hôm nay" },
+      { title: "Trà sen hồ Tịnh Tâm", detail: "Mã quà DEMO-GIFT-12 · Đối tác Huế", status: "Chờ bổ sung", meta: "Còn 8 phần · Cập nhật hôm qua" },
+      { title: "Sổ tay di sản Việt", detail: "Mã quà DEMO-GIFT-03 · Đối tác Hà Nội", status: "Đang phân phối", meta: "Còn 76 phần · 20/10/2026" },
+    ],
+  },
+  team: {
+    stats: [{ label: "Thành viên", value: "6" }, { label: "Quản trị viên", value: "2" }, { label: "Biên tập viên", value: "4" }],
+    rows: [
+      { title: "An Nhiên · admin.demo@tinlam.local", detail: "Quản trị viên · Toàn quyền quản trị", status: "Đang hoạt động", meta: "Đăng nhập gần nhất: hôm nay, 09:10" },
+      { title: "Minh Anh · editor.demo@tinlam.local", detail: "Biên tập viên · Văn hóa, lịch sự kiện", status: "Đang hoạt động", meta: "Đăng nhập gần nhất: hôm qua" },
+      { title: "Thu Hà · review.demo@tinlam.local", detail: "Biên tập viên · Nghi lễ, văn khấn", status: "Đang hoạt động", meta: "Đăng nhập gần nhất: 21/10/2026" },
+    ],
   },
 };
 
@@ -597,6 +654,23 @@ export default function AdminApp() {
 
   useEffect(() => {
     let mounted = true;
+    if (isDemoMode()) {
+      const requestedSection = getAdminSectionFromSearch(window.location.search);
+      const requestedStatus = new URLSearchParams(window.location.search).get("status") as ContentFilter | null;
+      const initialFilter: ContentFilter = requestedStatus && ["all", "DRAFT", "IN_REVIEW", "APPROVED", "PUBLISHED", "HIDDEN", "REVOKED", "needs_source"].includes(requestedStatus)
+        ? requestedStatus
+        : "all";
+      setAdminName("Quản trị viên demo");
+      setUserRole("ADMIN");
+      setIsAuthenticated(true);
+      setSection(requestedSection);
+      setActiveFilter(initialFilter);
+      void (async () => {
+        await fetchSection(requestedSection, 1, "", initialFilter);
+        if (mounted) setBooting(false);
+      })();
+      return () => { mounted = false; };
+    }
     void restoreSession().then(async (session) => {
       if (!mounted) return;
       const user = session.user;
@@ -740,7 +814,10 @@ export default function AdminApp() {
     setContentDetailError("");
     setChangeRequestNote("");
     try {
-      const record = await apiRequest<AdminRecord>(`/admin/${kind}/${encodeURIComponent(id)}`);
+      const record = isDemoMode()
+        ? getDemoAdminRecord(kind, id)
+        : await apiRequest<AdminRecord>(`/admin/${kind}/${encodeURIComponent(id)}`);
+      if (!record) throw new Error("Không tìm thấy hồ sơ demo này.");
       setContentDetails({ kind, id, record });
       const url = new URL(window.location.href);
       url.searchParams.set("contentEdit", kind);
@@ -766,7 +843,8 @@ export default function AdminApp() {
     }
     setContentDetailError("");
     try {
-      await apiRequest(`/admin/${contentDetails.kind}/${encodeURIComponent(contentDetails.id)}/request-changes`, {
+      if (isDemoMode()) requestDemoAdminChanges(contentDetails.kind, contentDetails.id, changeRequestNote.trim());
+      else await apiRequest(`/admin/${contentDetails.kind}/${encodeURIComponent(contentDetails.id)}/request-changes`, {
         method: "POST",
         body: JSON.stringify({ expectedUpdatedAt: contentDetails.record.updated_at, reviewNote: changeRequestNote.trim() }),
       });
@@ -844,7 +922,7 @@ export default function AdminApp() {
         (targetSection === "culture" || targetSection === "xam" || targetSection === "rituals" || targetSection === "prayers") &&
         reviewField === "verified" &&
         reviewValue;
-      if (reviewField === "verified" && !reviewValue) {
+      if (reviewField === "verified" && !reviewValue && !isDemoMode()) {
         await apiRequest(`/admin/${targetSection}/${encodeURIComponent(reviewRecord.id)}/revoke-approval`, {
           method: "POST",
           body: JSON.stringify({ expectedUpdatedAt: String(reviewRecord.updated_at || ""), reviewNote: reviewNote.trim() }),
@@ -897,6 +975,11 @@ export default function AdminApp() {
   };
 
   const handleLogout = async () => {
+    if (isDemoMode()) {
+      setIsAuthenticated(false);
+      exitDemoMode();
+      return;
+    }
     const result = await logoutAccount();
     setIsAuthenticated(false);
     setForbidden(false);
@@ -1133,6 +1216,10 @@ export default function AdminApp() {
 
       {/* Main Administrative Container */}
       <main className="admin-main">
+        {isDemoMode() && <div role="status" className="admin-demo-banner">
+          <span>{DEMO_MODE_LABEL} · Quản trị viên giả lập</span>
+          <button type="button" onClick={exitDemoMode}>Thoát demo</button>
+        </div>}
         <header className="admin-topbar">
           <div className="admin-topbar-left">
             <button
@@ -1290,32 +1377,24 @@ export default function AdminApp() {
           )}
 
           {/* Section View: Content & Data List */}
-          {section === "signals" && <SignalAdminPanel canReview={userRole === "ADMIN"} />}
-          {section === "team" && userRole === "ADMIN" && <TeamAccessPanel />}
+          {section === "signals" && (isDemoMode() ? <AdminDemoPanel section={section} title="Kho lời khuyên" /> : <SignalAdminPanel canReview={userRole === "ADMIN"} />)}
+          {section === "team" && userRole === "ADMIN" && (isDemoMode() ? <AdminDemoPanel section={section} title="Quản lý nhóm" /> : <TeamAccessPanel />)}
 
           {/* Section View: Commerce & Partnership Management Panels */}
           {section === "payments" && (
-            <div className="admin-panel-container">
-              <AdminPaymentsPanel />
-            </div>
+            isDemoMode() ? <AdminDemoPanel section={section} title="Thanh toán" /> : <div className="admin-panel-container"><AdminPaymentsPanel /></div>
           )}
 
           {section === "payment-alerts" && (
-            <div className="admin-panel-container">
-              <AdminPaymentAlertsPanel />
-            </div>
+            isDemoMode() ? <AdminDemoPanel section={section} title="Cảnh báo thanh toán" /> : <div className="admin-panel-container"><AdminPaymentAlertsPanel /></div>
           )}
 
           {section === "partnerships" && (
-            <div className="admin-panel-container">
-              <PartnershipPanel admin />
-            </div>
+            isDemoMode() ? <AdminDemoPanel section={section} title="Đề xuất hợp tác" /> : <div className="admin-panel-container"><PartnershipPanel admin /></div>
           )}
 
           {section === "partner-gifts" && (
-            <div className="admin-panel-container">
-              <AdminPartnerGiftsPanel />
-            </div>
+            isDemoMode() ? <AdminDemoPanel section={section} title="Quà tặng đối tác" /> : <div className="admin-panel-container"><AdminPartnerGiftsPanel /></div>
           )}
 
           {section !== "overview" &&
@@ -1871,16 +1950,11 @@ export default function AdminApp() {
               onClose={closeContentDetails}
               onApprove={(kind, record) => beginReview(record, "verified", kind)}
               onRequestChanges={async (note) => {
-                await apiRequest(
-                  `/admin/${contentDetails.kind}/${encodeURIComponent(contentDetails.id)}/request-changes`,
-                  {
-                    method: "POST",
-                    body: JSON.stringify({
-                      expectedUpdatedAt: contentDetails.record.updated_at,
-                      reviewNote: note,
-                    }),
-                  },
-                );
+                if (isDemoMode()) requestDemoAdminChanges(contentDetails.kind, contentDetails.id, note);
+                else await apiRequest(
+                    `/admin/${contentDetails.kind}/${encodeURIComponent(contentDetails.id)}/request-changes`,
+                    { method: "POST", body: JSON.stringify({ expectedUpdatedAt: contentDetails.record.updated_at, reviewNote: note }) },
+                  );
                 const itemTitle = getRecordTitle(contentDetails.record, contentDetails.kind);
                 closeContentDetails();
                 setReviewQueueKey((key) => key + 1);
@@ -1956,6 +2030,27 @@ export default function AdminApp() {
       />
 
       <ToastContainer />
+    </div>
+  );
+}
+
+function AdminDemoPanel({ section, title }: { section: Section; title: string }) {
+  const module = DEMO_ADMIN_MODULES[section];
+  return (
+    <div className="admin-panel-container">
+      <section className="admin-demo-module-panel" aria-label={title}>
+        <div className="admin-panel-heading"><div><span className="admin-demo-kicker">DỮ LIỆU MẪU</span><h2>{title}</h2></div><span className="admin-count-pill">DEMO</span></div>
+        <div className="admin-demo-stats">
+          {(module?.stats || [{ label: "Hồ sơ mẫu", value: "3" }, { label: "Đang hoạt động", value: "2" }, { label: "Chờ xử lý", value: "1" }]).map((stat) => <div key={stat.label}><span>{stat.label}</span><strong>{stat.value}</strong></div>)}
+        </div>
+        <div className="admin-demo-rows">
+          {(module?.rows || []).map((row) => <article key={row.title}>
+            <div className="admin-demo-row-heading"><h3>{row.title}</h3><span>{row.status}</span></div>
+            <p>{row.detail}</p><small>{row.meta}</small>
+          </article>)}
+        </div>
+        <p className="admin-demo-footnote">Thông tin giả lập chỉ dùng để xem trước. Không có giao dịch hay thay đổi nào được gửi lên máy chủ.</p>
+      </section>
     </div>
   );
 }

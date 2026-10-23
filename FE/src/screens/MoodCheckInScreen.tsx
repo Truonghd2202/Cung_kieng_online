@@ -26,6 +26,7 @@ import {
   MOOD_CONTEXTS,
   type MoodContextKey,
 } from "../data/demoSignals";
+import { isDemoMode } from "../data/demoMode";
 import { Button } from "@/src/components/ui/button";
 import { Textarea } from "@/src/components/ui/textarea";
 import "../styles/MoodCheckInScreen.css";
@@ -383,9 +384,15 @@ export const MoodCheckInScreen: React.FC<MoodCheckInScreenProps> = ({
             <ChevronDown className="w-4 h-4 text-muted transition-transform duration-200 group-open:rotate-180" />
           </summary>
           <div className="mt-3.5 pt-3.5 border-t border-line/60 space-y-2 text-xs sm:text-sm leading-relaxed text-muted">
-            <p>{isLoggedIn ? "Check-in gửi cảm xúc và bối cảnh đã chọn tới máy chủ Tin Lắm Tâm Linh." : "Khi đăng nhập để ghi nhận check-in, cảm xúc và bối cảnh đã chọn sẽ được gửi tới máy chủ Tin Lắm Tâm Linh."} Khi bạn chọn một bối cảnh cụ thể và Gemini được cấu hình, máy chủ chỉ gửi hai lựa chọn này tới Google Gemini để viết lời gợi mở. Ghi chú và lịch sử check-in không được gửi sang Gemini.</p>
+            <p>{isDemoMode()
+              ? "Chế độ demo: check-in và ghi chú chỉ được lưu trên trình duyệt này, không gửi lên máy chủ hoặc Google Gemini."
+              : isLoggedIn
+                ? "Check-in gửi cảm xúc và bối cảnh đã chọn tới máy chủ Tin Lắm Tâm Linh."
+                : "Khi đăng nhập để ghi nhận check-in, cảm xúc và bối cảnh đã chọn sẽ được gửi tới máy chủ Tin Lắm Tâm Linh."} {!isDemoMode() && <>Khi bạn chọn một bối cảnh cụ thể và Gemini được cấu hình, máy chủ chỉ gửi hai lựa chọn này tới Google Gemini để viết lời gợi mở. Ghi chú và lịch sử check-in không được gửi sang Gemini.</>}</p>
             <p>Nếu chọn “Chưa muốn chọn”, hoặc Gemini không khả dụng, hệ thống dùng nội dung biên tập sẵn. Lời gợi mở không phải chẩn đoán hay dự đoán.</p>
-            <p>Check-in được lưu theo tài khoản để xem lại; bạn có thể xóa bản lưu tại ứng dụng trong Cài đặt → Xóa dữ liệu cá nhân. Việc này cũng xóa lịch sử chiêm nghiệm AI theo năm, nhưng ứng dụng không có chức năng xóa yêu cầu đã được gửi ở phía Gemini.</p>
+            <p>{isDemoMode()
+              ? "Dữ liệu demo được giữ cục bộ trên trình duyệt và có thể xóa bằng cách thoát hoặc xóa dữ liệu trang web."
+              : "Check-in được lưu theo tài khoản để xem lại; bạn có thể xóa bản lưu tại ứng dụng trong Cài đặt → Xóa dữ liệu cá nhân. Việc này cũng xóa lịch sử chiêm nghiệm AI theo năm, nhưng ứng dụng không có chức năng xóa yêu cầu đã được gửi ở phía Gemini."}</p>
           </div>
         </details>
 
@@ -436,7 +443,9 @@ export const MoodCheckInScreen: React.FC<MoodCheckInScreenProps> = ({
 
             <p id="mood-journal-note" className="mt-2 text-xs text-muted leading-relaxed">
               {isLoggedIn
-                ? "Khi gửi check-in, đoạn này được gửi tới máy chủ cùng cảm xúc và bối cảnh. Tránh ghi tên hoặc thông tin nhận dạng."
+                ? isDemoMode()
+                  ? "Chế độ demo: ghi chú chỉ lưu trên trình duyệt này, không gửi tới máy chủ. Tránh ghi thông tin nhạy cảm."
+                  : "Khi gửi check-in, đoạn này được gửi tới máy chủ cùng cảm xúc và bối cảnh. Tránh ghi tên hoặc thông tin nhận dạng."
                 : "Chưa đăng nhập: đoạn này không gửi cùng check-in. Nếu đăng nhập để lưu kết quả, nội dung sẽ được gửi cùng bản lưu. Tránh ghi tên hoặc thông tin nhận dạng."}
             </p>
 

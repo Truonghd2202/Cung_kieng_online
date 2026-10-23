@@ -234,13 +234,13 @@ h4:focus, h4:focus-visible,
   width: 100%;
   min-width: 0;
   grid-template-columns: minmax(0, 1fr);
-  align-items: start;
+  align-items: stretch;
   gap: 1.25rem;
 }
 
 @media (min-width: 40rem) {
   .culture-map-layout {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
     gap: clamp(1rem, 2vw, 1.75rem);
   }
 }

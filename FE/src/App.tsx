@@ -2788,7 +2788,7 @@ export default function App() {
 
   return (
     <div className={`app-shell ${dark ? "dark" : ""} ${["login", "register", "forgot", "reset-password"].includes(screen) ? "lg:h-screen lg:max-h-screen lg:overflow-hidden" : ""}`}>
-      {isDemoMode() && <div role="status" className="sticky top-0 z-[80] flex items-center justify-center gap-3 border-b border-gold/30 bg-gold/10 px-4 py-1.5 text-xs font-semibold text-ink"><span>{DEMO_MODE_LABEL}</span><button type="button" onClick={exitDemoMode} className="underline underline-offset-2">Thoát demo</button></div>}
+      {isDemoMode() && <div role="status" className="sticky top-0 z-[80] flex items-center justify-center gap-3 border-b border-gold/30 bg-gold/10 px-4 py-1.5 text-xs font-semibold text-ink"><span>{DEMO_MODE_LABEL}</span><a href="/admin?demo=1" className="underline underline-offset-2">Mở admin demo</a><button type="button" onClick={exitDemoMode} className="underline underline-offset-2">Thoát demo</button></div>}
       {/* Universal Header - tự động ẩn khi ấn đăng nhập tại LoginScreen */}
       {!isLoginImmersive && (
         <AppHeader
@@ -2873,7 +2873,7 @@ export default function App() {
           <SignalResultScreen
             journalText={journalText}
             requestNotice={moodRequestNotice || undefined}
-            isLoggedIn={Boolean(currentUser)}
+            isLoggedIn={Boolean(currentUser) || isDemoMode()}
             mood={selectedMood}
             signal={publishedSignal}
             isActionDone={isActionDone}
@@ -3110,7 +3110,7 @@ export default function App() {
         {(screen === "chau-van" || screen === "sea-prayer" || screen === "southern-culture") && (
           <RegionalExperienceScreen
             key={`${screen}-${currentUser?.email || "guest"}`}
-            currentUserEmail={currentUser?.email}
+            currentUserEmail={displayUser?.email}
             kind={screen as RegionalExperienceKind}
             onBack={() => {
               const region: CultureRegionSlug =
@@ -3176,7 +3176,7 @@ export default function App() {
                 starred: false,
               };
 
-              if (!currentUser) {
+              if (!currentUser && !isDemoMode()) {
                 setPendingSave({
                   type: "xam",
                   item: newXam,
@@ -3189,6 +3189,16 @@ export default function App() {
               let remoteItem: SavedXinXamItem;
               try { remoteItem = await saveXam(result); }
               catch { return false; }
+
+              if (isDemoMode()) {
+                setUserCornerData((previous) => ({
+                  ...previous,
+                  xam: [remoteItem, ...previous.xam.filter((item) => item.id !== remoteItem.id)],
+                }));
+                return true;
+              }
+
+              if (!currentUser) return false;
 
               const exists = userCornerData.xam.some(
                 (item) =>
@@ -3217,7 +3227,7 @@ export default function App() {
             onGoToLogin={() => navigateTo("login")}
             onGoToExplore={() => navigateTo("culture")}
             onGoToWish={() => navigateTo("wish")}
-            isLoggedIn={!!currentUser}
+            isLoggedIn={Boolean(currentUser) || isDemoMode()}
             savedXamList={userCornerData.xam}
           />
         )}
@@ -3241,7 +3251,7 @@ export default function App() {
             onSaveJournal={(text, topic, requestId) =>
               handleSavePrivateWish(text, topic, requestId)
             }
-            isLoggedIn={!!currentUser}
+            isLoggedIn={Boolean(currentUser) || isDemoMode()}
             currentUserEmail={currentUser?.email}
           />
         )}
@@ -3382,7 +3392,7 @@ export default function App() {
           <CompletionScreen
             signal={publishedSignal}
             isActionDone={isActionDone}
-            isLoggedIn={Boolean(currentUser)}
+            isLoggedIn={Boolean(currentUser) || isDemoMode()}
             isSaved={isCurrentSignalSaved}
             onGoToHome={() => navigateTo("today")}
             onGoToAccount={() => navigateTo("account")}
@@ -3466,7 +3476,7 @@ export default function App() {
         {screen === "mood-journey" && (
           <MoodJourneyScreen
             savedSignals={userCornerData.signals}
-            isLoggedIn={Boolean(currentUser)}
+            isLoggedIn={Boolean(currentUser) || isDemoMode()}
             onBack={() => navigateTo("account")}
             onGoToMood={() => navigateTo("mood")}
             onGoToSignalResult={handleOpenSavedSignal}
@@ -3485,7 +3495,7 @@ export default function App() {
           <XinKeoScreen
             key={`${currentUser?.email || "guest"}:${xinKeoDrawId || "standalone"}`}
             drawId={xinKeoDrawId}
-            isLoggedIn={Boolean(currentUser)}
+            isLoggedIn={Boolean(currentUser) || isDemoMode()}
             onBackToExperience={() => navigateTo("experience")}
             onGoToCulture={() => navigateTo("culture")}
             onGoToHome={() => navigateTo("today")}

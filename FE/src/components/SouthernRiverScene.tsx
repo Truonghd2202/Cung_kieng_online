@@ -14,11 +14,14 @@ import {
   Volume2,
   Moon,
 } from "lucide-react";
-import { useRoyalLantern } from "../data/inventoryService";
+import { getDemoRoyalLanternStock, useRoyalLantern } from "../data/inventoryService";
+import { isDemoMode } from "../data/demoMode";
+import { disposeThreeScene } from "./threeSceneUtils";
 
 interface FloatingLantern {
   group: THREE.Group;
   light: THREE.PointLight;
+  flame: THREE.Mesh;
   initialX: number;
   speed: number;
   bobPhase: number;
@@ -115,7 +118,7 @@ export function SouthernRiverScene({
 
   useEffect(() => {
     const host = hostRef.current;
-    if (!host) return;
+    if (!host || !host.clientWidth || !host.clientHeight) return;
 
     let renderer: THREE.WebGLRenderer;
     try {
@@ -133,9 +136,10 @@ export function SouthernRiverScene({
 
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(host.clientWidth, host.clientHeight);
-    renderer.shadowMap.enabled = true;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = false;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 1.15;
 
     const canvas = renderer.domElement;
     canvas.style.display = "block";
@@ -145,8 +149,8 @@ export function SouthernRiverScene({
 
     // Không gian đêm Cửu Long huyền ảo
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#040a14");
-    scene.fog = new THREE.FogExp2("#040a14", 0.038);
+    scene.background = new THREE.Color("#8ba8a3");
+    scene.fog = new THREE.FogExp2("#829c94", 0.018);
 
     // Camera
     const camera = new THREE.PerspectiveCamera(
@@ -155,30 +159,31 @@ export function SouthernRiverScene({
       0.1,
       1000
     );
-    camera.position.set(0, 4.2, 9.5);
+    camera.position.set(0, 6.2, 16);
 
     // Controls
     const controls = new OrbitControls(camera, canvas);
     controls.enablePan = false;
-    controls.minDistance = 4.0;
-    controls.maxDistance = 18;
+    controls.minDistance = 8;
+    controls.maxDistance = 24;
     controls.maxPolarAngle = Math.PI / 2 - 0.04;
     controls.minPolarAngle = 0.2;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.35;
-    controls.target.set(0, 0.6, -1);
+    controls.enableDamping = true;
+    controls.autoRotate = false;
+    
+    controls.target.set(0, 1, -3);
     controls.update();
 
     resetSceneRef.current = () => {
-      camera.position.set(0, 4.2, 9.5);
-      controls.target.set(0, 0.6, -1);
+      camera.position.set(0, 6.2, 16);
+      controls.target.set(0, 1, -3);
       controls.update();
     };
 
     // ==========================================
     // 1. ÁNH TRĂNG RẰM & BẦU TRỜI ĐÊM HUYỀN ẢO
     // ==========================================
-    const ambientLight = new THREE.AmbientLight("#0d1f30", 2.2);
+    const ambientLight = new THREE.HemisphereLight("#e1eee0", "#594938", 2.1);
     scene.add(ambientLight);
 
     // Ánh trăng chiếu rọi từ trên cao
@@ -190,7 +195,7 @@ export function SouthernRiverScene({
     const moonGeo = new THREE.SphereGeometry(1.6, 32, 32);
     const moonMat = new THREE.MeshBasicMaterial({ color: "#fffbe6" });
     const moon = new THREE.Mesh(moonGeo, moonMat);
-    moon.position.set(-14, 14, -28);
+    moon.position.set(-9, 13, -28);
     scene.add(moon);
 
     // Quầng sáng quanh mặt trăng (Moon Halo)
@@ -218,7 +223,7 @@ export function SouthernRiverScene({
     scene.add(haloMesh);
 
     // Bầu trời sao lấp lánh
-    const starCount = 300;
+    const starCount = 90;
     const starGeo = new THREE.BufferGeometry();
     const starPos = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount; i++) {
@@ -229,9 +234,9 @@ export function SouthernRiverScene({
     starGeo.setAttribute("position", new THREE.BufferAttribute(starPos, 3));
     const starMat = new THREE.PointsMaterial({
       color: "#e0f2fe",
-      size: 0.2,
+      size: 0.1,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.45,
     });
     const starMesh = new THREE.Points(starGeo, starMat);
     scene.add(starMesh);
@@ -249,9 +254,9 @@ export function SouthernRiverScene({
       textureHeight: 512,
       waterNormals: riverNormals,
       sunDirection: sunDir,
-      sunColor: 0xfffae0, // Phản xạ ánh trăng vàng óng ánh
-      waterColor: 0x05141e, // Nước sông đêm phù sa sâu lắng
-      distortionScale: 2.6, // Sóng lăn tăn nhẹ nhàng
+      sunColor: 0xffd7a0, // Phản xạ ánh trăng vàng óng ánh
+      waterColor: 0x164954, // Nước sông đêm phù sa sâu lắng
+      distortionScale: 1.7, // Sóng lăn tăn nhẹ nhàng
       fog: scene.fog !== undefined,
     });
     water.rotation.x = -Math.PI / 2;
@@ -330,20 +335,20 @@ export function SouthernRiverScene({
       const bankGeo = new THREE.PlaneGeometry(16, 50);
       bankGeo.rotateX(-Math.PI / 2);
       const bankMat = new THREE.MeshStandardMaterial({
-        color: "#1a120b",
+        color: "#574331",
         roughness: 0.95,
       });
       const bank = new THREE.Mesh(bankGeo, bankMat);
-      bank.position.set(side * (riverWidth / 2 + 8), -0.05, 0);
+      bank.position.set(side * (riverWidth / 2 + 11), -0.05, 0);
       scene.add(bank);
 
       // Những tán lá dừa nước xòe cong mềm mại
       for (let z = -18; z <= 12; z += 4.5) {
         const palmGroup = new THREE.Group();
-        const trunkGeo = new THREE.CylinderGeometry(0.1, 0.16, 1.8, 8);
+        const trunkGeo = new THREE.CylinderGeometry(0.12, 0.2, 2.7, 9);
         trunkGeo.rotateZ(side * 0.25);
         const trunk = new THREE.Mesh(trunkGeo, bambooMat);
-        trunk.position.y = 0.9;
+        trunk.position.y = 1.35;
         palmGroup.add(trunk);
 
         // 5 tàu lá dừa nước uốn cong
@@ -362,7 +367,7 @@ export function SouthernRiverScene({
           palmGroup.add(leaf);
         }
 
-        palmGroup.position.set(side * (riverWidth / 2 - 0.5 + Math.random() * 1.5), 0, z);
+        palmGroup.position.set(side * (riverWidth / 2 + 3.4 + Math.random() * 1.2), 0, z);
         scene.add(palmGroup);
       }
     });
@@ -400,7 +405,7 @@ export function SouthernRiverScene({
     // ==========================================
     // 5. ĐOM ĐÓM LẬP LÒE TRÊN MẶT SÔNG
     // ==========================================
-    const fireflyCount = 40;
+    const fireflyCount = 20;
     const fireflies: Array<{
       mesh: THREE.Mesh;
       baseX: number;
@@ -415,7 +420,8 @@ export function SouthernRiverScene({
 
     for (let i = 0; i < fireflyCount; i++) {
       const mesh = new THREE.Mesh(fireflyGeo, fireflyMat);
-      const bx = (Math.random() - 0.5) * 12;
+      mesh.scale.setScalar(0.65);
+      const bx = (Math.random() - 0.5) * 8;
       const by = 0.4 + Math.random() * 1.8;
       const bz = (Math.random() - 0.5) * 20;
       mesh.position.set(bx, by, bz);
@@ -444,67 +450,73 @@ export function SouthernRiverScene({
       const group = new THREE.Group();
 
       // Đế lá sen xanh biếc
-      const baseGeo = new THREE.CylinderGeometry(0.35, 0.3, 0.04, 16);
-      const baseMat = new THREE.MeshStandardMaterial({
-        color: royal ? "#b45309" : "#14532d",
-        roughness: 0.6,
-      });
+      const baseGeo = new THREE.CylinderGeometry(0.43, 0.39, 0.055, 32);
+      const baseMat = new THREE.MeshStandardMaterial({ color: royal ? "#42663a" : "#245d3d", roughness: 0.48 });
       const base = new THREE.Mesh(baseGeo, baseMat);
       base.position.y = 0.02;
       group.add(base);
 
-      // Cánh hoa sen kép xếp so le (Tầng ngoài & Tầng trong)
-      const outerPetalMat = new THREE.MeshStandardMaterial({
-        color: royal ? "#fbbf24" : "#f472b6",
-        emissive: royal ? "#92400e" : "#9d174d",
-        emissiveIntensity: 0.4,
-        roughness: 0.35,
-      });
-
-      for (let i = 0; i < 8; i++) {
-        const angle = (i / 8) * Math.PI * 2;
-        const petalGeo = new THREE.ConeGeometry(0.14, 0.32, 6);
-        const petal = new THREE.Mesh(petalGeo, outerPetalMat);
-        petal.position.set(Math.cos(angle) * 0.24, 0.14, Math.sin(angle) * 0.24);
-        petal.rotation.x = Math.PI / 4;
-        petal.rotation.y = angle;
-        group.add(petal);
-      }
-
-      const innerPetalMat = new THREE.MeshStandardMaterial({
-        color: royal ? "#fde68a" : "#fb7185",
-        emissive: royal ? "#d97706" : "#e11d48",
-        emissiveIntensity: 0.6,
-        roughness: 0.3,
-      });
+      const leafGeo = new THREE.SphereGeometry(1, 16, 10);
+      const leafMaterial = new THREE.MeshStandardMaterial({ color: "#39754a", roughness: 0.42 });
       for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2 + 0.35;
-        const petalGeo = new THREE.ConeGeometry(0.12, 0.26, 6);
-        const petal = new THREE.Mesh(petalGeo, innerPetalMat);
-        petal.position.set(Math.cos(angle) * 0.16, 0.16, Math.sin(angle) * 0.16);
-        petal.rotation.x = Math.PI / 5;
-        petal.rotation.y = angle;
-        group.add(petal);
+        const angle = (i / 6) * Math.PI * 2;
+        const leaf = new THREE.Mesh(leafGeo, leafMaterial);
+        leaf.scale.set(0.2, 0.035, 0.34);
+        leaf.position.set(Math.cos(angle) * 0.28, 0.035, Math.sin(angle) * 0.28);
+        leaf.rotation.y = angle - Math.PI / 2;
+        group.add(leaf);
       }
 
-      // Ngọn nến vàng ở tâm nhụy
-      const candleGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.18, 12);
-      const candleMat = new THREE.MeshStandardMaterial({ color: "#fef08a" });
+      const petalGeo = new THREE.SphereGeometry(1, 18, 12);
+      const petalLayers = [
+        { count: 9, radius: 0.25, y: 0.105, sx: 0.18, sy: 0.065, sz: 0.34, color: royal ? "#f6c85f" : "#e95d9a", emissive: royal ? "#6a3216" : "#641b43" },
+        { count: 8, radius: 0.18, y: 0.145, sx: 0.15, sy: 0.06, sz: 0.29, color: royal ? "#ffe18a" : "#f58ab6", emissive: royal ? "#8a4a16" : "#7e2450" },
+        { count: 6, radius: 0.105, y: 0.18, sx: 0.115, sy: 0.05, sz: 0.22, color: royal ? "#fff0b5" : "#ffc0d5", emissive: royal ? "#a76a20" : "#8b3158" },
+      ];
+      petalLayers.forEach((layer, layerIndex) => {
+        const material = new THREE.MeshPhysicalMaterial({ color: layer.color, emissive: layer.emissive, emissiveIntensity: 0.16, roughness: 0.3, clearcoat: 0.42, clearcoatRoughness: 0.24, side: THREE.DoubleSide });
+        for (let i = 0; i < layer.count; i++) {
+          const angle = (i / layer.count) * Math.PI * 2 + layerIndex * 0.2;
+          const petal = new THREE.Mesh(petalGeo, material);
+          petal.scale.set(layer.sx, layer.sy, layer.sz);
+          petal.position.set(Math.cos(angle) * layer.radius, layer.y, Math.sin(angle) * layer.radius);
+          petal.rotation.set(-0.24 - layerIndex * 0.07, angle - Math.PI / 2, Math.cos(angle * 2) * 0.08);
+          group.add(petal);
+        }
+      });
+
+      const candleGeo = new THREE.CylinderGeometry(0.105, 0.12, 0.055, 20);
+      const candleMat = new THREE.MeshStandardMaterial({ color: royal ? "#e9bf72" : "#f2d78c", roughness: 0.38, metalness: 0.18 });
       const candle = new THREE.Mesh(candleGeo, candleMat);
-      candle.position.y = 0.14;
+      candle.position.y = 0.19;
       group.add(candle);
 
-      // Ngọn lửa nến tỏa sáng lung linh
-      const flameGeo = new THREE.SphereGeometry(0.05, 12, 12);
-      flameGeo.scale(0.8, 1.8, 0.8);
-      const flameMat = new THREE.MeshBasicMaterial({ color: "#ffaa22" });
+      const glowCanvas = document.createElement("canvas");
+      glowCanvas.width = 128;
+      glowCanvas.height = 128;
+      const glowContext = glowCanvas.getContext("2d")!;
+      const glowGradient = glowContext.createRadialGradient(64, 64, 2, 64, 64, 64);
+      glowGradient.addColorStop(0, "rgba(255, 245, 195, 0.9)");
+      glowGradient.addColorStop(0.2, "rgba(255, 176, 70, 0.42)");
+      glowGradient.addColorStop(1, "rgba(255, 115, 35, 0)");
+      glowContext.fillStyle = glowGradient;
+      glowContext.fillRect(0, 0, 128, 128);
+      const glowTexture = new THREE.CanvasTexture(glowCanvas);
+      glowTexture.colorSpace = THREE.SRGBColorSpace;
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture, color: royal ? "#ffd477" : "#ffc16c", transparent: true, opacity: 0.68, depthWrite: false, blending: THREE.AdditiveBlending }));
+      glow.position.y = 0.31;
+      glow.scale.set(0.9, 0.9, 1);
+      group.add(glow);
+
+      const flameGeo = new THREE.SphereGeometry(0.055, 16, 12);
+      const flameMat = new THREE.MeshBasicMaterial({ color: royal ? "#fff0b0" : "#fff4cf" });
       const flame = new THREE.Mesh(flameGeo, flameMat);
-      flame.position.y = 0.26;
+      flame.scale.set(0.72, 1.65, 0.72);
+      flame.position.y = 0.34;
       group.add(flame);
 
-      // PointLight tỏa ánh sáng vàng cam ấm áp phản chiếu lên mặt nước Water Shader
-      const light = new THREE.PointLight("#ff9922", 2.6, 6, 1.4);
-      light.position.y = 0.28;
+      const light = new THREE.PointLight(royal ? "#ffcf70" : "#ffad57", 2.2, 4.5, 1.8);
+      light.position.y = 0.32;
       group.add(light);
 
       group.position.set(posX, 0.05, posZ);
@@ -514,6 +526,7 @@ export function SouthernRiverScene({
       return {
         group,
         light,
+        flame,
         initialX: posX,
         speed: 0.28 + Math.random() * 0.18,
         bobPhase: Math.random() * Math.PI * 2,
@@ -526,7 +539,7 @@ export function SouthernRiverScene({
       royal = false
     ) => {
       const spawnX = (Math.random() - 0.5) * 4.2;
-      const spawnZ = 4.2;
+      const spawnZ = 6.5;
 
       const newLantern = createLotusLantern(
         message,
@@ -581,10 +594,11 @@ export function SouthernRiverScene({
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
 
-      const time = clock.getElapsedTime();
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const time = clock.elapsedTime;
 
       // 1. Chuyển động sóng nước quang học Physical Water Shader
-      water.material.uniforms["time"].value += 1.0 / 60.0;
+      water.material.uniforms["time"].value += delta;
 
       // 2. Xuồng ba lá nhấp nhô theo con nước dập dềnh
       sampanGroup.position.y = 0.05 + Math.sin(time * 1.5) * 0.04;
@@ -593,7 +607,7 @@ export function SouthernRiverScene({
 
       // 3. Hoa lục bình trôi dạt lững lờ
       waterHyacinths.forEach((item) => {
-        item.hyGroup.position.z -= item.speed * 0.015;
+        item.hyGroup.position.z -= item.speed * delta;
         if (item.hyGroup.position.z < -16) {
           item.hyGroup.position.z = 10;
           item.hyGroup.position.x = (Math.random() - 0.5) * 8;
@@ -603,20 +617,21 @@ export function SouthernRiverScene({
 
       // 4. Hoa đăng trôi xuôi dòng & Ánh nến lung linh
       lanterns.forEach((lantern) => {
-        lantern.group.position.z -= lantern.speed * 0.018;
+        lantern.group.position.z -= lantern.speed * delta;
 
         if (lantern.group.position.z < -16) {
-          lantern.group.position.z = 5.0;
-          lantern.group.position.x = (Math.random() - 0.5) * 4.5;
+          lantern.group.position.z = -16;
+          lantern.group.position.x = lantern.initialX;
         }
 
         lantern.group.position.y =
           0.05 + Math.sin(time * 2.4 + lantern.bobPhase) * 0.035;
-        lantern.group.rotation.y += 0.003;
+        lantern.group.rotation.y += delta * 0.18;
         lantern.group.rotation.z = Math.sin(time * 1.9 + lantern.bobPhase) * 0.03;
 
         // Ánh lửa nến nhấp nháy tự nhiên
-        lantern.light.intensity = 2.4 + Math.sin(time * 9 + lantern.bobPhase) * 0.5;
+        lantern.light.intensity = 2.1 + Math.sin(time * 9 + lantern.bobPhase) * 0.35;
+        lantern.flame.scale.y = 1.55 + (Math.sin(time * 11 + lantern.bobPhase) + 1) * 0.12;
       });
 
       // 5. Đom đóm bay lượn
@@ -647,13 +662,15 @@ export function SouthernRiverScene({
     animate();
 
     const handleResize = () => {
-      if (!host) return;
+      if (!host || !host.clientWidth || !host.clientHeight) return;
       camera.aspect = host.clientWidth / host.clientHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(host.clientWidth, host.clientHeight);
     };
 
-    window.addEventListener("resize", handleResize);
+    const resizeObserver = new ResizeObserver(handleResize);
+    resizeObserver.observe(host);
+    handleResize();
 
     return () => {
       releaseLanternRef.current = null;
@@ -663,11 +680,10 @@ export function SouthernRiverScene({
         handleContextLost
       );
       cancelAnimationFrame(animationFrameId);
-      window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
       canvas.removeEventListener("click", handleCanvasClick);
       controls.dispose();
-      waterGeometry.dispose();
-      riverNormals.dispose();
+      disposeThreeScene(scene);
       renderer.dispose();
       if (host.contains(canvas)) {
         host.removeChild(canvas);
@@ -707,7 +723,7 @@ export function SouthernRiverScene({
       return;
     }
 
-    if (!currentUserEmail) {
+    if (!currentUserEmail && !isDemoMode()) {
       setRoyalError(
         "Hãy đăng nhập để dùng đèn trong kho. Đèn thường vẫn miễn phí."
       );
@@ -717,8 +733,9 @@ export function SouthernRiverScene({
     royalLockRef.current = true;
     setUsingRoyal(true);
 
+    const accountEmail = currentUserEmail ?? "demo@tinlamtamlinh.local";
     const storageKey =
-      `tltl-royal-lantern-request:${currentUserEmail.trim().toLowerCase()}`;
+      `tltl-royal-lantern-request:${accountEmail.trim().toLowerCase()}`;
 
     try {
       // Chỉ lưu mã thao tác; không lưu lời viết.
@@ -942,8 +959,9 @@ export function SouthernRiverScene({
 
             {lanternStyle === "royal" && (
               <p className="text-xs leading-relaxed text-stone-300">
-                Chỉ là kiểu trang trí khác; không làm lời nguyện có
-                hiệu lực hơn. Bấm thả đèn sẽ yêu cầu dùng một lượt.
+                {isDemoMode()
+                  ? `Hội viên demo đã đăng ký · còn ${getDemoRoyalLanternStock()} lượt đèn hoàng gia trong kho. Lượt dùng chỉ lưu trên trình duyệt.`
+                  : "Đèn hoàng gia dùng một lượt trong kho hội viên. Mỗi năm hội viên Tâm An được tặng một lượt."}
               </p>
             )}
 

@@ -11,6 +11,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
+import { isDemoMode } from "../data/demoMode";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import {
@@ -789,7 +790,9 @@ export const XinKeoScreen: React.FC<XinKeoScreenProps> = ({
                   className="w-full p-3.5 rounded-panel border border-line focus:border-accent focus:ring-1 focus:ring-accent text-xs outline-none resize-none bg-surface/70 placeholder:text-subtle text-ink leading-relaxed"
                 />
                 <p className="text-xs text-muted mt-2 leading-relaxed">
-                  Ghi chú chỉ nằm trong màn hình này, không được gửi lên máy chủ và sẽ mất khi tải lại hoặc rời màn hình. Khi đăng nhập và gieo, hệ thống lưu chủ đề và kết quả vào tài khoản.
+                  {isDemoMode()
+                    ? "Ghi chú và kết quả demo chỉ lưu trên trình duyệt này, không gửi lên máy chủ."
+                    : "Ghi chú chỉ nằm trong màn hình này, không được gửi lên máy chủ và sẽ mất khi tải lại hoặc rời màn hình. Khi đăng nhập và gieo, hệ thống lưu chủ đề và kết quả vào tài khoản."}
                 </p>
               </div>
             </div>

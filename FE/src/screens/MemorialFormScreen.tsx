@@ -5,6 +5,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { Textarea } from "@/src/components/ui/textarea";
 import type { MemorialRecord } from "./MemorialSpaceScreen";
+import { isDemoMode } from "../data/demoMode";
 
 interface MemorialFormScreenProps {
   initialValue?: MemorialRecord | null;
@@ -174,9 +175,9 @@ export const MemorialFormScreen: React.FC<
             {initialValue ? "Chỉnh sửa góc tưởng niệm" : "Tạo góc tưởng niệm"}
           </h1>
           <p className="text-sm sm:text-base text-stone-700 dark:text-stone-300 leading-relaxed">
-            Khi đăng nhập, thông tin được gửi lên máy chủ để lưu theo tài khoản.
-            Khi dùng với tư cách khách, hồ sơ được lưu trong trình duyệt trên thiết bị này;
-            người dùng chung trình duyệt có thể xem được.
+            {isDemoMode()
+              ? "Chế độ demo: hồ sơ chỉ được lưu cục bộ trên trình duyệt này, không gửi lên máy chủ. Người dùng chung trình duyệt có thể xem được."
+              : <>{isLoggedIn && <>Khi đăng nhập, thông tin được gửi lên máy chủ để lưu theo tài khoản. </>}Khi dùng với tư cách khách, hồ sơ được lưu trong trình duyệt trên thiết bị này; người dùng chung trình duyệt có thể xem được.</>}
           </p>
         </header>
 
